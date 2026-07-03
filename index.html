@@ -147,6 +147,19 @@ header.site h1 { font-size: 1.45rem; font-weight: 700; }
 .section-title { font-size: 1.1rem; font-weight: 700; margin: 26px 0 12px; }
 .empty { color: var(--muted); padding: 40px 0; text-align: center; }
 
+.theme-desc {
+  color: var(--ink-2); font-size: 0.9rem; margin: 2px 0 18px;
+  padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+}
+.theme-desc strong { color: var(--ink); }
+.tier-group { margin-bottom: 22px; }
+.tier-head {
+  display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 0.95rem;
+  margin: 0 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--grid);
+}
+.tier-head .dot { width: 10px; height: 10px; border-radius: 50%; }
+.tier-head .tier-n { color: var(--muted); font-weight: 400; font-size: 0.82rem; }
+
 /* ── 유동성 게이지 ── */
 .liq {
   background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
@@ -206,15 +219,11 @@ footer.site {
       <button data-c="korea" class="on" type="button">🇰🇷 한국</button>
       <button data-c="us" type="button">🇺🇸 미국</button>
     </div>
-    <div class="chips" id="tierChips">
-      <button class="chip on" data-t="all" type="button">전체</button>
-      <button class="chip" data-t="1" type="button"><span class="dot" style="background:var(--tier1)"></span>Tier 1 · 핵심</button>
-      <button class="chip" data-t="2" type="button"><span class="dot" style="background:var(--tier2)"></span>Tier 2 · 성장·균형</button>
-      <button class="chip" data-t="3" type="button"><span class="dot" style="background:var(--tier3)"></span>Tier 3 · 저평가·기회</button>
-    </div>
+    <div class="chips" id="themeChips"></div>
   </div>
+  <div class="theme-desc" id="themeDesc"></div>
 
-  <div class="grid" id="cards"></div>
+  <div id="cards"></div>
 
   <footer class="site">
     <p id="disclaimer"></p>
@@ -228,7 +237,7 @@ footer.site {
 (function () {
   var D = window.STOCK_DATA;
   var L = window.LIQUIDITY_DATA;
-  var state = { country: "korea", tier: "all" };
+  var state = { country: "korea", theme: (D && D.themes && D.themes[0] && D.themes[0].key) || "core" };
 
   var root = document.documentElement;
   document.getElementById("themeBtn").addEventListener("click", function () {
@@ -264,12 +273,14 @@ footer.site {
     if (v == null) return "–";
     return (v > 0 ? "+" : "") + Number(v).toFixed(1) + "%";
   }
+  var TIER_COLORS = { 1: "var(--tier1)", 2: "var(--tier2)", 3: "var(--tier3)" };
+  var TIER_NAMES = { 1: "Tier 1 · 최우선", 2: "Tier 2 · 차선", 3: "Tier 3 · 관심" };
   function tierMeta(t) {
-    return {
-      1: { label: "Tier 1 · 핵심", color: "var(--tier1)" },
-      2: { label: "Tier 2 · 성장·균형", color: "var(--tier2)" },
-      3: { label: "Tier 3 · 저평가·기회", color: "var(--tier3)" }
-    }[t] || { label: "Tier ?", color: "var(--muted)" };
+    return { label: TIER_NAMES[t] || "Tier ?", color: TIER_COLORS[t] || "var(--muted)" };
+  }
+  function themeMeta(key) {
+    var t = (D.themes || []).filter(function (x) { return x.key === key; })[0];
+    return t || { key: key, label: key, emoji: "", desc: "" };
   }
 
   function renderTiles() {
@@ -278,12 +289,11 @@ footer.site {
     var avg = ups.length ? ups.reduce(function (a, b) { return a + b; }, 0) / ups.length : null;
     var best = all.filter(function (s) { return s.upside != null; })
                   .sort(function (a, b) { return b.upside - a.upside; })[0];
-    var t1 = all.filter(function (s) { return s.tier === 1; }).length;
     document.getElementById("tiles").innerHTML =
       tile("추천 종목", all.length + "종목") +
+      tile("주제 / 국가", (D.themes || []).length + "주제 × 2국") +
       tile("평균 상승여력", avg == null ? "–" : fmtPct(avg), avg != null && avg > 0) +
-      tile("최대 상승여력", best ? best.name + " " + fmtPct(best.upside) : "–", true) +
-      tile("Tier 1 핵심 종목", t1 + "종목");
+      tile("최대 상승여력", best ? best.name + " " + fmtPct(best.upside) : "–", true);
     function tile(k, v, up) {
       return '<div class="tile"><div class="k">' + esc(k) + '</div><div class="v' +
              (up ? " up" : "") + '">' + esc(v) + "</div></div>";
@@ -316,17 +326,37 @@ footer.site {
       "</article>";
   }
 
+  function renderThemeChips() {
+    document.getElementById("themeChips").innerHTML = (D.themes || []).map(function (t) {
+      return '<button class="chip' + (t.key === state.theme ? " on" : "") +
+        '" data-theme="' + esc(t.key) + '" type="button">' +
+        (t.emoji ? esc(t.emoji) + " " : "") + esc(t.label) + "</button>";
+    }).join("");
+  }
+
   function render() {
-    var list = (D[state.country] || []).slice();
-    if (state.tier !== "all") {
-      list = list.filter(function (s) { return String(s.tier) === state.tier; });
+    var tmeta = themeMeta(state.theme);
+    document.getElementById("themeDesc").innerHTML =
+      "<strong>" + (tmeta.emoji ? esc(tmeta.emoji) + " " : "") + esc(tmeta.label) + "</strong> — " + esc(tmeta.desc || "");
+
+    var list = (D[state.country] || []).filter(function (s) { return s.theme === state.theme; });
+    var host = document.getElementById("cards");
+    if (!list.length) {
+      host.innerHTML = '<div class="empty">해당 주제의 종목이 아직 없습니다.</div>';
+      return;
     }
-    list.sort(function (a, b) {
-      return (a.tier - b.tier) || ((b.upside || -999) - (a.upside || -999));
+    var html = "";
+    [1, 2, 3].forEach(function (t) {
+      var group = list.filter(function (s) { return s.tier === t; })
+                      .sort(function (a, b) { return (b.upside || -999) - (a.upside || -999); });
+      if (!group.length) return;
+      var tm = tierMeta(t);
+      html += '<div class="tier-group"><div class="tier-head">' +
+              '<span class="dot" style="background:' + tm.color + '"></span>' + esc(tm.label) +
+              ' <span class="tier-n">' + group.length + "종목</span></div>" +
+              '<div class="grid">' + group.map(function (s) { return card(s, state.country); }).join("") + "</div></div>";
     });
-    document.getElementById("cards").innerHTML = list.length
-      ? list.map(function (s) { return card(s, state.country); }).join("")
-      : '<div class="empty">해당 조건의 종목이 없습니다.</div>';
+    host.innerHTML = html;
   }
 
   document.getElementById("countrySeg").addEventListener("click", function (e) {
@@ -335,9 +365,9 @@ footer.site {
     this.querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x === b); });
     render();
   });
-  document.getElementById("tierChips").addEventListener("click", function (e) {
+  document.getElementById("themeChips").addEventListener("click", function (e) {
     var b = e.target.closest("button"); if (!b) return;
-    state.tier = b.dataset.t;
+    state.theme = b.dataset.theme;
     this.querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x === b); });
     render();
   });
@@ -388,6 +418,7 @@ footer.site {
 
   renderLiquidity();
   renderTiles();
+  renderThemeChips();
   render();
 })();
 </script>
