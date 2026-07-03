@@ -45,15 +45,23 @@ Claude Code 세션(웹/앱 어디서든)에서 이렇게 요청하세요:
 
 ## 데이터 형식
 
-`data/recommendations.js` 는 `window.STOCK_DATA` 전역 객체 하나를 정의합니다:
+`data/recommendations.js` 는 `window.STOCK_DATA` 전역 객체 하나를 정의합니다.
+구조는 **주제(theme) 4개 × 국가 2개 × 각 9종목 = 72종목**이며, 각 (주제×국가) 9종목은
+**확신·우선순위**에 따라 Tier 1(최우선)·2(차선)·3(관심)으로 3종목씩 나뉩니다.
 
 ```js
 window.STOCK_DATA = {
   generatedAt: "2026-07-03",        // 분석 기준일
   marketNote: "...",                // 시장 코멘트 한 줄
   disclaimer: "...",                // 투자 유의 문구
-  korea: [ /* 종목 카드 10개 */ ],
-  us:    [ /* 종목 카드 10개 */ ]
+  themes: [                         // 4개 주제 정의
+    { key: "core",     label: "핵심·안정",   emoji: "🛡️", desc: "..." },
+    { key: "growth",   label: "성장·균형",   emoji: "🚀", desc: "..." },
+    { key: "value",    label: "저평가·기회", emoji: "💎", desc: "..." },
+    { key: "dividend", label: "고배당·하방", emoji: "💰", desc: "..." }
+  ],
+  korea: [ /* 종목 카드 36개 (주제별 9개) */ ],
+  us:    [ /* 종목 카드 36개 (주제별 9개) */ ]
 };
 ```
 
@@ -61,6 +69,8 @@ window.STOCK_DATA = {
 
 | 필드 | 설명 |
 |---|---|
+| `theme` | 주제 키 (`core` / `growth` / `value` / `dividend`) |
+| `tier` | 주제 안 확신·우선순위 등급 — 1 최우선 / 2 차선 / 3 관심 (각 주제당 3종목씩) |
 | `name` / `ticker` / `market` | 종목명 / 코드 / 거래소 |
 | `price` / `priceDate` | 현재가와 기준일 (한국: 원, 미국: USD) |
 | `targetPrice` / `upside` | 컨센서스 목표가 / 상승여력 % |
@@ -68,9 +78,11 @@ window.STOCK_DATA = {
 | `earnings` | 최근 실적 한 줄 요약 |
 | `thesis` | 투자 논거 (중장기 안정·재무 건전성·주주친화·성장·저평가 관점) |
 | `risks` | 리스크 배열 |
-| `tier` | 1 핵심 / 2 성장·균형 / 3 저평가·기회 |
 | `chartUrl` | 네이버 차트 링크 |
 | `sources` | 근거 출처 URL (최대 3개) |
+
+> 주제와 국가 모두에 잘 맞는 대형주(예: 삼성바이오로직스, TSMC 등)는 두 주제에 함께 등장할 수 있으며,
+> 이때 가격·목표가 등 수치는 동일하게 맞추고 주제별 논거만 다르게 서술합니다.
 
 `data/liquidity.js` 는 `window.LIQUIDITY_DATA` 를 정의합니다:
 
