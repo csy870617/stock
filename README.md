@@ -1,0 +1,71 @@
+# 📈 주식 분석 · 종목 추천 페이지
+
+`stock-recommender` 스킬(claude.ai)의 분석 결과를 웹페이지로 보여주는 저장소입니다.
+
+- **`index.html`** — 추천 종목 대시보드 (한국/미국 탭, Tier 1·2·3 필터, 목표가·상승여력·배당·리스크·네이버 차트 링크)
+- **`data/recommendations.js`** — 페이지가 읽는 추천 데이터 (스킬 분석 결과)
+
+## 페이지 보는 법
+
+### GitHub Pages (권장)
+저장소 **Settings → Pages → Branch** 를 배포 브랜치로 지정하면
+`https://<계정>.github.io/stock/` 에서 바로 볼 수 있습니다.
+
+### 로컬
+`index.html` 을 브라우저로 열면 됩니다 (서버 불필요).
+
+## 스킬 ↔ 페이지 연결 구조
+
+claude.ai 스킬은 웹페이지가 직접 실행할 수 없으므로, **스킬이 만든 분석 결과를
+`data/recommendations.js` 에 저장**하고 페이지가 그것을 렌더링하는 구조입니다.
+
+```
+[stock-recommender 스킬 실행]  →  data/recommendations.js 갱신  →  git push  →  페이지 자동 반영
+```
+
+### 데이터 갱신 방법
+
+Claude Code 세션(웹/앱 어디서든)에서 이렇게 요청하세요:
+
+> stock-recommender 스킬 기준으로 오늘 날짜 최신 주가·컨센서스를 다시 조사해서
+> `data/recommendations.js` 를 갱신하고 커밋·푸시해줘.
+
+또는 claude.ai 채팅에서 스킬로 추천을 받은 뒤, 그 결과를 이 저장소의
+`data/recommendations.js` 형식으로 저장해달라고 요청해도 됩니다.
+
+정기 갱신을 원하면 Claude Code 세션에 예약 작업(Routine)을 걸어
+매주/매일 자동으로 데이터를 갱신하도록 설정할 수도 있습니다.
+
+## 데이터 형식
+
+`data/recommendations.js` 는 `window.STOCK_DATA` 전역 객체 하나를 정의합니다:
+
+```js
+window.STOCK_DATA = {
+  generatedAt: "2026-07-03",        // 분석 기준일
+  marketNote: "...",                // 시장 코멘트 한 줄
+  disclaimer: "...",                // 투자 유의 문구
+  korea: [ /* 종목 카드 10개 */ ],
+  us:    [ /* 종목 카드 10개 */ ]
+};
+```
+
+종목 카드 필드:
+
+| 필드 | 설명 |
+|---|---|
+| `name` / `ticker` / `market` | 종목명 / 코드 / 거래소 |
+| `price` / `priceDate` | 현재가와 기준일 (한국: 원, 미국: USD) |
+| `targetPrice` / `upside` | 컨센서스 목표가 / 상승여력 % |
+| `dividendYield` | 배당수익률 % |
+| `earnings` | 최근 실적 한 줄 요약 |
+| `thesis` | 투자 논거 (중장기 안정·재무 건전성·주주친화·성장·저평가 관점) |
+| `risks` | 리스크 배열 |
+| `tier` | 1 핵심 / 2 성장·균형 / 3 저평가·기회 |
+| `chartUrl` | 네이버 차트 링크 |
+| `sources` | 근거 출처 URL (최대 3개) |
+
+## 투자 유의
+
+본 페이지의 내용은 정보 제공 목적이며 투자 권유가 아닙니다.
+모든 투자 판단과 책임은 투자자 본인에게 있습니다.
