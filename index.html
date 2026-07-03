@@ -160,6 +160,63 @@ header.site h1 { font-size: 1.45rem; font-weight: 700; }
 .tier-head .dot { width: 10px; height: 10px; border-radius: 50%; }
 .tier-head .tier-n { color: var(--muted); font-weight: 400; font-size: 0.82rem; }
 
+/* ── Top Picks ── */
+.picks { margin: 0 0 22px; }
+.picks-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; }
+.picks-head h2 { font-size: 1.02rem; font-weight: 700; }
+.picks-head .crit { color: var(--muted); font-size: 0.78rem; }
+.picks-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+.pick {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+  padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; position: relative;
+}
+.pick .rank { position: absolute; top: 10px; right: 12px; color: var(--muted); font-size: 0.9rem; font-weight: 700; }
+.pick .nm { font-weight: 700; font-size: 0.98rem; }
+.pick .nm .tk { color: var(--muted); font-weight: 400; font-size: 0.75rem; margin-left: 4px; }
+.pick .up-big { font-size: 1.3rem; font-weight: 800; color: var(--up); font-variant-numeric: tabular-nums; }
+.pick .sub { color: var(--ink-2); font-size: 0.8rem; }
+.pick .thm { display: inline-flex; align-items: center; gap: 4px; font-size: 0.72rem; color: var(--ink-2);
+  background: var(--chip-bg); border-radius: 999px; padding: 2px 8px; width: fit-content; }
+
+/* ── 툴바 (검색·정렬·보기) ── */
+.toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 0 0 14px; }
+.toolbar input[type="search"] {
+  background: var(--surface); border: 1px solid var(--border); color: var(--ink);
+  border-radius: 10px; padding: 7px 12px; font-size: 0.88rem; min-width: 200px; flex: 1; max-width: 300px;
+}
+.toolbar input[type="search"]::placeholder { color: var(--muted); }
+.toolbar select {
+  background: var(--surface); border: 1px solid var(--border); color: var(--ink);
+  border-radius: 10px; padding: 7px 10px; font-size: 0.85rem;
+}
+.toolbar .lbl { color: var(--muted); font-size: 0.8rem; }
+
+/* ── 신선도·경고 배지 ── */
+.stale { color: #c98500; font-weight: 600; }
+.warn-badge {
+  font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 999px;
+  background: var(--chip-bg); color: var(--ink-2); white-space: nowrap;
+}
+.badges { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+
+/* ── 표 보기 ── */
+.tbl-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+table.tbl { width: 100%; border-collapse: collapse; font-size: 0.86rem; min-width: 760px; }
+.tbl th {
+  text-align: left; color: var(--muted); font-weight: 600; font-size: 0.76rem;
+  padding: 10px 12px; border-bottom: 1px solid var(--grid); white-space: nowrap; cursor: pointer; user-select: none;
+}
+.tbl th.num, .tbl td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.tbl td { padding: 9px 12px; border-bottom: 1px solid var(--grid); vertical-align: middle; }
+.tbl tbody tr:last-child td { border-bottom: 0; }
+.tbl tbody tr:hover { background: var(--chip-bg); }
+.tbl .nm { font-weight: 600; }
+.tbl .tk { color: var(--muted); font-size: 0.75rem; }
+.tbl .up { color: var(--up); font-weight: 700; }
+.tbl .down { color: var(--down); font-weight: 700; }
+.tbl a { color: var(--tier1); text-decoration: none; }
+.tbl .mini-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+
 /* ── 유동성 게이지 ── */
 .liq {
   background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
@@ -221,13 +278,37 @@ footer.site {
     </div>
     <div class="chips" id="themeChips"></div>
   </div>
+
+  <section class="picks" id="picksBox" style="display:none">
+    <div class="picks-head">
+      <h2>⭐ 오늘의 Top Picks</h2>
+      <span class="crit">기준: 각 주제 Tier 1(최우선) 종목 중 컨센서스 상승여력 상위 3</span>
+    </div>
+    <div class="picks-grid" id="picksGrid"></div>
+  </section>
+
+  <div class="toolbar">
+    <input type="search" id="q" placeholder="🔍 종목명·티커 검색 (전체 주제에서 찾기)">
+    <span class="lbl">정렬</span>
+    <select id="sortSel">
+      <option value="tier">티어 (기본)</option>
+      <option value="upside">상승여력 높은순</option>
+      <option value="div">배당수익률 높은순</option>
+      <option value="fresh">기준일 최신순</option>
+    </select>
+    <div class="seg" id="viewSeg">
+      <button data-v="cards" class="on" type="button">🗂️ 카드</button>
+      <button data-v="table" type="button">📋 표</button>
+    </div>
+  </div>
   <div class="theme-desc" id="themeDesc"></div>
 
   <div id="cards"></div>
 
   <footer class="site">
     <p id="disclaimer"></p>
-    <p style="margin-top:6px;">데이터는 stock-recommender 스킬 분석 결과이며, 갱신 방법은 저장소 README를 참고하세요.</p>
+    <p style="margin-top:6px;">⏳ 표시는 종가 기준일이 분석일보다 7일 이상 오래된 종목입니다 (출처 접근 제한 시 발생, 매일 자동 갱신으로 최신화). 🎯 표시는 현재가가 컨센서스 목표가에 도달·초과한 종목입니다.</p>
+    <p style="margin-top:6px;">데이터는 stock-recommender·macro-liquidity-monitor 스킬 분석 결과이며, 매일 오전 6시(LA) 자동 갱신됩니다. 갱신 방법은 저장소 README를 참고하세요.</p>
   </footer>
 </div>
 
@@ -237,7 +318,11 @@ footer.site {
 (function () {
   var D = window.STOCK_DATA;
   var L = window.LIQUIDITY_DATA;
-  var state = { country: "korea", theme: (D && D.themes && D.themes[0] && D.themes[0].key) || "core" };
+  var state = {
+    country: "korea",
+    theme: (D && D.themes && D.themes[0] && D.themes[0].key) || "core",
+    q: "", sort: "tier", view: "cards"
+  };
 
   var root = document.documentElement;
   document.getElementById("themeBtn").addEventListener("click", function () {
@@ -300,7 +385,13 @@ footer.site {
     }
   }
 
-  function card(s, country) {
+  function staleDays(s) {
+    if (!s.priceDate || !D.generatedAt) return 0;
+    var d = (new Date(D.generatedAt) - new Date(s.priceDate)) / 86400000;
+    return isNaN(d) ? 0 : Math.round(d);
+  }
+
+  function card(s, country, showTheme) {
     var tm = tierMeta(s.tier);
     var upCls = s.upside == null ? "" : s.upside >= 0 ? "up" : "down";
     var meterW = s.upside == null ? 0 : Math.max(0, Math.min(100, s.upside * 2));
@@ -308,11 +399,22 @@ footer.site {
     var srcs = (s.sources || []).slice(0, 3).map(function (u, i) {
       return '<a href="' + esc(u) + '" target="_blank" rel="noopener">출처' + (i + 1) + "</a>";
     }).join(" ");
+    var sd = staleDays(s);
+    var themeBadge = "";
+    if (showTheme) {
+      var thm = themeMeta(s.theme);
+      themeBadge = '<span class="badge">' + (thm.emoji ? esc(thm.emoji) + " " : "") + esc(thm.label) + "</span>";
+    }
+    var warnBadge = (s.upside != null && s.upside <= 0)
+      ? '<span class="warn-badge">🎯 목표가 도달</span>' : "";
+    var staleTag = sd >= 7
+      ? ' <span class="stale">⏳ ' + sd + "일 전 종가</span>" : "";
     return '<article class="card">' +
       '<div class="head"><h3>' + esc(s.name) + '<span class="tk">' + esc(s.ticker) + " · " + esc(s.market) + "</span></h3>" +
-      '<span class="badge"><span class="dot" style="background:' + tm.color + '"></span>' + tm.label + "</span></div>" +
+      '<span class="badges">' + themeBadge + warnBadge +
+      '<span class="badge"><span class="dot" style="background:' + tm.color + '"></span>' + tm.label + "</span></span></div>" +
       '<div class="prices">' +
-        '<div class="pv"><div class="k">현재가 (' + esc(s.priceDate || D.generatedAt) + ')</div><div class="v">' + fmtPrice(s.price, country) + "</div></div>" +
+        '<div class="pv"><div class="k">현재가 (' + esc(s.priceDate || D.generatedAt) + ')' + staleTag + '</div><div class="v">' + fmtPrice(s.price, country) + "</div></div>" +
         '<div class="pv"><div class="k">목표가 (컨센서스)</div><div class="v">' + fmtPrice(s.targetPrice, country) + "</div></div>" +
         '<div class="pv"><div class="k">배당수익률</div><div class="v">' + (s.dividendYield == null ? "–" : Number(s.dividendYield).toFixed(1) + "%") + "</div></div>" +
       "</div>" +
@@ -334,17 +436,105 @@ footer.site {
     }).join("");
   }
 
+  function sortList(list) {
+    var s = state.sort;
+    return list.slice().sort(function (a, b) {
+      if (s === "div")   return (b.dividendYield || -1) - (a.dividendYield || -1);
+      if (s === "fresh") return new Date(b.priceDate || 0) - new Date(a.priceDate || 0);
+      if (s === "tier")  return (a.tier - b.tier) || ((b.upside || -999) - (a.upside || -999));
+      return (b.upside || -999) - (a.upside || -999); // upside
+    });
+  }
+
+  function renderTopPicks() {
+    var box = document.getElementById("picksBox");
+    var seen = {}, picks = [];
+    sortList((D[state.country] || []).filter(function (s) {
+      return s.tier === 1 && s.upside != null && s.upside > 0;
+    }).sort(function (a, b) { return b.upside - a.upside; })).forEach(function (s) {
+      if (seen[s.ticker]) return;
+      seen[s.ticker] = true; picks.push(s);
+    });
+    picks.sort(function (a, b) { return b.upside - a.upside; });
+    picks = picks.slice(0, 3);
+    if (!picks.length) { box.style.display = "none"; return; }
+    box.style.display = "";
+    document.getElementById("picksGrid").innerHTML = picks.map(function (s, i) {
+      var thm = themeMeta(s.theme);
+      return '<div class="pick"><span class="rank">' + ["🥇", "🥈", "🥉"][i] + "</span>" +
+        '<span class="thm">' + (thm.emoji ? esc(thm.emoji) + " " : "") + esc(thm.label) + " · Tier 1</span>" +
+        '<div class="nm">' + esc(s.name) + '<span class="tk">' + esc(s.ticker) + "</span></div>" +
+        '<div class="up-big">+' + Number(s.upside).toFixed(1) + "%</div>" +
+        '<div class="sub">' + fmtPrice(s.price, state.country) + " → 목표 " + fmtPrice(s.targetPrice, state.country) +
+        (s.dividendYield ? " · 배당 " + Number(s.dividendYield).toFixed(1) + "%" : "") + "</div></div>";
+    }).join("");
+  }
+
+  function tableView(list, showTheme) {
+    var rows = list.map(function (s) {
+      var upCls = s.upside == null ? "" : s.upside >= 0 ? "up" : "down";
+      var sd = staleDays(s);
+      var thm = themeMeta(s.theme);
+      var tm = tierMeta(s.tier);
+      return "<tr>" +
+        '<td><span class="nm">' + esc(s.name) + '</span><br><span class="tk">' + esc(s.ticker) + " · " + esc(s.market) + "</span></td>" +
+        (showTheme ? "<td>" + (thm.emoji ? esc(thm.emoji) + " " : "") + esc(thm.label) + "</td>" : "") +
+        '<td><span class="mini-dot" style="background:' + tm.color + '"></span>' + s.tier + "</td>" +
+        '<td class="num">' + fmtPrice(s.price, state.country) + "</td>" +
+        '<td class="num">' + esc(s.priceDate || "") + (sd >= 7 ? ' <span class="stale">⏳</span>' : "") + "</td>" +
+        '<td class="num">' + fmtPrice(s.targetPrice, state.country) + "</td>" +
+        '<td class="num ' + upCls + '">' + fmtPct(s.upside) + "</td>" +
+        '<td class="num">' + (s.dividendYield == null ? "–" : Number(s.dividendYield).toFixed(1) + "%") + "</td>" +
+        '<td><a href="' + esc(s.chartUrl) + '" target="_blank" rel="noopener">차트</a></td></tr>';
+    }).join("");
+    return '<div class="tbl-wrap"><table class="tbl"><thead><tr>' +
+      "<th>종목</th>" + (showTheme ? "<th>주제</th>" : "") + "<th>Tier</th><th class=\"num\">현재가</th>" +
+      '<th class="num">기준일</th><th class="num">목표가</th><th class="num">상승여력</th><th class="num">배당</th><th>링크</th>' +
+      "</tr></thead><tbody>" + rows + "</tbody></table></div>";
+  }
+
   function render() {
+    var host = document.getElementById("cards");
+    var descEl = document.getElementById("themeDesc");
+    var searching = state.q.trim().length > 0;
+    var list;
+
+    if (searching) {
+      var q = state.q.trim().toLowerCase();
+      list = (D[state.country] || []).filter(function (s) {
+        return s.name.toLowerCase().indexOf(q) >= 0 || String(s.ticker).toLowerCase().indexOf(q) >= 0;
+      });
+      descEl.innerHTML = "<strong>🔍 검색</strong> — \"" + esc(state.q) + "\" 결과 " + list.length + "건 (전체 주제에서 검색)";
+      list = sortList(list);
+      host.innerHTML = list.length
+        ? (state.view === "table" ? tableView(list, true)
+           : '<div class="grid">' + list.map(function (s) { return card(s, state.country, true); }).join("") + "</div>")
+        : '<div class="empty">검색 결과가 없습니다.</div>';
+      return;
+    }
+
     var tmeta = themeMeta(state.theme);
-    document.getElementById("themeDesc").innerHTML =
+    descEl.innerHTML =
       "<strong>" + (tmeta.emoji ? esc(tmeta.emoji) + " " : "") + esc(tmeta.label) + "</strong> — " + esc(tmeta.desc || "");
 
-    var list = (D[state.country] || []).filter(function (s) { return s.theme === state.theme; });
-    var host = document.getElementById("cards");
+    list = (D[state.country] || []).filter(function (s) { return s.theme === state.theme; });
     if (!list.length) {
       host.innerHTML = '<div class="empty">해당 주제의 종목이 아직 없습니다.</div>';
       return;
     }
+
+    if (state.view === "table") {
+      host.innerHTML = tableView(sortList(list), false);
+      return;
+    }
+
+    if (state.sort !== "tier") {
+      // 티어 그룹 없이 선택한 기준으로 평면 정렬
+      host.innerHTML = '<div class="grid">' +
+        sortList(list).map(function (s) { return card(s, state.country); }).join("") + "</div>";
+      return;
+    }
+
     var html = "";
     [1, 2, 3].forEach(function (t) {
       var group = list.filter(function (s) { return s.tier === t; })
@@ -363,11 +553,27 @@ footer.site {
     var b = e.target.closest("button"); if (!b) return;
     state.country = b.dataset.c;
     this.querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x === b); });
+    renderTopPicks();
     render();
   });
   document.getElementById("themeChips").addEventListener("click", function (e) {
     var b = e.target.closest("button"); if (!b) return;
     state.theme = b.dataset.theme;
+    state.q = ""; document.getElementById("q").value = "";
+    this.querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x === b); });
+    render();
+  });
+  document.getElementById("q").addEventListener("input", function () {
+    state.q = this.value;
+    render();
+  });
+  document.getElementById("sortSel").addEventListener("change", function () {
+    state.sort = this.value;
+    render();
+  });
+  document.getElementById("viewSeg").addEventListener("click", function (e) {
+    var b = e.target.closest("button"); if (!b) return;
+    state.view = b.dataset.v;
     this.querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x === b); });
     render();
   });
@@ -419,6 +625,7 @@ footer.site {
   renderLiquidity();
   renderTiles();
   renderThemeChips();
+  renderTopPicks();
   render();
 })();
 </script>
