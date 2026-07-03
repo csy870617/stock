@@ -147,6 +147,30 @@ header.site h1 { font-size: 1.45rem; font-weight: 700; }
 .section-title { font-size: 1.1rem; font-weight: 700; margin: 26px 0 12px; }
 .empty { color: var(--muted); padding: 40px 0; text-align: center; }
 
+/* ── 유동성 게이지 ── */
+.liq {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+  padding: 16px 18px; margin-bottom: 18px;
+}
+.liq .liq-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+.liq .liq-head h2 { font-size: 1.02rem; font-weight: 700; }
+.liq .liq-as { color: var(--muted); font-size: 0.78rem; }
+.liq .liq-headline { font-size: 0.95rem; color: var(--ink); margin-bottom: 14px; }
+.liq-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 620px) { .liq-grid { grid-template-columns: 1fr; } }
+.liq-col { border: 1px solid var(--border); border-radius: 12px; padding: 12px 14px; }
+.liq-col h3 { font-size: 0.92rem; font-weight: 700; margin-bottom: 10px; }
+.liq-term { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.liq-term .lbl { color: var(--muted); font-size: 0.78rem; min-width: 68px; }
+.gauge { display: flex; gap: 3px; flex: 1; }
+.gauge .seg5 { flex: 1; height: 8px; border-radius: 3px; background: var(--meter-track); }
+.liq-term .rank { font-size: 0.82rem; font-weight: 700; min-width: 64px; text-align: right; }
+.liq-drivers { margin: 8px 0 0; padding-left: 16px; }
+.liq-drivers li { font-size: 0.82rem; color: var(--ink-2); margin-bottom: 3px; }
+.liq-foot { color: var(--muted); font-size: 0.78rem; margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.liq-foot .nc { color: var(--ink-2); }
+.liq-foot a { color: var(--muted); }
+
 footer.site {
   margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--grid);
   color: var(--muted); font-size: 0.8rem;
@@ -164,6 +188,16 @@ footer.site {
   </header>
 
   <div class="market-note" id="marketNote"></div>
+
+  <div class="liq" id="liqBox" style="display:none">
+    <div class="liq-head">
+      <h2>🌊 거시 유동성 — 지금 주식 사도 될까?</h2>
+      <span class="liq-as" id="liqAs"></span>
+    </div>
+    <div class="liq-headline" id="liqHeadline"></div>
+    <div class="liq-grid" id="liqGrid"></div>
+    <div class="liq-foot" id="liqFoot"></div>
+  </div>
 
   <div class="tiles" id="tiles"></div>
 
@@ -188,10 +222,12 @@ footer.site {
   </footer>
 </div>
 
+<script src="data/liquidity.js"></script>
 <script src="data/recommendations.js"></script>
 <script>
 (function () {
   var D = window.STOCK_DATA;
+  var L = window.LIQUIDITY_DATA;
   var state = { country: "korea", tier: "all" };
 
   var root = document.documentElement;
@@ -306,6 +342,51 @@ footer.site {
     render();
   });
 
+  function renderLiquidity() {
+    var box = document.getElementById("liqBox");
+    if (!L || (L.us && L.us.shortTerm == null && L.korea && L.korea.shortTerm == null)) return;
+    box.style.display = "";
+
+    var RANKS = ["매우 부정", "부정", "신중", "우호", "매우 우호"];
+    var RANK_COLORS = ["var(--down)", "#eb6834", "var(--tier3)", "var(--tier2)", "var(--up)"];
+
+    function gauge(rank) {
+      var idx = RANKS.indexOf(rank);
+      var cells = RANKS.map(function (_, i) {
+        var on = idx >= 0 && i <= idx;
+        return '<div class="seg5"' + (on ? ' style="background:' + RANK_COLORS[idx] + '"' : "") + "></div>";
+      }).join("");
+      return '<div class="gauge">' + cells + "</div>";
+    }
+    function termRow(label, rank) {
+      var idx = RANKS.indexOf(rank);
+      var color = idx >= 0 ? RANK_COLORS[idx] : "var(--muted)";
+      return '<div class="liq-term"><span class="lbl">' + label + "</span>" +
+             gauge(rank) +
+             '<span class="rank" style="color:' + color + '">' + esc(rank || "–") + "</span></div>";
+    }
+    function col(flag, title, c) {
+      if (!c) return "";
+      var drivers = (c.drivers || []).map(function (d) { return "<li>" + esc(d) + "</li>"; }).join("");
+      return '<div class="liq-col"><h3>' + flag + " " + title + "</h3>" +
+             termRow("단기 1–3M", c.shortTerm) +
+             termRow("중기 6–12M", c.midTerm) +
+             (drivers ? '<ul class="liq-drivers">' + drivers + "</ul>" : "") +
+             "</div>";
+    }
+
+    document.getElementById("liqAs").textContent = "기준일 " + esc(L.asOf);
+    document.getElementById("liqHeadline").innerHTML = "<strong>" + esc(L.headline) + "</strong>";
+    document.getElementById("liqGrid").innerHTML =
+      col("🇺🇸", "미국", L.us) + col("🇰🇷", "한국", L.korea);
+    var srcs = (L.sources || []).slice(0, 3).map(function (u, i) {
+      return '<a href="' + esc(u) + '" target="_blank" rel="noopener">출처' + (i + 1) + "</a>";
+    }).join(" ");
+    document.getElementById("liqFoot").innerHTML =
+      (L.nextCheck ? '<span class="nc">🔔 다음 체크 — ' + esc(L.nextCheck) + "</span> " : "") + srcs;
+  }
+
+  renderLiquidity();
   renderTiles();
   render();
 })();
