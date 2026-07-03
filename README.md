@@ -8,9 +8,15 @@
 
 ## 페이지 보는 법
 
-### GitHub Pages (권장)
-저장소 **Settings → Pages → Branch** 를 배포 브랜치로 지정하면
-`https://<계정>.github.io/stock/` 에서 바로 볼 수 있습니다.
+### GitHub Pages 자동 배포 (권장)
+`.github/workflows/deploy-pages.yml` 워크플로우가 이 브랜치에 푸시될 때마다
+(주간 자동 갱신 포함) 자동으로 GitHub Pages에 배포합니다.
+배포되면 `https://<계정>.github.io/stock/` 에서 볼 수 있습니다.
+
+> **최초 1회 설정** — 저장소 **Settings → Pages → Build and deployment → Source**
+> 를 **`GitHub Actions`** 로 지정하세요. 그 뒤부터는 푸시할 때마다 자동 배포됩니다.
+> (배포 브랜치가 기본 브랜치가 아니어서 `github-pages` 환경의 배포 브랜치 정책에
+> 막히면, Settings → Environments → github-pages 에서 이 브랜치를 허용해 주세요.)
 
 ### 로컬
 `index.html` 을 브라우저로 열면 됩니다 (서버 불필요).
