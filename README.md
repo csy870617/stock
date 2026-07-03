@@ -1,9 +1,10 @@
 # 📈 주식 분석 · 종목 추천 페이지
 
-`stock-recommender` 스킬(claude.ai)의 분석 결과를 웹페이지로 보여주는 저장소입니다.
+`stock-recommender` · `macro-liquidity-monitor` 스킬(claude.ai)의 분석 결과를 웹페이지로 보여주는 저장소입니다.
 
-- **`index.html`** — 추천 종목 대시보드 (한국/미국 탭, Tier 1·2·3 필터, 목표가·상승여력·배당·리스크·네이버 차트 링크)
-- **`data/recommendations.js`** — 페이지가 읽는 추천 데이터 (스킬 분석 결과)
+- **`index.html`** — 대시보드 (거시 유동성 게이지 + 한국/미국 탭, Tier 1·2·3 필터, 목표가·상승여력·배당·리스크·네이버 차트 링크)
+- **`data/recommendations.js`** — 종목 추천 데이터 (`stock-recommender` 스킬 결과)
+- **`data/liquidity.js`** — 거시 유동성 데이터 (`macro-liquidity-monitor` 스킬 결과, 없으면 게이지 섹션 자동 숨김)
 
 ## 페이지 보는 법
 
@@ -64,6 +65,27 @@ window.STOCK_DATA = {
 | `tier` | 1 핵심 / 2 성장·균형 / 3 저평가·기회 |
 | `chartUrl` | 네이버 차트 링크 |
 | `sources` | 근거 출처 URL (최대 3개) |
+
+`data/liquidity.js` 는 `window.LIQUIDITY_DATA` 를 정의합니다:
+
+```js
+window.LIQUIDITY_DATA = {
+  asOf: "2026-07-03",
+  headline: "미국·한국 종합 한 줄 결론",
+  us:    { shortTerm: "우호", midTerm: "신중", drivers: ["근거…"] },
+  korea: { shortTerm: "신중", midTerm: "신중", drivers: ["근거…"] },
+  nextCheck: "다음 체크 이벤트",
+  sources: ["url…"]
+};
+```
+
+게이지 단계는 `"매우 우호" / "우호" / "신중" / "부정" / "매우 부정"` 다섯 중 하나입니다.
+
+## 자동 갱신
+
+이 저장소에는 Claude Code Remote **트리거**가 걸려 있어(설정 시) 매주 새 세션이
+자동으로 최신 주가·컨센서스·유동성을 다시 조사해 `data/*.js` 를 갱신하고 푸시합니다.
+트리거 관리(주기 변경·중지)는 Claude Code 세션에서 요청하면 됩니다.
 
 ## 투자 유의
 
