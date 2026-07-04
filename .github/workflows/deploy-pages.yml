@@ -12,17 +12,17 @@ permissions:
   pages: write
   id-token: write
 
-# 동시에 여러 배포가 겹치지 않도록 하되, 진행 중인 배포는 취소하지 않는다.
+# 여러 푸시가 몰릴 때 진행 중인 배포를 취소하고 최신 것만 배포한다.
+# (같은 run 을 재시도하면 아티팩트가 누적돼 "Multiple artifacts" 오류가 나므로,
+#  재시도 대신 항상 새 커밋/새 run 으로 배포하는 것을 전제로 한다.)
 concurrency:
   group: pages
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
-  deploy:
+  # 빌드(아티팩트 업로드)와 배포를 분리 — GitHub 공식 권장 패턴.
+  build:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -36,6 +36,16 @@ jobs:
           # 정적 파일이 저장소 루트에 있으므로 루트 전체를 업로드한다.
           path: '.'
 
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
