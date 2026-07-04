@@ -440,31 +440,47 @@ footer.site {
     return s.ticker === "BRK.B" ? "BRK-B" : s.ticker;   // 미국(NASDAQ/NYSE)
   }
 
-  function fetchYahoo(host, sym) {
-    var url = "https://" + host + "/v8/finance/chart/" + encodeURIComponent(sym) + "?interval=1d&range=1d";
+  function yahooUrl(sym) {
+    return "https://query1.finance.yahoo.com/v8/finance/chart/" + encodeURIComponent(sym) + "?interval=1d&range=1d";
+  }
+  // 소스 순서: 야후 직접 → 야후 직접(미러) → CORS 프록시 2종.
+  // 야후가 브라우저 CORS 를 막으면 프록시가 CORS 헤더를 붙여 응답을 읽을 수 있게 해준다.
+  function liveSources(sym) {
+    var y = yahooUrl(sym);
+    var y2 = "https://query2.finance.yahoo.com/v8/finance/chart/" + encodeURIComponent(sym) + "?interval=1d&range=1d";
+    return [
+      y,
+      y2,
+      "https://api.allorigins.win/raw?url=" + encodeURIComponent(y),
+      "https://corsproxy.io/?url=" + encodeURIComponent(y)
+    ];
+  }
+  function parseChart(j) {
+    var m = j && j.chart && j.chart.result && j.chart.result[0] && j.chart.result[0].meta;
+    if (!m || typeof m.regularMarketPrice !== "number" || !isFinite(m.regularMarketPrice)) return null;
+    var date = null;
+    if (m.regularMarketTime) {
+      var off = (m.gmtoffset || 0) * 1000;
+      date = new Date(m.regularMarketTime * 1000 + off).toISOString().slice(0, 10);
+    }
+    return { price: m.regularMarketPrice, date: date };
+  }
+  function tryUrl(url) {
     var ctrl = new AbortController();
     var to = setTimeout(function () { ctrl.abort(); }, 8000);
     return fetch(url, { signal: ctrl.signal, cache: "no-store", referrerPolicy: "no-referrer" })
       .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (j) {
-        clearTimeout(to);
-        var m = j && j.chart && j.chart.result && j.chart.result[0] && j.chart.result[0].meta;
-        if (!m || typeof m.regularMarketPrice !== "number" || !isFinite(m.regularMarketPrice)) return null;
-        var date = null;
-        if (m.regularMarketTime) {
-          var off = (m.gmtoffset || 0) * 1000;
-          date = new Date(m.regularMarketTime * 1000 + off).toISOString().slice(0, 10);
-        }
-        return { price: m.regularMarketPrice, date: date };
-      })
+      .then(function (j) { clearTimeout(to); return j ? parseChart(j) : null; })
       .catch(function () { clearTimeout(to); return null; });
   }
-
   function fetchOne(s) {
-    var sym = symbolFor(s);
-    return fetchYahoo("query1.finance.yahoo.com", sym).then(function (res) {
-      return res || fetchYahoo("query2.finance.yahoo.com", sym);   // 예비 미러
-    });
+    var srcs = liveSources(symbolFor(s));
+    var i = 0;
+    function step() {
+      if (i >= srcs.length) return Promise.resolve(null);
+      return tryUrl(srcs[i++]).then(function (res) { return res || step(); });
+    }
+    return step();
   }
 
   // 보이는 종목들의 실시간 가격을 (미조회분만) 동시 8개 제한으로 가져온 뒤, 하나라도 성공하면 onDone 호출
