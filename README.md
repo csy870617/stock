@@ -122,6 +122,35 @@ window.LIQUIDITY_DATA = {
   - **Tier 1 vs 2 vs 3 평균 수익률** — 확신 등급(티어 배정)이 실제로 유효한지 검증
 - 수동 스냅샷: `node scripts/snapshot.js --kospi <종가> --sp500 <종가>`
 
+## 실시간 시세 백엔드 (선택 — Cloudflare Worker)
+
+페이지를 열 때 **현재가를 실시간으로** 보여주는 기능입니다. 브라우저에서 Yahoo 를 직접 부르면
+CORS 로 막히므로, **본인 전용 Cloudflare Worker**(무료)를 프록시로 두어 안정적으로 받아옵니다.
+
+구조: `페이지 → 내 Worker → Yahoo Finance` (Worker가 CORS 헤더를 붙여 돌려줌)
+
+### 배포 (한 번만)
+
+1. **Worker 만들기** — [dash.cloudflare.com](https://dash.cloudflare.com) → **Workers & Pages** →
+   **Create application** → **Create Worker** → 이름 예: `stock-quotes` → **Deploy**.
+2. **코드 넣기** — 방금 만든 Worker의 **Edit code** 에서 기본 코드를 지우고
+   `worker/quotes-worker.js` 내용을 **전부 붙여넣기** → **Deploy**.
+   - (또는 CLI: `npm i -g wrangler` 후 `wrangler deploy worker/quotes-worker.js --name stock-quotes`)
+3. **주소 확인** — 배포되면 `https://stock-quotes.<계정>.workers.dev` 같은 주소가 나옵니다.
+   브라우저로 `…workers.dev/?symbols=005930.KS,AAPL` 를 열어 JSON 이 나오면 정상.
+4. **페이지에 연결** — `data/config.js` 의 `quotesApi` 에 그 주소를 넣고 커밋·푸시:
+   ```js
+   window.APP_CONFIG = { quotesApi: "https://stock-quotes.<계정>.workers.dev" };
+   ```
+5. 배포 후 페이지를 새로고침하면 카드·표의 현재가 옆에 **🟢 실시간** 이 뜹니다.
+
+### 동작·비용
+
+- **배치 조회**: 보이는 종목(≈9개)을 한 번의 요청으로 가져오고, 60초 엣지 캐시로 야후 부하를 줄입니다.
+- **무료 티어**: Cloudflare Worker 무료 한도는 하루 10만 요청 — 개인 사용엔 넉넉합니다.
+- **폴백**: `quotesApi` 가 비어 있거나 조회가 실패하면 조용히 **매일 갱신된 종가(스냅샷)** 를 표시합니다.
+- 티커 매핑은 페이지가 자동 처리합니다(한국 `코드.KS`, 미국 심볼 그대로, `BRK.B`→`BRK-B`).
+
 ## 데이터 정확성
 
 데이터의 정확성이 최우선입니다. 자동 갱신 작업에는 다음 정확성 규칙이 포함돼 있습니다.

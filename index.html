@@ -335,11 +335,12 @@ footer.site {
 
   <footer class="site">
     <p id="disclaimer"></p>
-    <p style="margin-top:6px;">🟢 실시간 표시는 페이지를 열 때 브라우저가 Yahoo Finance에서 직접 받아온 현재가입니다 (조회 실패 시 최근 종가로 표시). ⏳ 표시는 종가 기준일이 분석일보다 7일 이상 오래된 종목, 🎯 표시는 현재가가 컨센서스 목표가에 도달·초과한 종목입니다.</p>
+    <p style="margin-top:6px;">🟢 실시간 표시는 페이지를 열 때 전용 시세 서버(Cloudflare Worker)를 통해 받아온 현재가입니다 (미설정·조회 실패 시 최근 종가로 표시). ⏳ 표시는 종가 기준일이 분석일보다 7일 이상 오래된 종목, 🎯 표시는 현재가가 컨센서스 목표가에 도달·초과한 종목입니다.</p>
     <p style="margin-top:6px;">데이터는 stock-recommender·macro-liquidity-monitor 스킬 분석 결과이며, 매일 오전 6시(LA) 자동 갱신됩니다. 갱신 방법은 저장소 README를 참고하세요.</p>
   </footer>
 </div>
 
+<script src="data/config.js"></script>
 <script src="data/liquidity.js"></script>
 <script src="data/recommendations.js"></script>
 <script src="data/history.js"></script>
@@ -427,12 +428,14 @@ footer.site {
     return isNaN(d) ? 0 : Math.round(d);
   }
 
-  // ── 실시간 가격 레이어 (사용자 브라우저에서 Yahoo Finance 직접 조회) ──
-  // 성공하면 현재가·상승여력을 실시간 값으로 덮어쓰고 "실시간" 배지 표시.
-  // 실패(CORS·네트워크·레이트리밋)하면 조용히 스냅샷(기존 종가)으로 폴백 — 페이지는 정상 동작.
-  var liveCache = {};     // ticker → {price, date} | null(조회 실패, 재시도 안 함) | undefined(미조회)
+  // ── 실시간 가격 레이어 (전용 Cloudflare Worker 경유 Yahoo 시세) ──
+  // data/config.js 의 quotesApi(사용자 Worker 주소)로 배치 조회한다. Worker가 서버에서 야후를
+  // 받아 CORS 헤더를 붙여 돌려주므로 브라우저 CORS 문제가 없다.
+  // quotesApi 미설정이거나 조회 실패 시 조용히 스냅샷(기존 종가)으로 폴백 — 페이지는 정상 동작.
+  var QUOTES_API = ((window.APP_CONFIG && window.APP_CONFIG.quotesApi) || "").replace(/\/+$/, "");
+  var liveCache = {};     // ticker → {price, date} | null(응답에 없음) | undefined(미조회)
   var liveInflight = {};
-  var liveSupported = typeof window.fetch === "function" && typeof AbortController === "function";
+  var liveSupported = typeof window.fetch === "function" && typeof AbortController === "function" && !!QUOTES_API;
 
   function symbolFor(s) {
     if (s.market === "KOSPI") return s.ticker + ".KS";
@@ -440,54 +443,10 @@ footer.site {
     return s.ticker === "BRK.B" ? "BRK-B" : s.ticker;   // 미국(NASDAQ/NYSE)
   }
 
-  function yahooUrl(sym) {
-    return "https://query1.finance.yahoo.com/v8/finance/chart/" + encodeURIComponent(sym) + "?interval=1d&range=1d";
-  }
-  // 소스 순서: 야후 직접 → 야후 직접(미러) → CORS 프록시 2종.
-  // 야후가 브라우저 CORS 를 막으면 프록시가 CORS 헤더를 붙여 응답을 읽을 수 있게 해준다.
-  function liveSources(sym) {
-    var y = yahooUrl(sym);
-    var y2 = "https://query2.finance.yahoo.com/v8/finance/chart/" + encodeURIComponent(sym) + "?interval=1d&range=1d";
-    return [
-      y,
-      y2,
-      "https://api.allorigins.win/raw?url=" + encodeURIComponent(y),
-      "https://corsproxy.io/?url=" + encodeURIComponent(y)
-    ];
-  }
-  function parseChart(j) {
-    var m = j && j.chart && j.chart.result && j.chart.result[0] && j.chart.result[0].meta;
-    if (!m || typeof m.regularMarketPrice !== "number" || !isFinite(m.regularMarketPrice)) return null;
-    var date = null;
-    if (m.regularMarketTime) {
-      var off = (m.gmtoffset || 0) * 1000;
-      date = new Date(m.regularMarketTime * 1000 + off).toISOString().slice(0, 10);
-    }
-    return { price: m.regularMarketPrice, date: date };
-  }
-  function tryUrl(url) {
-    var ctrl = new AbortController();
-    var to = setTimeout(function () { ctrl.abort(); }, 8000);
-    return fetch(url, { signal: ctrl.signal, cache: "no-store", referrerPolicy: "no-referrer" })
-      .then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (j) { clearTimeout(to); return j ? parseChart(j) : null; })
-      .catch(function () { clearTimeout(to); return null; });
-  }
-  function fetchOne(s) {
-    var srcs = liveSources(symbolFor(s));
-    var i = 0;
-    function step() {
-      if (i >= srcs.length) return Promise.resolve(null);
-      return tryUrl(srcs[i++]).then(function (res) { return res || step(); });
-    }
-    return step();
-  }
-
-  // 보이는 종목들의 실시간 가격을 (미조회분만) 동시 8개 제한으로 가져온 뒤, 하나라도 성공하면 onDone 호출
+  // 보이는 종목들의 실시간 가격을 (미조회분만) 한 번의 배치 요청으로 가져온 뒤, 하나라도 성공하면 onDone 호출
   function ensureLive(stocks, onDone) {
     if (!liveSupported) return;
-    var todo = [];
-    var seen = {};
+    var todo = [], seen = {};
     stocks.forEach(function (s) {
       if (!s || seen[s.ticker]) return;
       seen[s.ticker] = 1;
@@ -495,19 +454,28 @@ footer.site {
     });
     if (!todo.length) return;
     todo.forEach(function (s) { liveInflight[s.ticker] = 1; });
-    var CONC = 8, idx = 0, done = 0, any = false;
-    function next() {
-      if (idx >= todo.length) return;
-      var s = todo[idx++];
-      fetchOne(s).then(function (res) {
-        liveCache[s.ticker] = res || null;
-        delete liveInflight[s.ticker];
-        if (res) any = true;
-        if (++done === todo.length) { if (any && onDone) onDone(); }
-        else next();
+    var symbols = todo.map(symbolFor);
+    var url = QUOTES_API + (QUOTES_API.indexOf("?") >= 0 ? "&" : "?") + "symbols=" + encodeURIComponent(symbols.join(","));
+    var ctrl = new AbortController();
+    var to = setTimeout(function () { ctrl.abort(); }, 9000);
+    fetch(url, { signal: ctrl.signal, cache: "no-store" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (map) {
+        clearTimeout(to);
+        var any = false;
+        todo.forEach(function (s) {
+          var v = map && map[symbolFor(s)];
+          if (v && typeof v.price === "number" && isFinite(v.price)) { liveCache[s.ticker] = { price: v.price, date: v.date }; any = true; }
+          else { liveCache[s.ticker] = null; }   // 응답에 없으면 스냅샷 유지
+          delete liveInflight[s.ticker];
+        });
+        if (any && onDone) onDone();
+      })
+      .catch(function () {
+        clearTimeout(to);
+        // 네트워크/워커 오류 → 다음 렌더에서 재시도할 수 있도록 미조회 상태로 되돌림
+        todo.forEach(function (s) { delete liveInflight[s.ticker]; });
       });
-    }
-    for (var i = 0; i < Math.min(CONC, todo.length); i++) next();
   }
 
   // 종목의 "표시용" 현재가·상승여력 — 실시간 값이 있으면 그것으로, 없으면 스냅샷으로
