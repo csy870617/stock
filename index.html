@@ -4,6 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>주식 분석 · 종목 추천</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#0d0d0d">
+<link rel="icon" type="image/png" sizes="48x48" href="icons/favicon-48.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="MY STOCK">
 <style>
 :root {
   --page:            #f9f9f7;
@@ -740,6 +747,11 @@ footer.site {
   renderThemeChips();
   renderTopPicks();
   render();
+
+  // PWA 서비스워커 등록 (http/https에서만 — file:// 로 열면 건너뜀)
+  if ("serviceWorker" in navigator && location.protocol.indexOf("http") === 0) {
+    navigator.serviceWorker.register("sw.js").catch(function () {});
+  }
 })();
 </script>
 </body>
