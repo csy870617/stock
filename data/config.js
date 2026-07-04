@@ -6,5 +6,5 @@
 //
 // 비워두면("") 실시간 조회를 하지 않고 매일 갱신된 종가(스냅샷)를 표시한다.
 window.APP_CONFIG = {
-  quotesApi: ""
+  quotesApi: "https://saeyoungchoi--e4db647c77b211f1a6f81607ee4eb77e.web.val.run"
 };
