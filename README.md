@@ -131,17 +131,45 @@ window.LIQUIDITY_DATA = {
 - 기억/직전 값 대비 배수로 어긋나면 **액면분할 여부 확인**
 - 확인 못 한 값은 추측하지 않고 기존 값·기준일 유지 (커밋 메시지에 명시)
 
-### 실행 환경의 제약과 개선 방법
+### 정확한 시세: Yahoo Finance API 직접 호출
 
-이 환경의 **네트워크 정책**상 Yahoo·Google Finance·KRX 등 금융 사이트/ API에 대한 직접 접근이
-차단되어, 현재 시세는 **검색(WebSearch) 결과**를 통해 확보합니다. 이 때문에 실시간이 아닌
-**직전 거래일 종가** 수준의 정확도이며, 특히 국내 사이트 접근 제한으로 일부 한국 종목은
-기준일이 며칠 전일 수 있습니다.
+`scripts/update_prices.js` 가 **Yahoo Finance API(v8 chart)** 를 직접 호출해 전 종목의
+`price · priceDate · upside` 를 최신 종가로 갱신하고, KOSPI(`^KS11`)·S&P 500(`^GSPC`)
+지수 종가도 조회합니다. (targetPrice·논거·구조는 그대로 두고 숫자만 라인 단위로 안전 교체.)
 
-**더 높은(실시간) 정확도가 필요하면** 환경의 네트워크 정책을 넓혀
-금융 데이터 API 호스트(예: `query1.finance.yahoo.com`)를 허용하면 됩니다. 그러면 자동 갱신이
-검색 대신 API에서 정확한 시세를 직접 받아오도록 개선할 수 있습니다. 네트워크 정책 설정은
-[Claude Code on the web 문서](https://code.claude.com/docs/en/claude-code-on-the-web)를 참고하세요.
+```bash
+node scripts/update_prices.js
+```
+
+- 성공하면 종목별로 **거래소 기준 실제 거래일**의 종가가 반영됩니다.
+- 조회 실패(호스트 미허용 등) 종목은 **기존 값을 그대로 유지**하고 실패로 집계 — 데이터가 오염되지 않습니다.
+- 티커 매핑: 한국 `종목코드.KS`(예 `005930.KS`), 미국은 심볼 그대로(단 `BRK.B`→`BRK-B`).
+
+#### 네트워크 정책에서 Yahoo 호스트 허용하기 (필수)
+
+이 스크립트가 실제로 시세를 받아오려면 **환경의 네트워크 정책(egress 허용 도메인)** 에
+다음 호스트를 추가해야 합니다. 허용 전에는 스크립트가 안전하게 무동작합니다.
+
+```
+query1.finance.yahoo.com
+query2.finance.yahoo.com
+```
+
+설정 위치 — [Claude Code on the web](https://claude.ai/code) 에서 이 프로젝트가 쓰는
+**환경(Environment)** 을 열고 → **네트워크/Egress 설정** 에서 위 도메인을 허용 목록에 추가
+(또는 해당 도메인을 포함하는 정책 선택). 자세한 내용은
+[Claude Code on the web 문서](https://code.claude.com/docs/en/claude-code-on-the-web) 의
+네트워크 접근(network access) 항목을 참고하세요.
+
+> 참고: Yahoo v8 chart 는 **현재가·거래일** 조회용입니다. 애널리스트 **목표주가 컨센서스**는
+> Yahoo 가 인증(crumb)을 요구해 불안정하므로, 목표가는 기존 분석값을 유지하고 필요 시
+> 검색으로 보완합니다. 상승여력은 항상 (목표가 − 최신 현재가) 기준으로 재계산됩니다.
+
+#### 호스트를 허용하지 않은 경우 (폴백)
+
+호스트가 막혀 있으면 자동 갱신은 **검색(WebSearch)** 으로 시세를 확보합니다. 이 경우
+실시간이 아닌 **직전 거래일 종가** 수준이고, 특히 한국 종목은 국내 사이트 접근 제한으로
+기준일이 며칠 전일 수 있으며 카드에 `⏳` 로 표시됩니다.
 
 ## 투자 유의
 
