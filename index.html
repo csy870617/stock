@@ -22,6 +22,8 @@
   --meter-lo:        #86b6ef;
   --meter-hi:        #1c5cab;
   --chip-bg:         #f0efec;
+  --kr-up:           #d03b3b;   /* 한국식 등락색: 상승 빨강 */
+  --kr-down:         #1c5cab;   /* 하락 파랑 */
 }
 :root[data-theme="dark"] {
   --page:            #0d0d0d;
@@ -40,6 +42,8 @@
   --meter-lo:        #86b6ef;
   --meter-hi:        #3987e5;
   --chip-bg:         #2c2c2a;
+  --kr-up:           #e66767;
+  --kr-down:         #5598e7;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -59,6 +63,8 @@
     --meter-lo:        #86b6ef;
     --meter-hi:        #3987e5;
     --chip-bg:         #2c2c2a;
+    --kr-up:           #e66767;
+    --kr-down:         #5598e7;
   }
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -214,6 +220,8 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 0.86rem; min-widt
 .tbl .tk { color: var(--muted); font-size: 0.75rem; }
 .tbl .up { color: var(--up); font-weight: 700; }
 .tbl .down { color: var(--down); font-weight: 700; }
+.tbl .kr-up { color: var(--kr-up); font-weight: 700; }
+.tbl .kr-down { color: var(--kr-down); font-weight: 700; }
 .tbl a { color: var(--tier1); text-decoration: none; }
 .tbl .mini-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; }
 
@@ -563,13 +571,20 @@ footer.site {
       var thm = themeMeta(r.theme); var tm = tierMeta(r.tier);
       var retCls = r.ret == null ? "" : r.ret >= 0 ? "up" : "down";
       var alCls = r.alpha == null ? "" : r.alpha >= 0 ? "up" : "down";
+      // 최신 가격: 한국식 등락색 — 기록시 가격 대비 상승 빨강(▲) / 하락 파랑(▼)
+      var pxCls = "", pxArrow = "";
+      if (r.basePrice != null && r.lastPrice != null && r.lastPrice !== r.basePrice) {
+        var priceUp = r.lastPrice > r.basePrice;
+        pxCls = priceUp ? " kr-up" : " kr-down";
+        pxArrow = priceUp ? "▲ " : "▼ ";
+      }
       return "<tr>" +
         '<td><span class="nm">' + esc(r.name) + '</span><br><span class="tk">' + esc(r.ticker) + "</span></td>" +
         "<td>" + (thm.emoji ? esc(thm.emoji) + " " : "") + esc(thm.label) + "</td>" +
         '<td><span class="mini-dot" style="background:' + tm.color + '"></span>' + r.tier + "</td>" +
         '<td class="num">' + esc(r.since) + "</td>" +
         '<td class="num">' + fmtPrice(r.basePrice, country) + "</td>" +
-        '<td class="num">' + fmtPrice(r.lastPrice, country) + "</td>" +
+        '<td class="num' + pxCls + '">' + pxArrow + fmtPrice(r.lastPrice, country) + "</td>" +
         '<td class="num ' + retCls + '">' + (r.ret == null ? "기록 중" : fmtPct(r.ret)) + "</td>" +
         '<td class="num ' + alCls + '">' + (r.alpha == null ? "–" : fmtPct(r.alpha)) + "</td></tr>";
     }).join("");
