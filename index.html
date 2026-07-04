@@ -344,8 +344,6 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     <div class="liq-foot" id="liqFoot"></div>
   </div>
 
-  <div class="tiles" id="tiles"></div>
-
   <div class="controls">
     <div class="seg" id="countrySeg">
       <button data-c="korea" class="on" type="button">🇰🇷 한국</button>
@@ -449,23 +447,6 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   function themeMeta(key) {
     var t = (D.themes || []).filter(function (x) { return x.key === key; })[0];
     return t || { key: key, label: key, emoji: "", desc: "" };
-  }
-
-  function renderTiles() {
-    var all = (D.korea || []).concat(D.us || []);
-    var ups = all.map(function (s) { return s.upside; }).filter(function (v) { return v != null; });
-    var avg = ups.length ? ups.reduce(function (a, b) { return a + b; }, 0) / ups.length : null;
-    var best = all.filter(function (s) { return s.upside != null; })
-                  .sort(function (a, b) { return b.upside - a.upside; })[0];
-    document.getElementById("tiles").innerHTML =
-      tile("추천 종목", all.length + "종목") +
-      tile("주제 / 국가", (D.themes || []).length + "주제 × 2국") +
-      tile("평균 상승여력", avg == null ? "–" : fmtPct(avg), avg != null && avg > 0) +
-      tile("최대 상승여력", best ? best.name + " " + fmtPct(best.upside) : "–", !!(best && best.upside > 0));
-    function tile(k, v, up) {
-      return '<div class="tile"><div class="k">' + esc(k) + '</div><div class="v' +
-             (up ? " up" : "") + '">' + esc(v) + "</div></div>";
-    }
   }
 
   function staleDays(s) {
@@ -876,7 +857,6 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   }
 
   renderLiquidity();
-  renderTiles();
   renderThemeChips();
   renderTopPicks();
   render();
