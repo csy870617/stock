@@ -360,14 +360,6 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   </section>
 
   <div class="toolbar">
-    <input type="search" id="q" placeholder="🔍 종목명·티커 검색">
-    <span class="lbl">정렬</span>
-    <select id="sortSel">
-      <option value="tier">티어</option>
-      <option value="upside">상승여력순</option>
-      <option value="div">배당순</option>
-      <option value="fresh">최신순</option>
-    </select>
     <div class="seg" id="viewSeg">
       <button data-v="cards" class="on" type="button">카드</button>
       <button data-v="table" type="button">표</button>
@@ -718,29 +710,12 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   function render() {
     var host = document.getElementById("cards");
     var descEl = document.getElementById("themeDesc");
-    var searching = state.q.trim().length > 0;
     var list;
 
-    // 성과 뷰는 검색 중이 아닐 때만 (검색어를 입력하면 카드/표 결과로 전환)
-    if (state.view === "perf" && !searching) {
+    if (state.view === "perf") {
       descEl.innerHTML = "<strong>성과 추적</strong> — 추천 시점 대비 실제 수익률 · 기록 " +
         H.length + "일치" + (H.length ? " (" + esc(H[0].date) + " ~ " + esc(H[H.length - 1].date) + ")" : "");
       host.innerHTML = perfView(state.country);
-      return;
-    }
-
-    if (searching) {
-      var q = state.q.trim().toLowerCase();
-      list = (D[state.country] || []).filter(function (s) {
-        return String(s.name || "").toLowerCase().indexOf(q) >= 0 || String(s.ticker || "").toLowerCase().indexOf(q) >= 0;
-      });
-      descEl.innerHTML = "<strong>검색</strong> — \"" + esc(state.q) + "\" 결과 " + list.length + "건";
-      list = sortList(list);
-      host.innerHTML = list.length
-        ? (state.view === "table" ? tableView(list, true)
-           : '<div class="grid">' + list.map(function (s) { return card(s, state.country, true); }).join("") + "</div>")
-        : '<div class="empty">검색 결과가 없습니다.</div>';
-      ensureLive(list, render);
       return;
     }
 
@@ -793,16 +768,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   document.getElementById("themeChips").addEventListener("click", function (e) {
     var b = e.target.closest("button"); if (!b) return;
     state.theme = b.dataset.theme;
-    state.q = ""; document.getElementById("q").value = "";
     this.querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x === b); });
-    render();
-  });
-  document.getElementById("q").addEventListener("input", function () {
-    state.q = this.value;
-    render();
-  });
-  document.getElementById("sortSel").addEventListener("change", function () {
-    state.sort = this.value;
     render();
   });
   document.getElementById("viewSeg").addEventListener("click", function (e) {
