@@ -299,6 +299,7 @@ footer.site {
     <div class="seg" id="viewSeg">
       <button data-v="cards" class="on" type="button">🗂️ 카드</button>
       <button data-v="table" type="button">📋 표</button>
+      <button data-v="perf" type="button">📊 성과</button>
     </div>
   </div>
   <div class="theme-desc" id="themeDesc"></div>
@@ -314,10 +315,12 @@ footer.site {
 
 <script src="data/liquidity.js"></script>
 <script src="data/recommendations.js"></script>
+<script src="data/history.js"></script>
 <script>
 (function () {
   var D = window.STOCK_DATA;
   var L = window.LIQUIDITY_DATA;
+  var H = (window.STOCK_HISTORY || []).slice().sort(function (a, b) { return a.date.localeCompare(b.date); });
   var state = {
     country: "korea",
     theme: (D && D.themes && D.themes[0] && D.themes[0].key) || "core",
@@ -493,11 +496,106 @@ footer.site {
       "</tr></thead><tbody>" + rows + "</tbody></table></div>";
   }
 
+  // ── 성과(추천 능력) 계산: 각 종목의 "첫 기록 시점 대비" 수익률과 시장(벤치마크) 대비 초과수익 ──
+  function computePerf(country) {
+    if (!H.length) return null;
+    var benchKey = country === "korea" ? "kospi" : "sp500";
+    var last = H[H.length - 1];
+    var firstSeen = {}; // ticker → {snap, entry}
+    H.forEach(function (snap) {
+      snap.stocks.forEach(function (e) {
+        if (e.c !== country) return;
+        if (!firstSeen[e.t]) firstSeen[e.t] = { snap: snap, entry: e };
+      });
+    });
+    var rows = [];
+    last.stocks.forEach(function (e) {
+      if (e.c !== country) return;
+      var f = firstSeen[e.t];
+      if (!f) return;
+      var days = Math.round((new Date(last.date) - new Date(f.snap.date)) / 86400000);
+      var ret = (f.entry.p && e.p) ? (e.p - f.entry.p) / f.entry.p * 100 : null;
+      var benchRet = (f.snap[benchKey] && last[benchKey])
+        ? (last[benchKey] - f.snap[benchKey]) / f.snap[benchKey] * 100 : null;
+      rows.push({
+        name: e.n, ticker: e.t, theme: e.th, tier: f.entry.tier,
+        since: f.snap.date, basePrice: f.entry.p, lastPrice: e.p, days: days,
+        ret: days > 0 ? ret : null,
+        alpha: (days > 0 && ret != null && benchRet != null) ? ret - benchRet : null
+      });
+    });
+    return { rows: rows, last: last, first: H[0], benchKey: benchKey };
+  }
+
+  function perfView(country) {
+    var pf = computePerf(country);
+    if (!pf || !pf.rows.length) return '<div class="empty">아직 성과 기록이 없습니다.</div>';
+    var tracked = pf.rows.filter(function (r) { return r.ret != null; });
+    var html = "";
+
+    if (!tracked.length) {
+      html += '<div class="theme-desc"><strong>📸 기준점 기록 완료</strong> — ' + esc(pf.first.date) +
+        " 기준 " + pf.rows.length + "종목의 가격·목표가·티어를 기록했습니다. 다음 자동 갱신부터 " +
+        '"첫 추천일 대비 수익률"과 시장(벤치마크) 대비 초과수익이 여기에 표시되어, 추천(티어 배정)이 실제로 유효했는지 검증할 수 있습니다.</div>';
+    } else {
+      var avg = tracked.reduce(function (a, r) { return a + r.ret; }, 0) / tracked.length;
+      var wins = tracked.filter(function (r) { return r.ret > 0; }).length;
+      var alphas = tracked.filter(function (r) { return r.alpha != null; });
+      var avgAlpha = alphas.length ? alphas.reduce(function (a, r) { return a + r.alpha; }, 0) / alphas.length : null;
+      var tierAvg = {};
+      [1, 2, 3].forEach(function (t) {
+        var g = tracked.filter(function (r) { return r.tier === t; });
+        tierAvg[t] = g.length ? g.reduce(function (a, r) { return a + r.ret; }, 0) / g.length : null;
+      });
+      html += '<div class="tiles">' +
+        pTile("평균 수익률 (첫 추천 대비)", fmtPct(avg), avg > 0) +
+        pTile("승률", Math.round(wins / tracked.length * 100) + "% (" + wins + "/" + tracked.length + ")", wins / tracked.length > 0.5) +
+        pTile("시장 대비 초과수익", avgAlpha == null ? "–" : fmtPct(avgAlpha), avgAlpha != null && avgAlpha > 0) +
+        pTile("Tier1 / T2 / T3 평균", [1, 2, 3].map(function (t) { return tierAvg[t] == null ? "–" : fmtPct(tierAvg[t]); }).join(" · ")) +
+        "</div>";
+      html += '<div class="theme-desc"><strong>📊 추천 능력 검증</strong> — Tier 1 평균이 Tier 3보다 높게 유지되면 확신 등급이 유효하다는 뜻입니다. ' +
+        "초과수익은 " + (country === "korea" ? "KOSPI" : "S&P 500") + " 대비이며, 기록 시작일은 종목별 첫 등장 스냅샷 기준입니다.</div>";
+    }
+
+    var rows = pf.rows.slice().sort(function (a, b) {
+      return (b.ret == null ? -1e9 : b.ret) - (a.ret == null ? -1e9 : a.ret);
+    }).map(function (r) {
+      var thm = themeMeta(r.theme); var tm = tierMeta(r.tier);
+      var retCls = r.ret == null ? "" : r.ret >= 0 ? "up" : "down";
+      var alCls = r.alpha == null ? "" : r.alpha >= 0 ? "up" : "down";
+      return "<tr>" +
+        '<td><span class="nm">' + esc(r.name) + '</span><br><span class="tk">' + esc(r.ticker) + "</span></td>" +
+        "<td>" + (thm.emoji ? esc(thm.emoji) + " " : "") + esc(thm.label) + "</td>" +
+        '<td><span class="mini-dot" style="background:' + tm.color + '"></span>' + r.tier + "</td>" +
+        '<td class="num">' + esc(r.since) + "</td>" +
+        '<td class="num">' + fmtPrice(r.basePrice, country) + "</td>" +
+        '<td class="num">' + fmtPrice(r.lastPrice, country) + "</td>" +
+        '<td class="num ' + retCls + '">' + (r.ret == null ? "기록 중" : fmtPct(r.ret)) + "</td>" +
+        '<td class="num ' + alCls + '">' + (r.alpha == null ? "–" : fmtPct(r.alpha)) + "</td></tr>";
+    }).join("");
+    html += '<div class="tbl-wrap"><table class="tbl"><thead><tr>' +
+      '<th>종목</th><th>주제</th><th>Tier</th><th class="num">첫 기록일</th><th class="num">기록시 가격</th>' +
+      '<th class="num">최신 가격</th><th class="num">수익률</th><th class="num">시장 대비</th>' +
+      "</tr></thead><tbody>" + rows + "</tbody></table></div>";
+    return html;
+
+    function pTile(k, v, up) {
+      return '<div class="tile"><div class="k">' + esc(k) + '</div><div class="v' + (up ? " up" : "") + '">' + v + "</div></div>";
+    }
+  }
+
   function render() {
     var host = document.getElementById("cards");
     var descEl = document.getElementById("themeDesc");
     var searching = state.q.trim().length > 0;
     var list;
+
+    if (state.view === "perf") {
+      descEl.innerHTML = "<strong>📊 성과 추적</strong> — 추천 시점(스냅샷) 대비 실제 수익률로 종목 선정 능력을 검증합니다. 기록 " +
+        H.length + "일치 (" + (H.length ? esc(H[0].date) + " ~ " + esc(H[H.length - 1].date) : "-") + ")";
+      host.innerHTML = perfView(state.country);
+      return;
+    }
 
     if (searching) {
       var q = state.q.trim().toLowerCase();
