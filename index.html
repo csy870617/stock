@@ -346,7 +346,11 @@ footer.site {
 (function () {
   var D = window.STOCK_DATA;
   var L = window.LIQUIDITY_DATA;
-  var H = (window.STOCK_HISTORY || []).slice().sort(function (a, b) { return a.date.localeCompare(b.date); });
+  // 히스토리는 매일 스크립트가 새로 쓰므로, 한 번의 불완전 기록이 페이지 전체를 막지 않도록
+  // 유효한 스냅샷(date 문자열 + stocks 배열)만 사용한다.
+  var H = (window.STOCK_HISTORY || [])
+    .filter(function (s) { return s && typeof s.date === "string" && Array.isArray(s.stocks); })
+    .sort(function (a, b) { return a.date.localeCompare(b.date); });
   var state = {
     country: "korea",
     theme: (D && D.themes && D.themes[0] && D.themes[0].key) || "core",
@@ -387,6 +391,8 @@ footer.site {
     if (v == null) return "–";
     return (v > 0 ? "+" : "") + Number(v).toFixed(1) + "%";
   }
+  // 정렬용: 값이 없거나 숫자가 아니면 기본값 반환 (0을 -999 로 오인하지 않도록)
+  function numOr(v, def) { return (typeof v === "number" && !isNaN(v)) ? v : def; }
   var TIER_COLORS = { 1: "var(--tier1)", 2: "var(--tier2)", 3: "var(--tier3)" };
   var TIER_NAMES = { 1: "Tier 1 · 최우선", 2: "Tier 2 · 차선", 3: "Tier 3 · 관심" };
   function tierMeta(t) {
@@ -407,7 +413,7 @@ footer.site {
       tile("추천 종목", all.length + "종목") +
       tile("주제 / 국가", (D.themes || []).length + "주제 × 2국") +
       tile("평균 상승여력", avg == null ? "–" : fmtPct(avg), avg != null && avg > 0) +
-      tile("최대 상승여력", best ? best.name + " " + fmtPct(best.upside) : "–", true);
+      tile("최대 상승여력", best ? best.name + " " + fmtPct(best.upside) : "–", !!(best && best.upside > 0));
     function tile(k, v, up) {
       return '<div class="tile"><div class="k">' + esc(k) + '</div><div class="v' +
              (up ? " up" : "") + '">' + esc(v) + "</div></div>";
@@ -468,10 +474,10 @@ footer.site {
   function sortList(list) {
     var s = state.sort;
     return list.slice().sort(function (a, b) {
-      if (s === "div")   return (b.dividendYield || -1) - (a.dividendYield || -1);
+      if (s === "div")   return numOr(b.dividendYield, -Infinity) - numOr(a.dividendYield, -Infinity);
       if (s === "fresh") return new Date(b.priceDate || 0) - new Date(a.priceDate || 0);
-      if (s === "tier")  return (a.tier - b.tier) || ((b.upside || -999) - (a.upside || -999));
-      return (b.upside || -999) - (a.upside || -999); // upside
+      if (s === "tier")  return (a.tier - b.tier) || (numOr(b.upside, -Infinity) - numOr(a.upside, -Infinity));
+      return numOr(b.upside, -Infinity) - numOr(a.upside, -Infinity); // upside
     });
   }
 
@@ -623,7 +629,8 @@ footer.site {
     var searching = state.q.trim().length > 0;
     var list;
 
-    if (state.view === "perf") {
+    // 성과 뷰는 검색 중이 아닐 때만 (검색어를 입력하면 카드/표 결과로 전환)
+    if (state.view === "perf" && !searching) {
       descEl.innerHTML = "<strong>📊 성과 추적</strong> — 추천 시점(스냅샷) 대비 실제 수익률로 종목 선정 능력을 검증합니다. 기록 " +
         H.length + "일치 (" + (H.length ? esc(H[0].date) + " ~ " + esc(H[H.length - 1].date) : "-") + ")";
       host.innerHTML = perfView(state.country);
@@ -633,7 +640,7 @@ footer.site {
     if (searching) {
       var q = state.q.trim().toLowerCase();
       list = (D[state.country] || []).filter(function (s) {
-        return s.name.toLowerCase().indexOf(q) >= 0 || String(s.ticker).toLowerCase().indexOf(q) >= 0;
+        return String(s.name || "").toLowerCase().indexOf(q) >= 0 || String(s.ticker || "").toLowerCase().indexOf(q) >= 0;
       });
       descEl.innerHTML = "<strong>🔍 검색</strong> — \"" + esc(state.q) + "\" 결과 " + list.length + "건 (전체 주제에서 검색)";
       list = sortList(list);
@@ -669,7 +676,7 @@ footer.site {
     var html = "";
     [1, 2, 3].forEach(function (t) {
       var group = list.filter(function (s) { return s.tier === t; })
-                      .sort(function (a, b) { return (b.upside || -999) - (a.upside || -999); });
+                      .sort(function (a, b) { return numOr(b.upside, -Infinity) - numOr(a.upside, -Infinity); });
       if (!group.length) return;
       var tm = tierMeta(t);
       html += '<div class="tier-group"><div class="tier-head">' +

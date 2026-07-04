@@ -14,7 +14,10 @@ const HIST = path.join(ROOT, "data", "history.js");
 
 function arg(name) {
   const i = process.argv.indexOf("--" + name);
-  return i >= 0 && process.argv[i + 1] ? parseFloat(process.argv[i + 1]) : null;
+  if (i < 0 || !process.argv[i + 1]) return null;
+  // 쉼표 포함 값("8,088.34")도 안전하게 파싱하고, 숫자가 아니면 null 로 정규화
+  const v = parseFloat(String(process.argv[i + 1]).replace(/,/g, ""));
+  return isNaN(v) ? null : v;
 }
 
 global.window = {};
