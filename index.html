@@ -217,6 +217,7 @@ header.site h1 { font-size: 1.45rem; font-weight: 700; }
 
 /* ── 신선도·경고 배지 ── */
 .stale { color: #c98500; font-weight: 600; }
+.live-tag { color: var(--up); font-weight: 700; }
 .warn-badge {
   font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 999px;
   background: var(--chip-bg); color: var(--ink-2); white-space: nowrap;
@@ -334,7 +335,7 @@ footer.site {
 
   <footer class="site">
     <p id="disclaimer"></p>
-    <p style="margin-top:6px;">⏳ 표시는 종가 기준일이 분석일보다 7일 이상 오래된 종목입니다 (출처 접근 제한 시 발생, 매일 자동 갱신으로 최신화). 🎯 표시는 현재가가 컨센서스 목표가에 도달·초과한 종목입니다.</p>
+    <p style="margin-top:6px;">🟢 실시간 표시는 페이지를 열 때 브라우저가 Yahoo Finance에서 직접 받아온 현재가입니다 (조회 실패 시 최근 종가로 표시). ⏳ 표시는 종가 기준일이 분석일보다 7일 이상 오래된 종목, 🎯 표시는 현재가가 컨센서스 목표가에 도달·초과한 종목입니다.</p>
     <p style="margin-top:6px;">데이터는 stock-recommender·macro-liquidity-monitor 스킬 분석 결과이며, 매일 오전 6시(LA) 자동 갱신됩니다. 갱신 방법은 저장소 README를 참고하세요.</p>
   </footer>
 </div>
@@ -426,35 +427,115 @@ footer.site {
     return isNaN(d) ? 0 : Math.round(d);
   }
 
+  // ── 실시간 가격 레이어 (사용자 브라우저에서 Yahoo Finance 직접 조회) ──
+  // 성공하면 현재가·상승여력을 실시간 값으로 덮어쓰고 "실시간" 배지 표시.
+  // 실패(CORS·네트워크·레이트리밋)하면 조용히 스냅샷(기존 종가)으로 폴백 — 페이지는 정상 동작.
+  var liveCache = {};     // ticker → {price, date} | null(조회 실패, 재시도 안 함) | undefined(미조회)
+  var liveInflight = {};
+  var liveSupported = typeof window.fetch === "function" && typeof AbortController === "function";
+
+  function symbolFor(s) {
+    if (s.market === "KOSPI") return s.ticker + ".KS";
+    if (s.market === "KOSDAQ") return s.ticker + ".KQ";
+    return s.ticker === "BRK.B" ? "BRK-B" : s.ticker;   // 미국(NASDAQ/NYSE)
+  }
+
+  function fetchYahoo(host, sym) {
+    var url = "https://" + host + "/v8/finance/chart/" + encodeURIComponent(sym) + "?interval=1d&range=1d";
+    var ctrl = new AbortController();
+    var to = setTimeout(function () { ctrl.abort(); }, 8000);
+    return fetch(url, { signal: ctrl.signal, cache: "no-store", referrerPolicy: "no-referrer" })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) {
+        clearTimeout(to);
+        var m = j && j.chart && j.chart.result && j.chart.result[0] && j.chart.result[0].meta;
+        if (!m || typeof m.regularMarketPrice !== "number" || !isFinite(m.regularMarketPrice)) return null;
+        var date = null;
+        if (m.regularMarketTime) {
+          var off = (m.gmtoffset || 0) * 1000;
+          date = new Date(m.regularMarketTime * 1000 + off).toISOString().slice(0, 10);
+        }
+        return { price: m.regularMarketPrice, date: date };
+      })
+      .catch(function () { clearTimeout(to); return null; });
+  }
+
+  function fetchOne(s) {
+    var sym = symbolFor(s);
+    return fetchYahoo("query1.finance.yahoo.com", sym).then(function (res) {
+      return res || fetchYahoo("query2.finance.yahoo.com", sym);   // 예비 미러
+    });
+  }
+
+  // 보이는 종목들의 실시간 가격을 (미조회분만) 동시 8개 제한으로 가져온 뒤, 하나라도 성공하면 onDone 호출
+  function ensureLive(stocks, onDone) {
+    if (!liveSupported) return;
+    var todo = [];
+    var seen = {};
+    stocks.forEach(function (s) {
+      if (!s || seen[s.ticker]) return;
+      seen[s.ticker] = 1;
+      if (liveCache[s.ticker] === undefined && !liveInflight[s.ticker]) todo.push(s);
+    });
+    if (!todo.length) return;
+    todo.forEach(function (s) { liveInflight[s.ticker] = 1; });
+    var CONC = 8, idx = 0, done = 0, any = false;
+    function next() {
+      if (idx >= todo.length) return;
+      var s = todo[idx++];
+      fetchOne(s).then(function (res) {
+        liveCache[s.ticker] = res || null;
+        delete liveInflight[s.ticker];
+        if (res) any = true;
+        if (++done === todo.length) { if (any && onDone) onDone(); }
+        else next();
+      });
+    }
+    for (var i = 0; i < Math.min(CONC, todo.length); i++) next();
+  }
+
+  // 종목의 "표시용" 현재가·상승여력 — 실시간 값이 있으면 그것으로, 없으면 스냅샷으로
+  function effective(s) {
+    var lv = liveCache[s.ticker];
+    if (lv && lv.price != null) {
+      var up = (s.targetPrice != null && lv.price) ? (s.targetPrice - lv.price) / lv.price * 100 : s.upside;
+      return { price: lv.price, priceDate: lv.date || s.priceDate, upside: up, live: true };
+    }
+    return { price: s.price, priceDate: s.priceDate, upside: s.upside, live: false };
+  }
+
   function card(s, country, showTheme) {
     var tm = tierMeta(s.tier);
-    var upCls = s.upside == null ? "" : s.upside >= 0 ? "up" : "down";
-    var meterW = s.upside == null ? 0 : Math.max(0, Math.min(100, s.upside * 2));
+    var e = effective(s);
+    var upCls = e.upside == null ? "" : e.upside >= 0 ? "up" : "down";
+    var meterW = e.upside == null ? 0 : Math.max(0, Math.min(100, e.upside * 2));
     var risks = (s.risks || []).map(esc).join(" · ");
     var srcs = (s.sources || []).slice(0, 3).map(function (u, i) {
       return '<a href="' + esc(u) + '" target="_blank" rel="noopener">출처' + (i + 1) + "</a>";
     }).join(" ");
-    var sd = staleDays(s);
     var themeBadge = "";
     if (showTheme) {
       var thm = themeMeta(s.theme);
       themeBadge = '<span class="badge">' + (thm.emoji ? esc(thm.emoji) + " " : "") + esc(thm.label) + "</span>";
     }
-    var warnBadge = (s.upside != null && s.upside <= 0)
+    var warnBadge = (e.upside != null && e.upside <= 0)
       ? '<span class="warn-badge">🎯 목표가 도달</span>' : "";
-    var staleTag = sd >= 7
-      ? ' <span class="stale">⏳ ' + sd + "일 전 종가</span>" : "";
+    var sd = staleDays(s);
+    var priceTag = e.live
+      ? ' <span class="live-tag">🟢 실시간</span>'
+      : (sd >= 7 ? ' <span class="stale">⏳ ' + sd + "일 전 종가</span>" : "");
+    var priceLabel = e.live ? "현재가 (실시간)" : "현재가 (" + esc(e.priceDate || D.generatedAt) + ")";
     return '<article class="card">' +
       '<div class="head"><h3>' + esc(s.name) + '<span class="tk">' + esc(s.ticker) + " · " + esc(s.market) + "</span></h3>" +
       '<span class="badges">' + themeBadge + warnBadge +
       '<span class="badge"><span class="dot" style="background:' + tm.color + '"></span>' + tm.label + "</span></span></div>" +
       '<div class="prices">' +
-        '<div class="pv"><div class="k">현재가 (' + esc(s.priceDate || D.generatedAt) + ')' + staleTag + '</div><div class="v">' + fmtPrice(s.price, country) + "</div></div>" +
+        '<div class="pv"><div class="k">' + priceLabel + priceTag + '</div><div class="v">' + fmtPrice(e.price, country) + "</div></div>" +
         '<div class="pv"><div class="k">목표가 (컨센서스)</div><div class="v">' + fmtPrice(s.targetPrice, country) + "</div></div>" +
         '<div class="pv"><div class="k">배당수익률</div><div class="v">' + (s.dividendYield == null ? "–" : Number(s.dividendYield).toFixed(1) + "%") + "</div></div>" +
       "</div>" +
       '<div class="meter-row"><div class="meter"><i style="width:' + meterW + '%"></i></div>' +
-      '<div class="pct ' + upCls + '">' + fmtPct(s.upside) + "</div></div>" +
+      '<div class="pct ' + upCls + '">' + fmtPct(e.upside) + "</div></div>" +
       (s.earnings ? '<div class="earn">' + esc(s.earnings) + "</div>" : "") +
       '<div class="thesis">' + esc(s.thesis) + "</div>" +
       (risks ? '<div class="risks"><b>리스크</b> — ' + risks + "</div>" : "") +
@@ -507,18 +588,22 @@ footer.site {
 
   function tableView(list, showTheme) {
     var rows = list.map(function (s) {
-      var upCls = s.upside == null ? "" : s.upside >= 0 ? "up" : "down";
+      var e = effective(s);
+      var upCls = e.upside == null ? "" : e.upside >= 0 ? "up" : "down";
       var sd = staleDays(s);
       var thm = themeMeta(s.theme);
       var tm = tierMeta(s.tier);
+      var dateCell = e.live
+        ? '<span class="live-tag">🟢 실시간</span>'
+        : esc(s.priceDate || "") + (sd >= 7 ? ' <span class="stale">⏳</span>' : "");
       return "<tr>" +
         '<td><span class="nm">' + esc(s.name) + '</span><br><span class="tk">' + esc(s.ticker) + " · " + esc(s.market) + "</span></td>" +
         (showTheme ? "<td>" + (thm.emoji ? esc(thm.emoji) + " " : "") + esc(thm.label) + "</td>" : "") +
         '<td><span class="mini-dot" style="background:' + tm.color + '"></span>' + s.tier + "</td>" +
-        '<td class="num">' + fmtPrice(s.price, state.country) + "</td>" +
-        '<td class="num">' + esc(s.priceDate || "") + (sd >= 7 ? ' <span class="stale">⏳</span>' : "") + "</td>" +
+        '<td class="num">' + fmtPrice(e.price, state.country) + "</td>" +
+        '<td class="num">' + dateCell + "</td>" +
         '<td class="num">' + fmtPrice(s.targetPrice, state.country) + "</td>" +
-        '<td class="num ' + upCls + '">' + fmtPct(s.upside) + "</td>" +
+        '<td class="num ' + upCls + '">' + fmtPct(e.upside) + "</td>" +
         '<td class="num">' + (s.dividendYield == null ? "–" : Number(s.dividendYield).toFixed(1) + "%") + "</td>" +
         '<td><a href="' + esc(s.chartUrl) + '" target="_blank" rel="noopener">차트</a></td></tr>';
     }).join("");
@@ -648,6 +733,7 @@ footer.site {
         ? (state.view === "table" ? tableView(list, true)
            : '<div class="grid">' + list.map(function (s) { return card(s, state.country, true); }).join("") + "</div>")
         : '<div class="empty">검색 결과가 없습니다.</div>';
+      ensureLive(list, render);
       return;
     }
 
@@ -663,6 +749,7 @@ footer.site {
 
     if (state.view === "table") {
       host.innerHTML = tableView(sortList(list), false);
+      ensureLive(list, render);
       return;
     }
 
@@ -670,6 +757,7 @@ footer.site {
       // 티어 그룹 없이 선택한 기준으로 평면 정렬
       host.innerHTML = '<div class="grid">' +
         sortList(list).map(function (s) { return card(s, state.country); }).join("") + "</div>";
+      ensureLive(list, render);
       return;
     }
 
@@ -685,6 +773,7 @@ footer.site {
               '<div class="grid">' + group.map(function (s) { return card(s, state.country); }).join("") + "</div></div>";
     });
     host.innerHTML = html;
+    ensureLive(list, render);
   }
 
   document.getElementById("countrySeg").addEventListener("click", function (e) {
