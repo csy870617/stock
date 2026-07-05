@@ -191,10 +191,17 @@ a { color: inherit; }
 .picks-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
 .pick {
   background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
-  padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; position: relative;
+  padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; position: relative; cursor: pointer;
   transition: transform .16s ease, box-shadow .16s ease;
 }
 .pick:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+
+/* Top Pick 클릭 시 대상 카드 강조 */
+.card.flash { animation: cardflash 1.8s ease; }
+@keyframes cardflash {
+  0%, 22%   { box-shadow: 0 0 0 3px var(--accent), var(--shadow-lg); border-color: var(--accent); }
+  100%      { box-shadow: 0 0 0 0 transparent, var(--shadow-sm); border-color: var(--line); }
+}
 .pick .rank { position: absolute; top: 11px; right: 13px; font-size: 1.05rem; }
 .pick .thm { display: inline-flex; align-items: center; gap: 4px; font-size: 0.71rem; color: var(--ink-2);
   background: var(--chip-bg); border-radius: 999px; padding: 3px 9px; width: fit-content; }
@@ -545,7 +552,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       ? ' <span class="live-tag" title="실시간">🟢</span>'
       : (sd >= 7 ? ' <span class="stale">⏳ ' + sd + "일 전 종가</span>" : "");
     var priceLabel = e.live ? "현재가" : "현재가 (" + esc(e.priceDate || D.generatedAt) + ")";
-    return '<article class="card">' +
+    return '<article class="card" data-ticker="' + esc(s.ticker) + '">' +
       '<div class="head"><h3>' + esc(s.name) + '<span class="tk">' + esc(s.ticker) + " · " + esc(s.market) + "</span></h3>" +
       '<span class="badges">' + themeBadge + warnBadge +
       '<span class="badge"><span class="dot" style="background:' + tm.color + '"></span>' + tm.label + "</span></span></div>" +
@@ -608,7 +615,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     box.style.display = "";
     document.getElementById("picksGrid").innerHTML = picks.map(function (s, i) {
       var thm = themeMeta(s.theme);
-      return '<div class="pick"><span class="rank">' + ["🥇", "🥈", "🥉"][i] + "</span>" +
+      return '<div class="pick" data-ticker="' + esc(s.ticker) + '" data-theme="' + esc(s.theme) + '"><span class="rank">' + ["🥇", "🥈", "🥉"][i] + "</span>" +
         '<span class="thm">' + (thm.emoji ? esc(thm.emoji) + " " : "") + esc(thm.label) + " · Tier 1</span>" +
         '<div class="nm">' + esc(s.name) + '<span class="tk">' + esc(s.ticker) + "</span></div>" +
         '<div class="up-big">+' + Number(s.upside).toFixed(1) + "%</div>" +
@@ -805,6 +812,32 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     state.view = b.dataset.v;
     this.querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x === b); });
     render();
+  });
+  // Top Pick 클릭 → 해당 주제·카드 뷰로 전환하고 그 종목 카드로 스크롤·강조
+  document.getElementById("picksGrid").addEventListener("click", function (e) {
+    var el = e.target.closest(".pick"); if (!el) return;
+    var ticker = el.dataset.ticker, theme = el.dataset.theme;
+    if (theme) state.theme = theme;
+    state.view = "cards";
+    renderThemeChips();
+    document.getElementById("viewSeg").querySelectorAll("button").forEach(function (x) {
+      x.classList.toggle("on", x.dataset.v === "cards");
+    });
+    render();
+    if (!ticker) return;
+    // 렌더 직후 해당 카드로 스크롤 + 잠깐 강조
+    requestAnimationFrame(function () {
+      var target = null;
+      document.querySelectorAll("#cards .card").forEach(function (c) {
+        if (c.dataset.ticker === ticker) target = c;
+      });
+      if (!target) return;
+      target.scrollIntoView({ behavior: "smooth", block: "center" });
+      target.classList.remove("flash");
+      void target.offsetWidth;                 // 애니메이션 재시작
+      target.classList.add("flash");
+      setTimeout(function () { target.classList.remove("flash"); }, 1800);
+    });
   });
 
   function renderLiquidity() {
