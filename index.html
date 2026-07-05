@@ -157,16 +157,22 @@ a { color: inherit; }
 .tile .v { font-size: 1.4rem; font-weight: 750; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
 .tile .v.up { color: var(--up); }
 
+/* ── 선택 메뉴 패널 ── */
+.menu { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); margin-bottom: 22px; box-shadow: var(--shadow-sm); overflow: hidden; }
+.menu-row { display: flex; align-items: center; gap: 14px; padding: 12px 16px; }
+.menu-row + .menu-row { border-top: 1px solid var(--line); }
+.menu-row-theme { align-items: flex-start; }
+.menu-lbl { color: var(--muted); font-size: 0.76rem; font-weight: 600; min-width: 32px; flex-shrink: 0; }
+.menu-row-theme .menu-lbl { padding-top: 7px; }
+
 /* ── 세그먼트 · 칩 ── */
-.controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 18px; }
 .seg { display: inline-flex; gap: 2px; padding: 3px; background: var(--surface-2); border-radius: 12px; }
 .seg button {
   border: 0; background: transparent; color: var(--ink-2); padding: 6px 15px;
   font-size: 0.88rem; font-weight: 600; border-radius: 9px; cursor: pointer; transition: background .15s, color .15s;
 }
 .seg button.on { background: var(--surface); color: var(--ink); box-shadow: var(--shadow-sm); }
-.chips { display: inline-flex; gap: 6px; flex-wrap: wrap; }
-.chips-row { display: flex; margin-bottom: 18px; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
 .chip {
   border: 1px solid var(--line); background: var(--surface); color: var(--ink-2);
   border-radius: 999px; padding: 6px 13px; font-size: 0.83rem; font-weight: 500; cursor: pointer;
@@ -352,19 +358,27 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     <div class="picks-grid" id="picksGrid"></div>
   </section>
 
-  <div class="controls">
-    <div class="seg" id="countrySeg">
-      <button data-c="korea" class="on" type="button">🇰🇷 한국</button>
-      <button data-c="us" type="button">🇺🇸 미국</button>
+  <div class="menu">
+    <div class="menu-row">
+      <span class="menu-lbl">국가</span>
+      <div class="seg" id="countrySeg">
+        <button data-c="korea" class="on" type="button">🇰🇷 한국</button>
+        <button data-c="us" type="button">🇺🇸 미국</button>
+      </div>
     </div>
-    <div class="seg" id="viewSeg">
-      <button data-v="cards" class="on" type="button">카드</button>
-      <button data-v="table" type="button">표</button>
-      <button data-v="perf" type="button">성과</button>
+    <div class="menu-row">
+      <span class="menu-lbl">보기</span>
+      <div class="seg" id="viewSeg">
+        <button data-v="cards" class="on" type="button">카드</button>
+        <button data-v="table" type="button">표</button>
+        <button data-v="perf" type="button">성과</button>
+      </div>
+    </div>
+    <div class="menu-row menu-row-theme">
+      <span class="menu-lbl">주제</span>
+      <div class="chips" id="themeChips"></div>
     </div>
   </div>
-
-  <div class="chips chips-row" id="themeChips"></div>
 
   <div class="theme-desc" id="themeDesc"></div>
 
