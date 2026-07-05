@@ -185,6 +185,7 @@ a { color: inherit; }
 .picks { margin: 0 0 26px; }
 .picks-head { margin-bottom: 12px; }
 .picks-head h2 { font-size: 1.05rem; font-weight: 750; letter-spacing: -0.02em; }
+.picks-head .crit { display: block; color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
 .picks-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
 .pick {
   background: var(--surface); border: 1px solid var(--line); border-radius: 14px;
@@ -354,6 +355,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   <section class="picks" id="picksBox" style="display:none">
     <div class="picks-head">
       <h2>오늘의 Top Picks</h2>
+      <span class="crit">상승여력·리스크·배당·컨센서스 근거를 종합한 최우선 종목</span>
     </div>
     <div class="picks-grid" id="picksGrid"></div>
   </section>
@@ -578,16 +580,27 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     });
   }
 
+  // 종합 선정 점수 — 단순 상승여력이 아니라 리서치 요소를 가중 합산한다.
+  //   · 상승여력(60%에서 만점, 과열 종목이 독점하지 않도록 캡)
+  //   · 리스크 개수(적을수록 가점)  · 배당(하방 쿠션)  · 컨센서스 근거(출처 수)
+  function pickScore(s) {
+    var upScore   = Math.max(0, Math.min(numOr(s.upside, 0), 60)) / 60;
+    var divScore  = Math.max(0, Math.min(numOr(s.dividendYield, 0), 6)) / 6;
+    var riskScore = 1 - Math.max(0, Math.min(((s.risks || []).length) - 2, 3)) * 0.15;
+    var srcScore  = Math.max(0, Math.min((s.sources || []).length, 3)) / 3;
+    return 0.48 * upScore + 0.22 * riskScore + 0.18 * divScore + 0.12 * srcScore;
+  }
+
   function renderTopPicks() {
     var box = document.getElementById("picksBox");
     var seen = {}, picks = [];
-    sortList((D[state.country] || []).filter(function (s) {
-      return s.tier === 1 && s.upside != null && s.upside > 0;
-    }).sort(function (a, b) { return b.upside - a.upside; })).forEach(function (s) {
-      if (seen[s.ticker]) return;
+    // 최우선(Tier 1) 확신 등급 & 목표가 미도달 종목만 후보로
+    (D[state.country] || []).forEach(function (s) {
+      if (s.tier !== 1 || s.upside == null || s.upside <= 0 || seen[s.ticker]) return;
       seen[s.ticker] = true; picks.push(s);
     });
-    picks.sort(function (a, b) { return b.upside - a.upside; });
+    // 종합 점수 내림차순(동점 시 상승여력)
+    picks.sort(function (a, b) { return (pickScore(b) - pickScore(a)) || (numOr(b.upside, 0) - numOr(a.upside, 0)); });
     picks = picks.slice(0, 3);
     if (!picks.length) { box.style.display = "none"; return; }
     box.style.display = "";
