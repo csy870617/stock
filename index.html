@@ -404,6 +404,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
 <script src="data/config.js"></script>
 <script src="data/liquidity.js"></script>
 <script src="data/recommendations.js"></script>
+<script src="data/quotes.js"></script>
 <script src="data/history.js"></script>
 <script>
 (function () {
@@ -433,6 +434,25 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       '<div class="empty">data/recommendations.js 를 불러오지 못했습니다.</div>';
     return;
   }
+
+  // ── 시세 스냅샷 병합 (data/quotes.js, LLM 토큰 0으로 매일 갱신되는 레이어) ──
+  // 분석(recommendations.js)에서 시세를 분리했으므로, 저장된 종가 대신 quotes.js 값을
+  // 각 종목의 기본 시세로 덮어쓴다. 상승여력은 목표가(컨센서스) 기준으로 재계산한다.
+  // quotes.js 에 없는 종목(예: 방금 추가된 종목)은 recommendations.js 종가를 그대로 폴백.
+  (function applyQuotes() {
+    var Q = (window.STOCK_QUOTES && window.STOCK_QUOTES.quotes) || null;
+    if (!Q) return;
+    ["korea", "us"].forEach(function (c) {
+      (D[c] || []).forEach(function (s) {
+        var q = s && Q[s.ticker];
+        if (!q || typeof q.price !== "number" || !isFinite(q.price)) return;
+        s.price = q.price;
+        s.priceDate = q.date || s.priceDate;
+        s.upside = (s.targetPrice != null && q.price)
+          ? (s.targetPrice - q.price) / q.price * 100 : s.upside;
+      });
+    });
+  })();
 
   document.getElementById("genDate").textContent = "기준일 " + D.generatedAt;
   document.getElementById("marketNote").innerHTML =
@@ -466,10 +486,11 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     return t || { key: key, label: key, emoji: "", desc: "" };
   }
 
+  // 시세(quotes.js)는 매일 갱신되므로 최신성은 "오늘" 대비로 판단한다.
   function staleDays(s) {
-    if (!s.priceDate || !D.generatedAt) return 0;
-    var d = (new Date(D.generatedAt) - new Date(s.priceDate)) / 86400000;
-    return isNaN(d) ? 0 : Math.round(d);
+    if (!s.priceDate) return 0;
+    var d = (Date.now() - new Date(s.priceDate)) / 86400000;
+    return isNaN(d) || d < 0 ? 0 : Math.round(d);
   }
 
   // ── 실시간 가격 레이어 (전용 시세 서버 경유 Yahoo 시세) ──

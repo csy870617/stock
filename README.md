@@ -3,8 +3,21 @@
 `stock-recommender` · `macro-liquidity-monitor` 스킬(claude.ai)의 분석 결과를 웹페이지로 보여주는 저장소입니다.
 
 - **`index.html`** — 대시보드 (거시 유동성 게이지 + 한국/미국 탭, Tier 1·2·3 필터, 목표가·상승여력·배당·리스크·네이버 차트 링크)
-- **`data/recommendations.js`** — 종목 추천 데이터 (`stock-recommender` 스킬 결과)
+- **`data/recommendations.js`** — 종목 **분석** 데이터 (`stock-recommender` 스킬 결과, thesis·리스크·목표가 등). 시세는 빠짐.
+- **`data/quotes.js`** — **시세 스냅샷** (`scripts/update-quotes.js` 가 자동 생성, LLM 토큰 0). 분석과 분리되어 매일 저비용 갱신.
 - **`data/liquidity.js`** — 거시 유동성 데이터 (`macro-liquidity-monitor` 스킬 결과, 없으면 게이지 섹션 자동 숨김)
+
+### 💡 토큰 절약 구조 (시세 분리 + 증분 갱신)
+
+시세와 분석을 분리해, 비싼 LLM 리서치는 정말 필요할 때만 돌린다.
+
+| 갱신 대상 | 방법 | 주기 | LLM 토큰 |
+|---|---|---|---|
+| **시세** (`data/quotes.js`) | `scripts/update-quotes.js` (Yahoo 조회) — 자동화: `.github/workflows/refresh-quotes.yml` | 매일 | **0** |
+| **분석** (`data/recommendations.js`) | `scripts/update-reco.js` 로 **바뀐 종목만** 패치 | 필요 시 | 변경분만 |
+
+- 페이지 가격 우선순위: **실시간 API(`data/config.js`) > `data/quotes.js` 스냅샷 > `recommendations.js` 종가(폴백)**.
+- 예전처럼 매일 90종목을 통째로 재리서치할 필요가 없다.
 
 ## 페이지 보는 법
 
@@ -30,18 +43,47 @@ claude.ai 스킬은 웹페이지가 직접 실행할 수 없으므로, **스킬�
 [stock-recommender 스킬 실행]  →  data/recommendations.js 갱신  →  git push  →  페이지 자동 반영
 ```
 
-### 데이터 갱신 방법
+### 1) 시세 갱신 (매일 · LLM 토큰 0)
 
-Claude Code 세션(웹/앱 어디서든)에서 이렇게 요청하세요:
+시세는 분석과 분리되어 있으므로 LLM 없이 스크립트로 갱신한다.
 
-> stock-recommender 스킬 기준으로 오늘 날짜 최신 주가·컨센서스를 다시 조사해서
-> `data/recommendations.js` 를 갱신하고 커밋·푸시해줘.
+```
+node scripts/update-quotes.js            # Yahoo 조회 → data/quotes.js 갱신
+node scripts/update-quotes.js --seed     # (네트워크 없이) recommendations.js 종가로 seed
+```
 
-또는 claude.ai 채팅에서 스킬로 추천을 받은 뒤, 그 결과를 이 저장소의
-`data/recommendations.js` 형식으로 저장해달라고 요청해도 됩니다.
+`.github/workflows/refresh-quotes.yml` 이 평일 자동으로 이 스크립트를 돌려 `data/quotes.js`
+만 커밋한다. (조회 실패 종목은 기존 시세 → 종가 순으로 폴백해 항상 전체가 채워진다.)
 
-정기 갱신을 원하면 Claude Code 세션에 예약 작업(Routine)을 걸어
-매주/매일 자동으로 데이터를 갱신하도록 설정할 수도 있습니다.
+### 2) 분석 갱신 (필요 시 · 바뀐 종목만 = 증분)
+
+thesis·목표가·리스크 등 **분석**이 실제로 바뀔 때만, 전체가 아니라 **변경분만** 패치한다.
+
+Claude Code 세션에서 이렇게 요청하세요:
+
+> stock-recommender 스킬 기준으로 **바뀐 종목만** 골라서, 아래 형식의 패치 JSON 을 만들고
+> `node scripts/update-reco.js <패치파일>` 로 적용한 뒤 커밋·푸시해줘.
+
+패치 JSON 형식 (모든 항목 선택):
+
+```json
+{
+  "generatedAt": "2026-07-11",
+  "marketNote": "…",
+  "stocks": [
+    { "country": "korea", "ticker": "005930", "targetPrice": 460000, "thesis": "…" }
+  ],
+  "add":    [ { "country": "us", "theme": "growth", "tier": 2, "name": "…", "ticker": "…" } ],
+  "remove": [ { "country": "korea", "ticker": "000810" } ]
+}
+```
+
+- `stocks` 는 (국가+티커[+주제])로 찾아 **넣은 필드만** merge 한다. 시세는 넣지 않는다(quotes.js 담당).
+- 전체 파일을 통째로 다시 쓰지 않으므로 LLM 출력 토큰이 크게 줄어든다.
+- 미리보기: `node scripts/update-reco.js <패치> --out /tmp/preview.js` (원본을 건드리지 않음).
+
+> 전체를 새로 만들어야 하는 큰 개편이 아니라면, 매번 `recommendations.js` 를 통째로
+> 재생성하도록 요청하지 마세요 — 그게 토큰을 가장 많이 씁니다.
 
 ## 데이터 형식
 
