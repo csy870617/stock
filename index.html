@@ -210,6 +210,26 @@ a { color: inherit; }
 .pick .up-big { font-size: 1.35rem; font-weight: 800; color: var(--up); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
 .pick .sub { color: var(--ink-2); font-size: 0.8rem; }
 
+/* ── 종목 변경(편입·제외) ── */
+.roster { margin: 0 0 26px; background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r); padding: 16px 18px; box-shadow: var(--shadow-sm); }
+.roster-head { margin-bottom: 12px; }
+.roster-head h2 { font-size: 1.02rem; font-weight: 750; letter-spacing: -0.02em; }
+.roster-head .crit { display: block; color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
+.roster-body { display: flex; flex-wrap: wrap; gap: 10px 26px; }
+.roster-col { flex: 1 1 240px; min-width: 0; }
+.roster-col .lead { font-size: 0.8rem; font-weight: 700; margin-bottom: 7px; display: flex; align-items: center; gap: 6px; }
+.roster-col.in  .lead { color: var(--up); }
+.roster-col.out .lead { color: var(--down); }
+.roster-list { display: flex; flex-direction: column; gap: 5px; }
+.roster-item { display: flex; align-items: baseline; gap: 7px; font-size: 0.86rem; }
+.roster-item .rt-nm { font-weight: 600; }
+.roster-item .rt-meta { color: var(--muted); font-size: 0.74rem; }
+.roster-item.out .rt-nm { text-decoration: line-through; opacity: 0.75; }
+/* 카드의 신규 편입 배지 */
+.new-badge { display: inline-flex; align-items: center; font-size: 0.66rem; font-weight: 800;
+  letter-spacing: 0.02em; color: #fff; background: var(--up); border-radius: 999px; padding: 2px 7px; }
+
 /* ── 툴바 ── */
 .toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 0 0 16px; }
 .toolbar input[type="search"] {
@@ -369,6 +389,14 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     <div class="picks-grid" id="picksGrid"></div>
   </section>
 
+  <section class="roster" id="rosterBox" style="display:none">
+    <div class="roster-head">
+      <h2>📌 종목 변경</h2>
+      <span class="crit" id="rosterWhen"></span>
+    </div>
+    <div class="roster-body" id="rosterBody"></div>
+  </section>
+
   <div class="menu">
     <div class="menu-row">
       <span class="menu-lbl">국가</span>
@@ -415,6 +443,25 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   var H = (window.STOCK_HISTORY || [])
     .filter(function (s) { return s && typeof s.date === "string" && Array.isArray(s.stocks); })
     .sort(function (a, b) { return a.date.localeCompare(b.date); });
+
+  // ── 종목 변경(편입·제외) 계산 — 최근 두 스냅샷(history.js) 비교 ──
+  // 신규 편입/제외 종목을 페이지에 표시하기 위한 데이터. 스냅샷 2개 미만이면 표시 안 함.
+  var NEW_TICKERS = {};   // 이번 갱신에 새로 편입된 티커 → true (카드 NEW 배지용)
+  var ROSTER = null;      // { when, added:[snapStock], removed:[snapStock] }
+  (function computeRoster() {
+    if (H.length < 2) return;
+    var last = H[H.length - 1], prev = H[H.length - 2];
+    var lastSet = {}, prevSet = {};
+    last.stocks.forEach(function (s) { lastSet[s.t] = s; });
+    prev.stocks.forEach(function (s) { prevSet[s.t] = s; });
+    var added = last.stocks.filter(function (s) { return !prevSet[s.t]; });
+    var removed = prev.stocks.filter(function (s) { return !lastSet[s.t]; });
+    added.forEach(function (s) { NEW_TICKERS[s.t] = true; });
+    if (added.length || removed.length) {
+      ROSTER = { when: prev.date + " → " + last.date, added: added, removed: removed };
+    }
+  })();
+
   var state = {
     country: "korea",
     theme: (D && D.themes && D.themes[0] && D.themes[0].key) || "core",
@@ -568,6 +615,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     }
     var warnBadge = (e.upside != null && e.upside <= 0)
       ? '<span class="warn-badge">🎯 목표가 도달</span>' : "";
+    var newBadge = NEW_TICKERS[s.ticker] ? '<span class="new-badge">NEW</span>' : "";
     var sd = staleDays(s);
     var priceTag = e.live
       ? ' <span class="live-tag" title="실시간">🟢</span>'
@@ -575,7 +623,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     var priceLabel = e.live ? "현재가" : "현재가 (" + esc(e.priceDate || D.generatedAt) + ")";
     return '<article class="card" data-ticker="' + esc(s.ticker) + '">' +
       '<div class="head"><h3>' + esc(s.name) + '<span class="tk">' + esc(s.ticker) + " · " + esc(s.market) + "</span></h3>" +
-      '<span class="badges">' + themeBadge + warnBadge +
+      '<span class="badges">' + newBadge + themeBadge + warnBadge +
       '<span class="badge"><span class="dot" style="background:' + tm.color + '"></span>' + tm.label + "</span></span></div>" +
       '<div class="prices">' +
         '<div class="pv"><div class="k">' + priceLabel + priceTag + '</div><div class="v">' + fmtPrice(e.price, country) + "</div></div>" +
@@ -619,6 +667,27 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     var riskScore = 1 - Math.max(0, Math.min(((s.risks || []).length) - 2, 3)) * 0.15;
     var srcScore  = Math.max(0, Math.min((s.sources || []).length, 3)) / 3;
     return 0.48 * upScore + 0.22 * riskScore + 0.18 * divScore + 0.12 * srcScore;
+  }
+
+  // 종목 변경(편입·제외) 섹션 렌더 — 변경이 있을 때만 노출
+  function renderRoster() {
+    var box = document.getElementById("rosterBox");
+    if (!ROSTER) { box.style.display = "none"; return; }
+    box.style.display = "";
+    document.getElementById("rosterWhen").textContent = ROSTER.when + " 기준 변경";
+    function item(s, cls) {
+      var thm = themeMeta(s.th);
+      var flag = s.c === "us" ? "🇺🇸" : "🇰🇷";
+      return '<div class="roster-item ' + cls + '"><span class="rt-nm">' + esc(s.n) + "</span>" +
+        '<span class="rt-meta">' + flag + " " + (thm.emoji ? esc(thm.emoji) + " " : "") + esc(thm.label) + "</span></div>";
+    }
+    function col(list, cls, lead) {
+      if (!list.length) return "";
+      return '<div class="roster-col ' + cls + '"><div class="lead">' + lead + " (" + list.length + ")</div>" +
+        '<div class="roster-list">' + list.map(function (s) { return item(s, cls); }).join("") + "</div></div>";
+    }
+    document.getElementById("rosterBody").innerHTML =
+      col(ROSTER.added, "in", "🟢 신규 편입") + col(ROSTER.removed, "out", "🔴 제외");
   }
 
   function renderTopPicks() {
@@ -908,6 +977,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   renderLiquidity();
   renderThemeChips();
   renderTopPicks();
+  renderRoster();
   render();
 
   // PWA 서비스워커 등록 (http/https에서만 — file:// 로 열면 건너뜀)
