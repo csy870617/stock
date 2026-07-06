@@ -2,7 +2,10 @@ name: Refresh quotes (daily, token-free)
 
 # 시세만 매일 자동 갱신한다 — LLM 세션 대신 순수 스크립트(scripts/update-quotes.js)를
 # 돌려 data/quotes.js 만 커밋한다. 분석(recommendations.js)은 건드리지 않으므로 토큰 0.
-# quotes.js 가 바뀌어 푸시되면 deploy-pages.yml 이 이어서 페이지를 재배포한다.
+# 시세가 바뀌어 커밋되면 마지막 스텝이 deploy-pages 를 직접 트리거해 페이지를 재배포한다.
+#
+# 왜 직접 트리거하나: GITHUB_TOKEN 으로 만든 푸시는 deploy-pages 의 push 트리거를 태우지
+#       않는다(무한 루프 방지 정책). 그래서 workflow_dispatch 로 명시적으로 배포를 건다.
 #
 # 참고: 예약(cron)·수동(dispatch) 실행은 이 워크플로우가 "기본 브랜치"에 존재해야 동작한다
 #       (GitHub 정책). 이 저장소의 기본 브랜치는 아래 TARGET_BRANCH 와 같으므로 병합하면 동작한다.
@@ -14,6 +17,7 @@ on:
 
 permissions:
   contents: write
+  actions: write      # deploy-pages 를 workflow_dispatch 로 트리거하기 위해 필요
 
 concurrency:
   group: refresh-quotes
@@ -41,9 +45,11 @@ jobs:
         run: node scripts/update-quotes.js
 
       - name: Commit & push if changed
+        id: commit
         run: |
           if git diff --quiet -- data/quotes.js; then
             echo "시세 변화 없음 — 커밋 생략"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           git config user.name "github-actions[bot]"
@@ -51,3 +57,11 @@ jobs:
           git add data/quotes.js
           git commit -m "시세 자동 갱신 (data/quotes.js) — update-quotes.js"
           git push origin HEAD:${TARGET_BRANCH}
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      # GITHUB_TOKEN 푸시는 push 트리거를 안 태우므로, 바뀌었을 때만 배포를 명시적으로 건다.
+      - name: Trigger Pages deploy
+        if: steps.commit.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run deploy-pages.yml --ref "${TARGET_BRANCH}"
