@@ -31,6 +31,24 @@ if (fs.existsSync(HIST)) {
   history = global.window.STOCK_HISTORY || [];
 }
 
+// 시세는 data/quotes.js(매일 갱신되는 실제 시세)를 우선 사용한다.
+// recommendations.js 의 price 는 quotes.js 미보유 종목용 폴백일 뿐이므로,
+// 성과 히스토리도 quotes.js 값으로 기록해야 정확하다.
+const QUOTES = path.join(ROOT, "data", "quotes.js");
+let quotes = {};
+if (fs.existsSync(QUOTES)) {
+  try { require(QUOTES); quotes = (global.window.STOCK_QUOTES || {}).quotes || {}; }
+  catch (_e) { quotes = {}; }
+}
+function priceOf(s) {
+  const q = quotes[s.ticker];
+  return (q && typeof q.price === "number") ? q.price : s.price;
+}
+function priceDateOf(s) {
+  const q = quotes[s.ticker];
+  return (q && q.date) ? q.date : s.priceDate;
+}
+
 // (국가,티커) 중복 제거 — tier 최소(=확신 최고) 항목 우선
 const seen = {};
 ["korea", "us"].forEach((c) => {
@@ -38,7 +56,7 @@ const seen = {};
     const key = c + ":" + s.ticker;
     if (!seen[key] || s.tier < seen[key].tier) {
       seen[key] = { t: s.ticker, n: s.name, c, th: s.theme, tier: s.tier,
-                    p: s.price, pd: s.priceDate, tp: s.targetPrice };
+                    p: priceOf(s), pd: priceDateOf(s), tp: s.targetPrice };
     }
   });
 });
