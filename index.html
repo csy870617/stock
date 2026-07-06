@@ -213,9 +213,13 @@ a { color: inherit; }
 /* ── 종목 변경(편입·제외) ── */
 .roster { margin: 0 0 26px; background: var(--surface); border: 1px solid var(--line);
   border-radius: var(--r); padding: 16px 18px; box-shadow: var(--shadow-sm); }
-.roster-head { margin-bottom: 12px; }
+.roster-head { margin-bottom: 12px; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
 .roster-head h2 { font-size: 1.02rem; font-weight: 750; letter-spacing: -0.02em; }
 .roster-head .crit { display: block; color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
+.roster-date { flex-shrink: 0; font: inherit; font-size: 0.82rem; color: var(--ink); background: var(--surface);
+  border: 1px solid var(--line); border-radius: 10px; padding: 6px 10px; cursor: pointer; max-width: 100%; }
+.roster-date:focus { outline: none; border-color: var(--accent); }
+.roster-empty { color: var(--muted); font-size: 0.85rem; }
 .roster-body { display: grid; grid-template-columns: repeat(auto-fit, minmax(258px, 1fr)); gap: 12px; }
 .roster-theme { border: 1px solid var(--line); border-radius: 12px; padding: 11px 13px; }
 .rth-head { font-size: 0.85rem; font-weight: 750; letter-spacing: -0.01em; margin-bottom: 7px;
@@ -396,8 +400,8 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
 
   <section class="roster" id="rosterBox" style="display:none">
     <div class="roster-head">
-      <h2>📌 종목 변경</h2>
-      <span class="crit" id="rosterWhen"></span>
+      <div class="roster-title"><h2>📌 종목 변경</h2><span class="crit" id="rosterWhen"></span></div>
+      <select class="roster-date" id="rosterDate" aria-label="변경 날짜 선택"></select>
     </div>
     <div class="roster-body" id="rosterBody"></div>
   </section>
@@ -449,21 +453,23 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     .filter(function (s) { return s && typeof s.date === "string" && Array.isArray(s.stocks); })
     .sort(function (a, b) { return a.date.localeCompare(b.date); });
 
-  // ── 종목 변경(편입·제외) 계산 — 최근 두 스냅샷(history.js) 비교 ──
-  // 신규 편입/제외 종목을 페이지에 표시하기 위한 데이터. 스냅샷 2개 미만이면 표시 안 함.
-  var NEW_TICKERS = {};   // 이번 갱신에 새로 편입된 티커 → true (카드 NEW 배지용)
-  var ROSTER = null;      // { when, added:[snapStock], removed:[snapStock] }
+  // ── 종목 변경(편입·제외) 계산 — 인접 스냅샷쌍마다 diff 축적(history.js) ──
+  // 날짜별로 편입/제외를 조회할 수 있도록, 각 스냅샷을 직전 스냅샷과 비교해 기록한다.
+  var NEW_TICKERS = {};    // 가장 최근 갱신에 새로 편입된 티커 → true (카드 NEW 배지용)
+  var ROSTER_HIST = [];    // [{date, prevDate, added:[snapStock], removed:[snapStock]}], 과거→최신
   (function computeRoster() {
-    if (H.length < 2) return;
-    var last = H[H.length - 1], prev = H[H.length - 2];
-    var lastSet = {}, prevSet = {};
-    last.stocks.forEach(function (s) { lastSet[s.t] = s; });
-    prev.stocks.forEach(function (s) { prevSet[s.t] = s; });
-    var added = last.stocks.filter(function (s) { return !prevSet[s.t]; });
-    var removed = prev.stocks.filter(function (s) { return !lastSet[s.t]; });
-    added.forEach(function (s) { NEW_TICKERS[s.t] = true; });
-    if (added.length || removed.length) {
-      ROSTER = { when: prev.date + " → " + last.date, added: added, removed: removed };
+    for (var i = 1; i < H.length; i++) {
+      var prev = H[i - 1], cur = H[i];
+      var prevSet = {}, curSet = {};
+      prev.stocks.forEach(function (s) { prevSet[s.t] = s; });
+      cur.stocks.forEach(function (s) { curSet[s.t] = s; });
+      var added = cur.stocks.filter(function (s) { return !prevSet[s.t]; });
+      var removed = prev.stocks.filter(function (s) { return !curSet[s.t]; });
+      ROSTER_HIST.push({ date: cur.date, prevDate: prev.date, added: added, removed: removed });
+    }
+    // NEW 배지: 가장 최근 스냅샷의 편입 종목
+    if (ROSTER_HIST.length) {
+      ROSTER_HIST[ROSTER_HIST.length - 1].added.forEach(function (s) { NEW_TICKERS[s.t] = true; });
     }
   })();
 
@@ -674,11 +680,37 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     return 0.48 * upScore + 0.22 * riskScore + 0.18 * divScore + 0.12 * srcScore;
   }
 
-  // 종목 변경(편입·제외) 섹션 렌더 — 주제별로 묶어서, 변경이 있을 때만 노출
+  // 종목 변경(편입·제외) 섹션 — 날짜 드롭다운으로 과거 변경도 조회. 스냅샷쌍이 없으면 숨김.
   function renderRoster() {
     var box = document.getElementById("rosterBox");
-    if (!ROSTER) { box.style.display = "none"; return; }
-    document.getElementById("rosterWhen").textContent = ROSTER.when + " 기준 변경";
+    if (!ROSTER_HIST.length) { box.style.display = "none"; return; }
+    box.style.display = "";
+
+    var sel = document.getElementById("rosterDate");
+    var opts = ROSTER_HIST.slice().reverse();   // 최신 날짜가 위로
+    // 기본 선택: 변경이 있는 가장 최신 날짜, 없으면 가장 최신
+    var def = null;
+    for (var i = 0; i < opts.length; i++) { if (opts[i].added.length || opts[i].removed.length) { def = opts[i]; break; } }
+    if (!def) def = opts[0];
+
+    if (!sel.dataset.init) {
+      sel.innerHTML = opts.map(function (e) {
+        var n = e.added.length + e.removed.length;
+        var label = e.date + (n ? "  (편입 " + e.added.length + " · 제외 " + e.removed.length + ")" : "  (변경 없음)");
+        return '<option value="' + esc(e.date) + '"' + (e.date === def.date ? " selected" : "") + ">" + esc(label) + "</option>";
+      }).join("");
+      sel.addEventListener("change", function () { renderRosterBody(sel.value); });
+      sel.dataset.init = "1";
+    }
+    renderRosterBody(def.date);
+  }
+
+  // 선택된 날짜의 편입/제외를 주제별로 묶어서 렌더
+  function renderRosterBody(date) {
+    var entry = null;
+    for (var i = 0; i < ROSTER_HIST.length; i++) { if (ROSTER_HIST[i].date === date) { entry = ROSTER_HIST[i]; break; } }
+    if (!entry) return;
+    document.getElementById("rosterWhen").textContent = entry.prevDate + " → " + entry.date + " 기준";
 
     function item(s, cls) {
       var flag = s.c === "us" ? "🇺🇸" : "🇰🇷";
@@ -690,10 +722,9 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       return '<div class="roster-line ' + cls + '"><span class="rl-lead">' + lead + "</span>" +
         '<span class="roster-list">' + list.map(function (s) { return item(s, cls); }).join("") + "</span></div>";
     }
-    // 주제(theme) 블록 하나 — 편입/제외가 있을 때만
     function themeBlock(key, label, emoji) {
-      var added = ROSTER.added.filter(function (s) { return s.th === key; });
-      var removed = ROSTER.removed.filter(function (s) { return s.th === key; });
+      var added = entry.added.filter(function (s) { return s.th === key; });
+      var removed = entry.removed.filter(function (s) { return s.th === key; });
       if (!added.length && !removed.length) return "";
       return '<div class="roster-theme"><div class="rth-head">' +
         (emoji ? esc(emoji) + " " : "") + esc(label) +
@@ -704,14 +735,12 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     var themes = D.themes || [];
     var covered = {};
     var html = themes.map(function (t) { covered[t.key] = 1; return themeBlock(t.key, t.label, t.emoji); }).join("");
-    // themes 정의에 없는 주제 키(예: 사라진 옛 주제)는 '기타'로 모아 표시
     var otherKeys = {};
-    ROSTER.added.concat(ROSTER.removed).forEach(function (s) { if (!covered[s.th]) otherKeys[s.th] = 1; });
+    entry.added.concat(entry.removed).forEach(function (s) { if (!covered[s.th]) otherKeys[s.th] = 1; });
     Object.keys(otherKeys).forEach(function (k) { html += themeBlock(k, k, ""); });
 
-    if (!html) { box.style.display = "none"; return; }
-    box.style.display = "";
-    document.getElementById("rosterBody").innerHTML = html;
+    document.getElementById("rosterBody").innerHTML =
+      html || '<div class="roster-empty">이 날짜에는 편입·제외 변경이 없습니다.</div>';
   }
 
   function renderTopPicks() {
