@@ -746,9 +746,12 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   function renderTopPicks() {
     var box = document.getElementById("picksBox");
     var seen = {}, picks = [];
-    // 최우선(Tier 1) 확신 등급 & 목표가 미도달 종목만 후보로
+    // 최우선(Tier 1) 확신 등급 & (실시간 기준) 목표가 미도달 종목만 후보로
+    // — 카드와 동일한 effective() 상승여력으로 판정해, 실시간 시세가 붙어도 표시가 어긋나지 않게 한다.
     (D[state.country] || []).forEach(function (s) {
-      if (s.tier !== 1 || s.upside == null || s.upside <= 0 || seen[s.ticker]) return;
+      if (s.tier !== 1 || seen[s.ticker]) return;
+      var up = effective(s).upside;
+      if (up == null || up <= 0) return;
       seen[s.ticker] = true; picks.push(s);
     });
     // 종합 점수 내림차순(동점 시 상승여력)
@@ -758,13 +761,16 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     box.style.display = "";
     document.getElementById("picksGrid").innerHTML = picks.map(function (s, i) {
       var thm = themeMeta(s.theme);
+      var e = effective(s);   // 가격·상승여력은 카드와 동일하게 실시간 우선
       return '<div class="pick" data-ticker="' + esc(s.ticker) + '" data-theme="' + esc(s.theme) + '"><span class="rank">' + ["🥇", "🥈", "🥉"][i] + "</span>" +
         '<span class="thm">' + (thm.emoji ? esc(thm.emoji) + " " : "") + esc(thm.label) + " · Tier 1</span>" +
         '<div class="nm">' + esc(s.name) + '<span class="tk">' + esc(s.ticker) + "</span></div>" +
-        '<div class="up-big">+' + Number(s.upside).toFixed(1) + "%</div>" +
-        '<div class="sub">' + fmtPrice(s.price, state.country) + " → 목표 " + fmtPrice(s.targetPrice, state.country) +
+        '<div class="up-big">' + fmtPct(e.upside) + "</div>" +
+        '<div class="sub">' + fmtPrice(e.price, state.country) + " → 목표 " + fmtPrice(s.targetPrice, state.country) +
         (s.dividendYield ? " · 배당 " + Number(s.dividendYield).toFixed(1) + "%" : "") + "</div></div>";
     }).join("");
+    // 후보들의 실시간 시세도 확보해, 도착하면 카드와 함께 다시 그린다(현재 주제에 없어도).
+    ensureLive(picks, refreshLive);
   }
 
   function tableView(list, showTheme) {
@@ -886,6 +892,10 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     }
   }
 
+  // 실시간 시세가 도착하면 카드와 Top Picks 를 함께 다시 그려 표시를 일치시킨다.
+  // (모두 캐시된 뒤엔 ensureLive 의 todo 가 비어 재귀 호출이 즉시 멈춘다 — 무한 루프 없음)
+  function refreshLive() { render(); renderTopPicks(); }
+
   function render() {
     var host = document.getElementById("cards");
     var descEl = document.getElementById("themeDesc");
@@ -910,7 +920,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
 
     if (state.view === "table") {
       host.innerHTML = tableView(sortList(list), false);
-      ensureLive(list, render);
+      ensureLive(list, refreshLive);
       return;
     }
 
@@ -918,7 +928,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       // 티어 그룹 없이 선택한 기준으로 평면 정렬
       host.innerHTML = '<div class="grid">' +
         sortList(list).map(function (s) { return card(s, state.country); }).join("") + "</div>";
-      ensureLive(list, render);
+      ensureLive(list, refreshLive);
       return;
     }
 
@@ -934,7 +944,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
               '<div class="grid">' + group.map(function (s) { return card(s, state.country); }).join("") + "</div></div>";
     });
     host.innerHTML = html;
-    ensureLive(list, render);
+    ensureLive(list, refreshLive);
   }
 
   document.getElementById("countrySeg").addEventListener("click", function (e) {

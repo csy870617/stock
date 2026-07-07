@@ -1,7 +1,7 @@
 // 서비스워커 — 앱 설치(PWA) 및 오프라인 대비 캐시
 // 전략: 네트워크 우선(항상 최신 데이터를 먼저 시도), 실패 시에만 캐시 사용.
 // 데이터 정확성이 최우선이므로 캐시가 최신 데이터를 가리는 일이 없도록 한다.
-var CACHE = "mystock-v5";
+var CACHE = "mystock-v6";
 var SHELL = [
   "./",
   "./index.html",
@@ -15,8 +15,13 @@ var SHELL = [
 ];
 
 self.addEventListener("install", function (e) {
+  // 개별 자원을 독립적으로 캐시한다. addAll 은 목록 중 하나만 실패해도 전체가 reject 되어
+  // SW 설치 자체가 실패하므로(아이콘/데이터 파일 하나만 빠져도 PWA 캐시가 통째로 무산),
+  // allSettled 로 일부 실패를 허용해 설치는 항상 성공하도록 한다.
   e.waitUntil(
-    caches.open(CACHE).then(function (c) { return c.addAll(SHELL); }).then(function () { return self.skipWaiting(); })
+    caches.open(CACHE).then(function (c) {
+      return Promise.allSettled(SHELL.map(function (u) { return c.add(u); }));
+    }).then(function () { return self.skipWaiting(); })
   );
 });
 
