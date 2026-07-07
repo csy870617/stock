@@ -1,8 +1,11 @@
 name: Refresh quotes (daily, token-free)
 
-# 시세만 매일 자동 갱신한다 — LLM 세션 대신 순수 스크립트(scripts/update-quotes.js)를
-# 돌려 data/quotes.js 만 커밋한다. 분석(recommendations.js)은 건드리지 않으므로 토큰 0.
-# 시세가 바뀌어 커밋되면 마지막 스텝이 deploy-pages 를 직접 트리거해 페이지를 재배포한다.
+# 매일 앱 최신성을 순수 스크립트로 보장한다(LLM 토큰 0):
+#   1) update-quotes.js  → data/quotes.js (실제 Yahoo 시세)
+#   2) daily-maintenance.js → recommendations.js generatedAt(오늘) + 지수·스냅샷(history.js)
+# 이렇게 하면 LLM 추천 Routine이 실패해도 앱은 매일 오늘자 날짜·시세·스냅샷을 유지한다.
+# (종목별 심층 분석·발굴은 LLM Routine이 성공할 때 그 위에 얹힌다.)
+# 바뀌어 커밋되면 마지막 스텝이 deploy-pages 를 직접 트리거해 페이지를 재배포한다.
 #
 # 왜 직접 트리거하나: GITHUB_TOKEN 으로 만든 푸시는 deploy-pages 의 push 트리거를 태우지
 #       않는다(무한 루프 방지 정책). 그래서 workflow_dispatch 로 명시적으로 배포를 건다.
@@ -44,18 +47,21 @@ jobs:
       - name: Update quotes (Yahoo → data/quotes.js)
         run: node scripts/update-quotes.js
 
+      - name: Daily maintenance (generatedAt + 지수·스냅샷, token-free)
+        run: node scripts/daily-maintenance.js
+
       - name: Commit & push if changed
         id: commit
         run: |
-          if git diff --quiet -- data/quotes.js; then
-            echo "시세 변화 없음 — 커밋 생략"
+          if git diff --quiet -- data/quotes.js data/recommendations.js data/history.js; then
+            echo "변화 없음 — 커밋 생략"
             echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/quotes.js
-          git commit -m "시세 자동 갱신 (data/quotes.js) — update-quotes.js"
+          git add data/quotes.js data/recommendations.js data/history.js
+          git commit -m "매일 데이터 갱신 (자동) — 시세·기준일·스냅샷 (update-quotes + daily-maintenance)"
           git push origin HEAD:${TARGET_BRANCH}
           echo "changed=true" >> "$GITHUB_OUTPUT"
 
