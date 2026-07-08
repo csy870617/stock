@@ -29,10 +29,14 @@ if (src !== before) fs.writeFileSync(RECO, src);
 // 2) 지수(KOSPI ^KS11, S&P500 ^GSPC) 조회 — 실패 시 생략(스냅샷이 기존 지수값 보존)
 async function indexPrice(sym) {
   if (typeof fetch !== "function") return null;
+  // 요청당 타임아웃 — 지수 조회가 지연돼 매일 유지보수가 멈추는 것을 막는다.
+  // 실패 시 null 반환 → snapshot 이 기존 지수값을 보존하므로 안전하다.
+  const ctrl = new AbortController();
+  const to = setTimeout(function () { ctrl.abort(); }, 8000);
   try {
     const r = await fetch(
       "https://query1.finance.yahoo.com/v8/finance/chart/" + encodeURIComponent(sym) + "?interval=1d&range=1d",
-      { headers: { "User-Agent": "Mozilla/5.0", "Accept": "application/json" } }
+      { signal: ctrl.signal, headers: { "User-Agent": "Mozilla/5.0", "Accept": "application/json" } }
     );
     if (!r.ok) return null;
     const j = await r.json();
@@ -40,6 +44,7 @@ async function indexPrice(sym) {
     const p = m && m.regularMarketPrice;
     return (typeof p === "number" && isFinite(p)) ? p : null;
   } catch (_e) { return null; }
+  finally { clearTimeout(to); }
 }
 
 (async () => {

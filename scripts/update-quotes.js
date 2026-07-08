@@ -70,7 +70,16 @@ const seen = {};
 async function oneQuote(symbol) {
   const url = "https://query1.finance.yahoo.com/v8/finance/chart/" +
     encodeURIComponent(symbol) + "?interval=1d&range=1d";
-  const r = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0", "Accept": "application/json" } });
+  // 요청당 타임아웃 — Yahoo 가 응답을 지연할 때 워커가 무한정 매달려 전체 갱신이
+  // 멈추는 것을 막는다(index.html 실시간 조회와 동일한 방어). 실패는 폴백으로 처리된다.
+  const ctrl = new AbortController();
+  const to = setTimeout(function () { ctrl.abort(); }, 8000);
+  let r;
+  try {
+    r = await fetch(url, { signal: ctrl.signal, headers: { "User-Agent": "Mozilla/5.0", "Accept": "application/json" } });
+  } finally {
+    clearTimeout(to);
+  }
   if (!r.ok) throw new Error("HTTP " + r.status);
   const j = await r.json();
   const m = j && j.chart && j.chart.result && j.chart.result[0] && j.chart.result[0].meta;

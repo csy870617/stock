@@ -995,7 +995,10 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
 
   function renderLiquidity() {
     var box = document.getElementById("liqBox");
-    if (!L || (L.us && L.us.shortTerm == null && L.korea && L.korea.shortTerm == null)) return;
+    // 유효한 게이지 값(단기/중기)이 하나라도 있어야 섹션을 보인다.
+    // L 은 있으나 us/korea 키가 없거나 값이 비어도 깨진 빈 게이지가 뜨지 않도록 방어한다.
+    function hasTerm(c) { return c && (c.shortTerm != null || c.midTerm != null); }
+    if (!L || (!hasTerm(L.us) && !hasTerm(L.korea))) { box.style.display = "none"; return; }
     box.style.display = "";
 
     var RANKS = ["매우 부정", "부정", "신중", "우호", "매우 우호"];
