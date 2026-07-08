@@ -23,22 +23,40 @@
 //   }
 //
 // 시세(price·priceDate·upside)는 quotes.js 가 담당하므로 패치에 넣을 필요가 없다.
+//
+// 신뢰도 가드레일 (자동 재평가의 기계적 안전장치):
+//   1) 일일 편입+편출 합계가 8건(=4교체) 초과 → --force 없이 거부 (보수적 교체 원칙 강제)
+//   2) 기존 종목의 targetPrice 를 ±50% 초과 변경 → --force 없이 거부, ±25% 초과는 경고
+//      (단일 증권사 최고치를 컨센서스로 착각하는 실수 차단)
+//   3) targetPrice/thesis/earnings 를 바꾸는 stocks 항목은 sources(근거 URL) 필수
+//   4) 적용 결과가 validate-reco.js 전체 검증(구조 9·3×3, 형식, 계산 정합성)을 통과해야 저장
 
 const fs = require("fs");
 const path = require("path");
+const { validate } = require("./validate-reco");
 
 const ROOT = path.join(__dirname, "..");
 const RECO = path.join(ROOT, "data", "recommendations.js");
 
 const patchPath = process.argv[2];
 if (!patchPath || patchPath.startsWith("--")) {
-  console.error("사용법: node scripts/update-reco.js <patch.json> [--out <경로>]");
+  console.error("사용법: node scripts/update-reco.js <patch.json> [--out <경로>] [--force]");
   process.exit(1);
 }
 const outIdx = process.argv.indexOf("--out");
 const OUT = outIdx >= 0 ? process.argv[outIdx + 1] : RECO;
+const FORCE = process.argv.includes("--force");
 
 const patch = JSON.parse(fs.readFileSync(patchPath, "utf8"));
+
+// ── 가드레일: 과도한 일일 변경 차단 ──
+const MAX_DAILY_OPS = 8;   // add+remove 합계 (교체 1건 = add 1 + remove 1)
+const ops = (patch.add || []).length + (patch.remove || []).length;
+if (ops > MAX_DAILY_OPS && !FORCE) {
+  console.error("✗ 가드레일: 일일 편입+편출 " + ops + "건 > 허용 " + MAX_DAILY_OPS + "건.");
+  console.error("  보수적 교체 원칙 위반 가능성 — 정말 의도한 대규모 개편이면 --force 로 재실행.");
+  process.exit(1);
+}
 
 global.window = {};
 require(RECO);
@@ -57,6 +75,7 @@ let merged = 0, added = 0, removed = 0;
 if (patch.themes !== undefined) D.themes = patch.themes;
 
 // ── 종목 필드 merge (국가+티커[+주제]) ──
+const guardErrors = [];
 (patch.stocks || []).forEach((entry) => {
   const country = entry.country, ticker = entry.ticker, theme = entry.theme;
   if (!country || !D[country] || !ticker) { warnings.push("stocks 항목에 country/ticker 필요: " + JSON.stringify(entry)); return; }
@@ -64,9 +83,40 @@ if (patch.themes !== undefined) D.themes = patch.themes;
   delete fields.country; delete fields.ticker; delete fields.theme;   // theme 은 대상 지정용(값 변경 안 함)
   const matches = D[country].filter((s) => s.ticker === ticker && (theme == null || s.theme === theme));
   if (!matches.length) { warnings.push("merge 대상 없음: " + country + ":" + ticker + (theme ? "/" + theme : "")); return; }
+
+  // 가드레일: 분석 필드 변경엔 근거 URL 필수
+  const changesAnalysis = ["targetPrice", "thesis", "earnings"].some((k) => fields[k] !== undefined);
+  const hasSources = Array.isArray(fields.sources) && fields.sources.length >= 1;
+  if (changesAnalysis && !hasSources && !FORCE) {
+    guardErrors.push(country + ":" + ticker + " — targetPrice/thesis/earnings 변경에는 sources(근거 URL 1~3개) 필수");
+    return;
+  }
+
+  // 가드레일: 목표가 급변 차단 (단일 증권사 최고치 오인 방지)
+  if (typeof fields.targetPrice === "number") {
+    const prevTp = matches[0].targetPrice;
+    if (typeof prevTp === "number" && prevTp > 0) {
+      const chg = (fields.targetPrice - prevTp) / prevTp * 100;
+      if (Math.abs(chg) > 50 && !FORCE) {
+        guardErrors.push(country + ":" + ticker + " — 목표가 " + prevTp + " → " + fields.targetPrice +
+          " (" + chg.toFixed(1) + "%) 급변. 컨센서스(다수 증권사 평균) 맞는지 재확인 후 --force 로만 허용");
+        return;
+      }
+      if (Math.abs(chg) > 25) {
+        warnings.push(country + ":" + ticker + " — 목표가 " + chg.toFixed(1) + "% 변경. 단일 증권사 목표가가 아닌 컨센서스인지 확인 요망");
+      }
+    }
+  }
+
   matches.forEach((s) => Object.assign(s, fields));
   merged += matches.length;
 });
+
+if (guardErrors.length) {
+  console.error("✗ 가드레일 위반 " + guardErrors.length + "건 — 저장 취소:");
+  guardErrors.forEach((e) => console.error("  - " + e));
+  process.exit(1);
+}
 
 // ── 종목 추가 ──
 (patch.add || []).forEach((s) => {
@@ -86,12 +136,25 @@ if (patch.themes !== undefined) D.themes = patch.themes;
   removed += before - D[r.country].length;
 });
 
+// ── 파생 필드 재계산 — upside 는 price·targetPrice 에서 유도 (수기 값 불일치 방지) ──
+["korea", "us"].forEach((c) => (D[c] || []).forEach((s) => {
+  if (typeof s.price === "number" && s.price > 0 && typeof s.targetPrice === "number") {
+    s.upside = Math.round((s.targetPrice - s.price) / s.price * 1000) / 10;
+  }
+}));
+
 // ── 직렬화 (종목 1개 = 1줄 → 다음 패치의 diff 가 최소화된다) ──
 function serialize(D) {
   const L = [];
   L.push("// stock-recommender 분석 결과 — 시세는 data/quotes.js 로 분리(update-quotes.js).");
   L.push("// 증분 갱신: node scripts/update-reco.js <patch.json> 로 바뀐 종목만 merge (README 참고).");
   L.push("// price·priceDate·upside 는 quotes.js 미보유 종목용 폴백값일 뿐, 표시는 quotes.js 가 우선.");
+  L.push("//");
+  L.push("// ★ 재평가 체크리스트 (자동 루틴 필독 — 어기면 update-reco.js 가드레일이 저장을 거부한다):");
+  L.push("//  1. 목표가는 반드시 '컨센서스(다수 증권사 평균)'. 단일 증권사 최고치 금지. 출처에서 발행일 확인 — 4주 이상 지난 기사를 '최신'으로 취급 금지.");
+  L.push("//  2. 편입·편출·목표가 변경엔 서로 다른 출처 2개 이상으로 교차 확인. 확인 못 한 수치는 추정 금지.");
+  L.push("//  3. 근거가 약하면 그날은 바꾸지 않는다(변경 0건이 정상). 하루 최대 4교체.");
+  L.push("//  4. 판단 전 scripts/performance-report.js 실행 — 목표가 소진·성과 부진 종목이 재평가 우선 대상.");
   L.push("window.STOCK_DATA = {");
   ["generatedAt", "marketNote", "disclaimer"].forEach((k) => {
     if (D[k] !== undefined) L.push("  " + k + ": " + JSON.stringify(D[k]) + ",");
@@ -126,6 +189,31 @@ try {
 } catch (e) {
   console.error("직렬화 결과 검증 실패, 저장 취소: " + e.message);
   process.exit(1);
+}
+
+// ── 전체 데이터 검증 (구조 9·3×3, 티커/시장/출처 형식, upside 정합성) — 실패 시 저장 취소 ──
+{
+  let quotes = {};
+  const QUOTES = path.join(ROOT, "data", "quotes.js");
+  if (fs.existsSync(QUOTES)) {
+    try {
+      global.window = {};
+      delete require.cache[require.resolve(QUOTES)];
+      require(QUOTES);
+      quotes = (global.window.STOCK_QUOTES || {}).quotes || {};
+    } catch (_e) {}
+  }
+  const res = validate(D, { quotes });
+  if (res.warnings.length) {
+    console.log("⚠ 검증 경고 " + res.warnings.length + "건:");
+    res.warnings.forEach((w) => console.log("  - " + w));
+  }
+  if (res.errors.length) {
+    console.error("✗ 데이터 검증 실패 " + res.errors.length + "건 — 저장 취소:");
+    res.errors.forEach((e) => console.error("  - " + e));
+    console.error("  (패치를 수정해 9종목·Tier 3×3 구조와 필드 형식을 맞춘 뒤 재실행)");
+    process.exit(1);
+  }
 }
 
 fs.writeFileSync(OUT, out);

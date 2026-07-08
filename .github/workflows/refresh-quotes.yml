@@ -50,6 +50,10 @@ jobs:
       - name: Daily maintenance (generatedAt + 지수·스냅샷, token-free)
         run: node scripts/daily-maintenance.js
 
+      # 신뢰도 게이트 — 구조·형식·계산 정합성이 깨진 데이터는 커밋하지 않는다
+      - name: Validate data (guardrail)
+        run: node scripts/validate-reco.js
+
       - name: Commit & push if changed
         id: commit
         run: |

@@ -27,6 +27,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # 신뢰도 게이트 — 검증 실패 데이터는 Pages 에 배포되지 않는다
+      - name: Validate data (guardrail)
+        run: node scripts/validate-reco.js
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 
