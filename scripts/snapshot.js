@@ -79,6 +79,17 @@ if (idx >= 0) {
 }
 history.sort((a, b) => a.date.localeCompare(b.date));
 
+// 히스토리 상한 — 최근 365일치만 보존해 파일이 무한히 커지는 것을 막는다.
+// 성과(perf) 기준선은 '보존된 최초 스냅샷'이 되므로, 성과는 최대 약 1년 구간으로 측정된다.
+// (현재처럼 1년 미만이면 아무것도 잘리지 않는다.)
+const RETAIN_DAYS = 365;
+if (history.length) {
+  const latest = new Date(history[history.length - 1].date);
+  latest.setUTCDate(latest.getUTCDate() - RETAIN_DAYS);
+  const cutoff = latest.toISOString().slice(0, 10);
+  history = history.filter((h) => h.date >= cutoff);
+}
+
 const out = "// 일별 추천 스냅샷 히스토리 — scripts/snapshot.js 가 자동 생성/추가\n" +
   "// 각 항목: {date, kospi, sp500, stocks:[{t 티커, n 이름, c 국가, th 주제, tier, p 가격, pd 가격기준일, tp 목표가}]}\n" +
   "window.STOCK_HISTORY = " + JSON.stringify(history, null, 1) + ";\n";

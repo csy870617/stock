@@ -240,19 +240,6 @@ a { color: inherit; }
   letter-spacing: 0.02em; color: #fff; background: var(--up); border-radius: 999px; padding: 2px 7px; }
 
 /* ── 툴바 ── */
-.toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin: 0 0 16px; }
-.toolbar input[type="search"] {
-  background: var(--surface); border: 1px solid var(--line); color: var(--ink);
-  border-radius: 11px; padding: 8px 13px; font-size: 0.9rem; min-width: 200px; flex: 1; max-width: 320px;
-  transition: border-color .15s, box-shadow .15s;
-}
-.toolbar input[type="search"]:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 15%, transparent); }
-.toolbar input[type="search"]::placeholder { color: var(--muted); }
-.toolbar select {
-  background: var(--surface); border: 1px solid var(--line); color: var(--ink);
-  border-radius: 11px; padding: 8px 11px; font-size: 0.85rem; cursor: pointer;
-}
-.toolbar .lbl { color: var(--muted); font-size: 0.8rem; }
 
 /* ── 주제 설명 ── */
 .theme-desc {
@@ -476,7 +463,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   var state = {
     country: "korea",
     theme: (D && D.themes && D.themes[0] && D.themes[0].key) || "core",
-    q: "", sort: "tier", view: "cards"
+    view: "cards"
   };
 
   var root = document.documentElement;
@@ -659,13 +646,10 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     }).join("");
   }
 
+  // 정렬: Tier 오름차순 → 상승여력 내림차순 (표 뷰에서 사용)
   function sortList(list) {
-    var s = state.sort;
     return list.slice().sort(function (a, b) {
-      if (s === "div")   return numOr(b.dividendYield, -Infinity) - numOr(a.dividendYield, -Infinity);
-      if (s === "fresh") return new Date(b.priceDate || 0) - new Date(a.priceDate || 0);
-      if (s === "tier")  return (a.tier - b.tier) || (numOr(b.upside, -Infinity) - numOr(a.upside, -Infinity));
-      return numOr(b.upside, -Infinity) - numOr(a.upside, -Infinity); // upside
+      return (a.tier - b.tier) || (numOr(b.upside, -Infinity) - numOr(a.upside, -Infinity));
     });
   }
 
@@ -920,14 +904,6 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
 
     if (state.view === "table") {
       host.innerHTML = tableView(sortList(list), false);
-      ensureLive(list, refreshLive);
-      return;
-    }
-
-    if (state.sort !== "tier") {
-      // 티어 그룹 없이 선택한 기준으로 평면 정렬
-      host.innerHTML = '<div class="grid">' +
-        sortList(list).map(function (s) { return card(s, state.country); }).join("") + "</div>";
       ensureLive(list, refreshLive);
       return;
     }
