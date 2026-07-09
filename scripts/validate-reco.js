@@ -34,6 +34,55 @@ const RE_HANGUL = /[가-힣]/;
 const RE_URL = /^https?:\/\/[^\s"']+$/;
 const BAD_URL_HINTS = ["example.com", "example.org", "localhost", "127.0.0.1"];
 
+// ── 출처 신뢰도 등급 — WebSearch 기반 재평가의 증거 품질을 기계적으로 강제 ──
+// TRUSTED: 컨센서스 집계·공시·주요 경제언론·증권사 리서치 — 수치 인용을 신뢰할 수 있는 도메인.
+// BLOCKED: 커뮤니티·개인 블로그·SNS·위키 — 풍문/부정확 위험이 커서 근거(sources)로 금지.
+// 정책: 기존(baked) 데이터의 BLOCKED/비신뢰 출처는 경고만(배포 통과 — 레거시 관용, 재평가 우선 대상 표시),
+//       새 패치(update-reco.js)는 BLOCKED 즉시 거부 + 분석 변경/신규 편입엔 TRUSTED ≥1 필수.
+const TRUSTED_SOURCES = [
+  // 컨센서스·시장 데이터 집계
+  "fnguide.com", "wisereport.co.kr", "tipranks.com", "stockanalysis.com",
+  "investing.com", "marketbeat.com", "marketscreener.com", "zacks.com",
+  "morningstar.com", "tikr.com", "tradingview.com", "koyfin.com",
+  "finance.yahoo.com", "nasdaq.com", "finance.naver.com", "stock.naver.com",
+  // 공시·규제기관
+  "dart.fss.or.kr", "krx.co.kr", "sec.gov", "seibro.or.kr",
+  // 한국 주요 경제언론
+  "hankyung.com", "mk.co.kr", "sedaily.com", "edaily.co.kr", "mt.co.kr",
+  "biz.chosun.com", "yna.co.kr", "newsis.com", "news1.kr", "fnnews.com",
+  "asiae.co.kr", "businesspost.co.kr", "thebell.co.kr", "heraldcorp.com",
+  "newspim.com", "zdnet.co.kr", "bizwatch.co.kr",
+  // 글로벌 주요 언론
+  "reuters.com", "bloomberg.com", "wsj.com", "ft.com", "cnbc.com",
+  "marketwatch.com", "barrons.com", "cnn.com", "apnews.com",
+  // 증권사 리서치
+  "kbthink.com", "kbsec.com", "kiwoom.com", "miraeasset.com", "samsungpop.com",
+  "nhqv.com", "truefriend.com", "shinhansec.com", "hanaw.com",
+];
+const BLOCKED_SOURCES = [
+  // 블로그·포스팅 플랫폼
+  "blog.naver.com", "cafe.naver.com", "post.naver.com", "kin.naver.com",
+  "cafe.daum.net", "tistory.com", "brunch.co.kr", "blogspot.com",
+  "wordpress.com", "medium.com", "velog.io",
+  // SNS·동영상
+  "youtube.com", "youtu.be", "facebook.com", "twitter.com", "x.com",
+  "instagram.com", "tiktok.com", "threads.net", "t.me", "reddit.com",
+  // 커뮤니티·위키
+  "dcinside.com", "fmkorea.com", "clien.net", "ppomppu.co.kr",
+  "mlbpark.donga.com", "bobaedream.co.kr", "ruliweb.com", "theqoo.net",
+  "instiz.net", "82cook.com", "thinkpool.com", "namu.wiki", "wikipedia.org",
+];
+
+function sourceHost(u) {
+  try { return new URL(u).hostname.replace(/^www\./, "").toLowerCase(); }
+  catch (_e) { return ""; }
+}
+function matchDomain(host, list) {
+  return !!host && list.some((d) => host === d || host.endsWith("." + d));
+}
+function isTrustedSource(u) { return matchDomain(sourceHost(u), TRUSTED_SOURCES); }
+function isBlockedSource(u) { return matchDomain(sourceHost(u), BLOCKED_SOURCES); }
+
 const MARKETS = { korea: ["KOSPI", "KOSDAQ"], us: ["NASDAQ", "NYSE"] };
 const PER_GROUP = 9;              // (주제×국가)당 종목 수
 const PER_TIER = 3;               // 티어당 종목 수
@@ -113,7 +162,12 @@ function validate(D, opts) {
         s.sources.forEach((u) => {
           if (!RE_URL.test(u)) errors.push(tag + ": sources URL 형식 오류 '" + String(u).slice(0, 60) + "'");
           else if (BAD_URL_HINTS.some((h) => u.includes(h))) errors.push(tag + ": sources 에 플레이스홀더 도메인 '" + u + "'");
+          else if (isBlockedSource(u)) warnings.push(tag + ": 커뮤니티/블로그/SNS 출처 '" + sourceHost(u) + "' — 신뢰 출처(컨센서스·공시·주요언론)로 교체 필요, 재평가 우선 대상");
         });
+        // 신뢰 출처가 하나도 없으면 근거가 약한 종목 — 재평가 때 신뢰 출처로 보강 대상
+        if (!s.sources.some((u) => isTrustedSource(u))) {
+          warnings.push(tag + ": 신뢰 출처 0개 (" + s.sources.map(sourceHost).join(", ") + ") — 컨센서스 집계/공시/주요언론 출처로 보강 필요");
+        }
       }
 
       // 그룹 집계
@@ -188,4 +242,4 @@ if (require.main === module) {
   console.log("✓ 검증 통과: " + total + "종목, 오류 0건, 경고 " + warnings.length + "건 (" + path.relative(ROOT, file) + ")");
 }
 
-module.exports = { validate };
+module.exports = { validate, isTrustedSource, isBlockedSource, sourceHost };

@@ -33,7 +33,7 @@
 
 const fs = require("fs");
 const path = require("path");
-const { validate } = require("./validate-reco");
+const { validate, isTrustedSource, isBlockedSource, sourceHost } = require("./validate-reco");
 
 const ROOT = path.join(__dirname, "..");
 const RECO = path.join(ROOT, "data", "recommendations.js");
@@ -92,6 +92,23 @@ const guardErrors = [];
     return;
   }
 
+  // 가드레일: 출처 신뢰도 (WebSearch 결과의 품질을 기계적으로 강제)
+  //  - 커뮤니티/블로그/SNS 출처는 --force 로도 불가 (풍문은 어떤 경우에도 근거가 아님)
+  //  - 분석 변경엔 신뢰 출처(컨센서스 집계·공시·주요 언론·증권사) 1개 이상 필수
+  if (hasSources) {
+    const blocked = fields.sources.filter(isBlockedSource);
+    if (blocked.length) {
+      guardErrors.push(country + ":" + ticker + " — 커뮤니티/블로그/SNS 는 근거 출처로 쓸 수 없음: " +
+        blocked.map(sourceHost).join(", ") + " (컨센서스 집계·공시·주요 언론으로 교체)");
+      return;
+    }
+    if (changesAnalysis && !fields.sources.some(isTrustedSource) && !FORCE) {
+      guardErrors.push(country + ":" + ticker + " — targetPrice/thesis/earnings 변경엔 신뢰 출처(FnGuide·WiseReport·TipRanks·MarketBeat·공시·주요 언론·증권사 등) 1개 이상 필수. 현재: " +
+        fields.sources.map(sourceHost).join(", "));
+      return;
+    }
+  }
+
   // 가드레일: 목표가 급변 차단 (단일 증권사 최고치 오인 방지)
   if (typeof fields.targetPrice === "number") {
     const prevTp = matches[0].targetPrice;
@@ -112,21 +129,35 @@ const guardErrors = [];
   merged += matches.length;
 });
 
-if (guardErrors.length) {
-  console.error("✗ 가드레일 위반 " + guardErrors.length + "건 — 저장 취소:");
-  guardErrors.forEach((e) => console.error("  - " + e));
-  process.exit(1);
-}
-
 // ── 종목 추가 ──
 (patch.add || []).forEach((s) => {
   const country = s.country;
   if (!country || !D[country]) { warnings.push("add 국가 오류: " + JSON.stringify(s).slice(0, 80)); return; }
   const obj = Object.assign({}, s); delete obj.country;
   if (!obj.ticker || !obj.name) { warnings.push("add 에 ticker/name 필요: " + JSON.stringify(s).slice(0, 80)); return; }
+
+  // 가드레일: 신규 편입은 근거 전체가 새로 만들어지므로 출처 신뢰도를 가장 엄격히 본다
+  const srcs = Array.isArray(obj.sources) ? obj.sources : [];
+  const blocked = srcs.filter(isBlockedSource);
+  if (blocked.length) {
+    guardErrors.push("add " + country + ":" + obj.ticker + " — 커뮤니티/블로그/SNS 는 근거 출처로 쓸 수 없음: " + blocked.map(sourceHost).join(", "));
+    return;
+  }
+  if (!srcs.some(isTrustedSource) && !FORCE) {
+    guardErrors.push("add " + country + ":" + obj.ticker + " — 신규 편입엔 신뢰 출처(컨센서스 집계·공시·주요 언론·증권사) 1개 이상 필수. 현재: " +
+      (srcs.length ? srcs.map(sourceHost).join(", ") : "(없음)"));
+    return;
+  }
+
   D[country].push(obj);
   added++;
 });
+
+if (guardErrors.length) {
+  console.error("✗ 가드레일 위반 " + guardErrors.length + "건 — 저장 취소:");
+  guardErrors.forEach((e) => console.error("  - " + e));
+  process.exit(1);
+}
 
 // ── 종목 제거 ──
 (patch.remove || []).forEach((r) => {
@@ -152,10 +183,15 @@ function serialize(D) {
   L.push("//");
   L.push("// ★ 재평가 체크리스트 (자동 루틴 필독 — 어기면 update-reco.js 가드레일이 저장을 거부한다):");
   L.push("//  1. 목표가는 반드시 '컨센서스(다수 증권사 평균)'. 단일 증권사 최고치 금지. 출처에서 발행일 확인 — 4주 이상 지난 기사를 '최신'으로 취급 금지.");
-  L.push("//  2. 편입·편출·목표가 변경엔 WebSearch 로 서로 다른 출처 2개 이상을 교차 확인(스니펫에 담긴 수치·발행일 사용). 확인 못 한 수치는 추정 금지.");
-  L.push("//     └ 외부 사이트 WebFetch·금융 API 직접 호출은 이 샌드박스에서 403 으로 막힌다 — 쓰지 말 것. 403 을 만나도 멈추지 말고 WebSearch 로 대체해 계속 진행한다. (시세는 refresh-quotes GitHub Action 이 담당)");
-  L.push("//  3. 근거가 약하면 그날은 바꾸지 않는다(변경 0건이 정상). 하루 최대 4교체.");
-  L.push("//  4. 판단 전 scripts/performance-report.js 실행 — 목표가 소진·성과 부진 종목이 재평가 우선 대상.");
+  L.push("//  2. 편입·편출·목표가 변경엔 WebSearch 로 서로 다른 출처 2개 이상을 교차 확인. 수치는 스니펫에 실제로 적힌 것만 사용(기억·추론으로 채우기 금지),");
+  L.push("//     두 출처가 5% 이상 다르면 세 번째 출처로 판별해 다수/중앙값 채택. 확인 못 한 수치는 추정 금지(기존값 유지).");
+  L.push("//  3. 출처 등급 — sources 에는 반드시 신뢰 출처 1개 이상: ① 컨센서스 집계(FnGuide·WiseReport·TipRanks·MarketBeat·Investing·StockAnalysis 등)");
+  L.push("//     ② 공시·IR(DART·KRX·SEC) ③ 주요 경제언론(한경·매경·연합·로이터·블룸버그 등) ④ 증권사 리서치. 커뮤니티·개인 블로그·SNS·유튜브·위키는");
+  L.push("//     근거 금지(가드레일이 저장 거부). 신뢰 출처를 먼저 찾으려면 'site:comp.fnguide.com 종목명' 처럼 도메인 한정 검색을 활용하라.");
+  L.push("//  4. 외부 사이트 WebFetch·금융 API 직접 호출은 이 샌드박스에서 403 으로 막힌다 — 쓰지 말 것. 403 을 만나도 멈추지 말고 WebSearch 로 대체해");
+  L.push("//     계속 진행한다. (시세는 refresh-quotes GitHub Action 이 담당하므로 price·priceDate·upside 는 검색·기록 대상이 아니다)");
+  L.push("//  5. 근거가 약하면 그날은 바꾸지 않는다(변경 0건이 정상). 하루 최대 4교체.");
+  L.push("//  6. 판단 전 scripts/performance-report.js 와 scripts/validate-reco.js 실행 — 목표가 소진·성과 부진·'신뢰 출처 0개' 경고 종목이 재평가 우선 대상.");
   L.push("window.STOCK_DATA = {");
   ["generatedAt", "marketNote", "disclaimer"].forEach((k) => {
     if (D[k] !== undefined) L.push("  " + k + ": " + JSON.stringify(D[k]) + ",");
