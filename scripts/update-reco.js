@@ -94,7 +94,8 @@ const guardErrors = [];
 
   // 가드레일: 출처 신뢰도 (WebSearch 결과의 품질을 기계적으로 강제)
   //  - 커뮤니티/블로그/SNS 출처는 --force 로도 불가 (풍문은 어떤 경우에도 근거가 아님)
-  //  - 분석 변경엔 신뢰 출처(컨센서스 집계·공시·주요 언론·증권사) 1개 이상 필수
+  //  - 분석 변경엔 신뢰 출처(컨센서스 집계·공시·주요 언론·증권사) 2개 이상 필수
+  //    → '2개 독립 출처 교차확인' 규칙의 양쪽이 모두 신뢰 출처가 되도록 강제
   if (hasSources) {
     const blocked = fields.sources.filter(isBlockedSource);
     if (blocked.length) {
@@ -102,9 +103,10 @@ const guardErrors = [];
         blocked.map(sourceHost).join(", ") + " (컨센서스 집계·공시·주요 언론으로 교체)");
       return;
     }
-    if (changesAnalysis && !fields.sources.some(isTrustedSource) && !FORCE) {
-      guardErrors.push(country + ":" + ticker + " — targetPrice/thesis/earnings 변경엔 신뢰 출처(FnGuide·WiseReport·TipRanks·MarketBeat·공시·주요 언론·증권사 등) 1개 이상 필수. 현재: " +
-        fields.sources.map(sourceHost).join(", "));
+    const trustedN = fields.sources.filter(isTrustedSource).length;
+    if (changesAnalysis && trustedN < 2 && !FORCE) {
+      guardErrors.push(country + ":" + ticker + " — targetPrice/thesis/earnings 변경엔 신뢰 출처(FnGuide·WiseReport·TipRanks·MarketBeat·공시·주요 언론·증권사 등) 2개 이상 필수 (현재 " +
+        trustedN + "개: " + fields.sources.map(sourceHost).join(", ") + ")");
       return;
     }
   }
@@ -143,9 +145,10 @@ const guardErrors = [];
     guardErrors.push("add " + country + ":" + obj.ticker + " — 커뮤니티/블로그/SNS 는 근거 출처로 쓸 수 없음: " + blocked.map(sourceHost).join(", "));
     return;
   }
-  if (!srcs.some(isTrustedSource) && !FORCE) {
-    guardErrors.push("add " + country + ":" + obj.ticker + " — 신규 편입엔 신뢰 출처(컨센서스 집계·공시·주요 언론·증권사) 1개 이상 필수. 현재: " +
-      (srcs.length ? srcs.map(sourceHost).join(", ") : "(없음)"));
+  const trustedN = srcs.filter(isTrustedSource).length;
+  if (trustedN < 2 && !FORCE) {
+    guardErrors.push("add " + country + ":" + obj.ticker + " — 신규 편입엔 신뢰 출처(컨센서스 집계·공시·주요 언론·증권사) 2개 이상 필수 (현재 " +
+      trustedN + "개: " + (srcs.length ? srcs.map(sourceHost).join(", ") : "없음") + ")");
     return;
   }
 
@@ -185,7 +188,7 @@ function serialize(D) {
   L.push("//  1. 목표가는 반드시 '컨센서스(다수 증권사 평균)'. 단일 증권사 최고치 금지. 출처에서 발행일 확인 — 4주 이상 지난 기사를 '최신'으로 취급 금지.");
   L.push("//  2. 편입·편출·목표가 변경엔 WebSearch 로 서로 다른 출처 2개 이상을 교차 확인. 수치는 스니펫에 실제로 적힌 것만 사용(기억·추론으로 채우기 금지),");
   L.push("//     두 출처가 5% 이상 다르면 세 번째 출처로 판별해 다수/중앙값 채택. 확인 못 한 수치는 추정 금지(기존값 유지).");
-  L.push("//  3. 출처 등급 — sources 에는 반드시 신뢰 출처 1개 이상: ① 컨센서스 집계(FnGuide·WiseReport·TipRanks·MarketBeat·Investing·StockAnalysis 등)");
+  L.push("//  3. 출처 등급 — 분석 변경·신규 편입의 sources 에는 반드시 신뢰 출처 2개 이상(교차확인 양쪽 모두): ① 컨센서스 집계(FnGuide·WiseReport·TipRanks·MarketBeat·Investing·StockAnalysis 등)");
   L.push("//     ② 공시·IR(DART·KRX·SEC) ③ 주요 경제언론(한경·매경·연합·로이터·블룸버그 등) ④ 증권사 리서치. 커뮤니티·개인 블로그·SNS·유튜브·위키는");
   L.push("//     근거 금지(가드레일이 저장 거부). 신뢰 출처를 먼저 찾으려면 'site:comp.fnguide.com 종목명' 처럼 도메인 한정 검색을 활용하라.");
   L.push("//  4. 외부 사이트 WebFetch·금융 API 직접 호출은 이 샌드박스에서 403 으로 막힌다 — 쓰지 말 것. 403 을 만나도 멈추지 말고 WebSearch 로 대체해");

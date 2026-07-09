@@ -229,7 +229,7 @@ CORS 로 막히므로, **본인 전용 Cloudflare Worker**(무료)를 프록시�
 
 | 등급 | 도메인 | 강제 방식 |
 |---|---|---|
-| **신뢰(TRUSTED)** | 컨센서스 집계(FnGuide·WiseReport·TipRanks·MarketBeat·Investing 등), 공시(DART·KRX·SEC), 주요 경제언론(한경·매경·연합·로이터·블룸버그 등), 증권사 리서치 | 분석 변경(`targetPrice`/`thesis`/`earnings`)·신규 편입엔 **신뢰 출처 ≥1개 필수** — 없으면 `update-reco.js` 가 저장 거부 |
+| **신뢰(TRUSTED)** | 컨센서스 집계(FnGuide·WiseReport·TipRanks·MarketBeat·Investing 등), 공시(DART·KRX·SEC), 주요 경제언론(한경·매경·연합·로이터·블룸버그 등), 증권사 리서치 | 분석 변경(`targetPrice`/`thesis`/`earnings`)·신규 편입엔 **신뢰 출처 ≥2개 필수**(교차확인의 양쪽 모두 신뢰 출처) — 미달이면 `update-reco.js` 가 저장 거부 |
 | **미상** | 목록 밖 도메인 | 보조 출처로 허용. 단 신뢰 출처 0개인 종목은 검증기가 경고 → **재평가 우선 대상**으로 표시 |
 | **차단(BLOCKED)** | 커뮤니티·개인 블로그·SNS·유튜브·위키(thinkpool, blog.naver, tistory, dcinside, fmkorea, youtube, reddit, namu.wiki 등) | 새 패치에서 **`--force` 로도 불가** — 즉시 거부. 기존 데이터에 남은 것은 경고로 표시해 교체 유도 |
 
