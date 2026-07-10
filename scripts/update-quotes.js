@@ -20,6 +20,7 @@ const path = require("path");
 const ROOT = path.join(__dirname, "..");
 const RECO = path.join(ROOT, "data", "recommendations.js");
 const QUOTES = path.join(ROOT, "data", "quotes.js");
+const STALE_QUOTE_DAYS = 7;   // 야후 시세 날짜가 이보다 오래되면(거래정지·상장폐지 심볼) 폴백 처리
 
 function argVal(name) {
   const i = process.argv.indexOf("--" + name);
@@ -90,6 +91,13 @@ async function oneQuote(symbol) {
   if (m.regularMarketTime) {
     const off = (m.gmtoffset || 0) * 1000;               // 거래소 현지시각 기준 날짜
     date = new Date(m.regularMarketTime * 1000 + off).toISOString().slice(0, 10);
+    // 가드: 거래정지·상장폐지 심볼은 야후가 수개월~수년 전 시세를 그대로 반환한다.
+    // 이런 옛 값을 '실시간'으로 채택하면 상승여력이 크게 왜곡되므로, 오래된 시세는
+    // 거부해 이전 quotes.js 값 → recommendations.js 종가 순으로 폴백시킨다.
+    const ageDays = (Date.now() - m.regularMarketTime * 1000) / 86400000;
+    if (isFinite(ageDays) && ageDays > STALE_QUOTE_DAYS) {
+      throw new Error("stale quote (" + date + ", " + Math.round(ageDays) + "일 경과)");
+    }
   }
   return { price: m.regularMarketPrice, date };
 }
