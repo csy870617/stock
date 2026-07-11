@@ -3,7 +3,7 @@
 // 페이지 가격 우선순위: 실시간 API(config.js) > 이 스냅샷 > recommendations.js 종가(폴백)
 // 각 항목: ticker → { price, date }
 window.STOCK_QUOTES = {
- "generatedAt": "2026-07-10",
+ "generatedAt": "2026-07-11",
  "quotes": {
   "105560": {
    "price": 184400,
@@ -33,16 +33,12 @@ window.STOCK_QUOTES = {
    "price": 48500,
    "date": "2026-07-10"
   },
-  "214450": {
-   "price": 286500,
-   "date": "2026-06-05"
-  },
-  "257720": {
-   "price": 37600,
-   "date": "2026-07-10"
-  },
   "329180": {
    "price": 504000,
+   "date": "2026-07-10"
+  },
+  "403870": {
+   "price": 44400,
    "date": "2026-07-10"
   },
   "005930": {
@@ -171,6 +167,10 @@ window.STOCK_QUOTES = {
   },
   "064760": {
    "price": 232000,
+   "date": "2026-07-10"
+  },
+  "014680": {
+   "price": 248500,
    "date": "2026-07-10"
   },
   "MSFT": {
