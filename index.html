@@ -330,7 +330,10 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 0.86rem; min-widt
 .liq { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 18px 20px; margin-bottom: 22px; }
 .liq .liq-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
 .liq .liq-head h2 { font-size: 1.02rem; font-weight: 750; letter-spacing: -0.01em; }
+.liq .liq-head-r { display: flex; align-items: center; gap: 10px; }
 .liq .liq-as { color: var(--muted); font-size: 0.78rem; }
+.liq-refresh { font-size: 0.75rem; font-weight: 700; color: var(--ink-2); border: 1px solid var(--line); border-radius: 999px; padding: 3px 11px; text-decoration: none; white-space: nowrap; }
+.liq-refresh:hover { background: var(--meter-track); }
 .liq .liq-headline { font-size: 0.94rem; color: var(--ink); line-height: 1.6; margin-bottom: 16px; }
 .liq-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
 @media (max-width: 620px) { .liq-grid { grid-template-columns: 1fr; } }
@@ -370,7 +373,11 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   <div class="liq" id="liqBox" style="display:none">
     <div class="liq-head">
       <h2>거시 유동성</h2>
-      <span class="liq-as" id="liqAs"></span>
+      <span class="liq-head-r">
+        <span class="liq-as" id="liqAs"></span>
+        <a class="liq-refresh" id="liqRefresh" target="_blank" rel="noopener"
+           title="GitHub 이슈로 유동성 갱신을 요청합니다 (Claude GitHub 앱이 처리·배포)">🔄 갱신 요청</a>
+      </span>
     </div>
     <div class="liq-headline" id="liqHeadline"></div>
     <div class="liq-grid" id="liqGrid"></div>
@@ -976,6 +983,22 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     function hasTerm(c) { return c && (c.shortTerm != null || c.midTerm != null); }
     if (!L || (!hasTerm(L.us) && !hasTerm(L.korea))) { box.style.display = "none"; return; }
     box.style.display = "";
+
+    // "🔄 갱신 요청" 버튼 → @claude 지시가 미리 채워진 GitHub 이슈를 연다 (Claude GitHub 앱이 처리·배포)
+    (function () {
+      var a = document.getElementById("liqRefresh");
+      if (!a) return;
+      var body = [
+        "@claude data/liquidity.js 의 거시 유동성 지표를 최신으로 갱신해줘.",
+        "",
+        "절차:",
+        "1. WebSearch로 현재 유동성 여건을 조사한다 — 미국(연준 정책금리·차기 FOMC·인상/인하 확률·M2·연준 대차대조표·HY 신용스프레드·10년물·10Y-2Y 커브·Core PCE/CPI), 한국(한은 기준금리·금통위·CPI·원/달러 환율·외국인 코스피 수급). 모든 수치는 검색 결과에 실제로 적힌 값만 쓰고, 확인 못 한 값은 기존값을 유지한다. WebFetch·금융 API 직접 호출은 막히니(403) WebSearch만 쓴다.",
+        "2. data/liquidity.js 를 기존 구조 그대로 갱신한다: window.LIQUIDITY_DATA = { asOf(오늘 날짜), headline(한국어), us·korea 각각 {shortTerm, midTerm, drivers[]}, nextCheck, sources[] }. 게이지는 \"매우 우호\"/\"우호\"/\"신중\"/\"부정\"/\"매우 부정\" 5단계 중 하나로만 쓴다. 게이지 등급을 바꿀 땐 근거 수치를 drivers 에 남긴다.",
+        "3. node 로 파일 로드·게이지 값을 검증한 뒤, data/liquidity.js 만 변경해 배포 브랜치 claude/stock-analysis-recommendation-v9310x 에 직접 커밋한다(그래야 GitHub Pages 로 자동 배포됨). 다른 파일은 건드리지 않는다."
+      ].join("\n");
+      a.href = "https://github.com/csy870617/stock/issues/new?title=" +
+        encodeURIComponent("유동성 지표 갱신 요청") + "&body=" + encodeURIComponent(body);
+    })();
 
     var RANKS = ["매우 부정", "부정", "신중", "우호", "매우 우호"];
     var RANK_COLORS = ["var(--down)", "#eb6834", "var(--tier3)", "var(--tier2)", "var(--up)"];
