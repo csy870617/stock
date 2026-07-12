@@ -1,0 +1,51 @@
+# Claude GitHub 앱 — 이슈/댓글에 '@claude' 가 포함되면 Claude Code 가 작업을 수행한다.
+# 이 저장소에서는 '🔄 갱신 요청' 버튼이 여는 이슈(@claude + data/liquidity.js 갱신 지시)를
+# 받아 유동성 지표를 갱신·커밋하는 데 쓴다.
+#
+# 선행 조건(1회):
+#  1) Claude GitHub 앱을 이 저장소에 설치 (https://github.com/apps/claude)
+#  2) 저장소 Settings → Secrets and variables → Actions 에 시크릿 추가:
+#       이름: CLAUDE_CODE_OAUTH_TOKEN   값: `claude setup-token` 으로 발급한 구독 기반 토큰
+#     (종량제 API 키를 쓰려면 대신 ANTHROPIC_API_KEY 를 등록하고 아래 with 를 교체)
+#  * 이슈 이벤트는 '기본 브랜치'의 워크플로우만 트리거한다 — 이 파일은 기본(=배포) 브랜치
+#    claude/stock-analysis-recommendation-v9310x 에 있어야 한다(현재 그렇게 배치됨).
+
+name: Claude
+
+on:
+  issues:
+    types: [opened]
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+  pull_request_review:
+    types: [submitted]
+
+jobs:
+  claude:
+    # '@claude' 가 실제로 언급된 경우에만 실행 (불필요한 과금·실행 방지)
+    if: |
+      (github.event_name == 'issues' && (contains(github.event.issue.body, '@claude') || contains(github.event.issue.title, '@claude'))) ||
+      (github.event_name == 'issue_comment' && contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'pull_request_review_comment' && contains(github.event.comment.body, '@claude')) ||
+      (github.event_name == 'pull_request_review' && contains(github.event.review.body, '@claude'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write        # data/liquidity.js 커밋용
+      issues: write
+      pull-requests: write
+      id-token: write
+      actions: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Run Claude Code
+        uses: anthropics/claude-code-action@v1
+        with:
+          # 구독 기반 인증(추가 과금 없음). 종량제 API 키를 쓰려면 아래 줄을
+          # anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }} 로 교체한다.
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
