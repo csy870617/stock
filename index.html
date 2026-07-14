@@ -359,8 +359,8 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     <div class="brand"><span class="fl">🔥</span> 주식 추천</div>
     <div class="top-actions">
       <span class="gen-date" id="genDate"></span>
-      <a class="liq-refresh" id="analysisRefresh" target="_blank" rel="noopener"
-         title="분석·종목 추천 갱신 요청 이슈를 엽니다 — Claude 세션에서 처리·배포합니다">🔄 분석 갱신</a>
+      <a class="liq-refresh" id="updateBtn" target="_blank" rel="noopener"
+         title="분석·종목 추천과 거시 유동성을 한 번에 갱신 요청 — Claude 세션에서 처리·배포합니다">🔄 업데이트</a>
       <button class="icon-btn" id="themeBtn" type="button" title="라이트·다크 전환" aria-label="테마 전환">🌓</button>
       <a class="sim-link" href="https://csy870617.github.io/TradingSimulator/" target="_blank" rel="noopener" title="트레이딩 시뮬레이터 열기">
         <img src="icon2.png" alt="트레이딩 시뮬레이터">
@@ -375,11 +375,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   <div class="liq" id="liqBox" style="display:none">
     <div class="liq-head">
       <h2>거시 유동성</h2>
-      <span class="liq-head-r">
-        <span class="liq-as" id="liqAs"></span>
-        <a class="liq-refresh" id="liqRefresh" target="_blank" rel="noopener"
-           title="유동성 갱신 요청 이슈를 엽니다 — Claude 세션에서 처리·배포합니다">🔄 갱신 요청</a>
-      </span>
+      <span class="liq-as" id="liqAs"></span>
     </div>
     <div class="liq-headline" id="liqHeadline"></div>
     <div class="liq-grid" id="liqGrid"></div>
@@ -510,23 +506,28 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
 
   document.getElementById("genDate").textContent = "기준일 " + D.generatedAt;
 
-  // "🔄 분석 갱신" 버튼 → 분석·종목 추천 갱신 요청 이슈를 연다 (Claude 세션에서 온디맨드 처리)
+  // "🔄 업데이트" 버튼 → 분석·추천 + 유동성 전체 갱신 요청 이슈를 연다 (Claude 세션에서 온디맨드 처리)
   (function () {
-    var a = document.getElementById("analysisRefresh");
+    var a = document.getElementById("updateBtn");
     if (!a) return;
     var body = [
-      "[분석·추천 갱신 요청] data/recommendations.js 의 분석·종목 추천을 최신으로 재평가해 주세요. (Claude 세션에서 이 이슈를 열어 처리합니다.)",
+      "[전체 업데이트 요청] 주식 대시보드의 분석·종목 추천(recommendations.js)과 거시 유동성 지표(liquidity.js)를 한 번에 최신으로 갱신해 주세요. (Claude 세션에서 이 이슈를 열어 처리합니다.)",
       "",
-      "지침:",
-      "1. WebSearch로 조사한다(WebFetch·금융 API는 이 환경에서 403). 수치는 검색 스니펫에 실제로 적힌 값만 쓰고, 확인 못 한 값은 기존값을 유지한다.",
-      "2. generatedAt·marketNote(오늘 시황)를 갱신하고 node scripts/snapshot.js 로 스냅샷을 기록한다.",
-      "3. node scripts/performance-report.js 와 node scripts/validate-reco.js 로 우선순위(목표가 소진·성과 부진·신뢰 출처 부족)를 선별한다.",
-      "4. 목표가는 컨센서스(신뢰 출처 2개 이상 교차확인), 논거·리스크·tier·dividendYield·earnings를 최신화한다. 지배구조 스크리닝과 BANNED_TICKERS(재추가 금지)를 준수한다.",
-      "5. (주제×국가) 9종목·tier 3/3/3 구조를 유지하고, node scripts/update-reco.js <패치.json> 증분 패치로 적용 → validate 통과 → 배포 브랜치 claude/stock-analysis-recommendation-v9310x 에 커밋한다.",
-      "6. 시세(price·priceDate·upside)는 refresh-quotes Action 담당이므로 건드리지 않는다."
+      "공통: WebSearch로 조사한다(WebFetch·금융 API는 이 환경에서 403). 수치는 검색 스니펫에 실제로 적힌 값만 쓰고, 확인 못 한 값은 기존값을 유지한다. 완료 후 node scripts/validate-reco.js 통과 확인하고 배포 브랜치 claude/stock-analysis-recommendation-v9310x 에 커밋한다.",
+      "",
+      "A. 분석·추천 (data/recommendations.js)",
+      "1. generatedAt·marketNote(오늘 시황)를 갱신하고 node scripts/snapshot.js 로 스냅샷을 기록한다.",
+      "2. node scripts/performance-report.js 로 우선순위(목표가 소진·성과 부진)를, validate-reco.js 로 신뢰 출처 부족·재추가 금지 위반을 선별한다.",
+      "3. 목표가는 컨센서스(신뢰 출처 2개 이상 교차확인), 논거·리스크·tier·dividendYield·earnings를 최신화한다. 지배구조 스크리닝과 BANNED_TICKERS(재추가 금지)를 준수한다.",
+      "4. (주제×국가) 9종목·tier 3/3/3 구조를 유지하고 node scripts/update-reco.js <패치.json> 증분 패치로 적용한다.",
+      "5. 시세(price·priceDate·upside)는 refresh-quotes Action 담당이므로 건드리지 않는다.",
+      "",
+      "B. 유동성 (data/liquidity.js)",
+      "6. 미국(연준 정책금리·차기 FOMC·인상/인하 확률·M2·연준 대차대조표·HY 신용스프레드·10년물·10Y-2Y 커브·Core PCE/CPI), 한국(한은 기준금리·금통위·CPI·원/달러 환율·외국인 코스피 수급)을 조사한다.",
+      "7. 기존 구조를 유지한다: window.LIQUIDITY_DATA = { asOf(오늘), headline(한국어), us·korea 각각 {shortTerm, midTerm, drivers[]}, nextCheck, sources[] }. 게이지는 \"매우 우호\"/\"우호\"/\"신중\"/\"부정\"/\"매우 부정\" 5단계 중 하나로만 쓰고, 등급을 바꿀 땐 근거 수치를 drivers 에 남긴다."
     ].join("\n");
     a.href = "https://github.com/csy870617/stock/issues/new?title=" +
-      encodeURIComponent("분석·추천 갱신 요청") + "&body=" + encodeURIComponent(body);
+      encodeURIComponent("전체 업데이트 요청 (분석·추천 + 유동성)") + "&body=" + encodeURIComponent(body);
   })();
 
   document.getElementById("marketNote").innerHTML =
@@ -1005,22 +1006,6 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     function hasTerm(c) { return c && (c.shortTerm != null || c.midTerm != null); }
     if (!L || (!hasTerm(L.us) && !hasTerm(L.korea))) { box.style.display = "none"; return; }
     box.style.display = "";
-
-    // "🔄 갱신 요청" 버튼 → @claude 지시가 미리 채워진 GitHub 이슈를 연다 (Claude GitHub 앱이 처리·배포)
-    (function () {
-      var a = document.getElementById("liqRefresh");
-      if (!a) return;
-      var body = [
-        "[유동성 갱신 요청] data/liquidity.js 의 거시 유동성 지표를 아래 절차대로 최신 갱신해 주세요. (Claude 세션에서 이 이슈를 열어 처리합니다.)",
-        "",
-        "절차:",
-        "1. WebSearch로 현재 유동성 여건을 조사한다 — 미국(연준 정책금리·차기 FOMC·인상/인하 확률·M2·연준 대차대조표·HY 신용스프레드·10년물·10Y-2Y 커브·Core PCE/CPI), 한국(한은 기준금리·금통위·CPI·원/달러 환율·외국인 코스피 수급). 모든 수치는 검색 결과에 실제로 적힌 값만 쓰고, 확인 못 한 값은 기존값을 유지한다. WebFetch·금융 API 직접 호출은 막히니(403) WebSearch만 쓴다.",
-        "2. data/liquidity.js 를 기존 구조 그대로 갱신한다: window.LIQUIDITY_DATA = { asOf(오늘 날짜), headline(한국어), us·korea 각각 {shortTerm, midTerm, drivers[]}, nextCheck, sources[] }. 게이지는 \"매우 우호\"/\"우호\"/\"신중\"/\"부정\"/\"매우 부정\" 5단계 중 하나로만 쓴다. 게이지 등급을 바꿀 땐 근거 수치를 drivers 에 남긴다.",
-        "3. node 로 파일 로드·게이지 값을 검증한 뒤, data/liquidity.js 만 변경해 배포 브랜치 claude/stock-analysis-recommendation-v9310x 에 직접 커밋한다(그래야 GitHub Pages 로 자동 배포됨). 다른 파일은 건드리지 않는다."
-      ].join("\n");
-      a.href = "https://github.com/csy870617/stock/issues/new?title=" +
-        encodeURIComponent("유동성 지표 갱신 요청") + "&body=" + encodeURIComponent(body);
-    })();
 
     var RANKS = ["매우 부정", "부정", "신중", "우호", "매우 우호"];
     var RANK_COLORS = ["var(--down)", "#eb6834", "var(--tier3)", "var(--tier2)", "var(--up)"];
