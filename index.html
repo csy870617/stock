@@ -130,7 +130,7 @@ a { color: inherit; }
 }
 .brand { display: flex; align-items: center; gap: 7px; font-size: 1.05rem; font-weight: 800; letter-spacing: -0.02em; }
 .brand .fl { font-size: 1.02rem; }
-.top-actions { display: flex; align-items: center; gap: 8px; }
+.top-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
 .gen-date { color: var(--muted); font-size: 0.78rem; white-space: nowrap; }
 .icon-btn {
   width: 34px; height: 34px; display: grid; place-items: center;
@@ -359,6 +359,8 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     <div class="brand"><span class="fl">🔥</span> 주식 추천</div>
     <div class="top-actions">
       <span class="gen-date" id="genDate"></span>
+      <a class="liq-refresh" id="analysisRefresh" target="_blank" rel="noopener"
+         title="분석·종목 추천 갱신 요청 이슈를 엽니다 — Claude 세션에서 처리·배포합니다">🔄 분석 갱신</a>
       <button class="icon-btn" id="themeBtn" type="button" title="라이트·다크 전환" aria-label="테마 전환">🌓</button>
       <a class="sim-link" href="https://csy870617.github.io/TradingSimulator/" target="_blank" rel="noopener" title="트레이딩 시뮬레이터 열기">
         <img src="icon2.png" alt="트레이딩 시뮬레이터">
@@ -507,6 +509,26 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   })();
 
   document.getElementById("genDate").textContent = "기준일 " + D.generatedAt;
+
+  // "🔄 분석 갱신" 버튼 → 분석·종목 추천 갱신 요청 이슈를 연다 (Claude 세션에서 온디맨드 처리)
+  (function () {
+    var a = document.getElementById("analysisRefresh");
+    if (!a) return;
+    var body = [
+      "[분석·추천 갱신 요청] data/recommendations.js 의 분석·종목 추천을 최신으로 재평가해 주세요. (Claude 세션에서 이 이슈를 열어 처리합니다.)",
+      "",
+      "지침:",
+      "1. WebSearch로 조사한다(WebFetch·금융 API는 이 환경에서 403). 수치는 검색 스니펫에 실제로 적힌 값만 쓰고, 확인 못 한 값은 기존값을 유지한다.",
+      "2. generatedAt·marketNote(오늘 시황)를 갱신하고 node scripts/snapshot.js 로 스냅샷을 기록한다.",
+      "3. node scripts/performance-report.js 와 node scripts/validate-reco.js 로 우선순위(목표가 소진·성과 부진·신뢰 출처 부족)를 선별한다.",
+      "4. 목표가는 컨센서스(신뢰 출처 2개 이상 교차확인), 논거·리스크·tier·dividendYield·earnings를 최신화한다. 지배구조 스크리닝과 BANNED_TICKERS(재추가 금지)를 준수한다.",
+      "5. (주제×국가) 9종목·tier 3/3/3 구조를 유지하고, node scripts/update-reco.js <패치.json> 증분 패치로 적용 → validate 통과 → 배포 브랜치 claude/stock-analysis-recommendation-v9310x 에 커밋한다.",
+      "6. 시세(price·priceDate·upside)는 refresh-quotes Action 담당이므로 건드리지 않는다."
+    ].join("\n");
+    a.href = "https://github.com/csy870617/stock/issues/new?title=" +
+      encodeURIComponent("분석·추천 갱신 요청") + "&body=" + encodeURIComponent(body);
+  })();
+
   document.getElementById("marketNote").innerHTML =
     '<span class="mn-tag">시황</span>' + esc(D.marketNote);
   document.getElementById("disclaimer").textContent = D.disclaimer;
