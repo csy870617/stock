@@ -146,6 +146,13 @@ a { color: inherit; }
 
 /* ── 시황 리드 ── */
 .market-note { font-size: 0.95rem; color: var(--ink-2); line-height: 1.65; margin: 4px 0 24px; }
+.upd-status { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; font-size: 0.76rem; color: var(--muted); margin: 2px 0 16px; }
+.upd-status a { color: var(--ink-2); }
+.us-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: 0 0 auto; }
+.us-gray { background: var(--muted); }
+.us-yellow { background: #e0a020; }
+.us-amber { background: #eb6834; }
+.us-green { background: var(--up); }
 .mn-tag {
   display: inline-block; font-size: 0.66rem; font-weight: 700; letter-spacing: 0.03em;
   color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent);
@@ -370,6 +377,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
 </header>
 
 <div class="wrap">
+  <div class="upd-status" id="updStatus" hidden></div>
   <div class="market-note" id="marketNote"></div>
 
   <div class="liq" id="liqBox" style="display:none">
@@ -505,6 +513,36 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   })();
 
   document.getElementById("genDate").textContent = "기준일 " + D.generatedAt;
+
+  // 업데이트 진행 상태 칩 — GitHub 공개 API로 최근 '업데이트 요청' 이슈 상태를 읽어 표시(토큰 불필요).
+  // 실패(오프라인·요청 제한)하면 데이터 기준일만 조용히 표시한다.
+  (function () {
+    var el = document.getElementById("updStatus");
+    if (!el) return;
+    var liqD = (window.LIQUIDITY_DATA && window.LIQUIDITY_DATA.asOf) || "";
+    var base = "데이터 기준 분석 " + D.generatedAt + (liqD ? " · 유동성 " + liqD : "");
+    function show(dot, txt, link) {
+      el.innerHTML = '<span class="us-dot ' + dot + '"></span><span>' + txt + (link || "") + " · " + esc(base) + "</span>";
+      el.hidden = false;
+    }
+    show("us-gray", "상태 확인 중…");   // 기본(조회 전/실패 시 유지)
+    fetch("https://api.github.com/repos/csy870617/stock/issues?state=all&per_page=15&sort=created&direction=desc",
+      { headers: { "Accept": "application/vnd.github+json" } })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (list) {
+        if (!Array.isArray(list)) { show("us-gray", "최근 업데이트"); return; }
+        var reqs = list.filter(function (it) {
+          return !it.pull_request && it.title && it.title.indexOf("업데이트 요청") >= 0;
+        });
+        if (!reqs.length) { show("us-gray", "최근 업데이트"); return; }
+        var it = reqs[0];
+        var link = ' · <a href="' + esc(it.html_url) + '" target="_blank" rel="noopener">#' + it.number + "</a>";
+        if (it.state === "open" && it.comments > 0) show("us-amber", "🔧 업데이트 처리 중", link);
+        else if (it.state === "open") show("us-yellow", "🟡 업데이트 요청 접수됨 — 처리 대기중", link);
+        else show("us-green", "🟢 최근 업데이트 완료", link);
+      })
+      .catch(function () { show("us-gray", "최근 업데이트"); });
+  })();
 
   // "🔄 업데이트" 버튼 → 분석·추천 + 유동성 전체 갱신 요청 이슈를 연다 (Claude 세션에서 온디맨드 처리)
   (function () {
