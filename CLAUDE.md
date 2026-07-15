@@ -19,7 +19,7 @@
 
 ## 업데이트 작업 내용
 - **공통**: WebSearch만 사용(WebFetch·금융 API 직접 호출은 이 환경에서 403). 수치는 검색 스니펫에 실제로 적힌 값만 쓰고, 확인 못 한 값은 기존값 유지. 완료 후 `node scripts/validate-reco.js` 통과 확인 → 배포 브랜치 커밋·push(경합 시 `git rebase` 후 재푸시).
-- **A. 분석·추천 (`data/recommendations.js`)**: `generatedAt`·`marketNote`(오늘 시황) 갱신 → `node scripts/snapshot.js` 기록. `node scripts/performance-report.js`(목표가 소진·성과 부진)·`validate-reco.js`(신뢰 출처 부족·재추가 금지)로 우선순위 선별. 목표가는 컨센서스(신뢰 출처 2개 이상 교차확인), 논거·리스크·tier·dividendYield·earnings 최신화. 지배구조 스크리닝·`BANNED_TICKERS` 준수. (주제×국가) 9종목·tier 3/3/3 유지. `node scripts/update-reco.js <패치.json>` 증분 패치로 적용. **시세(price·priceDate·upside)는 건드리지 않는다.**
+- **A. 분석·추천 (`data/recommendations.js`)**: `generatedAt`·`marketNote`(오늘 시황) 갱신 → `node scripts/snapshot.js` 기록. `node scripts/performance-report.js`(목표가 소진·성과 부진)·`validate-reco.js`(신뢰 출처 부족·재추가 금지)로 우선순위 선별. 목표가는 컨센서스(신뢰 출처 2개 이상 교차확인), 논거·리스크·tier·dividendYield·earnings 최신화. 지배구조 스크리닝·`BANNED_TICKERS` 준수. (주제×국가) 9종목·tier 3/3/3 유지. **매 업데이트마다 트리거(목표가 소진·성과 부진) 유무와 무관하게 주제별 신규 후보 탐색을 적극 수행한다** — 기존 편성 대비 명확히 우월한 후보(신뢰 출처 2개 이상 교차확인)가 있으면 교체하고(하루 최대 4교체 가드레일 준수), 없으면 결과에 '교체 0건'을 명시한다. `node scripts/update-reco.js <패치.json>` 증분 패치로 적용. **시세(price·priceDate·upside)는 건드리지 않는다.**
 - **B. 유동성 (`data/liquidity.js`)**: 미국(연준 금리·FOMC·M2·연준 대차대조표·HY 스프레드·10Y·10Y-2Y 커브·Core PCE/CPI), 한국(한은 금리·금통위·CPI·원달러·외국인 수급) 조사 → 기존 구조 유지하며 게이지 5단계(`매우 우호`/`우호`/`신중`/`부정`/`매우 부정`)·`asOf`(오늘) 갱신. 등급 변경 시 근거 수치를 `drivers`에 남긴다.
 
 ## 가드레일 (코드로 강제됨)
