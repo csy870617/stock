@@ -5,7 +5,7 @@
 ## 운영 모델
 - **시세·스냅샷·배포**: `refresh-quotes` GitHub Action이 매일 자동 처리(순수 스크립트, LLM 0). `data/quotes.js`·`data/history.js`·`price`·`priceDate`·`upside`·`generatedAt`은 이 Action이 담당 — **직접 조사·수정하지 않는다.**
 - **분석·추천(`data/recommendations.js`)·유동성(`data/liquidity.js`)**: **온디맨드**. 사용자가 "업데이트/분석 갱신/유동성 갱신"을 요청할 때만 갱신한다.
-- **기본(=배포) 브랜치**: `claude/stock-analysis-recommendation-v9310x` (여기 push하면 `deploy-pages`가 자동 배포). 개발 브랜치 `claude/github-push-proxy-auth-6keb1y` 에도 함께 반영한다.
+- **기본(=배포) 브랜치**: `claude/stock-analysis-recommendation-v9310x` (여기 push하면 `deploy-pages`가 자동 배포). 세션에 별도의 지정 작업 브랜치가 있으면 거기에도 같은 커밋을 함께 반영한다(고정 개발 브랜치는 없음 — 세션마다 다르다).
 
 ## ★ "업데이트" 요청 처리 프로토콜 (반드시 지킬 것)
 사용자가 업데이트를 요청하면 — **버튼(이슈)을 눌렀든 안 눌렀든** — 앱 상단 상태칩이 진행을 표시하도록 **항상 GitHub 이슈로 추적**한다:
