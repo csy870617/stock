@@ -826,13 +826,14 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
         '<td class="num">' + fmtPrice(e.price, state.country) + "</td>" +
         '<td class="num">' + dateCell + "</td>" +
         '<td class="num">' + fmtPrice(s.targetPrice, state.country) + "</td>" +
+        '<td class="num">' + (s.aiTarget != null ? '<span title="' + esc(s.aiBasis || "") + '" style="cursor:help">🤖 ' + fmtPrice(s.aiTarget, state.country) + "</span>" : "–") + "</td>" +
         '<td class="num ' + upCls + '">' + fmtPct(e.upside) + "</td>" +
         '<td class="num">' + (s.dividendYield == null ? "–" : Number(s.dividendYield).toFixed(1) + "%") + "</td>" +
         '<td><a href="' + esc(s.chartUrl) + '" target="_blank" rel="noopener">차트</a></td></tr>';
     }).join("");
     return '<div class="tbl-wrap"><table class="tbl"><thead><tr>' +
       "<th>종목</th>" + (showTheme ? "<th>주제</th>" : "") + "<th>Tier</th><th class=\"num\">현재가</th>" +
-      '<th class="num">기준일</th><th class="num">목표가</th><th class="num">상승여력</th><th class="num">배당</th><th>링크</th>' +
+      '<th class="num">기준일</th><th class="num">목표가</th><th class="num" title="검증 입력값 기반 자체 분석(참고용)">AI적정가</th><th class="num">상승여력</th><th class="num">배당</th><th>링크</th>' +
       "</tr></thead><tbody>" + rows + "</tbody></table></div>";
   }
 
