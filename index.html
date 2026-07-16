@@ -298,6 +298,9 @@ a { color: inherit; }
 .meter-row .pct.down { color: var(--down); }
 
 .earn { color: var(--ink-2); font-size: 0.84rem; line-height: 1.55; border-left: 3px solid var(--grid); padding-left: 11px; }
+.ai-target { font-size: 0.83rem; color: var(--ink-2); background: color-mix(in srgb, var(--grid) 28%, transparent); border-radius: 8px; padding: 6px 10px; cursor: help; }
+.ai-target b { color: var(--ink); font-variant-numeric: tabular-nums; }
+.ai-target .ai-note { opacity: 0.7; font-size: 0.76rem; }
 .thesis { font-size: 0.9rem; line-height: 1.6; }
 .risks { color: var(--ink-2); font-size: 0.84rem; line-height: 1.55; }
 .risks b { color: var(--ink); font-weight: 600; }
@@ -675,6 +678,9 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       "</div>" +
       '<div class="meter-row"><div class="meter"><i style="width:' + meterW + '%"></i></div>' +
       '<div class="pct ' + upCls + '">' + fmtPct(e.upside) + "</div></div>" +
+      (s.aiTarget != null
+        ? '<div class="ai-target" title="' + esc(s.aiBasis || "") + '">🤖 AI 적정가 <b>' + fmtPrice(s.aiTarget, country) + '</b> <span class="ai-note">— 검증 입력값 기반 자체 분석(참고용, 마우스 오버로 근거 확인). 컨센서스와 별개</span></div>'
+        : "") +
       (s.earnings ? '<div class="earn">' + esc(s.earnings) + "</div>" : "") +
       '<div class="thesis">' + esc(s.thesis) + "</div>" +
       (risks ? '<div class="risks"><b>리스크</b> — ' + risks + "</div>" : "") +

@@ -160,6 +160,20 @@ function validate(D, opts) {
         errors.push(tag + ": dividendYield 오류 (" + s.dividendYield + ")");
       }
 
+      // AI 적정가(선택) — 컨센서스와 별개인 자체 분석치. 근거(aiBasis) 없이는 저장 거부.
+      if (s.aiTarget != null) {
+        if (!(typeof s.aiTarget === "number" && isFinite(s.aiTarget) && s.aiTarget > 0)) {
+          errors.push(tag + ": aiTarget 오류 (" + s.aiTarget + ")");
+        }
+        if (!s.aiBasis || !RE_HANGUL.test(s.aiBasis)) {
+          errors.push(tag + ": aiTarget 에는 한국어 aiBasis(산출 공식·입력값 근거)가 필수");
+        }
+        if (typeof s.targetPrice === "number" && s.targetPrice > 0 &&
+            Math.abs(s.aiTarget - s.targetPrice) / s.targetPrice > 0.5) {
+          warnings.push(tag + ": aiTarget(" + s.aiTarget + ")이 컨센서스 목표가와 50% 이상 괴리 — 입력값 재확인 필요");
+        }
+      }
+
       // 분석 텍스트 — 한국어 강제 (루틴이 영어로 채우는 퇴행 방지)
       if (!s.earnings || !RE_HANGUL.test(s.earnings)) errors.push(tag + ": earnings 누락 또는 한국어 아님");
       if (!s.thesis || !RE_HANGUL.test(s.thesis)) errors.push(tag + ": thesis 누락 또는 한국어 아님");
