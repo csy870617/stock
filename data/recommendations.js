@@ -11,7 +11,7 @@
 //     근거 금지(가드레일이 저장 거부). 신뢰 출처를 먼저 찾으려면 'site:comp.fnguide.com 종목명' 처럼 도메인 한정 검색을 활용하라.
 //  4. 외부 사이트 WebFetch·금융 API 직접 호출은 이 샌드박스에서 403 으로 막힌다 — 쓰지 말 것. 403 을 만나도 멈추지 말고 WebSearch 로 대체해
 //     계속 진행한다. (시세는 refresh-quotes GitHub Action 이 담당하므로 price·priceDate·upside 는 검색·기록 대상이 아니다)
-//  5. 근거가 약하면 그날은 바꾸지 않는다(변경 0건이 정상). 하루 최대 4교체.
+//  5. 근거가 약하면 그날은 바꾸지 않는다(변경 0건이 정상). 하루 최대 10교체.
 //  6. 판단 전 scripts/performance-report.js 와 scripts/validate-reco.js 실행 — 목표가 소진·성과 부진·'신뢰 출처 0개' 경고 종목이 재평가 우선 대상.
 window.STOCK_DATA = {
   generatedAt: "2026-07-16",
