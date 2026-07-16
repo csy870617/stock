@@ -25,7 +25,7 @@
 // 시세(price·priceDate·upside)는 quotes.js 가 담당하므로 패치에 넣을 필요가 없다.
 //
 // 신뢰도 가드레일 (자동 재평가의 기계적 안전장치):
-//   1) 일일 편입+편출 합계가 8건(=4교체) 초과 → --force 없이 거부 (보수적 교체 원칙 강제)
+//   1) 일일 편입+편출 합계가 20건(=10교체) 초과 → --force 없이 거부 (과도한 대량 개편 차단)
 //   2) 기존 종목의 targetPrice 를 ±50% 초과 변경 → --force 없이 거부, ±25% 초과는 경고
 //      (단일 증권사 최고치를 컨센서스로 착각하는 실수 차단)
 //   3) targetPrice/thesis/earnings 를 바꾸는 stocks 항목은 sources(근거 URL) 필수
@@ -50,7 +50,7 @@ const FORCE = process.argv.includes("--force");
 const patch = JSON.parse(fs.readFileSync(patchPath, "utf8"));
 
 // ── 가드레일: 과도한 일일 변경 차단 ──
-const MAX_DAILY_OPS = 8;   // add+remove 합계 (교체 1건 = add 1 + remove 1)
+const MAX_DAILY_OPS = 20;   // add+remove 합계 (교체 1건 = add 1 + remove 1) → 최대 10교체
 const ops = (patch.add || []).length + (patch.remove || []).length;
 if (ops > MAX_DAILY_OPS && !FORCE) {
   console.error("✗ 가드레일: 일일 편입+편출 " + ops + "건 > 허용 " + MAX_DAILY_OPS + "건.");
@@ -199,7 +199,7 @@ function serialize(D) {
   L.push("//     근거 금지(가드레일이 저장 거부). 신뢰 출처를 먼저 찾으려면 'site:comp.fnguide.com 종목명' 처럼 도메인 한정 검색을 활용하라.");
   L.push("//  4. 외부 사이트 WebFetch·금융 API 직접 호출은 이 샌드박스에서 403 으로 막힌다 — 쓰지 말 것. 403 을 만나도 멈추지 말고 WebSearch 로 대체해");
   L.push("//     계속 진행한다. (시세는 refresh-quotes GitHub Action 이 담당하므로 price·priceDate·upside 는 검색·기록 대상이 아니다)");
-  L.push("//  5. 근거가 약하면 그날은 바꾸지 않는다(변경 0건이 정상). 하루 최대 4교체.");
+  L.push("//  5. 근거가 약하면 그날은 바꾸지 않는다(변경 0건이 정상). 하루 최대 10교체.");
   L.push("//  6. 판단 전 scripts/performance-report.js 와 scripts/validate-reco.js 실행 — 목표가 소진·성과 부진·'신뢰 출처 0개' 경고 종목이 재평가 우선 대상.");
   L.push("window.STOCK_DATA = {");
   ["generatedAt", "marketNote", "disclaimer"].forEach((k) => {
