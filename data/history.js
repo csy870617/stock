@@ -9251,7 +9251,7 @@ window.STOCK_HISTORY = [
  {
   "date": "2026-07-16",
   "kospi": 6820.6,
-  "sp500": 7572.4,
+  "sp500": 7572,
   "stocks": [
    {
     "t": "005930",
@@ -9734,16 +9734,6 @@ window.STOCK_HISTORY = [
     "tp": 1082.94
    },
    {
-    "t": "AAPL",
-    "n": "Apple",
-    "c": "us",
-    "th": "core",
-    "tier": 3,
-    "p": 327.5,
-    "pd": "2026-07-15",
-    "tp": 320
-   },
-   {
     "t": "BRK.B",
     "n": "Berkshire Hathaway",
     "c": "us",
@@ -9904,16 +9894,6 @@ window.STOCK_HISTORY = [
     "tp": 63
    },
    {
-    "t": "MRK",
-    "n": "Merck & Co.",
-    "c": "us",
-    "th": "value",
-    "tier": 3,
-    "p": 123.61,
-    "pd": "2026-07-15",
-    "tp": 130.39
-   },
-   {
     "t": "PEP",
     "n": "PepsiCo",
     "c": "us",
@@ -9952,16 +9932,6 @@ window.STOCK_HISTORY = [
     "p": 106.53,
     "pd": "2026-07-15",
     "tp": 114.8
-   },
-   {
-    "t": "ABBV",
-    "n": "AbbVie",
-    "c": "us",
-    "th": "dividend",
-    "tier": 2,
-    "p": 244.11,
-    "pd": "2026-07-15",
-    "tp": 256.14
    },
    {
     "t": "MO",
@@ -10102,6 +10072,36 @@ window.STOCK_HISTORY = [
     "p": 42.36,
     "pd": "2026-07-13",
     "tp": 77.05
+   },
+   {
+    "t": "LLY",
+    "n": "Eli Lilly",
+    "c": "us",
+    "th": "core",
+    "tier": 3,
+    "p": 1159.03,
+    "pd": "2026-07-15",
+    "tp": 1236.52
+   },
+   {
+    "t": "CVX",
+    "n": "Chevron",
+    "c": "us",
+    "th": "dividend",
+    "tier": 2,
+    "p": 181.76,
+    "pd": "2026-07-14",
+    "tp": 211.13
+   },
+   {
+    "t": "CI",
+    "n": "Cigna",
+    "c": "us",
+    "th": "value",
+    "tier": 3,
+    "p": 279.27,
+    "pd": "2026-07-15",
+    "tp": 341.94
    }
   ]
  }
