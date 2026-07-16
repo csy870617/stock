@@ -9761,7 +9761,7 @@ window.STOCK_HISTORY = [
     "tier": 3,
     "p": 346.91,
     "pd": "2026-07-15",
-    "tp": 346.54
+    "tp": 351.81
    },
    {
     "t": "NVDA",
@@ -9872,16 +9872,6 @@ window.STOCK_HISTORY = [
     "p": 42.83,
     "pd": "2026-07-15",
     "tp": 49
-   },
-   {
-    "t": "PYPL",
-    "n": "PayPal Holdings",
-    "c": "us",
-    "th": "value",
-    "tier": 2,
-    "p": 55.52,
-    "pd": "2026-07-15",
-    "tp": 51.45
    },
    {
     "t": "C",
@@ -10102,6 +10092,16 @@ window.STOCK_HISTORY = [
     "p": 51.01,
     "pd": "2026-07-15",
     "tp": 60
+   },
+   {
+    "t": "TCOM",
+    "n": "Trip.com Group",
+    "c": "us",
+    "th": "value",
+    "tier": 2,
+    "p": 42.36,
+    "pd": "2026-07-13",
+    "tp": 77.05
    }
   ]
  }
