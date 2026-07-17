@@ -3,14 +3,14 @@
 // 페이지 가격 우선순위: 실시간 API(config.js) > 이 스냅샷 > recommendations.js 종가(폴백)
 // 각 항목: ticker → { price, date }
 window.STOCK_QUOTES = {
- "generatedAt": "2026-07-16",
+ "generatedAt": "2026-07-17",
  "quotes": {
   "105560": {
    "price": 181100,
    "date": "2026-07-16"
   },
-  "138930": {
-   "price": 18330,
+  "139130": {
+   "price": 18410,
    "date": "2026-07-16"
   },
   "175330": {
@@ -197,10 +197,6 @@ window.STOCK_QUOTES = {
    "price": 945.57,
    "date": "2026-07-16"
   },
-  "AAPL": {
-   "price": 333.26,
-   "date": "2026-07-16"
-  },
   "BRK.B": {
    "price": 493.12,
    "date": "2026-07-16"
@@ -265,10 +261,6 @@ window.STOCK_QUOTES = {
    "price": 60.51,
    "date": "2026-07-16"
   },
-  "MRK": {
-   "price": 127.63,
-   "date": "2026-07-16"
-  },
   "PEP": {
    "price": 139.43,
    "date": "2026-07-16"
@@ -283,10 +275,6 @@ window.STOCK_QUOTES = {
   },
   "KMB": {
    "price": 108.99,
-   "date": "2026-07-16"
-  },
-  "ABBV": {
-   "price": 254.39,
    "date": "2026-07-16"
   },
   "MO": {
@@ -343,6 +331,18 @@ window.STOCK_QUOTES = {
   },
   "TCOM": {
    "price": 43.75,
+   "date": "2026-07-16"
+  },
+  "LLY": {
+   "price": 1169.17,
+   "date": "2026-07-16"
+  },
+  "CVX": {
+   "price": 183.86,
+   "date": "2026-07-16"
+  },
+  "CI": {
+   "price": 283.82,
    "date": "2026-07-16"
   }
  }
