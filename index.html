@@ -580,6 +580,11 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
     });
   }
+  // AI 적정가 미산출 종목의 보류 사유 문구 (탭/호버 팝업용)
+  function aiPendingText(s) {
+    var why = s.aiPending || "입력값(2026E EPS·배당) 검증이 아직 완료되지 않았습니다";
+    return "AI 적정가 추정중 — " + why + ". 매 업데이트마다 재검증해 산출되는 대로 표시됩니다.";
+  }
   function fmtPrice(v, country) {
     if (v == null) return "–";
     return country === "korea"
@@ -701,7 +706,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
         '<div class="pv"><div class="k">목표가 (컨센서스)</div><div class="v">' + fmtPrice(s.targetPrice, country) + "</div></div>" +
         (s.aiTarget != null
           ? '<div class="pv" title="' + esc(s.aiBasis || "") + '" data-basis="' + esc(s.aiBasis || "") + '" style="cursor:help"><div class="k">🤖 AI 적정가</div><div class="v">' + fmtPrice(s.aiTarget, country) + "</div></div>"
-          : "") +
+          : '<div class="pv" title="' + esc(aiPendingText(s)) + '" data-basis="' + esc(aiPendingText(s)) + '" style="cursor:help"><div class="k">🤖 AI 적정가</div><div class="v" style="color:var(--muted);font-weight:500">추정중</div></div>') +
         '<div class="pv"><div class="k">배당수익률</div><div class="v">' + (s.dividendYield == null ? "–" : Number(s.dividendYield).toFixed(1) + "%") + "</div></div>" +
       "</div>" +
       '<div class="meter-row"><div class="meter"><i style="width:' + meterW + '%"></i></div>' +
@@ -851,7 +856,9 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
         '<td class="num">' + fmtPrice(e.price, state.country) + "</td>" +
         '<td class="num">' + dateCell + "</td>" +
         '<td class="num">' + fmtPrice(s.targetPrice, state.country) + "</td>" +
-        '<td class="num">' + (s.aiTarget != null ? '<span title="' + esc(s.aiBasis || "") + '" data-basis="' + esc(s.aiBasis || "") + '" style="cursor:help">🤖 ' + fmtPrice(s.aiTarget, state.country) + "</span>" : "–") + "</td>" +
+        '<td class="num">' + (s.aiTarget != null
+          ? '<span title="' + esc(s.aiBasis || "") + '" data-basis="' + esc(s.aiBasis || "") + '" style="cursor:help">🤖 ' + fmtPrice(s.aiTarget, state.country) + "</span>"
+          : '<span title="' + esc(aiPendingText(s)) + '" data-basis="' + esc(aiPendingText(s)) + '" style="cursor:help;color:var(--muted)">추정중</span>') + "</td>" +
         '<td class="num ' + upCls + '">' + fmtPct(e.upside) + "</td>" +
         '<td class="num">' + (s.dividendYield == null ? "–" : Number(s.dividendYield).toFixed(1) + "%") + "</td>" +
         '<td><a href="' + esc(s.chartUrl) + '" target="_blank" rel="noopener">차트</a></td></tr>';
