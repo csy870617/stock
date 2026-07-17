@@ -264,6 +264,13 @@ a { color: inherit; }
 .tier-head .dot { width: 9px; height: 9px; border-radius: 50%; }
 .tier-head .tier-n { color: var(--muted); font-weight: 400; font-size: 0.8rem; }
 
+/* AI 적정가 근거 팝업 — 데스크톱 호버(title)와 별개로 탭/클릭으로 표시 */
+.tip-pop {
+  position: fixed; z-index: 90; max-width: min(340px, calc(100vw - 24px)); max-height: 45vh; overflow-y: auto;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow-lg);
+  padding: 11px 13px; font-size: 0.8rem; line-height: 1.55; color: var(--ink-2);
+}
+
 /* ── 카드 ── */
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
 .card {
@@ -547,6 +554,27 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     '<span class="mn-tag">시황</span>' + esc(D.marketNote);
   document.getElementById("disclaimer").textContent = D.disclaimer;
 
+  // AI 적정가 근거 팝업 — 터치 기기에선 title 툴팁이 안 뜨므로 탭/클릭으로 표시(다시 탭하거나 바깥 탭하면 닫힘)
+  (function () {
+    var pop = document.createElement("div");
+    pop.className = "tip-pop"; pop.hidden = true;
+    document.body.appendChild(pop);
+    document.addEventListener("click", function (ev) {
+      var el = ev.target.closest ? ev.target.closest("[data-basis]") : null;
+      if (el && el.getAttribute("data-basis")) {
+        if (!pop.hidden && pop._src === el) { pop.hidden = true; pop._src = null; return; }
+        pop.textContent = el.getAttribute("data-basis");
+        pop.hidden = false; pop._src = el;
+        var r = el.getBoundingClientRect();
+        var top = r.bottom + 8;
+        pop.style.left = Math.max(12, Math.min(r.left, window.innerWidth - pop.offsetWidth - 12)) + "px";
+        if (top + pop.offsetHeight > window.innerHeight - 10) top = Math.max(10, r.top - pop.offsetHeight - 8);
+        pop.style.top = top + "px";
+      } else if (!pop.hidden) { pop.hidden = true; pop._src = null; }
+    });
+    window.addEventListener("scroll", function () { if (!pop.hidden) { pop.hidden = true; pop._src = null; } }, { passive: true });
+  })();
+
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
@@ -672,7 +700,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
         '<div class="pv"><div class="k">' + priceLabel + priceTag + '</div><div class="v">' + fmtPrice(e.price, country) + "</div></div>" +
         '<div class="pv"><div class="k">목표가 (컨센서스)</div><div class="v">' + fmtPrice(s.targetPrice, country) + "</div></div>" +
         (s.aiTarget != null
-          ? '<div class="pv" title="' + esc(s.aiBasis || "") + '" style="cursor:help"><div class="k">🤖 AI 적정가</div><div class="v">' + fmtPrice(s.aiTarget, country) + "</div></div>"
+          ? '<div class="pv" title="' + esc(s.aiBasis || "") + '" data-basis="' + esc(s.aiBasis || "") + '" style="cursor:help"><div class="k">🤖 AI 적정가</div><div class="v">' + fmtPrice(s.aiTarget, country) + "</div></div>"
           : "") +
         '<div class="pv"><div class="k">배당수익률</div><div class="v">' + (s.dividendYield == null ? "–" : Number(s.dividendYield).toFixed(1) + "%") + "</div></div>" +
       "</div>" +
@@ -823,7 +851,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
         '<td class="num">' + fmtPrice(e.price, state.country) + "</td>" +
         '<td class="num">' + dateCell + "</td>" +
         '<td class="num">' + fmtPrice(s.targetPrice, state.country) + "</td>" +
-        '<td class="num">' + (s.aiTarget != null ? '<span title="' + esc(s.aiBasis || "") + '" style="cursor:help">🤖 ' + fmtPrice(s.aiTarget, state.country) + "</span>" : "–") + "</td>" +
+        '<td class="num">' + (s.aiTarget != null ? '<span title="' + esc(s.aiBasis || "") + '" data-basis="' + esc(s.aiBasis || "") + '" style="cursor:help">🤖 ' + fmtPrice(s.aiTarget, state.country) + "</span>" : "–") + "</td>" +
         '<td class="num ' + upCls + '">' + fmtPct(e.upside) + "</td>" +
         '<td class="num">' + (s.dividendYield == null ? "–" : Number(s.dividendYield).toFixed(1) + "%") + "</td>" +
         '<td><a href="' + esc(s.chartUrl) + '" target="_blank" rel="noopener">차트</a></td></tr>';
