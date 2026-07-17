@@ -172,6 +172,13 @@ function validate(D, opts) {
             Math.abs(s.aiTarget - s.targetPrice) / s.targetPrice > 0.5) {
           warnings.push(tag + ": aiTarget(" + s.aiTarget + ")이 컨센서스 목표가와 50% 이상 괴리 — 입력값 재확인 필요");
         }
+        if (s.aiAsOf != null) {
+          if (!RE_DATE.test(s.aiAsOf)) errors.push(tag + ": aiAsOf 형식 오류 '" + s.aiAsOf + "'");
+          else {
+            const aiAge = (new Date(today) - new Date(s.aiAsOf)) / 86400000;
+            if (aiAge > 45) warnings.push(tag + ": AI 적정가 산출 후 " + Math.round(aiAge) + "일 경과 — 재산출 대상");
+          }
+        }
       }
 
       // 분석 텍스트 — 한국어 강제 (루틴이 영어로 채우는 퇴행 방지)

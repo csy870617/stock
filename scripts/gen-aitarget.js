@@ -13,11 +13,12 @@
 
 const fs = require("fs");
 const path = require("path");
-const [inputsPath, rulesPath, outPath] = process.argv.slice(2);
+const [inputsPath, rulesPath, outPath, asOfArg] = process.argv.slice(2);
 if (!inputsPath || !rulesPath || !outPath) {
-  console.error("사용법: node scripts/gen-aitarget.js <inputs.json> <rules.json> <out-patch.json>");
+  console.error("사용법: node scripts/gen-aitarget.js <inputs.json> <rules.json> <out-patch.json> [산출일 YYYY-MM-DD]");
   process.exit(1);
 }
+const AS_OF = asOfArg || new Date().toISOString().slice(0, 10);
 const inputs = JSON.parse(fs.readFileSync(inputsPath, "utf8"));
 const rules = JSON.parse(fs.readFileSync(rulesPath, "utf8"));
 
@@ -66,7 +67,7 @@ const skipped = [];
     const tp = s0.targetPrice;
     if (tp && Math.abs(v - tp) / tp > 0.5) basis += ". 컨센서스와 괴리 큼 — 참고 지표로만 볼 것";
     else if (tp) basis += ". 컨센서스(" + fmt(tp, c) + ") 대비 " + (v >= tp ? "높음" : "낮음/유사");
-    recos.forEach((s) => stocks.push({ country: c, ticker: row.t, theme: s.theme, aiTarget: v, aiBasis: basis }));
+    recos.forEach((s) => stocks.push({ country: c, ticker: row.t, theme: s.theme, aiTarget: v, aiBasis: basis, aiAsOf: AS_OF }));
   });
 });
 
