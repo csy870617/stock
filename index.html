@@ -698,10 +698,53 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     return { price: s.price, priceDate: s.priceDate, upside: s.upside, live: false };
   }
 
-  // ── 기술분석 — 앱이 매일 기록해온 종가 시계열(history.js)로 브라우저에서 계산 ──
-  // 외부 차트 API가 막힌 환경이라, 누적된 일별 종가(=차트 데이터)로 단기 지표를 산출한다.
-  // 거래일(priceDate) 기준으로 중복(주말·미갱신)을 제거해 실제 종가 흐름만 남기며,
-  // 데이터가 쌓일수록(매일 +1) RSI·이동평균이 더 정밀해진다.
+  // ── 과거 시계열 레이어 (기술분석용 — 신뢰할 만한 기간의 실제 일봉 종가) ──
+  // 누적 스냅샷(history.js)만으로는 기간이 짧아 RSI14·MA20·MA50 이 부정확하다.
+  // 그래서 시세 서버(config.js 의 quotesApi)의 history 모드로 6개월 일봉 종가를 받아
+  // 기술분석에 사용한다(서버가 Yahoo 를 서버-사이드로 조회 → CORS 문제 없음).
+  // 서버가 history 를 지원하지 않거나 실패하면 조용히 누적 스냅샷으로 폴백한다.
+  var HIST_RANGE = "6mo";
+  var histCache = {};      // ticker → closes[](오래된→최신) | null(미지원·실패) | undefined(미조회)
+  var histInflight = {};
+  function fetchHistory(stocks, onDone) {
+    if (!liveSupported) return;   // quotesApi 미설정이면 누적 스냅샷만 사용
+    var todo = [], seen = {};
+    stocks.forEach(function (s) {
+      if (!s || seen[s.ticker]) return; seen[s.ticker] = 1;
+      if (histCache[s.ticker] === undefined && !histInflight[s.ticker]) todo.push(s);
+    });
+    if (!todo.length) return;
+    todo = todo.slice(0, 40);     // 한 번에 최대 40종목(서버 부하·지연 관리)
+    todo.forEach(function (s) { histInflight[s.ticker] = 1; });
+    var symbols = todo.map(symbolFor);
+    var url = QUOTES_API + (QUOTES_API.indexOf("?") >= 0 ? "&" : "?") +
+      "history=1&range=" + HIST_RANGE + "&symbols=" + encodeURIComponent(symbols.join(","));
+    var ctrl = new AbortController();
+    var to = setTimeout(function () { ctrl.abort(); }, 15000);
+    fetch(url, { signal: ctrl.signal })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (map) {
+        clearTimeout(to);
+        var any = false;
+        todo.forEach(function (s) {
+          var v = map && map[symbolFor(s)];
+          // history 모드 응답만 채택(closes 배열). 구버전 서버가 시세를 돌려주면 무시하고 폴백.
+          if (v && Array.isArray(v.closes) && v.closes.length >= 20) { histCache[s.ticker] = v.closes; any = true; }
+          else { histCache[s.ticker] = null; }
+          delete histInflight[s.ticker];
+        });
+        if (any && onDone) onDone();
+      })
+      .catch(function () {
+        clearTimeout(to);
+        todo.forEach(function (s) { delete histInflight[s.ticker]; });
+      });
+  }
+
+  // ── 기술분석 종가 시계열 — 실측 6개월(있으면 우선) > 누적 스냅샷(폴백) ──
+  // 외부 차트 API가 막힌 브라우저 대신 시세 서버가 조회한 실제 일봉을 쓰고,
+  // 없으면 앱이 매일 기록해온 누적 종가(history.js)를 쓴다.
+  // 누적 시계열은 거래일(priceDate) 기준으로 중복(주말·미갱신)을 제거해 실제 흐름만 남긴다.
   var CLOSES = (function () {
     var byDate = {}, order = {};
     H.forEach(function (snap) {
@@ -720,6 +763,21 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     });
     return m;
   })();
+  // 기술분석에 쓸 종가 시계열 선택: 실측 6개월(histCache) 우선, 없으면 누적 스냅샷(CLOSES).
+  // 반환 {cl(오래된→최신), source:'live'|'accum', n}
+  function closeSeries(s) {
+    var accum = CLOSES[s.ticker] || [];
+    var hist = histCache[s.ticker];
+    var cl, source;
+    if (Array.isArray(hist) && hist.length >= 2 && hist.length >= accum.length) { cl = hist.slice(); source = "live"; }
+    else { cl = accum.slice(); source = "accum"; }
+    // 누적 스냅샷은 최신 표시가(실시간/quotes)가 마지막 기록보다 새로우면 반영(실측 시계열은 이미 일봉으로 최신)
+    if (source === "accum") {
+      var e = effective(s);
+      if (e.price != null && isFinite(e.price) && (cl.length === 0 || cl[cl.length - 1] !== e.price)) cl.push(e.price);
+    }
+    return { cl: cl, source: source, n: cl.length };
+  }
   function mean(a) { for (var s = 0, i = 0; i < a.length; i++) s += a[i]; return s / a.length; }
   // Wilder RSI — 초기 period 평균으로 시드한 뒤 지수평활(표준 방식)
   function rsiOf(cl, period) {
@@ -739,12 +797,10 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   }
   // s → {label, short, cls, ind, cross, conf, dir, note}
   function techSignal(s) {
-    var cl = CLOSES[s.ticker] ? CLOSES[s.ticker].slice() : [];
-    var e = effective(s);   // 실시간/최신 종가가 마지막 기록보다 새로우면 반영
-    if (e.price != null && isFinite(e.price) && (cl.length === 0 || cl[cl.length - 1] !== e.price)) cl.push(e.price);
-    var n = cl.length;
+    var cs = closeSeries(s);
+    var cl = cs.cl, n = cs.n;
     if (n < 5) return { label: "데이터 축적 중", short: "축적중", cls: "na", ind: "", cross: null, conf: null, dir: 0,
-      note: "기술분석은 앱이 누적한 일별 종가가 5거래일 이상 쌓이면 표시됩니다(현재 " + n + "일). 매일 자동 축적됩니다." };
+      note: "기술분석은 신뢰할 만한 기간의 일봉 종가가 확보되면 표시됩니다(현재 " + n + "일). 시세 서버 연결 시 6개월 시계열을 받아오고, 없으면 앱이 매일 종가를 누적합니다." };
     var last = cl[n - 1];
     var win = Math.min(20, n), seg = cl.slice(n - win);
     var maMid = mean(seg), hi = Math.max.apply(null, seg), lo = Math.min.apply(null, seg);
@@ -805,14 +861,18 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     if (rsi != null) ind.push("RSI " + Math.round(rsi) + (rsiFlag ? "(" + rsiFlag + ")" : ""));
     ind.push("20일선 " + (vsMid >= 0 ? "+" : "") + vsMid.toFixed(1) + "%");
     ind.push("위치 " + Math.round(pos * 100) + "%");
+    ind.push(cs.source === "live" ? n + "일 실측" : n + "일 누적");
     var crossNote = cross === "golden" ? " 최근 골든크로스로 매수 쪽 지표가 가세했습니다."
       : cross === "dead" ? " 최근 데드크로스로 매도 쪽 지표가 가세했습니다." : "";
-    var note = "기술분석 — 앱이 누적한 일별 종가 " + n + "거래일치로 계산했습니다. "
+    var dataNote = cs.source === "live"
+      ? "시세 서버에서 받은 실측 일봉 " + n + "거래일치(약 " + HIST_RANGE + ")로 계산해 RSI14·이동평균이 온전합니다."
+      : "앱이 누적한 일별 종가 " + n + "거래일치로 계산했습니다(시세 서버 연결 시 6개월 실측 시계열로 자동 강화).";
+    var note = "기술분석 — " + dataNote + " "
       + "종가 vs 20일선, 단기·중기 이평 배열, 골든/데드 크로스, 모멘텀, 고저 구간 내 위치 등 "
       + "추세추종 지표 " + votes.length + "개의 합의로 방향을 정하고, 지표가 일치하는 정도를 신뢰도(현재 " + conf + "%)로 표시합니다. "
       + "강한 신호(적극 매수·차익 실현)는 신뢰도 90% 이상일 때만 냅니다." + crossNote
-      + " Wilder RSI로 과열·과냉을 걸러냅니다. 종가만 사용한 단기 지표라 데이터가 쌓일수록 정밀해집니다. 투자 판단은 본인 책임입니다.";
-    return { label: label, short: short, cls: cls, ind: ind.join(" · "), cross: cross, conf: conf, dir: dir, note: note };
+      + " Wilder RSI로 과열·과냉을 걸러냅니다. 투자 판단은 본인 책임입니다.";
+    return { label: label, short: short, cls: cls, ind: ind.join(" · "), cross: cross, conf: conf, dir: dir, source: cs.source, note: note };
   }
 
   function card(s, country, showTheme) {
@@ -1152,6 +1212,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     if (state.view === "table") {
       host.innerHTML = tableView(sortList(list), false);
       ensureLive(list, refreshLive);
+      fetchHistory(list, refreshLive);
       return;
     }
 
@@ -1168,6 +1229,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     });
     host.innerHTML = html;
     ensureLive(list, refreshLive);
+    fetchHistory(list, refreshLive);
   }
 
   document.getElementById("countrySeg").addEventListener("click", function (e) {
