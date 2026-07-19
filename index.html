@@ -874,31 +874,63 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     else if (dir < 0 && conf >= 65) { label = "비중 축소"; short = "축소"; cls = "sell1"; }
     else { label = "관망"; short = "관망"; cls = "hold"; }
 
+    // ── 장기 국면 인식(regime-aware) — 추세추종만으로 놓치는 긍정 신호 보완 ──
+    // 200일선 위(장기 상승국면)의 단기 눌림목은 매도가 아니라 '매수 기회'로 인식하고,
+    // 상승국면의 단순 약세는 축소 대신 관망으로 완화한다. (하락국면은 그대로 — 무분별한 낙관 방지)
+    var regimeTag = "";
+    if (hasLong && vsLong >= 2 && dir <= 0) {
+      var oversold = (rsi != null && rsi <= 45) || pos <= 0.30 || vsMid <= -3;
+      if (oversold) {
+        label = "매수"; short = "매수"; cls = "buy1"; regimeTag = "눌림목"; dir = 1;
+        conf = Math.max(65, Math.min(82, Math.round(58 + vsLong * 0.4 + (rsi != null ? Math.max(0, 45 - rsi) * 0.5 : 0))));
+      } else if (label === "비중 축소" || label === "차익 실현") {
+        label = "관망"; short = "관망"; cls = "hold";
+      }
+    }
+
     var ind = [];
     if (rsi != null) ind.push("RSI " + Math.round(rsi) + (rsiFlag ? "(" + rsiFlag + ")" : ""));
     if (hasLong) ind.push("200일선 " + (vsLong >= 0 ? "+" : "") + vsLong.toFixed(1) + "%");
     ind.push("20일선 " + (vsMid >= 0 ? "+" : "") + vsMid.toFixed(1) + "%");
     ind.push("위치 " + Math.round(pos * 100) + "%");
     ind.push(cs.source === "live" ? n + "일 실측" : n + "일 누적");
-    var crossName = crossClassic ? "50/200일선 골든크로스" : "골든크로스";
-    var deadName = crossClassic ? "50/200일선 데드크로스" : "데드크로스";
-    var crossNote = cross === "golden" ? " 최근 " + crossName + "로 매수 쪽 지표가 가세했습니다."
-      : cross === "dead" ? " 최근 " + deadName + "로 매도 쪽 지표가 가세했습니다." : "";
-    var longNote = hasLong
-      ? "200일선(장기 국면) 대비 " + (vsLong >= 0 ? "위" : "아래") + "에 있어 장기 추세는 " + (vsLong >= 0 ? "상승" : "하락") + "입니다. "
-      : "(200일선 국면 판단은 60거래일 이상부터. 현재 기간이 짧아 생략) ";
-    var dataNote = cs.source === "live"
-      ? "시세 서버에서 받은 실측 일봉 " + n + "거래일치(약 2년)로 계산해 200일선·정통 골든크로스·RSI14가 온전합니다."
-      : "앱이 누적한 일별 종가 " + n + "거래일치로 계산했습니다(시세 서버 연결 시 2년 실측 시계열로 자동 강화 — 200일선·정통 50/200 골든크로스 활성화).";
-    var dampNote = shortData
-      ? " ⚠ 현재 데이터가 짧아(" + n + "거래일) 단기 지표들이 서로 겹쳐 합치도가 부풀려지므로, 신뢰도를 " + confRaw + "% → " + conf + "%로 낮춰 표시합니다(과대평가 방지). 2년 실측 시계열이 확보되면 지표가 독립적으로 검증돼 신뢰도가 정직해집니다."
+    // ── 이 종목이 '왜' 이 신호인지 — 실제 지표값으로 종목별 근거를 서술 ──
+    var reasons = [];
+    if (hasLong) reasons.push(
+      vsLong >= 2 ? "200일선을 " + vsLong.toFixed(1) + "% 상회해 장기 추세는 상승"
+      : vsLong <= -2 ? "200일선을 " + Math.abs(vsLong).toFixed(1) + "% 하회해 장기 추세는 하락"
+      : "200일선 부근(" + vsLong.toFixed(1) + "%)이라 장기 방향은 중립");
+    reasons.push(
+      vsMid >= 1 ? "20일선 위(+" + vsMid.toFixed(1) + "%)로 중기 흐름 양호"
+      : vsMid <= -1 ? "20일선 아래(" + vsMid.toFixed(1) + "%)로 단기 조정 중"
+      : "20일선 부근 횡보");
+    if (rsi != null) reasons.push(
+      rsi >= 70 ? "RSI " + Math.round(rsi) + " 과열(단기 과매수)"
+      : rsi <= 30 ? "RSI " + Math.round(rsi) + " 과매도(반등 여지)"
+      : "RSI " + Math.round(rsi) + " 중립권");
+    reasons.push(
+      pos >= 0.7 ? "최근 고가권(" + Math.round(pos * 100) + "%)"
+      : pos <= 0.3 ? "최근 저가권(" + Math.round(pos * 100) + "%)"
+      : "등락범위 중단(" + Math.round(pos * 100) + "%)");
+    if (cross) reasons.push("최근 " + (crossClassic ? "50/200일선 " : "") + (cross === "golden" ? "골든크로스 발생" : "데드크로스 발생"));
+
+    var why;
+    if (regimeTag === "눌림목") why = "→ 장기 상승추세가 살아있는데 단기 조정에 들어와, 눌림목 매수 기회로 판단했습니다.";
+    else if (label === "적극 매수") why = "→ 장·단기 지표가 강하게 상승에 일치해 적극 매수입니다.";
+    else if (label === "매수") why = "→ 추세추종 지표가 상승 우위라 매수입니다.";
+    else if (label === "차익 실현") why = "→ 지표가 강하게 하락에 일치해 차익 실현(비중 대폭 축소) 신호입니다.";
+    else if (label === "비중 축소") why = "→ 하락 우위 지표가 많아 비중 축소 신호입니다.";
+    else if (hasLong && vsLong >= 2) why = "→ 장기 추세는 상승이나 단기 지표가 엇갈려, 뚜렷한 진입 시점은 아니라 관망입니다.";
+    else why = "→ 지표들이 방향에 대해 엇갈려 관망입니다.";
+
+    var basis = cs.source === "live" ? "실측 " + n + "거래일(약 2년)" : "누적 " + n + "거래일";
+    var dampNote = (shortData && !regimeTag)
+      ? " (데이터가 짧아 신뢰도를 " + confRaw + "%→" + conf + "%로 낮춰 표시 — 과대평가 방지)"
       : "";
-    var note = "기술분석 — " + dataNote + " " + longNote
-      + "종가 vs 20일선·200일선, 단기·중기 이평 배열, 골든/데드 크로스, 모멘텀, 고저 구간 내 위치 등 "
-      + "추세추종 지표 " + votes.length + "개의 합의로 방향을 정하고, 지표가 일치하는 정도를 신뢰도(현재 " + conf + "%)로 표시합니다. "
-      + "강한 신호(적극 매수·차익 실현)는 신뢰도 90% 이상일 때만 냅니다." + crossNote + dampNote
-      + " Wilder RSI로 과열·과냉을 걸러냅니다. 투자 판단은 본인 책임입니다.";
-    return { label: label, short: short, cls: cls, ind: ind.join(" · "), cross: cross, conf: conf, dir: dir, source: cs.source, shortData: shortData, note: note };
+    var note = "[" + s.name + "] " + label + " · 신뢰도 " + conf + "% — "
+      + reasons.join(", ") + ". " + why
+      + " 근거 데이터: " + basis + dampNote + ". 종가 기반 추세추종 분석이며, 투자 판단과 책임은 본인에게 있습니다.";
+    return { label: label, short: short, cls: cls, ind: ind.join(" · "), cross: cross, conf: conf, dir: dir, source: cs.source, shortData: shortData, regimeTag: regimeTag, note: note };
   }
 
   function card(s, country, showTheme) {
@@ -951,9 +983,12 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
         var shortChip = ts.shortData
           ? '<span class="short-chip" title="장기 데이터 부족 — 시계열이 짧아 단기 지표들이 서로 겹칩니다. 신뢰도를 낮춰 표시하며, 2년 실측 시계열 확보 시 정밀해집니다.">단기 데이터</span>'
           : "";
+        var regimeChip = ts.regimeTag === "눌림목"
+          ? '<span class="cross-chip gc" title="상승추세 눌림목 — 200일선 위 장기 상승국면에서 단기 조정에 들어온 매수 기회">🎯 눌림목</span>'
+          : "";
         return '<div class="tech-row"><span class="tlabel">📈 기술분석</span>' +
           '<span class="tech-sig ' + ts.cls + '" data-basis="' + esc(ts.note) + '"><span class="dot"></span>' + esc(ts.label) + "</span>" +
-          confBadge + shortChip + crossChip +
+          confBadge + regimeChip + shortChip + crossChip +
           (ts.ind ? '<span class="tech-ind">' + esc(ts.ind) + "</span>" : "") + "</div>";
       })() +
       (s.earnings ? '<div class="earn">' + esc(s.earnings) + "</div>" : "") +
