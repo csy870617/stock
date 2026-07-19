@@ -331,6 +331,11 @@ a { color: inherit; }
 .tech-sig.sell2 { color: #fff; background: var(--down); }
 .tech-sig.na { color: var(--muted); background: var(--chip-bg); }
 .tech-ind { color: var(--muted); font-size: 0.74rem; font-variant-numeric: tabular-nums; }
+.cross-chip { font-size: 0.7rem; font-weight: 800; padding: 2px 8px; border-radius: 999px; white-space: nowrap; cursor: help; }
+.cross-chip.gc { color: var(--up); background: var(--chip-bg); }
+.cross-chip.dc { color: var(--down); background: var(--chip-bg); }
+.tbl .sig-cell .cx { font-weight: 900; margin-left: 3px; }
+.tbl .sig-cell .cx.gc { color: var(--up); } .tbl .sig-cell .cx.dc { color: var(--down); }
 .tbl .sig-cell { font-size: 0.72rem; font-weight: 800; white-space: nowrap; }
 .tbl .sig-cell.buy2 { color: var(--up); } .tbl .sig-cell.buy1 { color: var(--up); }
 .tbl .sig-cell.hold { color: var(--ink-2); } .tbl .sig-cell.na { color: var(--muted); }
@@ -730,7 +735,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     var e = effective(s);   // 실시간/최신 종가가 마지막 기록보다 새로우면 반영
     if (e.price != null && isFinite(e.price) && (cl.length === 0 || cl[cl.length - 1] !== e.price)) cl.push(e.price);
     var n = cl.length;
-    if (n < 5) return { label: "데이터 축적 중", cls: "na", ind: "",
+    if (n < 5) return { label: "데이터 축적 중", short: "축적중", cls: "na", ind: "", cross: null,
       note: "매매시점은 앱이 누적한 일별 종가가 5거래일 이상 쌓이면 표시됩니다(현재 " + n + "일). 매일 자동 축적됩니다." };
     var last = cl[n - 1];
     var win = Math.min(20, n), seg = cl.slice(n - win);
@@ -739,26 +744,48 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     var rsi = rsiOf(cl, 14);
     var vsMid = (last / maMid - 1) * 100;                    // 20일선(가용분) 대비 %
 
+    // ── 골든/데드 크로스 (단기·장기 이동평균 교차, 최근 3거래일 내 발생분) ──
+    // 윈도우는 데이터가 쌓일수록 표준(단기 5·장기 20)으로 수렴하고, 데이터가 적으면
+    // 가용 범위에서 축소해 지금도 동작한다(예: 10일치 → 4·8일선).
+    var cross = null;   // 'golden' | 'dead' | null
+    (function () {
+      var lW = Math.min(20, n - 2);
+      if (lW < 4) return;
+      var sW = Math.min(5, Math.max(2, Math.floor(lW / 2)));
+      var maAt = function (end, w) { return mean(cl.slice(end - w, end)); };   // end 직전 w개 평균
+      for (var j = 0; j < 3; j++) {
+        var iN = n - j, iP = iN - 1;
+        if (iP - lW < 0 || iN - sW < 0) break;
+        var sN = maAt(iN, sW), lN = maAt(iN, lW), sP = maAt(iP, sW), lP = maAt(iP, lW);
+        if (sP <= lP && sN > lN) { cross = "golden"; break; }
+        if (sP >= lP && sN < lN) { cross = "dead"; break; }
+      }
+    })();
+
     var score = 0;
     if (rsi != null) { if (rsi <= 30) score += 2; else if (rsi <= 42) score += 1; else if (rsi >= 70) score -= 2; else if (rsi >= 58) score -= 1; }
     if (pos <= 0.2) score += 1; else if (pos >= 0.8) score -= 1;
     if (vsMid >= 2) score += 1; else if (vsMid <= -2) score -= 1;
+    if (cross === "golden") score += 1; else if (cross === "dead") score -= 1;
 
-    var label, cls;
-    if (score >= 3) { label = "적극 매수"; cls = "buy2"; }
-    else if (score === 2) { label = "매수"; cls = "buy1"; }
-    else if (score <= -3) { label = "차익 실현"; cls = "sell2"; }
-    else if (score === -2) { label = "비중 축소"; cls = "sell1"; }
-    else { label = "관망"; cls = "hold"; }
+    var label, short, cls;
+    if (score >= 3) { label = "적극 매수"; short = "적극매수"; cls = "buy2"; }
+    else if (score === 2) { label = "매수"; short = "매수"; cls = "buy1"; }
+    else if (score <= -3) { label = "차익 실현"; short = "차익"; cls = "sell2"; }
+    else if (score === -2) { label = "비중 축소"; short = "축소"; cls = "sell1"; }
+    else { label = "관망"; short = "관망"; cls = "hold"; }
 
     var ind = [];
     if (rsi != null) ind.push("RSI " + Math.round(rsi));
     ind.push("20일선 " + (vsMid >= 0 ? "+" : "") + vsMid.toFixed(1) + "%");
     ind.push("위치 " + Math.round(pos * 100) + "%");
+    var crossNote = cross === "golden" ? " 최근 골든크로스(단기 이평이 장기 이평을 상향 돌파)로 매수 신호가 가세했습니다."
+      : cross === "dead" ? " 최근 데드크로스(단기 이평이 장기 이평을 하향 돌파)로 매도 신호가 가세했습니다." : "";
     var note = "단기 매매시점 — 앱이 누적한 일별 종가 " + n + "거래일치로 계산했습니다. "
-      + "RSI(과매수·과매도), 20일 이동평균 대비 위치, 최근 고저 구간 내 위치를 합성해 "
-      + "추세추종과 눌림목 진입을 함께 반영합니다. 종가만 사용한 단기 참고 지표이며 데이터가 쌓일수록 정밀해집니다. 투자 판단은 본인 책임입니다.";
-    return { label: label, cls: cls, ind: ind.join(" · "), note: note };
+      + "RSI(과매수·과매도), 20일 이동평균 대비 위치, 최근 고저 구간 내 위치, 골든/데드 크로스를 합성해 "
+      + "추세추종과 눌림목 진입을 함께 반영합니다." + crossNote
+      + " 종가만 사용한 단기 참고 지표이며 데이터가 쌓일수록 정밀해집니다. 투자 판단은 본인 책임입니다.";
+    return { label: label, short: short, cls: cls, ind: ind.join(" · "), cross: cross, note: note };
   }
 
   function card(s, country, showTheme) {
@@ -801,8 +828,13 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       '<div class="pct ' + upCls + '">' + fmtPct(e.upside) + "</div></div>" +
       (function () {
         var ts = techSignal(s);
+        var crossChip = ts.cross === "golden"
+          ? '<span class="cross-chip gc" title="골든크로스 — 단기 이동평균이 장기 이동평균을 상향 돌파">✚ 골든크로스</span>'
+          : ts.cross === "dead"
+          ? '<span class="cross-chip dc" title="데드크로스 — 단기 이동평균이 장기 이동평균을 하향 돌파">✖ 데드크로스</span>' : "";
         return '<div class="tech-row"><span class="tlabel">📈 매매시점</span>' +
           '<span class="tech-sig ' + ts.cls + '" data-basis="' + esc(ts.note) + '"><span class="dot"></span>' + esc(ts.label) + "</span>" +
+          crossChip +
           (ts.ind ? '<span class="tech-ind">' + esc(ts.ind) + "</span>" : "") + "</div>";
       })() +
       (s.earnings ? '<div class="earn">' + esc(s.earnings) + "</div>" : "") +
@@ -954,7 +986,12 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
           ? '<span title="' + esc(s.aiBasis || "") + '" data-basis="' + esc(s.aiBasis || "") + '" style="cursor:help">🤖 ' + fmtPrice(s.aiTarget, state.country) + "</span>"
           : '<span title="' + esc(aiPendingText(s)) + '" data-basis="' + esc(aiPendingText(s)) + '" style="cursor:help;color:var(--muted)">추정중</span>') + "</td>" +
         '<td class="num ' + upCls + '">' + fmtPct(e.upside) + "</td>" +
-        (function () { var ts = techSignal(s); return '<td class="sig-cell ' + ts.cls + '" title="' + esc(ts.note) + '" data-basis="' + esc(ts.note) + '">' + esc(ts.label) + "</td>"; })() +
+        (function () {
+          var ts = techSignal(s);
+          var cx = ts.cross === "golden" ? '<span class="cx gc" title="골든크로스">✚</span>'
+            : ts.cross === "dead" ? '<span class="cx dc" title="데드크로스">✖</span>' : "";
+          return '<td class="sig-cell ' + ts.cls + '" title="' + esc(ts.note) + '" data-basis="' + esc(ts.note) + '">' + esc(ts.short) + cx + "</td>";
+        })() +
         '<td class="num">' + (s.dividendYield == null ? "–" : Number(s.dividendYield).toFixed(1) + "%") + "</td>" +
         '<td><a href="' + esc(s.chartUrl) + '" target="_blank" rel="noopener">차트</a></td></tr>';
     }).join("");
