@@ -167,17 +167,11 @@ a { color: inherit; }
 .tile .v.up { color: var(--up); }
 
 /* ── 성과: 기간 선택 · 주제×Tier 매트릭스 ── */
-.filterbar { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 0 0 18px; padding: 10px 12px;
-  background: var(--surface); border: 1px solid var(--line); border-radius: 12px; }
-.filterbar .fb-lbl { color: var(--muted); font-size: 0.74rem; font-weight: 600; margin: 0 2px 0 8px; }
-.filterbar .fb-lbl:first-child { margin-left: 0; }
-.fb-chip { font-size: 0.78rem; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line);
-  background: transparent; color: var(--ink-2); cursor: pointer; font-weight: 600; }
-.fb-chip.on { background: var(--accent); color: #fff; border-color: var(--accent); }
-.fb-sort { font-size: 0.78rem; padding: 5px 8px; border-radius: 8px; border: 1px solid var(--line);
+.filterbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 0 0 18px; }
+.fb-sel { font-size: 0.8rem; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line);
   background: var(--surface); color: var(--ink); cursor: pointer; }
-.fb-reset { font-size: 0.76rem; padding: 4px 11px; border-radius: 999px; border: 1px solid var(--line);
-  background: transparent; color: var(--accent); cursor: pointer; font-weight: 600; margin-left: auto; }
+.fb-reset { font-size: 0.78rem; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--line);
+  background: transparent; color: var(--accent); cursor: pointer; font-weight: 600; }
 .perf-periods { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 0 0 16px; }
 .perf-periods .pp-lbl { color: var(--muted); font-size: 0.76rem; font-weight: 600; margin-right: 4px; }
 .perf-periods .chip { font-size: 0.8rem; padding: 5px 12px; border-radius: 999px; border: 1px solid var(--line);
@@ -1405,10 +1399,10 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   function refreshLive() { render(); renderTopPicks(); }
 
   // ── 필터/정렬 (카드·표 뷰) — 순수 표시 제어(데이터·주장 변경 없음) ──
-  var SIG_OPTS = [{ v: "all", l: "전체" }, { v: "buy", l: "매수" }, { v: "hold", l: "관망" }, { v: "sell", l: "매도" }];
-  var UP_OPTS = [{ v: 0, l: "전체" }, { v: 10, l: "+10%↑" }, { v: 20, l: "+20%↑" }, { v: 30, l: "+30%↑" }];
-  var DIV_OPTS = [{ v: 0, l: "전체" }, { v: 2, l: "2%↑" }, { v: 3, l: "3%↑" }, { v: 4, l: "4%↑" }];
-  var SORT_OPTS = [{ v: "default", l: "기본(Tier·상승여력)" }, { v: "upside", l: "상승여력↓" }, { v: "div", l: "배당수익률↓" }, { v: "conf", l: "기술 신뢰도↓" }, { v: "name", l: "이름순" }];
+  var SIG_OPTS = [{ v: "all", l: "신호 전체" }, { v: "buy", l: "매수 신호" }, { v: "hold", l: "관망" }, { v: "sell", l: "매도 신호" }];
+  var UP_OPTS = [{ v: 0, l: "상승여력 전체" }, { v: 10, l: "상승여력 10%+" }, { v: 20, l: "상승여력 20%+" }, { v: 30, l: "상승여력 30%+" }];
+  var DIV_OPTS = [{ v: 0, l: "배당 전체" }, { v: 2, l: "배당 2%+" }, { v: 3, l: "배당 3%+" }, { v: 4, l: "배당 4%+" }];
+  var SORT_OPTS = [{ v: "default", l: "정렬: 기본" }, { v: "upside", l: "정렬: 상승여력↓" }, { v: "div", l: "정렬: 배당↓" }, { v: "conf", l: "정렬: 신뢰도↓" }, { v: "name", l: "정렬: 이름" }];
 
   function techGroup(s) {
     var c = techSignal(s).cls;
@@ -1436,18 +1430,17 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     return arr;
   }
   function filterBar() {
-    function chips(opts, cur, attr) {
-      return opts.map(function (o) {
-        return '<button class="fb-chip' + (String(o.v) === String(cur) ? " on" : "") + '" ' + attr + '="' + o.v + '" type="button">' + esc(o.l) + "</button>";
-      }).join("");
+    function sel(attr, opts, cur) {
+      return '<select class="fb-sel" ' + attr + '>' + opts.map(function (o) {
+        return '<option value="' + o.v + '"' + (String(o.v) === String(cur) ? " selected" : "") + ">" + esc(o.l) + "</option>";
+      }).join("") + "</select>";
     }
     var active = state.fSignal !== "all" || state.fUpside > 0 || state.fDiv > 0 || state.sort !== "default";
     return '<div class="filterbar">' +
-      '<span class="fb-lbl">신호</span>' + chips(SIG_OPTS, state.fSignal, "data-fs") +
-      '<span class="fb-lbl">상승여력</span>' + chips(UP_OPTS, state.fUpside, "data-fu") +
-      '<span class="fb-lbl">배당</span>' + chips(DIV_OPTS, state.fDiv, "data-fd") +
-      '<span class="fb-lbl">정렬</span><select class="fb-sort" data-fsort>' +
-        SORT_OPTS.map(function (o) { return '<option value="' + o.v + '"' + (o.v === state.sort ? " selected" : "") + ">" + esc(o.l) + "</option>"; }).join("") + "</select>" +
+      sel("data-fsort", SORT_OPTS, state.sort) +
+      sel("data-fs", SIG_OPTS, state.fSignal) +
+      sel("data-fu", UP_OPTS, state.fUpside) +
+      sel("data-fd", DIV_OPTS, state.fDiv) +
       (active ? '<button class="fb-reset" data-freset="1" type="button">초기화</button>' : "") +
       "</div>";
   }
@@ -1533,17 +1526,18 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   });
   // 성과 기간 칩 + 필터/정렬 — #cards 는 재렌더돼도 요소 자체는 유지되므로 위임 처리
   document.getElementById("cards").addEventListener("click", function (e) {
-    var b = e.target.closest("[data-perfp],[data-fs],[data-fu],[data-fd],[data-freset]"); if (!b) return;
+    var b = e.target.closest("[data-perfp],[data-freset]"); if (!b) return;
     if (b.hasAttribute("data-perfp")) state.perfPeriod = b.dataset.perfp;
-    else if (b.hasAttribute("data-fs")) state.fSignal = b.dataset.fs;
-    else if (b.hasAttribute("data-fu")) state.fUpside = +b.dataset.fu;
-    else if (b.hasAttribute("data-fd")) state.fDiv = +b.dataset.fd;
     else if (b.hasAttribute("data-freset")) { state.fSignal = "all"; state.fUpside = 0; state.fDiv = 0; state.sort = "default"; }
     render();
   });
   document.getElementById("cards").addEventListener("change", function (e) {
-    var sel = e.target.closest("[data-fsort]"); if (!sel) return;
-    state.sort = sel.value;
+    var sel = e.target.closest("select"); if (!sel) return;
+    if (sel.hasAttribute("data-fsort")) state.sort = sel.value;
+    else if (sel.hasAttribute("data-fs")) state.fSignal = sel.value;
+    else if (sel.hasAttribute("data-fu")) state.fUpside = +sel.value;
+    else if (sel.hasAttribute("data-fd")) state.fDiv = +sel.value;
+    else return;
     render();
   });
   // Top Pick 클릭 → 해당 주제·카드 뷰로 전환하고 그 종목 카드로 스크롤·강조
