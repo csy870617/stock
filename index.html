@@ -166,6 +166,21 @@ a { color: inherit; }
 .tile .v { font-size: 1.4rem; font-weight: 750; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
 .tile .v.up { color: var(--up); }
 
+/* ── 성과: 기간 선택 · 주제×Tier 매트릭스 ── */
+.perf-periods { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 0 0 16px; }
+.perf-periods .pp-lbl { color: var(--muted); font-size: 0.76rem; font-weight: 600; margin-right: 4px; }
+.perf-periods .chip { font-size: 0.8rem; padding: 5px 12px; border-radius: 999px; border: 1px solid var(--line);
+  background: var(--surface); color: var(--ink-2); cursor: pointer; font-weight: 600; }
+.perf-periods .chip.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+.perf-sec-t { font-size: 0.9rem; font-weight: 700; color: var(--ink); margin: 22px 0 9px; }
+.perf-sec-t span { color: var(--muted); font-weight: 500; font-size: 0.8rem; }
+.perf-matrix td.num, .perf-matrix th.num { text-align: right; }
+.perf-matrix .pm-th { font-weight: 600; }
+.perf-matrix .pm-n { display: inline-block; color: var(--muted); font-size: 0.68rem; font-weight: 500; margin-left: 5px; }
+.perf-matrix .pm-na { color: var(--muted); }
+.perf-matrix tr.pm-tot { border-top: 2px solid var(--grid); font-weight: 700; }
+.perf-matrix tr.pm-tot td { background: var(--chip-bg); }
+
 /* ── 선택 메뉴 패널 ── */
 .menu { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); margin-bottom: 22px; box-shadow: var(--shadow-sm); overflow: hidden; }
 .menu-row { display: flex; align-items: center; gap: 14px; padding: 12px 16px; }
@@ -508,7 +523,8 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   var state = {
     country: "korea",
     theme: (D && D.themes && D.themes[0] && D.themes[0].key) || "core",
-    view: "cards"
+    view: "cards",
+    perfPeriod: "since"   // 성과 기준일: since(추천시점) | 1m | 2m | 3m | 6m | 1y
   };
 
   var root = document.documentElement;
@@ -741,6 +757,31 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
         clearTimeout(to);
         todo.forEach(function (s) { delete histInflight[s.ticker]; });
       });
+  }
+
+  // ── 벤치마크 지수 2년 시계열(성과 기간별 비교용) — KOSPI(^KS11)·S&P500(^GSPC) ──
+  var indexCache = {};      // 심볼 → closes[] | null(실패) | undefined(미조회)
+  var indexInflight = {};
+  function indexSymbol(country) { return country === "korea" ? "^KS11" : "^GSPC"; }
+  function fetchIndexHistory(country, onDone) {
+    if (!liveSupported) return;
+    var sym = indexSymbol(country);
+    if (indexCache[sym] !== undefined || indexInflight[sym]) return;
+    indexInflight[sym] = 1;
+    var url = QUOTES_API + (QUOTES_API.indexOf("?") >= 0 ? "&" : "?") +
+      "history=1&range=" + HIST_RANGE + "&symbols=" + encodeURIComponent(sym);
+    var ctrl = new AbortController();
+    var to = setTimeout(function () { ctrl.abort(); }, 15000);
+    fetch(url, { signal: ctrl.signal })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (map) {
+        clearTimeout(to);
+        delete indexInflight[sym];
+        var v = map && map[sym];
+        if (v && Array.isArray(v.closes) && v.closes.length >= 20) { indexCache[sym] = v.closes; if (onDone) onDone(); }
+        else indexCache[sym] = null;
+      })
+      .catch(function () { clearTimeout(to); delete indexInflight[sym]; });
   }
 
   // ── 기술분석 종가 시계열 — 실측 6개월(있으면 우선) > 누적 스냅샷(폴백) ──
@@ -1155,12 +1196,26 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       "</tr></thead><tbody>" + rows + "</tbody></table></div>";
   }
 
-  // ── 성과(추천 능력) 계산: 각 종목의 "첫 기록 시점 대비" 수익률과 시장(벤치마크) 대비 초과수익 ──
+  // ── 성과 기간 옵션 (기준일: 추천시점 또는 N개월/1년 전) ──
+  var PERF_PERIODS = [
+    { key: "since", label: "추천시점" },
+    { key: "1m", label: "1개월", days: 21 },
+    { key: "2m", label: "2개월", days: 42 },
+    { key: "3m", label: "3개월", days: 63 },
+    { key: "6m", label: "6개월", days: 126 },
+    { key: "1y", label: "1년", days: 252 }
+  ];
+  function perfPeriodMeta(key) {
+    for (var i = 0; i < PERF_PERIODS.length; i++) if (PERF_PERIODS[i].key === key) return PERF_PERIODS[i];
+    return PERF_PERIODS[0];
+  }
+
+  // (A) 추천시점 대비 — history.js 스냅샷의 "첫 기록 시점" 기준
   function computePerf(country) {
     if (!H.length) return null;
     var benchKey = country === "korea" ? "kospi" : "sp500";
     var last = H[H.length - 1];
-    var firstSeen = {}; // ticker → {snap, entry}
+    var firstSeen = {};
     H.forEach(function (snap) {
       snap.stocks.forEach(function (e) {
         if (e.c !== country) return;
@@ -1170,81 +1225,122 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     var rows = [];
     last.stocks.forEach(function (e) {
       if (e.c !== country) return;
-      var f = firstSeen[e.t];
-      if (!f) return;
+      var f = firstSeen[e.t]; if (!f) return;
       var days = Math.round((new Date(last.date) - new Date(f.snap.date)) / 86400000);
       var ret = (f.entry.p && e.p) ? (e.p - f.entry.p) / f.entry.p * 100 : null;
-      var benchRet = (f.snap[benchKey] && last[benchKey])
-        ? (last[benchKey] - f.snap[benchKey]) / f.snap[benchKey] * 100 : null;
-      rows.push({
-        name: e.n, ticker: e.t, theme: e.th, tier: f.entry.tier,
-        since: f.snap.date, basePrice: f.entry.p, lastPrice: e.p, days: days,
-        ret: days > 0 ? ret : null,
-        alpha: (days > 0 && ret != null && benchRet != null) ? ret - benchRet : null
-      });
+      var benchRet = (f.snap[benchKey] && last[benchKey]) ? (last[benchKey] - f.snap[benchKey]) / f.snap[benchKey] * 100 : null;
+      rows.push({ name: e.n, ticker: e.t, theme: e.th, tier: f.entry.tier,
+        basePrice: f.entry.p, lastPrice: e.p, ret: days > 0 ? ret : null,
+        alpha: (days > 0 && ret != null && benchRet != null) ? ret - benchRet : null });
     });
-    return { rows: rows, last: last, first: H[0], benchKey: benchKey };
+    return { rows: rows, mode: "since", benchRet: null };
+  }
+
+  // (B) 기간별(1·2·3·6개월·1년) — 실측 2년 일봉(closeSeries) 기준, 지수 대비 초과수익
+  function computePerfPeriod(country, P) {
+    var sym = indexSymbol(country), bc = indexCache[sym], benchRet = null;
+    if (Array.isArray(bc) && bc.length > P) { var b0 = bc[bc.length - 1 - P]; if (b0) benchRet = (bc[bc.length - 1] - b0) / b0 * 100; }
+    var rows = [], seen = {};
+    (D[country] || []).forEach(function (s) {
+      var key = s.ticker + ":" + s.theme; if (seen[key]) return; seen[key] = 1;
+      var cs = closeSeries(s), cl = cs.cl, ret = null, p0 = null, p1 = null;
+      if (cs.source === "live" && cl.length > P) { p0 = cl[cl.length - 1 - P]; p1 = cl[cl.length - 1]; if (p0) ret = (p1 - p0) / p0 * 100; }
+      rows.push({ name: s.name, ticker: s.ticker, theme: s.theme, tier: s.tier,
+        basePrice: p0, lastPrice: p1, ret: ret, alpha: (ret != null && benchRet != null) ? ret - benchRet : null });
+    });
+    return { rows: rows, mode: "period", benchRet: benchRet };
   }
 
   function perfView(country) {
-    var pf = computePerf(country);
-    if (!pf || !pf.rows.length) return '<div class="empty">아직 성과 기록이 없습니다.</div>';
-    var tracked = pf.rows.filter(function (r) { return r.ret != null; });
-    var html = "";
+    var period = state.perfPeriod || "since";
+    if (period !== "since") { fetchHistory(D[country] || [], refreshLive); fetchIndexHistory(country, refreshLive); }
 
+    var chips = '<div class="perf-periods"><span class="pp-lbl">기준일</span>' + PERF_PERIODS.map(function (p) {
+      return '<button class="chip' + (p.key === period ? " on" : "") + '" data-perfp="' + p.key + '" type="button">' + esc(p.label) + "</button>";
+    }).join("") + "</div>";
+
+    var data = period === "since" ? computePerf(country) : computePerfPeriod(country, perfPeriodMeta(period).days);
+    if (!data || !data.rows.length) return chips + '<div class="empty">아직 성과 기록이 없습니다.</div>';
+
+    var tracked = data.rows.filter(function (r) { return r.ret != null; });
     if (!tracked.length) {
-      html += '<div class="theme-desc"><strong>기준점 기록 완료</strong> — ' + esc(pf.first.date) +
-        " 기준 " + pf.rows.length + "종목. 다음 자동 갱신부터 수익률이 표시됩니다.</div>";
-    } else {
-      var avg = tracked.reduce(function (a, r) { return a + r.ret; }, 0) / tracked.length;
-      var wins = tracked.filter(function (r) { return r.ret > 0; }).length;
-      var alphas = tracked.filter(function (r) { return r.alpha != null; });
-      var avgAlpha = alphas.length ? alphas.reduce(function (a, r) { return a + r.alpha; }, 0) / alphas.length : null;
-      var tierAvg = {};
-      [1, 2, 3].forEach(function (t) {
-        var g = tracked.filter(function (r) { return r.tier === t; });
-        tierAvg[t] = g.length ? g.reduce(function (a, r) { return a + r.ret; }, 0) / g.length : null;
-      });
-      html += '<div class="tiles">' +
-        pTile("평균 수익률", fmtPct(avg), avg > 0) +
-        pTile("승률", Math.round(wins / tracked.length * 100) + "% (" + wins + "/" + tracked.length + ")", wins / tracked.length > 0.5) +
-        pTile("시장 대비 초과수익", avgAlpha == null ? "–" : fmtPct(avgAlpha), avgAlpha != null && avgAlpha > 0) +
-        pTile("Tier1 / T2 / T3", [1, 2, 3].map(function (t) { return tierAvg[t] == null ? "–" : fmtPct(tierAvg[t]); }).join(" · ")) +
-        "</div>";
+      var msg = period === "since"
+        ? "기준점 기록 완료 — 다음 자동 갱신부터 수익률이 표시됩니다."
+        : "기간별 성과는 2년 실측 시계열을 불러온 뒤 표시됩니다… (시세 서버 연결 시 자동 표시)";
+      return chips + '<div class="theme-desc">' + esc(msg) + "</div>";
     }
 
-    var rows = pf.rows.slice().sort(function (a, b) {
-      return (b.ret == null ? -1e9 : b.ret) - (a.ret == null ? -1e9 : a.ret);
-    }).map(function (r) {
-      var thm = themeMeta(r.theme); var tm = tierMeta(r.tier);
-      var retCls = r.ret == null ? "" : r.ret >= 0 ? "up" : "down";
-      var alCls = r.alpha == null ? "" : r.alpha >= 0 ? "up" : "down";
-      // 최신 가격: 한국식 등락색 — 기록시 가격 대비 상승 빨강(▲) / 하락 파랑(▼)
-      var pxCls = "", pxArrow = "";
-      if (r.basePrice != null && r.lastPrice != null && r.lastPrice !== r.basePrice) {
-        var priceUp = r.lastPrice > r.basePrice;
-        pxCls = priceUp ? " kr-up" : " kr-down";
-        pxArrow = priceUp ? "▲ " : "▼ ";
-      }
-      return "<tr>" +
-        '<td><span class="nm">' + esc(r.name) + '</span><br><span class="tk">' + esc(r.ticker) + "</span></td>" +
-        "<td>" + (thm.emoji ? esc(thm.emoji) + " " : "") + esc(thm.label) + "</td>" +
-        '<td><span class="mini-dot" style="background:' + tm.color + '"></span>' + r.tier + "</td>" +
-        '<td class="num">' + esc(r.since) + "</td>" +
-        '<td class="num">' + fmtPrice(r.basePrice, country) + "</td>" +
-        '<td class="num' + pxCls + '">' + pxArrow + fmtPrice(r.lastPrice, country) + "</td>" +
-        '<td class="num ' + retCls + '">' + (r.ret == null ? "기록 중" : fmtPct(r.ret)) + "</td>" +
-        '<td class="num ' + alCls + '">' + (r.alpha == null ? "–" : fmtPct(r.alpha)) + "</td></tr>";
-    }).join("");
-    html += '<div class="tbl-wrap"><table class="tbl"><thead><tr>' +
-      '<th>종목</th><th>주제</th><th>Tier</th><th class="num">첫 기록일</th><th class="num">기록시 가격</th>' +
-      '<th class="num">최신 가격</th><th class="num">수익률</th><th class="num">시장 대비</th>' +
-      "</tr></thead><tbody>" + rows + "</tbody></table></div>";
-    return html;
+    var avg = tracked.reduce(function (a, r) { return a + r.ret; }, 0) / tracked.length;
+    var wins = tracked.filter(function (r) { return r.ret > 0; }).length;
+    var tiles;
+    if (data.mode === "period") {
+      var bLabel = country === "korea" ? "KOSPI" : "S&P500";
+      var exc = data.benchRet == null ? null : avg - data.benchRet;
+      tiles = '<div class="tiles">' +
+        pTile("평균 수익률", fmtPct(avg), avg > 0) +
+        pTile("승률", Math.round(wins / tracked.length * 100) + "% (" + wins + "/" + tracked.length + ")", wins / tracked.length > 0.5) +
+        pTile(bLabel + " 수익률", data.benchRet == null ? "–" : fmtPct(data.benchRet), data.benchRet != null && data.benchRet > 0) +
+        pTile("지수 대비 초과", exc == null ? "–" : fmtPct(exc), exc != null && exc > 0) + "</div>";
+    } else {
+      var al = tracked.filter(function (r) { return r.alpha != null; });
+      var avgAlpha = al.length ? al.reduce(function (a, r) { return a + r.alpha; }, 0) / al.length : null;
+      tiles = '<div class="tiles">' +
+        pTile("평균 수익률", fmtPct(avg), avg > 0) +
+        pTile("승률", Math.round(wins / tracked.length * 100) + "% (" + wins + "/" + tracked.length + ")", wins / tracked.length > 0.5) +
+        pTile("시장 대비 초과수익", avgAlpha == null ? "–" : fmtPct(avgAlpha), avgAlpha != null && avgAlpha > 0) + "</div>";
+    }
+
+    return chips + tiles +
+      '<div class="perf-sec-t">주제 × Tier 세분화 <span>(평균 수익률 · 종목수)</span></div>' + perfMatrix(data.rows) +
+      '<div class="perf-sec-t">종목별 성과</div>' + perfTable(data.rows, country, data.mode);
 
     function pTile(k, v, up) {
       return '<div class="tile"><div class="k">' + esc(k) + '</div><div class="v' + (up ? " up" : "") + '">' + v + "</div></div>";
     }
+  }
+
+  // 주제 × Tier 매트릭스 (셀 = 평균 수익률 + 종목수) — 세분화 성과 검증
+  function perfMatrix(rows) {
+    var themes = D.themes || [];
+    function avgOf(a) { var t = a.filter(function (r) { return r.ret != null; }); return t.length ? t.reduce(function (s, r) { return s + r.ret; }, 0) / t.length : null; }
+    function cnt(a) { return a.filter(function (r) { return r.ret != null; }).length; }
+    function cell(v, n) {
+      if (v == null) return '<td class="num pm-na">–</td>';
+      return '<td class="num ' + (v >= 0 ? "up" : "down") + '">' + fmtPct(v) + '<span class="pm-n">' + n + "</span></td>";
+    }
+    var head = '<tr><th>주제 \\ Tier</th><th class="num">Tier 1</th><th class="num">Tier 2</th><th class="num">Tier 3</th><th class="num">주제 전체</th></tr>';
+    var body = themes.map(function (th) {
+      var tr = rows.filter(function (r) { return r.theme === th.key; });
+      var cells = [1, 2, 3].map(function (t) { var g = tr.filter(function (r) { return r.tier === t; }); return cell(avgOf(g), cnt(g)); }).join("");
+      return '<tr><td class="pm-th">' + (th.emoji ? esc(th.emoji) + " " : "") + esc(th.label) + "</td>" + cells + cell(avgOf(tr), cnt(tr)) + "</tr>";
+    }).join("");
+    var totRow = '<tr class="pm-tot"><td>Tier 전체</td>' +
+      [1, 2, 3].map(function (t) { var g = rows.filter(function (r) { return r.tier === t; }); return cell(avgOf(g), cnt(g)); }).join("") +
+      cell(avgOf(rows), cnt(rows)) + "</tr>";
+    return '<div class="tbl-wrap"><table class="tbl perf-matrix"><thead>' + head + "</thead><tbody>" + body + totRow + "</tbody></table></div>";
+  }
+
+  // 종목별 성과 표 (티커 중복 제거, 수익률 내림차순)
+  function perfTable(rows, country, mode) {
+    var seen = {}, uniq = [];
+    rows.forEach(function (r) { if (!seen[r.ticker]) { seen[r.ticker] = 1; uniq.push(r); } });
+    var body = uniq.slice().sort(function (a, b) { return (b.ret == null ? -1e9 : b.ret) - (a.ret == null ? -1e9 : a.ret); }).map(function (r) {
+      var thm = themeMeta(r.theme), tm = tierMeta(r.tier);
+      var retCls = r.ret == null ? "" : r.ret >= 0 ? "up" : "down";
+      var alCls = r.alpha == null ? "" : r.alpha >= 0 ? "up" : "down";
+      return "<tr>" +
+        '<td><span class="nm">' + esc(r.name) + '</span><br><span class="tk">' + esc(r.ticker) + "</span></td>" +
+        "<td>" + (thm.emoji ? esc(thm.emoji) + " " : "") + esc(thm.label) + "</td>" +
+        '<td><span class="mini-dot" style="background:' + tm.color + '"></span>' + r.tier + "</td>" +
+        '<td class="num">' + fmtPrice(r.basePrice, country) + "</td>" +
+        '<td class="num">' + fmtPrice(r.lastPrice, country) + "</td>" +
+        '<td class="num ' + retCls + '">' + (r.ret == null ? "–" : fmtPct(r.ret)) + "</td>" +
+        '<td class="num ' + alCls + '">' + (r.alpha == null ? "–" : fmtPct(r.alpha)) + "</td></tr>";
+    }).join("");
+    return '<div class="tbl-wrap"><table class="tbl"><thead><tr>' +
+      '<th>종목</th><th>주제</th><th>Tier</th><th class="num">' + (mode === "since" ? "기록시 가격" : "기준가") + '</th>' +
+      '<th class="num">최신 가격</th><th class="num">수익률</th><th class="num">' + (mode === "since" ? "시장 대비" : "지수 대비") +
+      "</th></tr></thead><tbody>" + body + "</tbody></table></div>";
   }
 
   // 실시간 시세가 도착하면 카드와 Top Picks 를 함께 다시 그려 표시를 일치시킨다.
@@ -1257,8 +1353,11 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     var list;
 
     if (state.view === "perf") {
-      descEl.innerHTML = "<strong>성과 추적</strong> — 추천 시점 대비 실제 수익률 · 기록 " +
-        H.length + "일치" + (H.length ? " (" + esc(H[0].date) + " ~ " + esc(H[H.length - 1].date) + ")" : "");
+      var pm = perfPeriodMeta(state.perfPeriod || "since");
+      descEl.innerHTML = (state.perfPeriod && state.perfPeriod !== "since")
+        ? "<strong>성과 추적 · 최근 " + esc(pm.label) + "</strong> — 실측 종가 기준 " + esc(pm.label) + " 전 대비 수익률을 주제·티어별로 세분화(지수 대비 초과수익 포함)"
+        : "<strong>성과 추적 · 추천시점</strong> — 추천(첫 기록) 시점 대비 실제 수익률을 주제·티어별로 세분화 · 기록 " +
+          H.length + "일치" + (H.length ? " (" + esc(H[0].date) + " ~ " + esc(H[H.length - 1].date) + ")" : "");
       host.innerHTML = perfView(state.country);
       return;
     }
@@ -1313,6 +1412,12 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     var b = e.target.closest("button"); if (!b) return;
     state.view = b.dataset.v;
     this.querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x === b); });
+    render();
+  });
+  // 성과 기간(기준일) 칩 — #cards 는 재렌더돼도 요소 자체는 유지되므로 위임 처리
+  document.getElementById("cards").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-perfp]"); if (!b) return;
+    state.perfPeriod = b.dataset.perfp;
     render();
   });
   // Top Pick 클릭 → 해당 주제·카드 뷰로 전환하고 그 종목 카드로 스크롤·강조
