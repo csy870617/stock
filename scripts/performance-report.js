@@ -53,6 +53,16 @@ function benchReturn(key) {
 const benchKr = benchReturn("kospi");
 const benchUs = benchReturn("sp500");
 
+// ── 종목별 편입일에 맞춘 벤치마크(like-for-like 초과수익용) ──
+// 전체구간 벤치마크와 종목별(편입시점 상이) 수익률을 나란히 비교하면 구간 불일치로 왜곡되므로,
+// 각 종목의 baseline.date 이후 첫 non-null 지수 → 최신 non-null 지수로 '동일 구간' 벤치마크를 구해 초과수익을 낸다.
+function indexAt(key, fromDate) {
+  for (let i = 0; i < H.length; i++) { if (H[i].date >= fromDate && H[i][key] != null) return H[i][key]; }
+  return null;
+}
+const lastKospi = H.reduce((a, h) => (h.kospi != null ? h.kospi : a), null);
+const lastSp = H.reduce((a, h) => (h.sp500 != null ? h.sp500 : a), null);
+
 // ── 현재 보유 종목의 수익률 계산 ──
 const latest = H[H.length - 1];
 const rows = [];
@@ -67,13 +77,20 @@ const seen = {};
     if (!b || !(cur > 0)) return;
     const ret = (cur - b.price) / b.price * 100;
     const liveUpside = typeof s.targetPrice === "number" ? (s.targetPrice - cur) / cur * 100 : null;
+    // 동일 구간(편입일~현재) 지수 대비 초과수익
+    const bkey = c === "korea" ? "kospi" : "sp500";
+    const fromIdx = indexAt(bkey, b.date);
+    const lastIdx = c === "korea" ? lastKospi : lastSp;
+    const benchPct = (fromIdx && lastIdx) ? (lastIdx - fromIdx) / fromIdx * 100 : null;
+    const excess = benchPct == null ? null : +(ret - benchPct).toFixed(2);
     rows.push({ country: c, ticker: s.ticker, name: s.name, theme: b.theme, tier: b.tier,
-      since: b.date, basePrice: b.price, curPrice: cur, retPct: +ret.toFixed(2),
+      since: b.date, basePrice: b.price, curPrice: cur, retPct: +ret.toFixed(2), excessPct: excess,
       targetPrice: s.targetPrice, liveUpsidePct: liveUpside == null ? null : +liveUpside.toFixed(1) });
   });
 });
 
 function avg(list) { return list.length ? list.reduce((a, r) => a + r.retPct, 0) / list.length : null; }
+function avgEx(list) { const v = list.filter((r) => r.excessPct != null); return v.length ? v.reduce((a, r) => a + r.excessPct, 0) / v.length : null; }
 function fmt(v) { return v == null ? "  n/a" : (v >= 0 ? "+" : "") + v.toFixed(2) + "%"; }
 
 // 그룹 통계
@@ -104,7 +121,14 @@ const report = {
     korea: byCountry.korea ? +avg(byCountry.korea).toFixed(2) : null,
     us: byCountry.us ? +avg(byCountry.us).toFixed(2) : null
   },
+  // 편입일 정렬 지수 대비 초과수익 — 추천 능력(시장 초과 여부)의 like-for-like 지표
+  avgExcess: {
+    korea: byCountry.korea && avgEx(byCountry.korea) != null ? +avgEx(byCountry.korea).toFixed(2) : null,
+    us: byCountry.us && avgEx(byCountry.us) != null ? +avgEx(byCountry.us).toFixed(2) : null
+  },
+  perfNote: "avgReturn 은 종목별 편입시점~현재 원수익률(편입 구간이 종목마다 달라 전체구간 벤치마크와 직접 비교는 왜곡). avgExcess/byTierExcess 는 각 종목 편입일에 맞춘 지수 대비 초과수익으로 like-for-like.",
   byTier: Object.fromEntries(Object.keys(byTier).sort().map((k) => [k, +avg(byTier[k]).toFixed(2)])),
+  byTierExcess: Object.fromEntries(Object.keys(byTier).sort().map((k) => [k, avgEx(byTier[k]) == null ? null : +avgEx(byTier[k]).toFixed(2)])),
   byTheme: Object.fromEntries(Object.keys(byTheme).sort().map((k) => [k, +avg(byTheme[k]).toFixed(2)])),
   reevalPriority: {
     targetReached: targetReached.map((r) => ({ ticker: r.ticker, name: r.name, country: r.country, liveUpsidePct: r.liveUpsidePct })),
@@ -119,11 +143,12 @@ if (JSON_MODE) { console.log(JSON.stringify(report, null, 1)); process.exit(0); 
 console.log("═══ 추천 성과 리포트 (" + report.firstSnapshot + " → " + report.asOf + ", 스냅샷 " + report.snapshotDays + "일치) ═══");
 if (report.caveat) console.log("⚠ " + report.caveat);
 console.log("");
-console.log("벤치마크:  KOSPI " + fmt(report.benchmark.kospi) + "   S&P500 " + fmt(report.benchmark.sp500));
-console.log("추천 평균: 한국  " + fmt(report.avgReturn.korea) + "   미국   " + fmt(report.avgReturn.us));
+console.log("벤치마크(전체구간):  KOSPI " + fmt(report.benchmark.kospi) + "   S&P500 " + fmt(report.benchmark.sp500));
+console.log("추천 평균(원수익률): 한국  " + fmt(report.avgReturn.korea) + "   미국   " + fmt(report.avgReturn.us));
+console.log("초과수익(편입일 정렬·지수대비): 한국  " + fmt(report.avgExcess.korea) + "   미국   " + fmt(report.avgExcess.us) + "   ← 추천 능력의 like-for-like 지표");
 console.log("");
-console.log("티어별 평균 (Tier1 > Tier3 이어야 확신도가 유효):");
-Object.keys(report.byTier).forEach((k) => console.log("  " + k + ": " + fmt(report.byTier[k])));
+console.log("티어별 (원수익률 / 초과수익) — Tier1 > Tier3 이어야 확신도가 유효:");
+Object.keys(report.byTier).forEach((k) => console.log("  " + k + ": " + fmt(report.byTier[k]) + "  /  초과 " + fmt(report.byTierExcess[k])));
 console.log("");
 console.log("주제별 평균:");
 Object.keys(report.byTheme).forEach((k) => console.log("  " + k + ": " + fmt(report.byTheme[k])));
