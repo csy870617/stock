@@ -103,28 +103,32 @@ const guardErrors = [];
         blocked.map(sourceHost).join(", ") + " (컨센서스 집계·공시·주요 언론으로 교체)");
       return;
     }
-    const trustedN = fields.sources.filter(isTrustedSource).length;
+    // 신뢰 출처는 '서로 다른 도메인' 기준으로 센다(동일 도메인·동일 URL 2개로 '교차확인' 우회 방지)
+    const trustedN = new Set(fields.sources.filter(isTrustedSource).map(sourceHost).filter(Boolean)).size;
     if (changesAnalysis && trustedN < 2 && !FORCE) {
-      guardErrors.push(country + ":" + ticker + " — targetPrice/thesis/earnings 변경엔 신뢰 출처(FnGuide·WiseReport·TipRanks·MarketBeat·공시·주요 언론·증권사 등) 2개 이상 필수 (현재 " +
+      guardErrors.push(country + ":" + ticker + " — targetPrice/thesis/earnings 변경엔 서로 다른 신뢰 출처(FnGuide·WiseReport·TipRanks·MarketBeat·공시·주요 언론·증권사 등) 2개 이상 필수 (현재 신뢰 도메인 " +
         trustedN + "개: " + fields.sources.map(sourceHost).join(", ") + ")");
       return;
     }
   }
 
-  // 가드레일: 목표가 급변 차단 (단일 증권사 최고치 오인 방지)
+  // 가드레일: 목표가 급변 차단 (단일 증권사 최고치 오인 방지) — 영향받는 모든 매치를 개별 검사
+  // (theme 생략 시 동일 티커의 여러 주제 항목이 모두 갱신되므로 matches[0] 만 보면 우회됨)
   if (typeof fields.targetPrice === "number") {
-    const prevTp = matches[0].targetPrice;
-    if (typeof prevTp === "number" && prevTp > 0) {
+    let blocked = false;
+    for (const m of matches) {
+      const prevTp = m.targetPrice;
+      if (typeof prevTp !== "number" || prevTp <= 0) continue;
       const chg = (fields.targetPrice - prevTp) / prevTp * 100;
       if (Math.abs(chg) > 50 && !FORCE) {
-        guardErrors.push(country + ":" + ticker + " — 목표가 " + prevTp + " → " + fields.targetPrice +
+        guardErrors.push(country + ":" + ticker + (m.theme ? "/" + m.theme : "") + " — 목표가 " + prevTp + " → " + fields.targetPrice +
           " (" + chg.toFixed(1) + "%) 급변. 컨센서스(다수 증권사 평균) 맞는지 재확인 후 --force 로만 허용");
-        return;
-      }
-      if (Math.abs(chg) > 25) {
-        warnings.push(country + ":" + ticker + " — 목표가 " + chg.toFixed(1) + "% 변경. 단일 증권사 목표가가 아닌 컨센서스인지 확인 요망");
+        blocked = true;
+      } else if (Math.abs(chg) > 25) {
+        warnings.push(country + ":" + ticker + (m.theme ? "/" + m.theme : "") + " — 목표가 " + chg.toFixed(1) + "% 변경. 단일 증권사 목표가가 아닌 컨센서스인지 확인 요망");
       }
     }
+    if (blocked) return;
   }
 
   matches.forEach((s) => Object.assign(s, fields));
@@ -151,9 +155,9 @@ const guardErrors = [];
     guardErrors.push("add " + country + ":" + obj.ticker + " — 커뮤니티/블로그/SNS 는 근거 출처로 쓸 수 없음: " + blocked.map(sourceHost).join(", "));
     return;
   }
-  const trustedN = srcs.filter(isTrustedSource).length;
+  const trustedN = new Set(srcs.filter(isTrustedSource).map(sourceHost).filter(Boolean)).size;
   if (trustedN < 2 && !FORCE) {
-    guardErrors.push("add " + country + ":" + obj.ticker + " — 신규 편입엔 신뢰 출처(컨센서스 집계·공시·주요 언론·증권사) 2개 이상 필수 (현재 " +
+    guardErrors.push("add " + country + ":" + obj.ticker + " — 신규 편입엔 서로 다른 신뢰 출처(컨센서스 집계·공시·주요 언론·증권사) 2개 이상 필수 (현재 신뢰 도메인 " +
       trustedN + "개: " + (srcs.length ? srcs.map(sourceHost).join(", ") : "없음") + ")");
     return;
   }
