@@ -336,6 +336,13 @@ a { color: inherit; }
 /* 기술분석 신호 */
 .tech-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 1px 0 1px; }
 .tech-row .tlabel { color: var(--muted); font-size: 0.72rem; font-weight: 600; white-space: nowrap; }
+.vt-note { font-size: 0.8rem; line-height: 1.5; padding: 7px 11px; border-radius: 8px;
+  border-left: 3px solid var(--grid); background: var(--chip-bg); color: var(--ink-2); }
+.vt-note .vt-k { font-weight: 700; color: var(--ink); cursor: help; white-space: nowrap; }
+.vt-note.vt-good { border-left-color: var(--up); }
+.vt-note.vt-warn { border-left-color: var(--down); }
+.vt-note.vt-mix { border-left-color: var(--tier3); }
+.vt-note.vt-neutral { border-left-color: var(--muted); }
 .tech-sig { font-size: 0.74rem; font-weight: 800; padding: 3px 10px; border-radius: 999px;
   display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; cursor: help; }
 .tech-sig .dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
@@ -974,6 +981,26 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     return { label: label, short: short, cls: cls, ind: ind.join(" · "), cross: cross, conf: conf, dir: dir, source: cs.source, shortData: shortData, regimeTag: regimeTag, note: note };
   }
 
+  // 밸류(펀더멘털 상승여력·장기)와 타이밍(기술적 추세·단기)을 두 렌즈로 종합 해석.
+  // 새 예측·점수를 만드는 게 아니라, 이미 표시된 두 신호를 '어떻게 읽는지' 안내한다(충돌 시 오해 방지).
+  function valueTimingNote(upside, ts) {
+    if (!ts || ts.cls === "na" || upside == null) return null;
+    var techBull = ts.cls === "buy1" || ts.cls === "buy2";
+    var techBear = ts.cls === "sell1" || ts.cls === "sell2";
+    var vHigh = upside >= 8, vFull = upside <= 0, vMid = upside > 0 && upside < 8;
+    var t, cls;
+    if (vHigh && techBull) { t = "밸류·타이밍 동반 우호 — 장기 상승여력에 단기 추세도 매수 우위"; cls = "vt-good"; }
+    else if (vHigh && techBear) { t = "장기 저평가이나 단기 추세는 약세 — 분할매수·진입 타이밍 주의"; cls = "vt-mix"; }
+    else if (vHigh) { t = "장기 상승여력 충분, 단기는 관망 — 눌림목·진입 시점 대기"; cls = "vt-mix"; }
+    else if (vFull && techBear) { t = "컨센서스 목표가 도달 + 단기 약세 — 차익실현·비중조절 검토"; cls = "vt-warn"; }
+    else if (vFull && techBull) { t = "컨센서스 목표가 도달했으나 단기 모멘텀 강세 — 추격 신중"; cls = "vt-warn"; }
+    else if (vFull) { t = "컨센서스 목표가 도달 — 신규 진입 매력 제한"; cls = "vt-warn"; }
+    else if (vMid && techBull) { t = "단기 추세는 매수 우위이나 장기 상승여력은 제한적"; cls = "vt-mix"; }
+    else if (vMid && techBear) { t = "장기 상승여력 제한 + 단기 약세 — 신중"; cls = "vt-warn"; }
+    else { t = "밸류·타이밍 모두 뚜렷한 우위 없음 — 관망"; cls = "vt-neutral"; }
+    return { text: t, cls: cls };
+  }
+
   function card(s, country, showTheme) {
     var tm = tierMeta(s.tier);
     var e = effective(s);
@@ -1027,10 +1054,14 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
         var regimeChip = ts.regimeTag === "눌림목"
           ? '<span class="cross-chip gc" title="상승추세 눌림목 — 200일선 위 장기 상승국면에서 단기 조정에 들어온 매수 기회">🎯 눌림목</span>'
           : "";
+        var vt = valueTimingNote(e.upside, ts);
+        var vtHtml = vt
+          ? '<div class="vt-note ' + vt.cls + '"><span class="vt-k" title="밸류(컨센서스 상승여력·장기)와 타이밍(기술적 추세·단기)을 함께 읽는 종합 해석입니다. 새 예측이 아니라 위 두 신호의 관계를 설명합니다.">밸류 × 타이밍</span> ' + esc(vt.text) + "</div>"
+          : "";
         return '<div class="tech-row"><span class="tlabel">📈 기술분석</span>' +
           '<span class="tech-sig ' + ts.cls + '" data-basis="' + esc(ts.note) + '"><span class="dot"></span>' + esc(ts.label) + "</span>" +
           confBadge + regimeChip + shortChip + crossChip +
-          (ts.ind ? '<span class="tech-ind">' + esc(ts.ind) + "</span>" : "") + "</div>";
+          (ts.ind ? '<span class="tech-ind">' + esc(ts.ind) + "</span>" : "") + "</div>" + vtHtml;
       })() +
       (s.earnings ? '<div class="earn">' + esc(s.earnings) + "</div>" : "") +
       '<div class="thesis">' + esc(s.thesis) + "</div>" +
