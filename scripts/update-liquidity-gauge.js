@@ -53,12 +53,17 @@ const ago = (a, n) => a[Math.max(0, a.length - 1 - n)];
 const chg = (a, n) => { const p = ago(a, n); return p ? (last(a) - p) / p : 0; };
 
 // ── 하위 점수(-2..+2, 양수=유동성 우호) ──
-function sYieldLevel(y) { if (y < 3.5) return 2; if (y < 4.0) return 1; if (y < 4.5) return 0; if (y < 5.0) return -1; return -2; }
+// 임계값은 과거 1년 시계열 롤링 백테스트로 캘리브레이션(v2). 앵커:
+//  · VIX: 장기 중앙값 ~17 을 '중립(0)'으로 재중심 — 정상 변동성을 우호로 과대평가하지 않는다.
+//  · 10Y: 제약적 레짐(관측범위 3.95~4.67%) 안에서 촘촘히 — 4.2%=중립, 4.5%+=역풍.
+//  · 커브: 무반전 구간 판별력 위해 양의 밴드 촘촘히. 음수(역전) 밴드는 레짐 전환 대비 유지.
+//  · toRank 중립대는 ±0.35 로 좁혀 게이지가 한 단계에 고착되지 않게 한다.
+function sYieldLevel(y) { if (y < 3.8) return 2; if (y < 4.1) return 1; if (y < 4.4) return 0; if (y < 4.7) return -1; return -2; }
 function sTrend(chRate, favorFall) { const s = favorFall ? -chRate : chRate; if (s > 0.03) return 2; if (s > 0.01) return 1; if (s > -0.01) return 0; if (s > -0.03) return -1; return -2; }
-function sVix(v) { if (v < 15) return 2; if (v < 20) return 1; if (v < 25) return 0; if (v < 32) return -1; return -2; }
+function sVix(v) { if (v < 13) return 2; if (v < 16) return 1; if (v < 21) return 0; if (v < 27) return -1; return -2; }
 function sCredit(ch) { if (ch > 0.015) return 2; if (ch > 0.005) return 1; if (ch > -0.005) return 0; if (ch > -0.02) return -1; return -2; }
-function sCurve(spread) { if (spread > 1.0) return 2; if (spread > 0.3) return 1; if (spread > -0.1) return 0; if (spread > -0.5) return -1; return -2; }
-function toRank(avg) { if (avg >= 1.2) return 4; if (avg >= 0.4) return 3; if (avg > -0.4) return 2; if (avg > -1.2) return 1; return 0; }
+function sCurve(spread) { if (spread > 0.8) return 2; if (spread > 0.4) return 1; if (spread > 0.05) return 0; if (spread > -0.3) return -1; return -2; }
+function toRank(avg) { if (avg >= 1.2) return 4; if (avg >= 0.35) return 3; if (avg > -0.35) return 2; if (avg > -1.2) return 1; return 0; }
 
 // 가중 평균(항목: [라벨, 점수, 가중치])
 function composite(items) {
