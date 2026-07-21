@@ -30,15 +30,17 @@ function argVal(name) {
 }
 
 // 대상 지수 정의 (렌더는 이 순서를 그대로 따른다)
+// chartUrl 은 해당 지수의 네이버 차트 — 프로젝트의 네이버 링크 관례와 일치시킨다
+// (한국 지수: finance.naver.com 국내지수, 미국 지수: m.stock.naver.com 해외지수).
 const INDICES = [
   { key: "nasdaq", name: "나스닥 종합", flag: "🇺🇸", symbol: "^IXIC",
-    chartUrl: "https://kr.investing.com/technical/nasdaq-composite-technical-analysis" },
+    chartUrl: "https://m.stock.naver.com/worldstock/index/.IXIC/total" },
   { key: "dow", name: "다우존스", flag: "🇺🇸", symbol: "^DJI",
-    chartUrl: "https://kr.investing.com/indices/us-30" },
+    chartUrl: "https://m.stock.naver.com/worldstock/index/.DJI/total" },
   { key: "kospi", name: "코스피", flag: "🇰🇷", symbol: "^KS11",
-    chartUrl: "https://kr.investing.com/indices/kospi-technical" },
+    chartUrl: "https://finance.naver.com/sise/sise_index.naver?code=KOSPI" },
   { key: "kosdaq", name: "코스닥", flag: "🇰🇷", symbol: "^KQ11",
-    chartUrl: "https://kr.investing.com/indices/kosdaq" }
+    chartUrl: "https://finance.naver.com/sise/sise_index.naver?code=KOSDAQ" }
 ];
 
 // ── 숫자 포맷: 천단위 콤마 + 소수 자릿수 ──

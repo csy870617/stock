@@ -9,7 +9,7 @@ window.INDEX_TA = {
    "key": "nasdaq",
    "name": "나스닥 종합",
    "flag": "🇺🇸",
-   "chartUrl": "https://kr.investing.com/technical/nasdaq-composite-technical-analysis",
+   "chartUrl": "https://m.stock.naver.com/worldstock/index/.IXIC/total",
    "level": "25,508.07",
    "change": "-0.05%",
    "changeDir": "down",
@@ -36,7 +36,7 @@ window.INDEX_TA = {
    "key": "dow",
    "name": "다우존스",
    "flag": "🇺🇸",
-   "chartUrl": "https://kr.investing.com/indices/us-30",
+   "chartUrl": "https://m.stock.naver.com/worldstock/index/.DJI/total",
    "level": "51,839.26",
    "change": "-0.59%",
    "changeDir": "down",
@@ -63,36 +63,36 @@ window.INDEX_TA = {
    "key": "kospi",
    "name": "코스피",
    "flag": "🇰🇷",
-   "chartUrl": "https://kr.investing.com/indices/kospi-technical",
-   "level": "6,573.36",
-   "change": "-3.62%",
-   "changeDir": "down",
+   "chartUrl": "https://finance.naver.com/sise/sise_index.naver?code=KOSPI",
+   "level": "6,704.10",
+   "change": "+2.88%",
+   "changeDir": "up",
    "period": "07/21 종가",
    "trend": "하락",
    "signal": "적극매도",
    "metrics": [
     [
      "RSI(14)",
-     "36.2 · 중립"
+     "38.7 · 중립"
     ],
     [
      "이동평균",
-     "20·60·120일선 모두 하회"
+     "120일선 상회 · 20·60일선 하회"
     ],
     [
      "지지 / 저항",
-     "6,429 / 6,644"
+     "6,659 / 7,682"
     ]
    ],
-   "read": "20·60·120일선 모두 하회, RSI 36.2(중립), 주간 -12.1%. 이동평균 1매수/5매도로 '적극매도' 우위 — 지지 6,429선."
+   "read": "120일선 상회 · 20·60일선 하회, RSI 38.7(중립), 주간 -1.5%. 이동평균 1매수/5매도로 '적극매도' 우위 — 지지 6,659선."
   },
   {
    "key": "kosdaq",
    "name": "코스닥",
    "flag": "🇰🇷",
-   "chartUrl": "https://kr.investing.com/indices/kosdaq",
-   "level": "735.58",
-   "change": "-7.10%",
+   "chartUrl": "https://finance.naver.com/sise/sise_index.naver?code=KOSDAQ",
+   "level": "740.31",
+   "change": "-1.24%",
    "changeDir": "down",
    "period": "07/21 종가",
    "trend": "하락",
@@ -100,7 +100,7 @@ window.INDEX_TA = {
    "metrics": [
     [
      "RSI(14)",
-     "32.6 · 과매도 근접"
+     "32.9 · 과매도 근접"
     ],
     [
      "이동평균",
@@ -108,10 +108,10 @@ window.INDEX_TA = {
     ],
     [
      "지지 / 저항",
-     "732 / 852"
+     "731 / 842"
     ]
    ],
-   "read": "20·60·120일선 모두 하회, RSI 32.6(과매도 근접), 주간 -12.2%. 이동평균 0매수/6매도로 '적극매도' 우위 — 지지 732선."
+   "read": "20·60·120일선 모두 하회, RSI 32.9(과매도 근접), 주간 -7.4%. 이동평균 0매수/6매도로 '적극매도' 우위 — 지지 731선."
   }
  ]
 };
