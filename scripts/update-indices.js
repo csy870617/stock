@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 // 지수 기술적 분석 자동 갱신 — LLM 토큰 0 (순수 스크립트, refresh-quotes Action에서 실행)
 //
-// 역할: 나스닥 종합(^IXIC)·다우존스(^DJI)·코스피(^KS11)·코스닥(^KQ11)의 1년치 일봉을
-//       Yahoo Finance 에서 받아, 종가·등락률·이동평균(20/60/120)·RSI(14)·추세·
-//       지지/저항·기계적 매매신호(이동평균 집계)를 "결정론적으로 계산"해
+// 역할: 나스닥 종합(^IXIC)·다우존스(^DJI)·코스피(^KS11)·코스닥(^KQ11)의 2년치 일봉을
+//       Yahoo Finance 에서 받아, 공유 scripts/lib-ta.js 로 단기(1–3M)·장기(6–12M+)
+//       기술적 분석(이동평균·RSI·추세·지지/저항·골든크로스·매매신호)을 "결정론적으로 계산"해
 //       data/indices.js(window.INDEX_TA)로 저장한다.
 //
 //       가격도 기술적 분석도 사람의 판단(LLM)이 필요 없는 순수 수치·규칙이므로,
@@ -45,108 +45,6 @@ const INDICES = [
     chartUrl: "https://finance.naver.com/sise/sise_index.naver?code=KOSDAQ" }
 ];
 
-// ── 숫자 포맷: 천단위 콤마 + 소수 자릿수 ──
-function fmt(n, dp) {
-  if (n == null || !isFinite(n)) return "–";
-  return Number(n).toLocaleString("en-US", { minimumFractionDigits: dp, maximumFractionDigits: dp });
-}
-
-// ── 기술적 지표 계산 ──
-function mean(arr) { return arr.reduce((a, b) => a + b, 0) / arr.length; }
-function ma(closes, n) { return closes.length >= n ? mean(closes.slice(-n)) : null; }
-
-// RSI(14) — Wilder 스무딩
-function rsi(closes, period) {
-  period = period || 14;
-  if (closes.length < period + 1) return null;
-  let gain = 0, loss = 0;
-  for (let i = 1; i <= period; i++) {
-    const d = closes[i] - closes[i - 1];
-    if (d >= 0) gain += d; else loss -= d;
-  }
-  let avgGain = gain / period, avgLoss = loss / period;
-  for (let i = period + 1; i < closes.length; i++) {
-    const d = closes[i] - closes[i - 1];
-    avgGain = (avgGain * (period - 1) + (d > 0 ? d : 0)) / period;
-    avgLoss = (avgLoss * (period - 1) + (d < 0 ? -d : 0)) / period;
-  }
-  if (avgLoss === 0) return 100;
-  const rs = avgGain / avgLoss;
-  return 100 - 100 / (1 + rs);
-}
-
-function rsiState(r) {
-  if (r == null) return "";
-  if (r >= 70) return "과매수";
-  if (r >= 65) return "과매수 근접";
-  if (r <= 30) return "과매도";
-  if (r <= 35) return "과매도 근접";
-  return "중립";
-}
-
-// 이동평균 집계 신호 — 종가가 각 이평선 위/아래인지로 매수/매도 표를 세어 5단계로 매핑
-function maSignal(closes, level) {
-  const periods = [5, 10, 20, 50, 100, 200];
-  let buy = 0, total = 0;
-  periods.forEach((p) => {
-    const m = ma(closes, p);
-    if (m == null) return;
-    total++;
-    if (level > m) buy++;
-  });
-  if (!total) return { signal: "중립", buy: 0, total: 0 };
-  const ratio = buy / total;
-  let signal;
-  if (ratio >= 0.83) signal = "적극매수";
-  else if (ratio >= 0.6) signal = "매수";
-  else if (ratio > 0.4) signal = "중립";
-  else if (ratio >= 0.17) signal = "매도";
-  else signal = "적극매도";
-  return { signal, buy, total };
-}
-
-// 추세 — 중기선(60일선, 없으면 120·20일선) 대비 종가 위치로 판단.
-// 급락 직후 20일선이 아직 60일선 위에 걸쳐 있어 하락장이 '횡보'로 오판되는 것을 피한다.
-function trendOf(level, m20, m60, m120) {
-  const base = m60 != null ? m60 : (m120 != null ? m120 : m20);
-  if (base == null) return "횡보";
-  const dev = (level - base) / base;
-  if (dev > 0.005) return "상승";
-  if (dev < -0.005) return "하락";
-  return "횡보";
-}
-
-// 지지/저항 — 현재가 기준 '가장 가까운' 아래/위 레벨을 이평선·최근 저·고점 후보에서 고른다.
-// (크래시 때 20일 고점처럼 멀리 떨어진 값이 무의미한 저항으로 잡히는 것을 방지)
-function levels(level, cands, lo20, hi20) {
-  const below = cands.filter((v) => v != null && v < level);
-  const above = cands.filter((v) => v != null && v > level);
-  const support = below.length ? Math.max.apply(null, below) : lo20;      // 가장 가까운 아래 레벨
-  const resistance = above.length ? Math.min.apply(null, above) : hi20;   // 가장 가까운 위 레벨
-  return { support, resistance };
-}
-
-// 추세 타이브레이커 — 이평선 집계가 '중립'(3:3 부근)일 때 장기 추세로 애매함을 가른다.
-// 상승 추세 + 장기선(120일) 상회면 '고점 부근 단기 눌림'으로 보고 '매수'로 상향(상향 전용 —
-// 하락 지수는 이미 매도/적극매도라 영향 없음). 단순 이평선 집계가 강한 장기 추세를 과소평가하는 것을 보정.
-function signalTiebreak(signal, trend, level, m120) {
-  if (signal === "중립" && trend === "상승" && m120 != null && level > m120) return "매수";
-  return signal;
-}
-
-// 이동평균 관계 요약 문구 (20·60·120일선 상회/하회)
-function maSummary(level, m20, m60, m120) {
-  const items = [["20", m20], ["60", m60], ["120", m120]].filter((x) => x[1] != null);
-  if (!items.length) return "–";
-  const above = items.filter((x) => level > x[1]).map((x) => x[0]);
-  const below = items.filter((x) => level <= x[1]).map((x) => x[0]);
-  if (!below.length) return items.map((x) => x[0]).join("·") + "일선 모두 상회";
-  if (!above.length) return items.map((x) => x[0]).join("·") + "일선 모두 하회";
-  const parts = [];
-  if (above.length) parts.push(above.join("·") + "일선 상회");
-  if (below.length) parts.push(below.join("·") + "일선 하회");
-  return parts.join(" · ");
-}
 
 // ── Yahoo 일봉 조회 (종가·고가·저가·타임스탬프) ──
 async function fetchSeries(symbol) {
