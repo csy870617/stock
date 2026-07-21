@@ -20,6 +20,8 @@
 const fs = require("fs");
 const path = require("path");
 
+const TA = require("./lib-ta.js");   // 공유 기술적 분석 라이브러리(단기/장기)
+
 const ROOT = path.join(__dirname, "..");
 const OUT = path.join(ROOT, "data", "indices.js");
 
@@ -150,7 +152,7 @@ function maSummary(level, m20, m60, m120) {
 async function fetchSeries(symbol) {
   if (typeof fetch !== "function") return null;
   const url = "https://query1.finance.yahoo.com/v8/finance/chart/" +
-    encodeURIComponent(symbol) + "?interval=1d&range=1y";
+    encodeURIComponent(symbol) + "?interval=1d&range=2y";
   const ctrl = new AbortController();
   const to = setTimeout(() => ctrl.abort(), 10000);
   let r;
@@ -178,57 +180,14 @@ async function fetchSeries(symbol) {
   return rows;
 }
 
+// 지수 1종목 분석 — 공유 lib-ta로 단기/장기 기술적 분석을 계산해 카드 필드와 합친다.
 function analyze(cfg, rows) {
-  const closes = rows.map((r) => r.close);
-  const dp = cfg.key === "kosdaq" ? 2 : 2;   // 표기 소수 자릿수(모두 2)
-  const level = closes[closes.length - 1];
-  const prev = closes[closes.length - 2];
-  const changePct = prev ? (level - prev) / prev * 100 : 0;
-  const wkAgo = closes.length > 5 ? closes[closes.length - 6] : null;
-  const weekPct = wkAgo ? (level - wkAgo) / wkAgo * 100 : null;
-
-  const m20 = ma(closes, 20), m60 = ma(closes, 60), m120 = ma(closes, 120);
-  const r = rsi(closes, 14);
-  const sig = maSignal(closes, level);
-  const trend = trendOf(level, m20, m60, m120);
-  const signal = signalTiebreak(sig.signal, trend, level, m120);   // 최종 신호(타이브레이커 반영)
-  const tiebroken = signal !== sig.signal;
-
-  // 지지/저항 — 최근 20거래일 저·고점과 주요 이평선 중 현재가에 가장 가까운 아래/위 레벨
-  const win = rows.slice(-20);
-  const lo20 = Math.min.apply(null, win.map((x) => x.low));
-  const hi20 = Math.max.apply(null, win.map((x) => x.high));
-  const sr = levels(level, [m20, m60, m120, lo20, hi20], lo20, hi20);
-  const support = sr.support, resistance = sr.resistance;
-
-  // 기준일(현지 거래일)
-  const lastT = rows[rows.length - 1].t;
-  const period = lastT ? (new Date(lastT * 1000).toISOString().slice(5, 10).replace("-", "/") + " 종가") : "";
-
-  // 규칙 기반 해설
-  const rs = rsiState(r);
-  const readParts = [];
-  readParts.push(maSummary(level, m20, m60, m120));
-  if (r != null) readParts.push("RSI " + r.toFixed(1) + (rs ? "(" + rs + ")" : ""));
-  if (weekPct != null) readParts.push("주간 " + (weekPct >= 0 ? "+" : "") + weekPct.toFixed(1) + "%");
-  let read = readParts.join(", ") + ". 이동평균 " + sig.buy + "매수/" + (sig.total - sig.buy) +
-    "매도" + (tiebroken ? "이나 장기 상승추세로 '" + signal + "'" : "로 '" + signal + "' 우위") +
-    " — 지지 " + fmt(support, 0) + "선.";
-
+  const a = TA.analyzeTimeframes(rows, { dp: 2, srDp: 0 });
+  if (!a) return null;
   return {
     key: cfg.key, name: cfg.name, flag: cfg.flag, chartUrl: cfg.chartUrl,
-    level: fmt(level, dp),
-    change: (changePct >= 0 ? "+" : "") + changePct.toFixed(2) + "%",
-    changeDir: changePct >= 0 ? "up" : "down",
-    period: period,
-    trend: trend,
-    signal: signal,
-    metrics: [
-      ["RSI(14)", (r == null ? "–" : r.toFixed(1)) + (rs ? " · " + rs : "")],
-      ["이동평균", maSummary(level, m20, m60, m120)],
-      ["지지 / 저항", fmt(support, 0) + " / " + fmt(resistance, 0)]
-    ],
-    read: read
+    level: a.level, change: a.change, changeDir: a.changeDir, period: a.period,
+    short: a.short, long: a.long
   };
 }
 
@@ -253,18 +212,19 @@ function loadPrev() {
   const indices = [];
   for (const cfg of INDICES) {
     const rows = await fetchSeries(cfg.symbol);
-    if (rows) {
-      indices.push(analyze(cfg, rows));
+    const a = rows ? analyze(cfg, rows) : null;
+    if (a) {
+      indices.push(a);
       live++;
     } else if (prev[cfg.key]) {
       indices.push(prev[cfg.key]);   // 이전 계산값 유지
       fellBack++;
     } else {
       // 최초 생성 시 조회 실패한 지수는 최소 골격만 남긴다(렌더가 깨지지 않도록).
+      const skel = { trend: "횡보", signal: "중립", metrics: [["상태", "조회 실패 · 다음 갱신 대기"]], read: "데이터 조회 실패." };
       indices.push({
         key: cfg.key, name: cfg.name, flag: cfg.flag, chartUrl: cfg.chartUrl,
-        level: "–", change: "–", changeDir: "down", period: "", trend: "횡보",
-        signal: "중립", metrics: [["상태", "조회 실패 · 다음 갱신 대기"]], read: "데이터 조회 실패로 이번 갱신에서 제외되었습니다."
+        level: "–", change: "–", changeDir: "down", period: "", short: skel, long: skel
       });
       fellBack++;
     }
@@ -272,7 +232,7 @@ function loadPrev() {
 
   const T = {
     asOf: asOf,
-    note: "가격·기술적 지표(RSI·이동평균·추세·지지/저항·신호)는 Yahoo Finance 일봉에서 매일 자동 계산됩니다(LLM 토큰 0). 신호는 이동평균 집계 기준.",
+    note: "가격·기술적 지표는 Yahoo Finance 일봉에서 매일 자동 계산됩니다(LLM 토큰 0). 단기(1–3M: 5·20·60일선·RSI14)·장기(6–12M+: 60·120·200일선·골든크로스)로 분리, 신호는 이동평균 집계 기준.",
     indices: indices
   };
 

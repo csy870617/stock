@@ -3,7 +3,7 @@
 이 저장소는 정적 대시보드(GitHub Pages)다. Claude 세션은 아래 규칙을 반드시 따른다.
 
 ## 운영 모델
-- **시세·지수 기술적 분석·유동성 baseline·스냅샷·배포**: `refresh-quotes` GitHub Action이 매일 자동 처리(순수 스크립트, LLM 0). `data/quotes.js`·`data/indices.js`·`data/liquidity-auto.js`·`data/history.js`·`price`·`priceDate`·`upside`·`generatedAt`은 이 Action이 담당 — **직접 조사·수정하지 않는다.** (`data/indices.js`=나스닥·다우·코스피·코스닥의 종가·이동평균·RSI·추세·지지/저항·신호 `scripts/update-indices.js`; `data/liquidity-auto.js`=금리·일드커브·VIX·HY신용·달러·원달러·코스피 합성 유동성 게이지 baseline `scripts/update-liquidity-gauge.js`.)
+- **시세·지수/종목 기술적 분석·유동성 baseline·스냅샷·배포**: `refresh-quotes` GitHub Action이 매일 자동 처리(순수 스크립트, LLM 0). `data/quotes.js`·`data/indices.js`·`data/stock-ta.js`·`data/liquidity-auto.js`·`data/history.js`·`price`·`priceDate`·`upside`·`generatedAt`은 이 Action이 담당 — **직접 조사·수정하지 않는다.** (`data/indices.js`=나스닥·다우·코스피·코스닥, `data/stock-ta.js`=전 종목 — 둘 다 Yahoo 일봉에서 **단기(1–3M: 5·20·60일선·RSI14)·장기(6–12M+: 60·120·200일선·골든크로스)** 로 분리 계산 `scripts/update-indices.js`·`scripts/update-stock-ta.js`, 공유 `scripts/lib-ta.js`; `data/liquidity-auto.js`=금리·일드커브·VIX·HY신용·달러·원달러·코스피 합성 유동성 게이지 baseline `scripts/update-liquidity-gauge.js`.)
 - **분석·추천(`data/recommendations.js`)·유동성 판단(`data/liquidity.js`)**: **온디맨드**. 사용자가 "업데이트/분석 갱신/유동성 갱신"을 요청할 때만 갱신한다. **유동성은 하이브리드** — 시장지표 baseline(`liquidity-auto.js`)은 매일 자동 산출되고, `data/liquidity.js`(온디맨드)는 거시 이벤트(FOMC·지정학)·내러티브 판단으로 이를 **보정/덮어쓰기**한다. 앱은 `liquidity.js`가 있으면 그것을 우선 표시하고 baseline 을 병기하며, 없으면 baseline 을 게이지로 쓴다.
 - **기본(=배포) 브랜치**: `claude/stock-analysis-recommendation-v9310x` (여기 push하면 `deploy-pages`가 자동 배포). 세션에 별도의 지정 작업 브랜치가 있으면 거기에도 같은 커밋을 함께 반영한다(고정 개발 브랜치는 없음 — 세션마다 다르다).
 
