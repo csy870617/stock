@@ -443,7 +443,16 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 0.86rem; min-widt
 .idx-metrics .im-row { display: flex; justify-content: space-between; gap: 10px; font-size: 0.8rem; }
 .idx-metrics .im-k { color: var(--muted); white-space: nowrap; }
 .idx-metrics .im-v { color: var(--ink); font-weight: 600; text-align: right; }
+.idx-card .ic-tf { border-top: 1px dashed var(--grid); padding-top: 10px; margin-top: 10px; }
+.idx-card .ic-tf:first-of-type { border-top: 0; padding-top: 2px; margin-top: 6px; }
+.idx-card .ic-tf-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.idx-card .ic-tf-lbl { font-size: 0.8rem; font-weight: 700; color: var(--ink-2); }
 .idx-card .ic-read { font-size: 0.82rem; color: var(--ink-2); line-height: 1.55; margin-bottom: 12px; }
+/* 종목 카드 단·장기 기술분석 줄 */
+.ta-split { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 12px; margin: 7px 0 2px; font-size: 0.8rem; }
+.ta-split .tas-lbl { color: var(--muted); font-weight: 600; }
+.ta-split .tas-tf { color: var(--muted); cursor: help; white-space: nowrap; }
+.ta-split .tas-tf b { font-weight: 700; }
 .idx-card .ic-chart { margin-top: auto; align-self: flex-start; font-size: 0.76rem; font-weight: 700; color: var(--accent); text-decoration: none; }
 .idx-card .ic-chart:hover { text-decoration: underline; }
 
@@ -539,6 +548,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
 <script src="data/liquidity.js"></script>
 <script src="data/liquidity-auto.js"></script>
 <script src="data/indices.js"></script>
+<script src="data/stock-ta.js"></script>
 <script src="data/recommendations.js"></script>
 <script src="data/quotes.js"></script>
 <script src="data/history.js"></script>
@@ -1061,6 +1071,26 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     return { text: t, cls: cls };
   }
 
+  // 개별 종목 단기/장기 기술적 분석 줄 — data/stock-ta.js(자동 계산, 단기/장기 분리)를 읽어 컴팩트 표시.
+  var TA_SIG_COL = { "적극매수": "var(--up)", "매수": "var(--tier2)", "중립": "var(--tier3)", "매도": "#eb6834", "적극매도": "var(--down)" };
+  var TA_TREND_MK = { "상승": "▲", "횡보": "▬", "하락": "▼" };
+  function stockTaLine(ticker) {
+    var T = window.STOCK_TA, t = T && T.ta && T.ta[ticker];
+    if (!t || (!t.short && !t.long)) return "";
+    function tf(lbl, d) {
+      if (!d) return "";
+      var c = TA_SIG_COL[d.signal] || "var(--muted)";
+      var tc = d.trend === "상승" ? "var(--up)" : (d.trend === "하락" ? "var(--down)" : "var(--muted)");
+      var tip = (d.read || "") + ((d.metrics && d.metrics.length)
+        ? " | " + d.metrics.map(function (m) { return m[0] + " " + m[1]; }).join(" · ") : "");
+      return '<span class="tas-tf" title="' + esc(tip) + '" data-basis="' + esc(tip) + '">' + lbl +
+        ' <span style="color:' + tc + '">' + (TA_TREND_MK[d.trend] || "") + "</span> " +
+        '<b style="color:' + c + '">' + esc(d.signal || "–") + "</b></span>";
+    }
+    return '<div class="ta-split"><span class="tas-lbl">🕒 단·장기</span>' +
+      tf("단기", t.short) + tf("장기", t.long) + "</div>";
+  }
+
   function card(s, country, showTheme) {
     var tm = tierMeta(s.tier);
     var e = effective(s);
@@ -1123,6 +1153,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
           confBadge + regimeChip + shortChip + crossChip +
           (ts.ind ? '<span class="tech-ind">' + esc(ts.ind) + "</span>" : "") + "</div>" + vtHtml;
       })() +
+      stockTaLine(s.ticker) +
       (s.earnings ? '<div class="earn">' + esc(s.earnings) + "</div>" : "") +
       '<div class="thesis">' + esc(s.thesis) + "</div>" +
       (risks ? '<div class="risks"><b>리스크</b> — ' + risks + "</div>" : "") +
@@ -1735,28 +1766,35 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     };
     var TREND_MARK = { "상승": "▲", "횡보": "▬", "하락": "▼" };
 
-    function card(x) {
-      var sigColor = SIG_COLORS[x.signal] || "var(--muted)";
-      var trend = TREND_MARK[x.trend] || "";
-      var trendColor = x.trend === "상승" ? "var(--up)" : (x.trend === "하락" ? "var(--down)" : "var(--muted)");
-      var metrics = (x.metrics || []).map(function (m) {
+    // 단기/장기 한 시계열 블록
+    function tfBlock(label, tf) {
+      if (!tf) return "";
+      var sigColor = SIG_COLORS[tf.signal] || "var(--muted)";
+      var trend = TREND_MARK[tf.trend] || "";
+      var trendColor = tf.trend === "상승" ? "var(--up)" : (tf.trend === "하락" ? "var(--down)" : "var(--muted)");
+      var metrics = (tf.metrics || []).map(function (m) {
         return '<div class="im-row"><span class="im-k">' + esc(m[0]) +
                '</span><span class="im-v">' + esc(m[1]) + "</span></div>";
       }).join("");
+      return '<div class="ic-tf">' +
+        '<div class="ic-tf-head"><span class="ic-tf-lbl">' + label +
+          ' <span style="color:' + trendColor + '">' + trend + "</span></span>" +
+          '<span class="ic-sig" style="background:' + sigColor + ';color:#fff">' + esc(tf.signal || "–") + "</span></div>" +
+        (metrics ? '<div class="idx-metrics">' + metrics + "</div>" : "") +
+        '<div class="ic-read">' + esc(tf.read || "") + "</div>" +
+        "</div>";
+    }
+    function card(x) {
       var chDir = x.changeDir === "up" ? "up" : "down";
       return '<div class="idx-card">' +
-        '<div class="ic-top">' +
-          '<span class="ic-nm">' + esc(x.flag || "") + " " + esc(x.name) +
-            ' <span style="color:' + trendColor + '">' + trend + "</span></span>" +
-          '<span class="ic-sig" style="background:' + sigColor + ';color:#fff">' + esc(x.signal) + "</span>" +
-        "</div>" +
+        '<div class="ic-top"><span class="ic-nm">' + esc(x.flag || "") + " " + esc(x.name) + "</span></div>" +
         '<div class="ic-px">' +
           '<span class="ic-lv">' + esc(x.level) + "</span>" +
           '<span class="ic-ch ' + chDir + '">' + esc(x.change) + "</span>" +
           (x.period ? '<span class="ic-pd">' + esc(x.period) + "</span>" : "") +
         "</div>" +
-        (metrics ? '<div class="idx-metrics">' + metrics + "</div>" : "") +
-        '<div class="ic-read">' + esc(x.read) + "</div>" +
+        tfBlock("단기 1–3M", x.short) +
+        tfBlock("장기 6–12M+", x.long) +
         (x.chartUrl ? '<a class="ic-chart" href="' + esc(x.chartUrl) +
           '" target="_blank" rel="noopener">📈 네이버 차트 →</a>' : "") +
         "</div>";

@@ -5,7 +5,8 @@
 - **`index.html`** — 대시보드 (거시 유동성 게이지 + 한국/미국 탭, Tier 1·2·3 필터, 목표가·상승여력·배당·리스크·네이버 차트 링크)
 - **`data/recommendations.js`** — 종목 **분석** 데이터 (`stock-recommender` 스킬 결과, thesis·리스크·목표가 등). 시세는 빠짐.
 - **`data/quotes.js`** — **시세 스냅샷** (`scripts/update-quotes.js` 가 자동 생성, LLM 토큰 0). 분석과 분리되어 매일 저비용 갱신.
-- **`data/indices.js`** — **지수 기술적 분석 스냅샷** (`scripts/update-indices.js` 가 자동 생성, LLM 토큰 0). 나스닥·다우·코스피·코스닥의 종가·이동평균(20/60/120)·RSI(14)·추세·지지/저항·매매신호를 Yahoo 일봉에서 매일 계산. 없으면 지수 섹션 자동 숨김.
+- **`data/indices.js`** — **지수 기술적 분석 스냅샷** (`scripts/update-indices.js` 가 자동 생성, LLM 토큰 0). 나스닥·다우·코스피·코스닥을 **단기(1–3M: 5·20·60일선·RSI14)·장기(6–12M+: 60·120·200일선·골든크로스)** 로 분리 계산. 없으면 지수 섹션 자동 숨김.
+- **`data/stock-ta.js`** — **개별 종목 기술적 분석 스냅샷** (`scripts/update-stock-ta.js` 가 자동 생성, LLM 토큰 0). 전 종목의 단기·장기 추세·신호·RSI·이동평균·지지/저항을 Yahoo 2년 일봉에서 매일 계산해 종목 카드에 표시. (지수·종목 공통 계산은 `scripts/lib-ta.js`.)
 - **`data/liquidity-auto.js`** — **유동성 게이지 자동 baseline** (`scripts/update-liquidity-gauge.js` 가 자동 생성, LLM 토큰 0). 금리·일드커브·VIX·HY신용·달러·원달러·코스피를 가중 합성해 미국·한국 단기/중기 게이지를 매일 산출.
 - **`data/liquidity.js`** — 거시 유동성 **판단층** (`macro-liquidity-monitor` 스킬 결과, 온디맨드). 하이브리드: 있으면 이 값을 우선 표시하고 auto baseline 을 병기, 없으면 baseline 이 게이지. 둘 다 없으면 섹션 자동 숨김.
 
@@ -16,7 +17,8 @@
 | 갱신 대상 | 방법 | 주기 | LLM 토큰 |
 |---|---|---|---|
 | **시세** (`data/quotes.js`) | `scripts/update-quotes.js` (Yahoo 조회) — 자동화: `.github/workflows/refresh-quotes.yml` | 매일 | **0** |
-| **지수 기술적 분석** (`data/indices.js`) | `scripts/update-indices.js` (Yahoo 일봉 → MA·RSI·추세·지지/저항·신호 계산) — 같은 워크플로우 | 매일 | **0** |
+| **지수 기술적 분석** (`data/indices.js`) | `scripts/update-indices.js` (Yahoo 일봉 → 단기/장기 MA·RSI·추세·지지/저항·신호) — 같은 워크플로우 | 매일 | **0** |
+| **종목 기술적 분석** (`data/stock-ta.js`) | `scripts/update-stock-ta.js` (Yahoo 2년 일봉 → 전 종목 단기/장기 TA, 공유 `lib-ta.js`) — 같은 워크플로우 | 매일 | **0** |
 | **유동성 baseline** (`data/liquidity-auto.js`) | `scripts/update-liquidity-gauge.js` (Yahoo 금리·커브·VIX·신용·달러·FX → 5단계 합성) — 같은 워크플로우 | 매일 | **0** |
 | **분석** (`data/recommendations.js`) | `scripts/update-reco.js` 로 **바뀐 종목만** 패치 | 필요 시 | 변경분만 |
 | **유동성 판단층** (`data/liquidity.js`) | `macro-liquidity-monitor` 스킬 — 이벤트·내러티브로 baseline 보정 | 온디맨드 | 요청 시 |
