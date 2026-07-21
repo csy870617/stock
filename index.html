@@ -430,8 +430,25 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 0.86rem; min-widt
 .vt-note.vt-warn { border-left-color: var(--down); }
 .vt-note.vt-mix { border-left-color: var(--tier3); }
 .vt-note.vt-neutral { border-left-color: var(--muted); }
-.idx-card .ic-chart { margin-top: auto; align-self: flex-start; font-size: 0.76rem; font-weight: 700; color: var(--accent); text-decoration: none; }
+.idx-card .ic-chart { display: inline-block; margin-top: 2px; align-self: flex-start; font-size: 0.76rem; font-weight: 700; color: var(--accent); text-decoration: none; }
 .idx-card .ic-chart:hover { text-decoration: underline; }
+/* 지수 카드 요약 신호 칩(항상 표시) + '자세히' 접기 */
+.idx-card .ic-sigrow { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-bottom: 2px; }
+.idx-card .ic-sc { display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem; }
+.idx-card .ic-sc-l { color: var(--muted); font-weight: 700; }
+.idx-card .ic-more { margin-top: 10px; }
+.idx-card .ic-more > summary { cursor: pointer; font-size: 0.78rem; font-weight: 700; color: var(--accent); list-style: none; padding: 3px 0; user-select: none; }
+.idx-card .ic-more > summary::-webkit-details-marker { display: none; }
+.idx-card .ic-more > summary::before { content: "▸ "; }
+.idx-card .ic-more[open] > summary::before { content: "▾ "; }
+.idx-card .ic-more-body { padding-top: 4px; }
+.idx-card .ic-more-body .ic-tf:first-of-type { border-top: 0; padding-top: 2px; margin-top: 4px; }
+/* 종목 카드 '분석 자세히' 접기 (실적·논거·리스크) */
+.card-more > summary { cursor: pointer; font-size: 0.82rem; font-weight: 700; color: var(--accent); list-style: none; padding: 2px 0; user-select: none; }
+.card-more > summary::-webkit-details-marker { display: none; }
+.card-more > summary::before { content: "▸ "; }
+.card-more[open] > summary::before { content: "▾ "; }
+.card-more-body { display: flex; flex-direction: column; gap: 11px; padding-top: 9px; }
 
 footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--grid); color: var(--muted); font-size: 0.8rem; line-height: 1.6; }
 </style>
@@ -970,9 +987,11 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       '<div class="pct ' + upCls + '">' + fmtPct(e.upside) + "</div></div>" +
       stockTaLine(s.ticker) +
       valueTimingLine(e.upside, s.ticker) +
-      (s.earnings ? '<div class="earn">' + esc(s.earnings) + "</div>" : "") +
-      '<div class="thesis">' + esc(s.thesis) + "</div>" +
-      (risks ? '<div class="risks"><b>리스크</b> — ' + risks + "</div>" : "") +
+      '<details class="card-more"><summary>분석 자세히</summary><div class="card-more-body">' +
+        (s.earnings ? '<div class="earn">' + esc(s.earnings) + "</div>" : "") +
+        '<div class="thesis">' + esc(s.thesis) + "</div>" +
+        (risks ? '<div class="risks"><b>리스크</b> — ' + risks + "</div>" : "") +
+      "</div></details>" +
       '<div class="links"><a href="' + esc(s.chartUrl) + '" target="_blank" rel="noopener">📊 차트 보기</a>' +
       '<span class="src">' + srcs + "</span></div>" +
       "</article>";
@@ -1596,8 +1615,21 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
         '<div class="ic-read">' + esc(tf.read || "") + "</div>" +
         "</div>";
     }
+    // 요약 신호 칩(항상 표시) — 단기/장기 각각 추세 화살표 + 5단계 신호 배지
+    function sigChip(label, tf) {
+      if (!tf) return "";
+      var sigColor = SIG_COLORS[tf.signal] || "var(--muted)";
+      var trend = TREND_MARK[tf.trend] || "";
+      var trendColor = tf.trend === "상승" ? "var(--up)" : (tf.trend === "하락" ? "var(--down)" : "var(--muted)");
+      return '<span class="ic-sc"><span class="ic-sc-l">' + label + "</span>" +
+        '<span style="color:' + trendColor + '">' + trend + "</span>" +
+        '<span class="ic-sig" style="background:' + sigColor + ';color:#fff">' + esc(tf.signal || "–") + "</span></span>";
+    }
     function card(x) {
       var chDir = x.changeDir === "up" ? "up" : "down";
+      var detail = tfBlock("단기 1–3M", x.short) + tfBlock("장기 6–12M+", x.long) +
+        (x.chartUrl ? '<a class="ic-chart" href="' + esc(x.chartUrl) +
+          '" target="_blank" rel="noopener">📈 네이버 차트 →</a>' : "");
       return '<div class="idx-card">' +
         '<div class="ic-top"><span class="ic-nm">' + esc(x.flag || "") + " " + esc(x.name) + "</span></div>" +
         '<div class="ic-px">' +
@@ -1605,10 +1637,9 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
           '<span class="ic-ch ' + chDir + '">' + esc(x.change) + "</span>" +
           (x.period ? '<span class="ic-pd">' + esc(x.period) + "</span>" : "") +
         "</div>" +
-        tfBlock("단기 1–3M", x.short) +
-        tfBlock("장기 6–12M+", x.long) +
-        (x.chartUrl ? '<a class="ic-chart" href="' + esc(x.chartUrl) +
-          '" target="_blank" rel="noopener">📈 네이버 차트 →</a>' : "") +
+        '<div class="ic-sigrow">' + sigChip("단기", x.short) + sigChip("장기", x.long) + "</div>" +
+        (detail ? '<details class="ic-more"><summary>기술 지표 자세히</summary>' +
+          '<div class="ic-more-body">' + detail + "</div></details>" : "") +
         "</div>";
     }
 
