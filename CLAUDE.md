@@ -3,8 +3,8 @@
 이 저장소는 정적 대시보드(GitHub Pages)다. Claude 세션은 아래 규칙을 반드시 따른다.
 
 ## 운영 모델
-- **시세·스냅샷·배포**: `refresh-quotes` GitHub Action이 매일 자동 처리(순수 스크립트, LLM 0). `data/quotes.js`·`data/history.js`·`price`·`priceDate`·`upside`·`generatedAt`은 이 Action이 담당 — **직접 조사·수정하지 않는다.**
-- **분석·추천(`data/recommendations.js`)·유동성(`data/liquidity.js`)**: **온디맨드**. 사용자가 "업데이트/분석 갱신/유동성 갱신"을 요청할 때만 갱신한다.
+- **시세·지수 기술적 분석·스냅샷·배포**: `refresh-quotes` GitHub Action이 매일 자동 처리(순수 스크립트, LLM 0). `data/quotes.js`·`data/indices.js`·`data/history.js`·`price`·`priceDate`·`upside`·`generatedAt`은 이 Action이 담당 — **직접 조사·수정하지 않는다.** (`data/indices.js`는 나스닥·다우·코스피·코스닥의 종가·이동평균·RSI·추세·지지/저항·매매신호를 Yahoo 일봉에서 매일 계산한다 — `scripts/update-indices.js`.)
+- **분석·추천(`data/recommendations.js`)·유동성 게이지(`data/liquidity.js`)**: **온디맨드**. 사용자가 "업데이트/분석 갱신/유동성 갱신"을 요청할 때만 갱신한다. (유동성 게이지의 등급 판정·거시 내러티브는 판단 영역이라 자동화하지 않는다. 지수의 '가격·기술적 지표'는 순수 계산이므로 위 Action이 자동 담당한다.)
 - **기본(=배포) 브랜치**: `claude/stock-analysis-recommendation-v9310x` (여기 push하면 `deploy-pages`가 자동 배포). 세션에 별도의 지정 작업 브랜치가 있으면 거기에도 같은 커밋을 함께 반영한다(고정 개발 브랜치는 없음 — 세션마다 다르다).
 
 ## ★ "업데이트" 요청 처리 프로토콜 (반드시 지킬 것)
