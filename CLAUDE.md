@@ -3,8 +3,8 @@
 이 저장소는 정적 대시보드(GitHub Pages)다. Claude 세션은 아래 규칙을 반드시 따른다.
 
 ## 운영 모델
-- **시세·지수 기술적 분석·스냅샷·배포**: `refresh-quotes` GitHub Action이 매일 자동 처리(순수 스크립트, LLM 0). `data/quotes.js`·`data/indices.js`·`data/history.js`·`price`·`priceDate`·`upside`·`generatedAt`은 이 Action이 담당 — **직접 조사·수정하지 않는다.** (`data/indices.js`는 나스닥·다우·코스피·코스닥의 종가·이동평균·RSI·추세·지지/저항·매매신호를 Yahoo 일봉에서 매일 계산한다 — `scripts/update-indices.js`.)
-- **분석·추천(`data/recommendations.js`)·유동성 게이지(`data/liquidity.js`)**: **온디맨드**. 사용자가 "업데이트/분석 갱신/유동성 갱신"을 요청할 때만 갱신한다. (유동성 게이지의 등급 판정·거시 내러티브는 판단 영역이라 자동화하지 않는다. 지수의 '가격·기술적 지표'는 순수 계산이므로 위 Action이 자동 담당한다.)
+- **시세·지수 기술적 분석·유동성 baseline·스냅샷·배포**: `refresh-quotes` GitHub Action이 매일 자동 처리(순수 스크립트, LLM 0). `data/quotes.js`·`data/indices.js`·`data/liquidity-auto.js`·`data/history.js`·`price`·`priceDate`·`upside`·`generatedAt`은 이 Action이 담당 — **직접 조사·수정하지 않는다.** (`data/indices.js`=나스닥·다우·코스피·코스닥의 종가·이동평균·RSI·추세·지지/저항·신호 `scripts/update-indices.js`; `data/liquidity-auto.js`=금리·일드커브·VIX·HY신용·달러·원달러·코스피 합성 유동성 게이지 baseline `scripts/update-liquidity-gauge.js`.)
+- **분석·추천(`data/recommendations.js`)·유동성 판단(`data/liquidity.js`)**: **온디맨드**. 사용자가 "업데이트/분석 갱신/유동성 갱신"을 요청할 때만 갱신한다. **유동성은 하이브리드** — 시장지표 baseline(`liquidity-auto.js`)은 매일 자동 산출되고, `data/liquidity.js`(온디맨드)는 거시 이벤트(FOMC·지정학)·내러티브 판단으로 이를 **보정/덮어쓰기**한다. 앱은 `liquidity.js`가 있으면 그것을 우선 표시하고 baseline 을 병기하며, 없으면 baseline 을 게이지로 쓴다.
 - **기본(=배포) 브랜치**: `claude/stock-analysis-recommendation-v9310x` (여기 push하면 `deploy-pages`가 자동 배포). 세션에 별도의 지정 작업 브랜치가 있으면 거기에도 같은 커밋을 함께 반영한다(고정 개발 브랜치는 없음 — 세션마다 다르다).
 
 ## ★ "업데이트" 요청 처리 프로토콜 (반드시 지킬 것)
@@ -20,7 +20,7 @@
 ## 업데이트 작업 내용
 - **공통**: WebSearch만 사용(WebFetch·금융 API 직접 호출은 이 환경에서 403). 수치는 검색 스니펫에 실제로 적힌 값만 쓰고, 확인 못 한 값은 기존값 유지. 완료 후 `node scripts/validate-reco.js` 통과 확인 → 배포 브랜치 커밋·push(경합 시 `git rebase` 후 재푸시).
 - **A. 분석·추천 (`data/recommendations.js`)**: `generatedAt`·`marketNote`(오늘 시황) 갱신 → `node scripts/snapshot.js` 기록. `node scripts/performance-report.js`(목표가 소진·성과 부진)·`validate-reco.js`(신뢰 출처 부족·재추가 금지)로 우선순위 선별. 목표가는 컨센서스(신뢰 출처 2개 이상 교차확인), 논거·리스크·tier·dividendYield·earnings 최신화. 지배구조 스크리닝·`BANNED_TICKERS` 준수. (주제×국가) 9종목·tier 3/3/3 유지. **매 업데이트마다 트리거(목표가 소진·성과 부진) 유무와 무관하게 아래 '신규 후보 탐색 프로토콜'을 수행한다.** `node scripts/update-reco.js <패치.json>` 증분 패치로 적용. **시세(price·priceDate·upside)는 건드리지 않는다.**
-- **B. 유동성 (`data/liquidity.js`)**: 미국(연준 금리·FOMC·M2·연준 대차대조표·HY 스프레드·10Y·10Y-2Y 커브·Core PCE/CPI), 한국(한은 금리·금통위·CPI·원달러·외국인 수급) 조사 → 기존 구조 유지하며 게이지 5단계(`매우 우호`/`우호`/`신중`/`부정`/`매우 부정`)·`asOf`(오늘) 갱신. 등급 변경 시 근거 수치를 `drivers`에 남긴다.
+- **B. 유동성 (`data/liquidity.js`, 하이브리드의 온디맨드 판단층)**: 시장지표 baseline(`liquidity-auto.js`)은 Action이 매일 자동 산출하므로, 이 온디맨드 갱신은 **baseline 이 못 읽는 것**에 집중한다 — 거시 이벤트(FOMC·금통위 결과·지정학), 느린 거시(M2·연준 대차대조표·Core PCE/CPI·외국인 수급), 내러티브. 미국(연준 금리·FOMC·M2·연준 대차대조표·HY 스프레드·10Y·10Y-2Y 커브·Core PCE/CPI), 한국(한은 금리·금통위·CPI·원달러·외국인 수급) 조사 → 게이지 5단계(`매우 우호`/`우호`/`신중`/`부정`/`매우 부정`)·`asOf`(오늘) 갱신. 등급 변경 시 근거 수치를 `drivers`에 남긴다. baseline 과 등급이 크게 어긋나면 그 이유(이벤트·수급)를 `drivers`에 명시한다.
 
 ## 신규 후보 탐색 프로토콜 (최선 편성 수렴)
 목표: 전 그룹 탐색·다각도 검색·워치리스트 승계로, 업데이트가 반복될수록 편성이 "찾을 수 있는 최선"으로 수렴하게 한다.
