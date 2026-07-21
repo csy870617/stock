@@ -101,7 +101,7 @@ async function mapLimit(items, limit, fn) {
 
   const T = {
     asOf: asOf,
-    note: "개별 종목 단기(1–3M: 5·20·60일선·RSI14)·장기(6–12M+: 60·120·200일선·골든크로스) 기술적 분석. Yahoo 2년 일봉에서 매일 자동 계산(LLM 토큰 0).",
+    note: "개별 종목 기술적 분석 — 이동평균(SMA·EMA)+오실레이터(RSI·MACD·스토캐스틱·CCI·Williams %R·ADX·모멘텀) 종합 투표. 단기(1–3M)는 일봉, 장기(6–12M+)는 주봉 기준. Yahoo 2년 일봉에서 매일 자동 계산(LLM 토큰 0).",
     ta: ta
   };
   const body =

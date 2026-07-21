@@ -130,7 +130,7 @@ function loadPrev() {
 
   const T = {
     asOf: asOf,
-    note: "가격·기술적 지표는 Yahoo Finance 일봉에서 매일 자동 계산됩니다(LLM 토큰 0). 단기(1–3M: 5·20·60일선·RSI14)·장기(6–12M+: 60·120·200일선·골든크로스)로 분리, 신호는 이동평균 집계 기준.",
+    note: "기술적 지표는 Yahoo 일봉에서 매일 자동 계산(LLM 토큰 0). 이동평균(SMA·EMA)과 오실레이터(RSI·MACD·스토캐스틱·CCI·Williams %R·ADX·모멘텀)를 종합 투표한 5단계 신호 — 단기(1–3M)는 일봉, 장기(6–12M+)는 주봉 기준.",
     indices: indices
   };
 
