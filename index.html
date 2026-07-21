@@ -762,10 +762,21 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       });
   }
 
+  // 실시간 값의 날짜가 너무 오래됐는지 — 거래정지·심볼 변경 시 Yahoo 가 옛 시세를 얼려
+  // 반환하는데, update-quotes.js(7일 가드)와 달리 페이지가 이를 그대로 노출하면 상승여력이
+  // 왜곡된다. 날짜가 8일 초과로 오래되면 실시간 값을 버리고 스냅샷으로 폴백한다.
+  // (주말·휴장 여유로 8일. 날짜 미상이면 방어 불가하므로 기존대로 통과시킨다.)
+  function liveFresh(dateStr) {
+    if (!dateStr) return true;
+    var t = Date.parse(dateStr + "T00:00:00Z");
+    if (isNaN(t)) return true;
+    return (Date.now() - t) / 86400000 <= 8;
+  }
+
   // 종목의 "표시용" 현재가·상승여력 — 실시간 값이 있으면 그것으로, 없으면 스냅샷으로
   function effective(s) {
     var lv = liveCache[s.ticker];
-    if (lv && lv.price != null) {
+    if (lv && lv.price != null && liveFresh(lv.date)) {
       var up = (s.targetPrice != null && lv.price) ? (s.targetPrice - lv.price) / lv.price * 100 : s.upside;
       return { price: lv.price, priceDate: lv.date || s.priceDate, upside: up, live: true };
     }
