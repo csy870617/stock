@@ -417,6 +417,9 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 0.86rem; min-widt
 .liq-foot { color: var(--muted); font-size: 0.78rem; margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .liq-foot .nc { color: var(--ink-2); }
 .liq-foot a { color: var(--muted); }
+.liq-auto { margin-top: 10px; padding-top: 9px; border-top: 1px dashed var(--grid); font-size: 0.78rem; color: var(--muted); line-height: 1.5; }
+.liq-auto b { font-weight: 700; }
+.liq-auto .ttl { color: var(--ink-2); font-weight: 600; }
 
 /* ── 주요 지수 기술적 분석 ── */
 .idx { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 18px 20px; margin-bottom: 22px; }
@@ -534,6 +537,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
 
 <script src="data/config.js"></script>
 <script src="data/liquidity.js"></script>
+<script src="data/liquidity-auto.js"></script>
 <script src="data/indices.js"></script>
 <script src="data/recommendations.js"></script>
 <script src="data/quotes.js"></script>
@@ -1605,10 +1609,12 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
 
   function renderLiquidity() {
     var box = document.getElementById("liqBox");
-    // 유효한 게이지 값(단기/중기)이 하나라도 있어야 섹션을 보인다.
-    // L 은 있으나 us/korea 키가 없거나 값이 비어도 깨진 빈 게이지가 뜨지 않도록 방어한다.
+    var A = window.LIQUIDITY_AUTO;   // 시장지표 기반 자동 baseline (매일 갱신, 무토큰)
+    // 온디맨드(L, 판단 반영) 또는 자동 baseline(A) 중 하나라도 게이지 값이 있으면 섹션을 보인다.
     function hasTerm(c) { return c && (c.shortTerm != null || c.midTerm != null); }
-    if (!L || (!hasTerm(L.us) && !hasTerm(L.korea))) { box.style.display = "none"; return; }
+    var hasL = L && (hasTerm(L.us) || hasTerm(L.korea));
+    var hasA = A && (hasTerm(A.us) || hasTerm(A.korea));
+    if (!hasL && !hasA) { box.style.display = "none"; return; }
     box.style.display = "";
 
     var RANKS = ["매우 부정", "부정", "신중", "우호", "매우 우호"];
@@ -1629,25 +1635,48 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
              gauge(rank) +
              '<span class="rank" style="color:' + color + '">' + esc(rank || "–") + "</span></div>";
     }
-    function col(flag, title, c) {
+    // 자동 baseline 병기 라인 (온디맨드 게이지가 주인일 때 하단에 함께 보여준다)
+    function autoChip(rank) {
+      var i = RANKS.indexOf(rank), color = i >= 0 ? RANK_COLORS[i] : "var(--muted)";
+      return '<b style="color:' + color + '">' + esc(rank || "–") + "</b>";
+    }
+    function autoLine(a) {
+      if (!a) return "";
+      return '<div class="liq-auto"><span class="ttl">🤖 자동 baseline</span> · 단기 ' +
+             autoChip(a.shortTerm) + " · 중기 " + autoChip(a.midTerm) + "</div>";
+    }
+    // c: 표시할 게이지 소스(온디맨드 우선, 없으면 auto), a: 병기용 auto 국가객체
+    function col(flag, title, c, a) {
+      var showAuto = !!(c && a && c !== a);   // 온디맨드가 주인일 때만 auto 병기
+      c = c || a;
       if (!c) return "";
       var drivers = (c.drivers || []).map(function (d) { return "<li>" + esc(d) + "</li>"; }).join("");
       return '<div class="liq-col"><h3>' + flag + " " + title + "</h3>" +
              termRow("단기 1–3M", c.shortTerm) +
              termRow("중기 6–12M", c.midTerm) +
              (drivers ? '<ul class="liq-drivers">' + drivers + "</ul>" : "") +
+             (showAuto ? autoLine(a) : "") +
              "</div>";
     }
 
-    document.getElementById("liqAs").textContent = "기준일 " + esc(L.asOf);
-    document.getElementById("liqHeadline").innerHTML = "<strong>" + esc(L.headline) + "</strong>";
+    var src = hasL ? L : A;
+    document.getElementById("liqAs").textContent = "기준일 " + esc(src.asOf) +
+      (hasL && A && A.asOf && A.asOf !== L.asOf ? " · 자동 " + esc(A.asOf) : "");
+    document.getElementById("liqHeadline").innerHTML =
+      "<strong>" + esc(hasL ? L.headline : A.note) + "</strong>";
     document.getElementById("liqGrid").innerHTML =
-      col("🇺🇸", "미국", L.us) + col("🇰🇷", "한국", L.korea);
-    var srcs = (L.sources || []).slice(0, 3).map(function (u, i) {
+      col("🇺🇸", "미국", hasL ? L.us : null, A ? A.us : null) +
+      col("🇰🇷", "한국", hasL ? L.korea : null, A ? A.korea : null);
+    var srcs = hasL ? (L.sources || []).slice(0, 3).map(function (u, i) {
       return '<a href="' + esc(u) + '" target="_blank" rel="noopener">출처' + (i + 1) + "</a>";
-    }).join(" ");
+    }).join(" ") : "";
+    var autoNote = (A && A.inputs)
+      ? '<span class="nc">🤖 자동 지표 — 10Y ' + esc(A.inputs.us10y) + "% · 커브 " + esc(A.inputs.curve) +
+        " · VIX " + esc(A.inputs.vix) + " · 원/달러 " + esc(A.inputs.usdkrw) + "</span> "
+      : "";
     document.getElementById("liqFoot").innerHTML =
-      (L.nextCheck ? '<span class="nc">🔔 다음 체크 — ' + esc(L.nextCheck) + "</span> " : "") + srcs;
+      (hasL && L.nextCheck ? '<span class="nc">🔔 다음 체크 — ' + esc(L.nextCheck) + "</span> " : "") +
+      autoNote + srcs;
   }
 
   function renderIndexTA() {
