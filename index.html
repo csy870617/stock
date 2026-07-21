@@ -1074,6 +1074,16 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   // 개별 종목 단기/장기 기술적 분석 줄 — data/stock-ta.js(자동 계산, 단기/장기 분리)를 읽어 컴팩트 표시.
   var TA_SIG_COL = { "적극매수": "var(--up)", "매수": "var(--tier2)", "중립": "var(--tier3)", "매도": "#eb6834", "적극매도": "var(--down)" };
   var TA_TREND_MK = { "상승": "▲", "횡보": "▬", "하락": "▼" };
+  var TA_RANK = { "적극매수": 2, "매수": 1, "중립": 0, "매도": -1, "적극매도": -2 };
+  function stTa(ticker) { var T = window.STOCK_TA; return (T && T.ta && T.ta[ticker]) || null; }
+  function stTaShortSig(s) { var t = stTa(s.ticker); return t && t.short ? t.short.signal : null; }
+  // 표시 신호 그룹(필터용) — 단기 신호 기준(가장 실행 가능한 타이밍 신호)
+  function taGroup(s) {
+    var sig = stTaShortSig(s);
+    if (sig == null) return "na";
+    var r = TA_RANK[sig];
+    if (r >= 1) return "buy"; if (r <= -1) return "sell"; return "hold";
+  }
   function stockTaLine(ticker) {
     var T = window.STOCK_TA, t = T && T.ta && T.ta[ticker];
     if (!t || (!t.short && !t.long)) return "";
@@ -1129,30 +1139,6 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       "</div>" +
       '<div class="meter-row"><div class="meter"><i style="width:' + meterW + '%"></i></div>' +
       '<div class="pct ' + upCls + '">' + fmtPct(e.upside) + "</div></div>" +
-      (function () {
-        var ts = techSignal(s);
-        var crossChip = ts.cross === "golden"
-          ? '<span class="cross-chip gc" title="골든크로스 — 단기 이동평균이 장기 이동평균을 상향 돌파">✚ 골든크로스</span>'
-          : ts.cross === "dead"
-          ? '<span class="cross-chip dc" title="데드크로스 — 단기 이동평균이 장기 이동평균을 하향 돌파">✖ 데드크로스</span>' : "";
-        var confBadge = ts.conf != null
-          ? '<span class="tech-conf" title="지표 합치도 — 추세추종 지표들이 방향에 동의하는 정도. 강한 신호는 90% 이상일 때만 표시.">신뢰도 ' + ts.conf + "%</span>"
-          : "";
-        var shortChip = ts.shortData
-          ? '<span class="short-chip" title="장기 데이터 부족 — 시계열이 짧아 단기 지표들이 서로 겹칩니다. 신뢰도를 낮춰 표시하며, 2년 실측 시계열 확보 시 정밀해집니다.">단기 데이터</span>'
-          : "";
-        var regimeChip = ts.regimeTag === "눌림목"
-          ? '<span class="cross-chip gc" title="상승추세 눌림목 — 200일선 위 장기 상승국면에서 단기 조정에 들어온 매수 기회">🎯 눌림목</span>'
-          : "";
-        var vt = valueTimingNote(e.upside, ts);
-        var vtHtml = vt
-          ? '<div class="vt-note ' + vt.cls + '"><span class="vt-k" title="밸류(컨센서스 상승여력·장기)와 타이밍(기술적 추세·단기)을 함께 읽는 종합 해석입니다. 새 예측이 아니라 위 두 신호의 관계를 설명합니다.">밸류 × 타이밍</span> ' + esc(vt.text) + "</div>"
-          : "";
-        return '<div class="tech-row"><span class="tlabel">📈 기술분석</span>' +
-          '<span class="tech-sig ' + ts.cls + '" data-basis="' + esc(ts.note) + '"><span class="dot"></span>' + esc(ts.label) + "</span>" +
-          confBadge + regimeChip + shortChip + crossChip +
-          (ts.ind ? '<span class="tech-ind">' + esc(ts.ind) + "</span>" : "") + "</div>" + vtHtml;
-      })() +
       stockTaLine(s.ticker) +
       (s.earnings ? '<div class="earn">' + esc(s.earnings) + "</div>" : "") +
       '<div class="thesis">' + esc(s.thesis) + "</div>" +
@@ -1336,17 +1322,19 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
           : '<span title="' + esc(aiPendingText(s)) + '" data-basis="' + esc(aiPendingText(s)) + '" style="cursor:help;color:var(--muted)">추정중</span>') + "</td>" +
         '<td class="num ' + upCls + '">' + fmtPct(e.upside) + "</td>" +
         (function () {
-          var ts = techSignal(s);
-          var cx = ts.cross === "golden" ? '<span class="cx gc" title="골든크로스">✚</span>'
-            : ts.cross === "dead" ? '<span class="cx dc" title="데드크로스">✖</span>' : "";
-          return '<td class="sig-cell ' + ts.cls + '" title="' + esc(ts.note) + '" data-basis="' + esc(ts.note) + '">' + esc(ts.short) + cx + "</td>";
+          var t = stTa(s.ticker);
+          function cell(d) { if (!d) return '<span style="color:var(--muted)">–</span>';
+            return '<b style="color:' + (TA_SIG_COL[d.signal] || "var(--muted)") + '">' + esc(d.signal || "–") + "</b>"; }
+          var tip = t ? ((t.short ? "단기: " + (t.short.read || "") : "") + (t.long ? "  장기: " + (t.long.read || "") : "")) : "";
+          return '<td class="sig-cell" title="' + esc(tip) + '" data-basis="' + esc(tip) + '">' +
+            (t ? cell(t.short) + ' <span style="color:var(--muted)">/</span> ' + cell(t.long) : '<span style="color:var(--muted)">–</span>') + "</td>";
         })() +
         '<td class="num">' + (s.dividendYield == null ? "–" : Number(s.dividendYield).toFixed(1) + "%") + "</td>" +
         '<td><a href="' + esc(s.chartUrl) + '" target="_blank" rel="noopener">차트</a></td></tr>';
     }).join("");
     return '<div class="tbl-wrap"><table class="tbl"><thead><tr>' +
       "<th>종목</th>" + (showTheme ? "<th>주제</th>" : "") + "<th>Tier</th><th class=\"num\">현재가</th>" +
-      '<th class="num">기준일</th><th class="num">목표가</th><th class="num" title="검증 입력값 기반 자체 분석(참고용)">AI적정가</th><th class="num">상승여력</th><th title="누적 종가 기반 추세추종 다중 지표 합의 신호(합치도 90%+에서만 강한 신호)">기술분석</th><th class="num">배당</th><th>링크</th>' +
+      '<th class="num">기준일</th><th class="num">목표가</th><th class="num" title="검증 입력값 기반 자체 분석(참고용)">AI적정가</th><th class="num">상승여력</th><th title="Yahoo 2년 일봉 기반 단기(1–3M) / 장기(6–12M+) 기술적 신호">기술 단/장</th><th class="num">배당</th><th>링크</th>' +
       "</tr></thead><tbody>" + rows + "</tbody></table></div>";
   }
 
@@ -1516,15 +1504,9 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   var SIG_OPTS = [{ v: "all", l: "신호 전체" }, { v: "buy", l: "매수 신호" }, { v: "hold", l: "관망" }, { v: "sell", l: "매도 신호" }];
   var UP_OPTS = [{ v: 0, l: "상승여력 전체" }, { v: 10, l: "상승여력 10%+" }, { v: 20, l: "상승여력 20%+" }, { v: 30, l: "상승여력 30%+" }];
   var DIV_OPTS = [{ v: 0, l: "배당 전체" }, { v: 2, l: "배당 2%+" }, { v: 3, l: "배당 3%+" }, { v: 4, l: "배당 4%+" }];
-  var SORT_OPTS = [{ v: "default", l: "정렬: 기본" }, { v: "upside", l: "정렬: 상승여력↓" }, { v: "div", l: "정렬: 배당↓" }, { v: "conf", l: "정렬: 신뢰도↓" }, { v: "name", l: "정렬: 이름" }];
+  var SORT_OPTS = [{ v: "default", l: "정렬: 기본" }, { v: "upside", l: "정렬: 상승여력↓" }, { v: "div", l: "정렬: 배당↓" }, { v: "conf", l: "정렬: 단기신호↓" }, { v: "name", l: "정렬: 이름" }];
 
-  function techGroup(s) {
-    var c = techSignal(s).cls;
-    if (c === "buy1" || c === "buy2") return "buy";
-    if (c === "sell1" || c === "sell2") return "sell";
-    if (c === "na") return "na";
-    return "hold";
-  }
+  function techGroup(s) { return taGroup(s); }   // 단기 기술신호 기준
   function applyFilters(list) {
     return list.filter(function (s) {
       var e = effective(s);
@@ -1538,7 +1520,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     var arr = list.slice();
     if (state.sort === "upside") arr.sort(function (a, b) { return numOr(effective(b).upside, -Infinity) - numOr(effective(a).upside, -Infinity); });
     else if (state.sort === "div") arr.sort(function (a, b) { return numOr(b.dividendYield, -1) - numOr(a.dividendYield, -1); });
-    else if (state.sort === "conf") arr.sort(function (a, b) { return numOr(techSignal(b).conf, -1) - numOr(techSignal(a).conf, -1); });
+    else if (state.sort === "conf") arr.sort(function (a, b) { return numOr(TA_RANK[stTaShortSig(b)], -9) - numOr(TA_RANK[stTaShortSig(a)], -9); });
     else if (state.sort === "name") arr.sort(function (a, b) { return String(a.name).localeCompare(String(b.name), "ko"); });
     else arr = sortList(arr);   // default: Tier → 상승여력
     return arr;

@@ -109,7 +109,7 @@ function analyzeTimeframes(rows, opts) {
   const winS = rows.slice(-20);
   const loS = Math.min.apply(null, winS.map((x) => x.low)), hiS = Math.max.apply(null, winS.map((x) => x.high));
   const srS = levels(level, [m5, m20, m60, loS, hiS], loS, hiS);
-  const sigSraw = tallySignal(closes, level, [5, 10, 20]);
+  const sigSraw = tallySignal(closes, level, [5, 20, 60]);   // 단기 집계 이평(표시와 일치)
   const trendS = trendBy(level, m20);
   const sigS = { signal: signalTiebreak(sigSraw.signal, trendS, level, m60) };
   const momS = chgN(closes, 20);
@@ -131,7 +131,7 @@ function analyzeTimeframes(rows, opts) {
   const winL = rows.slice(-nLong);
   const loL = Math.min.apply(null, winL.map((x) => x.low)), hiL = Math.max.apply(null, winL.map((x) => x.high));
   const srL = levels(level, [m60, m120, m200, loL, hiL], loL, hiL);
-  const sigLraw = tallySignal(closes, level, [50, 100, 200]);
+  const sigLraw = tallySignal(closes, level, [60, 120, 200]);   // 장기 집계 이평(표시와 일치)
   const longBase = m200 != null ? m200 : (m120 != null ? m120 : m60);
   const trendL = trendBy(level, longBase, 0.01);
   const sigL = { signal: signalTiebreak(sigLraw.signal, trendL, level, longBase) };
