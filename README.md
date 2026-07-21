@@ -5,7 +5,8 @@
 - **`index.html`** — 대시보드 (거시 유동성 게이지 + 한국/미국 탭, Tier 1·2·3 필터, 목표가·상승여력·배당·리스크·네이버 차트 링크)
 - **`data/recommendations.js`** — 종목 **분석** 데이터 (`stock-recommender` 스킬 결과, thesis·리스크·목표가 등). 시세는 빠짐.
 - **`data/quotes.js`** — **시세 스냅샷** (`scripts/update-quotes.js` 가 자동 생성, LLM 토큰 0). 분석과 분리되어 매일 저비용 갱신.
-- **`data/liquidity.js`** — 거시 유동성 데이터 (`macro-liquidity-monitor` 스킬 결과, 없으면 게이지 섹션 자동 숨김)
+- **`data/indices.js`** — **지수 기술적 분석 스냅샷** (`scripts/update-indices.js` 가 자동 생성, LLM 토큰 0). 나스닥·다우·코스피·코스닥의 종가·이동평균(20/60/120)·RSI(14)·추세·지지/저항·매매신호를 Yahoo 일봉에서 매일 계산. 없으면 지수 섹션 자동 숨김.
+- **`data/liquidity.js`** — 거시 유동성 게이지 데이터 (`macro-liquidity-monitor` 스킬 결과 — 등급 판정은 온디맨드, 없으면 게이지 섹션 자동 숨김)
 
 ### 💡 토큰 절약 구조 (시세 분리 + 증분 갱신)
 
@@ -14,7 +15,9 @@
 | 갱신 대상 | 방법 | 주기 | LLM 토큰 |
 |---|---|---|---|
 | **시세** (`data/quotes.js`) | `scripts/update-quotes.js` (Yahoo 조회) — 자동화: `.github/workflows/refresh-quotes.yml` | 매일 | **0** |
+| **지수 기술적 분석** (`data/indices.js`) | `scripts/update-indices.js` (Yahoo 일봉 → MA·RSI·추세·지지/저항·신호 계산) — 같은 워크플로우 | 매일 | **0** |
 | **분석** (`data/recommendations.js`) | `scripts/update-reco.js` 로 **바뀐 종목만** 패치 | 필요 시 | 변경분만 |
+| **유동성 게이지** (`data/liquidity.js`) | `macro-liquidity-monitor` 스킬(등급 판정·내러티브는 판단 영역) | 온디맨드 | 요청 시 |
 
 - 페이지 가격 우선순위: **실시간 API(`data/config.js`) > `data/quotes.js` 스냅샷 > `recommendations.js` 종가(폴백)**.
 - 예전처럼 매일 90종목을 통째로 재리서치할 필요가 없다.
