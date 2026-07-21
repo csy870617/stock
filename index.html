@@ -490,7 +490,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   <section class="picks" id="picksBox" style="display:none">
     <div class="picks-head">
       <h2>오늘의 Top Picks</h2>
-      <span class="crit">상승여력·리스크·배당·컨센서스에 시장 국면(유동성·지수 로테이션)을 반영한 최우선 종목</span>
+      <span class="crit">안전성(우량·저리스크·저평가)과 수익성(상승여력)을 우선하고 시장 국면(유동성·지수 로테이션)을 반영한 최우선 종목</span>
     </div>
     <div class="picks-grid" id="picksGrid"></div>
   </section>
@@ -1152,7 +1152,9 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   //    (반도체 셀오프로 나스닥 매도·다우 매수면 성장·라이징 테마를 감점 → 방어 로테이션 반영)
   var GAUGE_RANK = { "매우 우호": -1, "우호": -0.5, "신중": 0, "부정": 0.5, "매우 부정": 1 };
   var IDX_SIG = { "적극매수": -1, "매수": -0.5, "중립": 0, "매도": 0.5, "적극매도": 1 };
-  var THEME_DEFENSE = { core: 1, dividend: 1, value: 0.5, growth: -0.7, rising: -1 };
+  // 테마 선호 — '안전 + 수익성' 관점: 우량(핵심)·저평가(가치, 안전마진) 우대, 고베타(성장·라이징) 회피.
+  //   배당은 선정 기준이 아니므로 최소 가점만(집착하지 않음).
+  var THEME_QUALITY = { core: 1, value: 0.6, dividend: 0.1, growth: -0.6, rising: -0.9 };
   function idxSignal(key) {
     var T = window.INDEX_TA, x = T && (T.indices || []).filter(function (i) { return i.key === key; })[0];
     return x ? (IDX_SIG[x.signal] || 0) : 0;
@@ -1168,15 +1170,14 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     return Math.max(0, Math.min(idxSignal(grw) - idxSignal(val), 1));
   }
 
-  // 종합 선정 점수 — 개별 리서치 요소(상승여력·리스크·배당·출처)에 거시 국면을 얹는다.
-  //   · 상승여력(60%에서 만점, 과열 종목 독점 방지 캡)  · 리스크(적을수록 가점)  · 배당(하방 쿠션)  · 출처 수
-  //   위험회피(gauge>0)면 상승여력 가중↓·배당/안정↑, 위험선호면 반대. 방어 로테이션·위험회피
-  //   강도만큼 방어 테마(핵심·고배당·저평가)에 가점, 공격 테마(성장·라이징)에 감점.
+  // 종합 선정 점수 — '순수하게 안전하면서 수익성도 좋은' 종목을 상위로.
+  //   안전 = 저리스크(가중 큼) + 우량/저평가 테마.  수익성 = 상승여력(가중 큼).  배당은 부수 요소(가중 최소).
+  //   테마 선호는 상시 적용(기본 0.08)하되, 위험회피(gauge)·방어 로테이션(성장지수<가치지수)일수록 증폭 →
+  //   반도체 셀오프 같은 국면에서 고베타(성장) 회피가 강해진다. 데이터 없으면 국면항이 0이 되어 안전 폴백.
   function pickScore(s) {
     var g = gaugeTilt(state.country), rot = rotationTilt(state.country);
-    var wUp = 0.48 - 0.16 * Math.max(0, g), wRisk = 0.22 + 0.05 * Math.max(0, g),
-        wDiv = 0.18 + 0.11 * Math.max(0, g), wSrc = 0.12;
-    if (g < 0) { wUp += 0.10 * (-g); wDiv -= 0.06 * (-g); wRisk -= 0.04 * (-g); }
+    var wUp = 0.50 - 0.06 * Math.max(0, g), wRisk = 0.30 + 0.06 * Math.max(0, g), wDiv = 0.08, wSrc = 0.12;
+    if (g < 0) { wUp += 0.06 * (-g); }
     var sum = wUp + wRisk + wDiv + wSrc; wUp /= sum; wRisk /= sum; wDiv /= sum; wSrc /= sum;
     var upScore   = Math.max(0, Math.min(numOr(s.upside, 0), 60)) / 60;
     var divScore  = Math.max(0, Math.min(numOr(s.dividendYield, 0), 6)) / 6;
@@ -1184,7 +1185,8 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     var srcScore  = Math.max(0, Math.min((s.sources || []).length, 3)) / 3;
     var base = wUp * upScore + wRisk * riskScore + wDiv * divScore + wSrc * srcScore;
     var defense = Math.max(Math.max(0, g), rot);
-    return base + 0.15 * defense * (THEME_DEFENSE[s.theme] || 0);
+    var tilt = 0.08 + 0.12 * defense;   // 상시 품질 선호 + 국면 증폭
+    return base + tilt * (THEME_QUALITY[s.theme] || 0);
   }
 
   // 종목 변경(편입·제외) 섹션 — 날짜 드롭다운으로 과거 변경도 조회. 스냅샷쌍이 없으면 숨김.
