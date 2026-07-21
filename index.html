@@ -418,6 +418,32 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 0.86rem; min-widt
 .liq-foot .nc { color: var(--ink-2); }
 .liq-foot a { color: var(--muted); }
 
+/* ── 주요 지수 기술적 분석 ── */
+.idx { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 18px 20px; margin-bottom: 22px; }
+.idx .idx-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+.idx .idx-head h2 { font-size: 1.02rem; font-weight: 750; letter-spacing: -0.01em; }
+.idx .idx-as { color: var(--muted); font-size: 0.78rem; }
+.idx .idx-note { color: var(--muted); font-size: 0.8rem; line-height: 1.55; margin-bottom: 14px; }
+.idx-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 720px) { .idx-grid { grid-template-columns: 1fr; } }
+.idx-card { border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; display: flex; flex-direction: column; }
+.idx-card .ic-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.idx-card .ic-nm { font-size: 0.95rem; font-weight: 750; }
+.idx-card .ic-sig { font-size: 0.74rem; font-weight: 700; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
+.idx-card .ic-px { display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+.idx-card .ic-lv { font-size: 1.28rem; font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.idx-card .ic-ch { font-size: 0.86rem; font-weight: 700; }
+.idx-card .ic-ch.up { color: var(--up); }
+.idx-card .ic-ch.down { color: var(--down); }
+.idx-card .ic-pd { color: var(--muted); font-size: 0.74rem; margin-left: auto; }
+.idx-metrics { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }
+.idx-metrics .im-row { display: flex; justify-content: space-between; gap: 10px; font-size: 0.8rem; }
+.idx-metrics .im-k { color: var(--muted); white-space: nowrap; }
+.idx-metrics .im-v { color: var(--ink); font-weight: 600; text-align: right; }
+.idx-card .ic-read { font-size: 0.82rem; color: var(--ink-2); line-height: 1.55; margin-bottom: 12px; }
+.idx-card .ic-chart { margin-top: auto; align-self: flex-start; font-size: 0.76rem; font-weight: 700; color: var(--accent); text-decoration: none; }
+.idx-card .ic-chart:hover { text-decoration: underline; }
+
 footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--grid); color: var(--muted); font-size: 0.8rem; line-height: 1.6; }
 </style>
 </head>
@@ -447,6 +473,15 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     <div class="liq-headline" id="liqHeadline"></div>
     <div class="liq-grid" id="liqGrid"></div>
     <div class="liq-foot" id="liqFoot"></div>
+  </div>
+
+  <div class="idx" id="idxBox" style="display:none">
+    <div class="idx-head">
+      <h2>📈 주요 지수 기술적 분석</h2>
+      <span class="idx-as" id="idxAs"></span>
+    </div>
+    <div class="idx-note" id="idxNote"></div>
+    <div class="idx-grid" id="idxGrid"></div>
   </div>
 
   <section class="picks" id="picksBox" style="display:none">
@@ -1614,7 +1649,53 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       (L.nextCheck ? '<span class="nc">🔔 다음 체크 — ' + esc(L.nextCheck) + "</span> " : "") + srcs;
   }
 
+  function renderIndexTA() {
+    var box = document.getElementById("idxBox");
+    var T = window.INDEX_TA;
+    if (!T || !Array.isArray(T.indices) || !T.indices.length) { box.style.display = "none"; return; }
+    box.style.display = "";
+
+    // 신호별 색상: 매수 계열 → 초록, 중립 → 주황, 매도 계열 → 빨강
+    var SIG_COLORS = {
+      "적극매수": "var(--up)", "매수": "var(--tier2)", "중립": "var(--tier3)",
+      "매도": "#eb6834", "적극매도": "var(--down)"
+    };
+    var TREND_MARK = { "상승": "▲", "횡보": "▬", "하락": "▼" };
+
+    function card(x) {
+      var sigColor = SIG_COLORS[x.signal] || "var(--muted)";
+      var trend = TREND_MARK[x.trend] || "";
+      var trendColor = x.trend === "상승" ? "var(--up)" : (x.trend === "하락" ? "var(--down)" : "var(--muted)");
+      var metrics = (x.metrics || []).map(function (m) {
+        return '<div class="im-row"><span class="im-k">' + esc(m[0]) +
+               '</span><span class="im-v">' + esc(m[1]) + "</span></div>";
+      }).join("");
+      var chDir = x.changeDir === "up" ? "up" : "down";
+      return '<div class="idx-card">' +
+        '<div class="ic-top">' +
+          '<span class="ic-nm">' + esc(x.flag || "") + " " + esc(x.name) +
+            ' <span style="color:' + trendColor + '">' + trend + "</span></span>" +
+          '<span class="ic-sig" style="background:' + sigColor + ';color:#fff">' + esc(x.signal) + "</span>" +
+        "</div>" +
+        '<div class="ic-px">' +
+          '<span class="ic-lv">' + esc(x.level) + "</span>" +
+          '<span class="ic-ch ' + chDir + '">' + esc(x.change) + "</span>" +
+          (x.period ? '<span class="ic-pd">' + esc(x.period) + "</span>" : "") +
+        "</div>" +
+        (metrics ? '<div class="idx-metrics">' + metrics + "</div>" : "") +
+        '<div class="ic-read">' + esc(x.read) + "</div>" +
+        (x.chartUrl ? '<a class="ic-chart" href="' + esc(x.chartUrl) +
+          '" target="_blank" rel="noopener">차트·기술적 분석 →</a>' : "") +
+        "</div>";
+    }
+
+    document.getElementById("idxAs").textContent = "기준일 " + esc(T.asOf);
+    document.getElementById("idxNote").textContent = T.note || "";
+    document.getElementById("idxGrid").innerHTML = T.indices.map(card).join("");
+  }
+
   renderLiquidity();
+  renderIndexTA();
   renderThemeChips();
   renderTopPicks();
   renderRoster();
