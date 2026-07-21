@@ -64,6 +64,14 @@ function sVix(v) { if (v < 13) return 2; if (v < 16) return 1; if (v < 21) retur
 function sCredit(ch) { if (ch > 0.015) return 2; if (ch > 0.005) return 1; if (ch > -0.005) return 0; if (ch > -0.02) return -1; return -2; }
 function sCurve(spread) { if (spread > 0.8) return 2; if (spread > 0.4) return 1; if (spread > 0.05) return 0; if (spread > -0.3) return -1; return -2; }
 function toRank(avg) { if (avg >= 1.2) return 4; if (avg >= 0.35) return 3; if (avg > -0.35) return 2; if (avg > -1.2) return 1; return 0; }
+// 급성 주식 드로다운 floor — 월간(20거래일) 폭락은 리스크오프가 지배하는 국면이라,
+// FX·신용 개선이 등가로 상쇄해 게이지가 관대해지는 것을 막는다(합성 점수보다 등급을 하향 고정).
+//   20일 모멘텀 < -18% → 최소 '매우 부정', < -10% → 최소 '부정'.
+function equityFloorRank(rank, mom20) {
+  if (mom20 < -0.18) return Math.min(rank, 0);
+  if (mom20 < -0.10) return Math.min(rank, 1);
+  return rank;
+}
 
 // 가중 평균(항목: [라벨, 점수, 가중치])
 function composite(items) {
@@ -146,6 +154,14 @@ function loadPrev() {
   const usShort = composite(usShortItems), usMid = composite(usMidItems);
   const krShort = composite(krShortItems), krMid = composite(krMidItems);
 
+  // 한국 단기 — 코스피 급락 floor 적용(급성 드로다운은 FX 개선으로 상쇄 불가)
+  const krShortRank0 = toRank(krShort);
+  const krShortRank = equityFloorRank(krShortRank0, kospi20);
+  const krDrivers = drivers(krShortItems);
+  if (krShortRank < krShortRank0) {
+    krDrivers.unshift("⚠ 코스피 급락 floor 발동 (20일 " + (kospi20 * 100).toFixed(0) + "%)");
+  }
+
   const data = {
     asOf: asOf,
     note: "Yahoo 시장지표 기반 자동 baseline(금리·일드커브·VIX·HY신용·달러·원달러·코스피). 거시 이벤트·내러티브는 미반영 — 온디맨드 유동성이 보정.",
@@ -159,9 +175,9 @@ function loadPrev() {
       drivers: drivers(usShortItems)
     },
     korea: {
-      shortTerm: RANKS[toRank(krShort)], midTerm: RANKS[toRank(krMid)],
+      shortTerm: RANKS[krShortRank], midTerm: RANKS[toRank(krMid)],
       shortScore: +krShort.toFixed(2), midScore: +krMid.toFixed(2),
-      drivers: drivers(krShortItems)
+      drivers: krDrivers
     }
   };
 

@@ -10,7 +10,7 @@ window.LIQUIDITY_AUTO = {
   "vix": "18.6",
   "hyg20": "-0.4",
   "dxy": "101.0",
-  "usdkrw": "1480"
+  "usdkrw": "1479"
  },
  "us": {
   "shortTerm": "신중",
@@ -25,11 +25,12 @@ window.LIQUIDITY_AUTO = {
   ]
  },
  "korea": {
-  "shortTerm": "신중",
+  "shortTerm": "매우 부정",
   "midTerm": "신중",
   "shortScore": 0,
   "midScore": 0.09,
   "drivers": [
+   "⚠ 코스피 급락 floor 발동 (20일 -27%)",
    "원/달러 추세 (+2)",
    "코스피 모멘텀(20d) (−2)",
    "글로벌 변동성 VIX (·0)",
