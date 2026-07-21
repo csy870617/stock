@@ -122,6 +122,14 @@ function levels(level, cands, lo20, hi20) {
   return { support, resistance };
 }
 
+// 추세 타이브레이커 — 이평선 집계가 '중립'(3:3 부근)일 때 장기 추세로 애매함을 가른다.
+// 상승 추세 + 장기선(120일) 상회면 '고점 부근 단기 눌림'으로 보고 '매수'로 상향(상향 전용 —
+// 하락 지수는 이미 매도/적극매도라 영향 없음). 단순 이평선 집계가 강한 장기 추세를 과소평가하는 것을 보정.
+function signalTiebreak(signal, trend, level, m120) {
+  if (signal === "중립" && trend === "상승" && m120 != null && level > m120) return "매수";
+  return signal;
+}
+
 // 이동평균 관계 요약 문구 (20·60·120일선 상회/하회)
 function maSummary(level, m20, m60, m120) {
   const items = [["20", m20], ["60", m60], ["120", m120]].filter((x) => x[1] != null);
@@ -181,6 +189,8 @@ function analyze(cfg, rows) {
   const r = rsi(closes, 14);
   const sig = maSignal(closes, level);
   const trend = trendOf(level, m20, m60, m120);
+  const signal = signalTiebreak(sig.signal, trend, level, m120);   // 최종 신호(타이브레이커 반영)
+  const tiebroken = signal !== sig.signal;
 
   // 지지/저항 — 최근 20거래일 저·고점과 주요 이평선 중 현재가에 가장 가까운 아래/위 레벨
   const win = rows.slice(-20);
@@ -200,7 +210,8 @@ function analyze(cfg, rows) {
   if (r != null) readParts.push("RSI " + r.toFixed(1) + (rs ? "(" + rs + ")" : ""));
   if (weekPct != null) readParts.push("주간 " + (weekPct >= 0 ? "+" : "") + weekPct.toFixed(1) + "%");
   let read = readParts.join(", ") + ". 이동평균 " + sig.buy + "매수/" + (sig.total - sig.buy) +
-    "매도로 '" + sig.signal + "' 우위 — 지지 " + fmt(support, 0) + "선.";
+    "매도" + (tiebroken ? "이나 장기 상승추세로 '" + signal + "'" : "로 '" + signal + "' 우위") +
+    " — 지지 " + fmt(support, 0) + "선.";
 
   return {
     key: cfg.key, name: cfg.name, flag: cfg.flag, chartUrl: cfg.chartUrl,
@@ -209,7 +220,7 @@ function analyze(cfg, rows) {
     changeDir: changePct >= 0 ? "up" : "down",
     period: period,
     trend: trend,
-    signal: sig.signal,
+    signal: signal,
     metrics: [
       ["RSI(14)", (r == null ? "–" : r.toFixed(1)) + (rs ? " · " + rs : "")],
       ["이동평균", maSummary(level, m20, m60, m120)],
