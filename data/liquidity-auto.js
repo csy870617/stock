@@ -7,10 +7,10 @@ window.LIQUIDITY_AUTO = {
  "inputs": {
   "us10y": "4.60",
   "curve": "0.89",
-  "vix": "18.6",
+  "vix": "17.5",
   "hyg20": "-0.4",
-  "dxy": "101.0",
-  "usdkrw": "1479"
+  "dxy": "100.9",
+  "usdkrw": "1476"
  },
  "us": {
   "shortTerm": "신중",
@@ -20,7 +20,7 @@ window.LIQUIDITY_AUTO = {
   "drivers": [
    "10Y 추세 (−2)",
    "일드커브 (+2)",
-   "VIX 18.6 (·0)",
+   "VIX 17.5 (·0)",
    "HY 신용(20d) (·0)"
   ]
  },
@@ -30,7 +30,7 @@ window.LIQUIDITY_AUTO = {
   "shortScore": 0,
   "midScore": 0.09,
   "drivers": [
-   "⚠ 코스피 급락 floor 발동 (20일 -27%)",
+   "⚠ 코스피 급락 floor 발동 (20일 -26%)",
    "원/달러 추세 (+2)",
    "코스피 모멘텀(20d) (−2)",
    "글로벌 변동성 VIX (·0)",
