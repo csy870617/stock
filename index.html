@@ -449,20 +449,21 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 0.86rem; min-widt
 .idx-card .ic-tf-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
 .idx-card .ic-tf-lbl { font-size: 0.8rem; font-weight: 700; color: var(--ink-2); }
 .idx-card .ic-read { font-size: 0.82rem; color: var(--ink-2); line-height: 1.55; margin-bottom: 12px; }
-/* 종목 카드 단·장기 기술분석 줄 */
-.ta-split { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 2px 0; font-size: 0.8rem; }
-.ta-split .tas-lbl { color: var(--muted); font-weight: 600; margin-right: 2px; }
-.ta-split .tas-tf { display: inline-flex; align-items: center; gap: 5px; cursor: help; }
-.ta-split .tas-l { color: var(--muted); font-size: 0.78rem; }
-.ta-split .tas-sig { font-size: 0.72rem; font-weight: 700; color: #fff; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
-/* 밸류 × 타이밍 종합 해석 */
-.vt-note { font-size: 0.8rem; line-height: 1.5; padding: 7px 11px; border-radius: 8px; margin: 6px 0 2px;
-  border-left: 3px solid var(--grid); background: var(--chip-bg); color: var(--ink-2); }
-.vt-note .vt-k { font-weight: 700; color: var(--ink); cursor: help; white-space: nowrap; }
-.vt-note.vt-good { border-left-color: var(--up); }
-.vt-note.vt-warn { border-left-color: var(--down); }
-.vt-note.vt-mix { border-left-color: var(--tier3); }
-.vt-note.vt-neutral { border-left-color: var(--muted); }
+/* 통합 신호 박스 — 기술(단·장기 알약) + 밸류×타이밍(해석)을 한 카드에 정렬 */
+.sig-box { display: grid; grid-template-columns: auto 1fr; gap: 9px 12px; align-items: baseline;
+  background: var(--inset); border-radius: var(--r-sm); padding: 12px 14px; }
+.sig-box .sig-k { color: var(--muted); font-weight: 600; font-size: 0.78rem; white-space: nowrap; }
+.sig-box .vt-k { cursor: help; }
+.sig-box .sig-body { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0; }
+.sig-box .sig-txt { display: block; font-size: 0.82rem; line-height: 1.5; color: var(--ink-2); }
+.sig-pill { display: inline-flex; align-items: center; gap: 5px; cursor: help; }
+.sig-pill .sig-pl { color: var(--muted); font-size: 0.78rem; }
+.sig-pill .sig-sig { font-size: 0.72rem; font-weight: 700; color: #fff; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
+.vt-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 7px; vertical-align: 1px; background: var(--muted); }
+.vt-dot.vt-good { background: var(--up); }
+.vt-dot.vt-warn { background: var(--down); }
+.vt-dot.vt-mix { background: var(--tier3); }
+.vt-dot.vt-neutral { background: var(--muted); }
 .idx-card .ic-chart { display: inline-block; margin-top: 2px; align-self: flex-start; font-size: 0.76rem; font-weight: 700; color: var(--accent); text-decoration: none; }
 .idx-card .ic-chart:hover { text-decoration: underline; }
 /* 지수 카드 요약 신호 칩(항상 표시) + '자세히' 접기 */
@@ -476,12 +477,6 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 0.86rem; min-widt
 .idx-card .ic-more[open] > summary::before { content: "▾ "; }
 .idx-card .ic-more-body { padding-top: 4px; }
 .idx-card .ic-more-body .ic-tf:first-of-type { border-top: 0; padding-top: 2px; margin-top: 4px; }
-/* 종목 카드 '분석 자세히' 접기 (실적·논거·리스크) */
-.card-more > summary { cursor: pointer; font-size: 0.82rem; font-weight: 700; color: var(--accent); list-style: none; padding: 2px 0; user-select: none; }
-.card-more > summary::-webkit-details-marker { display: none; }
-.card-more > summary::before { content: "▸ "; }
-.card-more[open] > summary::before { content: "▾ "; }
-.card-more-body { display: flex; flex-direction: column; gap: 11px; padding-top: 9px; }
 
 footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--grid); color: var(--muted); font-size: 0.8rem; line-height: 1.6; }
 </style>
@@ -936,25 +931,26 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     var r = TA_RANK[sig];
     if (r >= 1) return "buy"; if (r <= -1) return "sell"; return "hold";
   }
-  function stockTaLine(ticker) {
+  // 기술 신호 — 통합 신호 박스(sig-box)의 한 행(라벨 셀 + 본문 셀)을 반환. 없으면 "".
+  function stockTaCells(ticker) {
     var T = window.STOCK_TA, t = T && T.ta && T.ta[ticker];
     if (!t || (!t.short && !t.long)) return "";
-    function tf(lbl, d) {
+    function pill(lbl, d) {
       if (!d) return "";
       var c = TA_SIG_COL[d.signal] || "var(--muted)";
       var tip = (d.read || "") + ((d.metrics && d.metrics.length)
         ? " | " + d.metrics.map(function (m) { return m[0] + " " + m[1]; }).join(" · ") : "");
-      return '<span class="tas-tf" title="' + esc(tip) + '" data-basis="' + esc(tip) + '">' +
-        '<span class="tas-l">' + lbl + "</span>" +
-        '<span class="tas-sig" style="background:' + c + '">' + esc(d.signal || "–") + "</span></span>";
+      return '<span class="sig-pill" title="' + esc(tip) + '" data-basis="' + esc(tip) + '">' +
+        '<span class="sig-pl">' + lbl + "</span>" +
+        '<span class="sig-sig" style="background:' + c + '">' + esc(d.signal || "–") + "</span></span>";
     }
-    return '<div class="ta-split"><span class="tas-lbl">기술</span>' +
-      tf("단기", t.short) + tf("장기", t.long) + "</div>";
+    return '<span class="sig-k">기술</span><div class="sig-body">' +
+      pill("단기", t.short) + pill("장기", t.long) + "</div>";
   }
 
   // 밸류(컨센서스 상승여력·장기 펀더멘털) × 타이밍(기술 추세·단기) 종합 해석 —
   // Tier(펀더멘털 확신)와 기술신호(모멘텀)가 어긋날 때 어떻게 읽는지 안내한다(급락 우량주=분할매수·눌림목 등).
-  function valueTimingLine(upside, ticker) {
+  function valueTimingCells(upside, ticker) {
     var t = stTa(ticker);
     if (upside == null || !t || !t.short) return "";
     var sig = t.short.signal;
@@ -973,7 +969,8 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     else if (vMid && techBull) { text = "단기 추세는 매수 우위이나 장기 상승여력은 제한적"; cls = "vt-mix"; }
     else if (vMid && techBear) { text = "장기 상승여력 제한 + 단기 약세 — 신중"; cls = "vt-warn"; }
     else { text = "밸류·타이밍 모두 뚜렷한 우위 없음 — 관망"; cls = "vt-neutral"; }
-    return '<div class="vt-note ' + cls + '"><span class="vt-k" title="밸류(컨센서스 상승여력·장기 펀더멘털)와 타이밍(기술 추세·단기)을 함께 읽는 종합 해석입니다. 새 예측이 아니라 두 신호의 관계를 설명합니다.">밸류 × 타이밍</span> ' + esc(text) + "</div>";
+    return '<span class="sig-k vt-k" title="밸류(컨센서스 상승여력·장기 펀더멘털)와 타이밍(기술 추세·단기)을 함께 읽는 종합 해석입니다. 새 예측이 아니라 두 신호의 관계를 설명합니다.">밸류 × 타이밍</span>' +
+      '<div class="sig-body sig-txt"><span class="vt-dot ' + cls + '"></span>' + esc(text) + "</div>";
   }
 
   function card(s, country, showTheme) {
@@ -1005,6 +1002,15 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     var aiStat = s.aiTarget != null
       ? '<div class="c-stat" title="' + esc(s.aiBasis || "") + '" data-basis="' + esc(s.aiBasis || "") + '" style="cursor:help"><div class="c-sk">AI 적정가</div><div class="c-sv">' + fmtPrice(s.aiTarget, country) + "</div></div>"
       : '<div class="c-stat" title="' + esc(aiPendingText(s)) + '" data-basis="' + esc(aiPendingText(s)) + '" style="cursor:help"><div class="c-sk">AI 적정가</div><div class="c-sv c-muted">추정중</div></div>';
+    // 기술 + 밸류×타이밍을 하나의 통합 신호 박스로 묶는다(라벨 정렬 그리드). 둘 다 없으면 생략.
+    var taCells = stockTaCells(s.ticker);
+    var vtCells = valueTimingCells(e.upside, s.ticker);
+    var sigBox = (taCells || vtCells) ? '<div class="sig-box">' + taCells + vtCells + "</div>" : "";
+    // 분석(실적·논거·리스크)은 접지 않고 바로 표시
+    var analysis =
+      (s.earnings ? '<div class="earn">' + esc(s.earnings) + "</div>" : "") +
+      '<div class="thesis">' + esc(s.thesis) + "</div>" +
+      (risks ? '<div class="risks"><b>리스크</b> — ' + risks + "</div>" : "");
     return '<article class="card" data-ticker="' + esc(s.ticker) + '">' +
       '<div class="head"><h3>' + esc(s.name) + '<span class="tk">' + esc(s.ticker) + " · " + esc(s.market) + "</span></h3>" +
       '<span class="badges">' + newBadge + themeBadge + warnBadge + unvBadge +
@@ -1019,13 +1025,8 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
         aiStat +
         '<div class="c-stat"><div class="c-sk">배당수익률</div><div class="c-sv">' + divVal + "</div></div>" +
       "</div>" +
-      stockTaLine(s.ticker) +
-      valueTimingLine(e.upside, s.ticker) +
-      '<details class="card-more"><summary>분석 자세히</summary><div class="card-more-body">' +
-        (s.earnings ? '<div class="earn">' + esc(s.earnings) + "</div>" : "") +
-        '<div class="thesis">' + esc(s.thesis) + "</div>" +
-        (risks ? '<div class="risks"><b>리스크</b> — ' + risks + "</div>" : "") +
-      "</div></details>" +
+      sigBox +
+      analysis +
       '<div class="links"><a href="' + esc(s.chartUrl) + '" target="_blank" rel="noopener">차트 보기</a>' +
       '<span class="src">' + srcs + "</span></div>" +
       "</article>";
