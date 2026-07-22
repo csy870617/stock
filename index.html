@@ -453,6 +453,22 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 0.86rem; min-widt
 .vt-dot.vt-mix { background: var(--tier3); }
 .vt-dot.vt-neutral { background: var(--muted); }
 
+/* 관심종목 추가 폼 + 라이트 카드 */
+.wl-add { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 8px; }
+.wl-in { font-size: 0.9rem; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+.wl-in:focus { outline: none; border-color: var(--accent); }
+.wl-name { flex: 1 1 130px; min-width: 0; }
+.wl-code { flex: 1 1 170px; min-width: 0; }
+.wl-mkt { flex: 0 0 auto; cursor: pointer; }
+.wl-btn { flex: 0 0 auto; font-size: 0.9rem; font-weight: 700; padding: 9px 18px; border-radius: 10px; border: 0; background: var(--accent); color: #fff; cursor: pointer; transition: transform .12s; }
+.wl-btn:active { transform: scale(0.97); }
+.wl-hint { color: var(--muted); font-size: 0.78rem; line-height: 1.5; margin: 0 0 18px; }
+.wl-grid { margin-top: 4px; }
+.wl-card .wl-del { border: 0; background: var(--surface-2); color: var(--muted); width: 24px; height: 24px; border-radius: 50%; cursor: pointer; font-size: 0.78rem; line-height: 1; display: grid; place-items: center; padding: 0; }
+.wl-card .wl-del:hover { background: var(--down); color: #fff; }
+.wl-card .wl-msg { color: var(--muted); font-size: 0.86rem; padding: 6px 0; }
+.wl-note { color: var(--muted); font-size: 0.76rem; line-height: 1.45; }
+
 footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--grid); color: var(--muted); font-size: 0.8rem; line-height: 1.6; }
 </style>
 </head>
@@ -541,6 +557,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
 <script src="data/recommendations.js"></script>
 <script src="data/quotes.js"></script>
 <script src="data/history.js"></script>
+<script src="scripts/lib-ta.js"></script>
 <script>
 (function () {
   var D = window.STOCK_DATA;
@@ -1359,6 +1376,101 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   // ── 정렬 (카드·표 뷰) — 기본: Tier → 상승여력. 필터/정렬 선택 UI는 제거됨. ──
   function sortByKey(list) { return sortList(list.slice()); }
 
+  // ── 관심종목(앱에서 직접 추가/삭제) — 브라우저 localStorage 개인 목록 ──
+  //  라이트 카드: 실시간 시세 + 브라우저에서 계산한 단·장기 기술분석만 표시.
+  //  (목표가·논거·밸류 등 정밀 분석은 리서치가 필요해 미포함)
+  var MYWATCH_KEY = "myWatch.v1";
+  var wlCache = {};   // "country:ticker" → undefined(미조회) | "loading" | null(실패) | {price,date,ta,sym}
+  function getMyWatch() { try { return JSON.parse(localStorage.getItem(MYWATCH_KEY)) || []; } catch (_e) { return []; } }
+  function saveMyWatch(a) { try { localStorage.setItem(MYWATCH_KEY, JSON.stringify(a)); } catch (_e) {} }
+  function wlSymbols(code, country) { return country === "us" ? [code] : [code + ".KS", code + ".KQ"]; }
+
+  // 한 종목의 2년 일봉(종가)+실시간 시세를 시세 Worker 로 받아 브라우저에서 기술분석을 계산
+  function fetchWatchOne(item, onDone) {
+    var key = item.c + ":" + item.t;
+    if (wlCache[key] !== undefined) return;                 // 이미 조회중/완료
+    if (!liveSupported || !window.LIB_TA) { wlCache[key] = null; if (onDone) onDone(); return; }
+    wlCache[key] = "loading";
+    var syms = wlSymbols(item.t, item.c);
+    (function tryIdx(i) {
+      if (i >= syms.length) { wlCache[key] = null; if (onDone) onDone(); return; }
+      var sym = syms[i];
+      var hUrl = QUOTES_API + (QUOTES_API.indexOf("?") >= 0 ? "&" : "?") + "history=1&range=" + HIST_RANGE + "&symbols=" + encodeURIComponent(sym);
+      var pUrl = QUOTES_API + (QUOTES_API.indexOf("?") >= 0 ? "&" : "?") + "symbols=" + encodeURIComponent(sym);
+      Promise.all([
+        fetch(hUrl).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
+        fetch(pUrl, { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })
+      ]).then(function (res) {
+        var hv = res[0] && res[0][sym], pv = res[1] && res[1][sym];
+        if (!hv || !Array.isArray(hv.closes) || hv.closes.length < 35) { tryIdx(i + 1); return; }
+        var closes = hv.closes, dates = hv.dates || [];
+        // Worker history 는 종가만 반환 → high=low=close 로 근사(범위형 오실레이터는 자동 중립 처리)
+        var rows = closes.map(function (cl, j) {
+          var t = dates[j] ? Math.floor(Date.parse(dates[j] + "T00:00:00Z") / 1000) : j * 86400;
+          return { t: t, close: cl, high: cl, low: cl };
+        });
+        var dp = item.c === "korea" ? 0 : 2;
+        var ta = null;
+        try { ta = window.LIB_TA.analyzeTimeframes(rows, { dp: dp, srDp: dp }); } catch (_e) { ta = null; }
+        var price = pv && typeof pv.price === "number" && isFinite(pv.price) ? pv.price : closes[closes.length - 1];
+        var date = pv && pv.date ? pv.date : (dates.length ? dates[dates.length - 1] : "");
+        wlCache[key] = { sym: sym, price: price, date: date, ta: ta };
+        if (onDone) onDone();
+      }).catch(function () { tryIdx(i + 1); });
+    })(0);
+  }
+
+  // 관심종목 라이트 카드 — 추천 카드와 같은 톤(히어로+기술 신호 박스)이되 시세·기술분석만
+  function wlLightCard(item) {
+    var key = item.c + ":" + item.t;
+    var d = wlCache[key];
+    var title = item.n || item.t;
+    var aid = "wlc-" + item.c + "-" + item.t;                // 모든 상태에서 동일 id — 조회 완료 시 이 노드만 교체
+    var open = '<article id="' + esc(aid) + '" class="card wl-card">';
+    var head = '<div class="head"><h3>' + esc(title) + '<span class="tk">' + esc(item.t) + " · " + (item.c === "us" ? "US" : "KR") + "</span></h3>" +
+      '<span class="badges"><span class="badge">관심종목</span>' +
+      '<button class="wl-del" type="button" data-wl="' + esc(item.c + "|" + item.t) + '" title="관심종목에서 제거" aria-label="제거">✕</button></span></div>';
+    if (d === undefined || d === "loading") return open + head + '<div class="wl-msg">시세·기술분석 불러오는 중…</div></article>';
+    if (d === null) return open + head + '<div class="wl-msg">시세를 불러오지 못했습니다 — 코드·시장(한국/미국)을 확인해 주세요.</div></article>';
+    var country = item.c;
+    var ta = d.ta;
+    var chDir = ta && ta.changeDir === "up" ? "up" : "down";
+    var sigBox = "";
+    if (ta && (ta.short || ta.long)) {
+      var pill = function (lbl, tf) {
+        if (!tf) return "";
+        var c = TA_SIG_COL[tf.signal] || "var(--muted)";
+        var tip = (tf.read || "") + ((tf.metrics && tf.metrics.length) ? " | " + tf.metrics.map(function (m) { return m[0] + " " + m[1]; }).join(" · ") : "");
+        return '<span class="sig-pill" title="' + esc(tip) + '" data-basis="' + esc(tip) + '"><span class="sig-pl">' + lbl +
+          '</span><span class="sig-sig" style="background:' + c + '">' + esc(tf.signal || "–") + "</span></span>";
+      };
+      sigBox = '<div class="sig-box"><span class="sig-k">기술</span><div class="sig-body">' + pill("단기", ta.short) + pill("장기", ta.long) + "</div></div>";
+    }
+    var chartUrl = country === "korea"
+      ? "https://finance.naver.com/item/main.naver?code=" + encodeURIComponent(item.t)
+      : "https://finance.yahoo.com/quote/" + encodeURIComponent(item.t);
+    return open + head +
+      '<div class="c-hero"><div class="c-hcell"><div class="c-hv">' + fmtPrice(d.price, country) + '</div>' +
+        '<div class="c-hk">현재가 · ' + esc(d.date || "실시간") + "</div></div>" +
+        (ta && ta.change ? '<div class="c-hcell c-r"><div class="c-hv ' + chDir + '">' + esc(ta.change) + '</div><div class="c-hk">전일대비</div></div>' : "") +
+      "</div>" +
+      sigBox +
+      '<div class="wl-note">실시간 시세 + 기술분석만 보여주는 라이트 카드입니다. 목표가·논거 등 정밀 분석은 포함되지 않습니다.</div>' +
+      '<div class="links"><a href="' + chartUrl + '" target="_blank" rel="noopener">차트 보기</a></div>' +
+      "</article>";
+  }
+
+  // 관심종목 추가 입력 폼
+  function watchAddForm() {
+    return '<form class="wl-add" id="wlAdd">' +
+      '<input class="wl-in wl-name" id="wlName" placeholder="종목명 (선택)" autocomplete="off" maxlength="24">' +
+      '<input class="wl-in wl-code" id="wlCode" placeholder="코드 (예: 005930 · AAPL)" autocomplete="off" maxlength="10" required>' +
+      '<select class="wl-in wl-mkt" id="wlMkt"><option value="korea">한국</option><option value="us">미국</option></select>' +
+      '<button class="wl-btn" type="submit">추가</button>' +
+      "</form>" +
+      '<div class="wl-hint">이 기기 브라우저에만 저장되는 개인 관심목록입니다. 추가하면 실시간 시세와 단·장기 기술분석이 표시됩니다(목표가·논거 등 정밀 분석은 미포함).</div>';
+  }
+
   function render() {
     var host = document.getElementById("cards");
     var descEl = document.getElementById("themeDesc");
@@ -1379,11 +1491,31 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       "<strong>" + esc(tmeta.label) + "</strong> — " + esc(tmeta.desc || "");
 
     list = (D[state.country] || []).filter(function (s) { return s.theme === state.theme; });
+
+    // 관심종목 — 추가 폼 + 편성(에스원 등) 풀카드 + 사용자 라이트 카드(localStorage). 뷰(카드/표) 무관.
+    if (state.theme === "watch") {
+      var baked = list.slice().sort(function (a, b) { return numOr(effective(b).upside, -Infinity) - numOr(effective(a).upside, -Infinity); });
+      var mine = getMyWatch().filter(function (w) { return w.c === state.country; });
+      var wparts = watchAddForm();
+      if (baked.length) wparts += '<div class="grid">' + baked.map(function (s) { return card(s, state.country); }).join("") + "</div>";
+      if (mine.length) wparts += '<div class="grid wl-grid">' + mine.map(wlLightCard).join("") + "</div>";
+      else if (!baked.length) wparts += '<div class="empty">아직 추가한 관심종목이 없습니다. 위에서 코드를 입력해 추가하세요.</div>';
+      host.innerHTML = wparts;
+      if (baked.length) { ensureLive(baked, refreshLive); fetchHistory(baked, refreshLive); }
+      // 사용자 종목은 개별 비동기 조회 후 해당 카드만 교체(폼 포커스 유지)
+      mine.forEach(function (w) {
+        fetchWatchOne(w, function () {
+          var el = document.getElementById("wlc-" + w.c + "-" + w.t);
+          if (el) el.outerHTML = wlLightCard(w);
+        });
+      });
+      return;
+    }
+
     if (!list.length) {
       host.innerHTML = '<div class="empty">해당 주제의 종목이 아직 없습니다.</div>';
       return;
     }
-
     var fl = list;
 
     if (state.view === "table") {
@@ -1393,25 +1525,18 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       return;
     }
 
-    var html;
-    if (state.theme === "watch") {
-      // 관심종목 — Tier 구분 없이 상승여력 내림차순 평면 그리드
-      var wl = fl.slice().sort(function (a, b) { return numOr(effective(b).upside, -Infinity) - numOr(effective(a).upside, -Infinity); });
-      html = '<div class="grid">' + wl.map(function (s) { return card(s, state.country); }).join("") + "</div>";
-    } else {
-      // 카드 뷰 — Tier 그룹 유지(상승여력 내림차순)
-      html = "";
-      [1, 2, 3].forEach(function (t) {
-        var group = fl.filter(function (s) { return s.tier === t; })
-                      .sort(function (a, b) { return numOr(effective(b).upside, -Infinity) - numOr(effective(a).upside, -Infinity); });
-        if (!group.length) return;
-        var tm = tierMeta(t);
-        html += '<div class="tier-group"><div class="tier-head">' +
-                '<span class="dot" style="background:' + tm.color + '"></span>' + esc(tm.label) +
-                ' <span class="tier-n">' + group.length + "종목</span></div>" +
-                '<div class="grid">' + group.map(function (s) { return card(s, state.country); }).join("") + "</div></div>";
-      });
-    }
+    // 카드 뷰 — Tier 그룹 유지(상승여력 내림차순)
+    var html = "";
+    [1, 2, 3].forEach(function (t) {
+      var group = fl.filter(function (s) { return s.tier === t; })
+                    .sort(function (a, b) { return numOr(effective(b).upside, -Infinity) - numOr(effective(a).upside, -Infinity); });
+      if (!group.length) return;
+      var tm = tierMeta(t);
+      html += '<div class="tier-group"><div class="tier-head">' +
+              '<span class="dot" style="background:' + tm.color + '"></span>' + esc(tm.label) +
+              ' <span class="tier-n">' + group.length + "종목</span></div>" +
+              '<div class="grid">' + group.map(function (s) { return card(s, state.country); }).join("") + "</div></div>";
+    });
     host.innerHTML = html;
     ensureLive(list, refreshLive);
     fetchHistory(list, refreshLive);
@@ -1436,11 +1561,41 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     this.querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x === b); });
     render();
   });
-  // 성과 기간 칩 + 필터/정렬 — #cards 는 재렌더돼도 요소 자체는 유지되므로 위임 처리
-  // 성과 기간 칩 — #cards 는 재렌더돼도 요소 자체는 유지되므로 위임 처리
+  // #cards 위임 — 성과 기간 칩 + 관심종목 제거(✕)
   document.getElementById("cards").addEventListener("click", function (e) {
+    var del = e.target.closest("[data-wl]");
+    if (del) {
+      var p = del.getAttribute("data-wl").split("|");   // "country|ticker"
+      saveMyWatch(getMyWatch().filter(function (w) { return !(w.c === p[0] && w.t === p[1]); }));
+      render();
+      return;
+    }
     var b = e.target.closest("[data-perfp]"); if (!b) return;
     state.perfPeriod = b.dataset.perfp;
+    render();
+  });
+  // 관심종목 추가 폼 제출(위임)
+  document.getElementById("cards").addEventListener("submit", function (e) {
+    var f = e.target.closest("#wlAdd"); if (!f) return;
+    e.preventDefault();
+    var code = (document.getElementById("wlCode").value || "").trim().toUpperCase();
+    var name = (document.getElementById("wlName").value || "").trim();
+    var mkt = document.getElementById("wlMkt").value === "us" ? "us" : "korea";
+    if (!code) return;
+    var ok = mkt === "korea" ? /^\d{6}$/.test(code) : /^[A-Z][A-Z0-9.\-]{0,6}$/.test(code);
+    if (!ok) { alert("코드 형식을 확인해 주세요 — 한국: 6자리 숫자(예 005930), 미국: 알파벳 티커(예 AAPL)."); return; }
+    if ((D[mkt] || []).some(function (s) { return s.ticker === code; })) { alert("이미 추천·관심 편성에 있는 종목입니다."); return; }
+    var arr = getMyWatch();
+    if (arr.some(function (w) { return w.c === mkt && w.t === code; })) { alert("이미 추가된 관심종목입니다."); return; }
+    arr.push({ t: code, n: name, c: mkt });
+    saveMyWatch(arr);
+    state.theme = "watch";
+    if (state.country !== mkt) {
+      state.country = mkt;
+      document.getElementById("countrySeg").querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x.dataset.c === mkt); });
+      renderTopPicks();
+    }
+    renderThemeChips();
     render();
   });
   // Top Pick 클릭 → 해당 주제·카드 뷰로 전환하고 그 종목 카드로 스크롤·강조
