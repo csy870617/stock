@@ -239,7 +239,8 @@ a { color: inherit; }
   0%, 22%   { box-shadow: 0 0 0 3px var(--accent), var(--shadow-lg); border-color: var(--accent); }
   100%      { box-shadow: 0 0 0 0 transparent, var(--shadow-sm); border-color: var(--line); }
 }
-.pick .rank { position: absolute; top: 11px; right: 13px; font-size: 1.05rem; }
+.pick .rank { position: absolute; top: 13px; right: 14px; width: 22px; height: 22px; display: grid; place-items: center;
+  font-size: 0.78rem; font-weight: 700; color: var(--muted); background: var(--surface-2); border-radius: 50%; font-variant-numeric: tabular-nums; }
 .pick .thm { display: inline-flex; align-items: center; gap: 4px; font-size: 0.71rem; color: var(--ink-2);
   background: var(--chip-bg); border-radius: 999px; padding: 3px 9px; width: fit-content; }
 .pick .nm { font-weight: 700; font-size: 0.98rem; }
@@ -400,6 +401,20 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 0.86rem; min-widt
 .liq-auto { margin-top: 10px; padding-top: 9px; border-top: 1px dashed var(--grid); font-size: 0.78rem; color: var(--muted); line-height: 1.5; }
 .liq-auto b { font-weight: 700; }
 .liq-auto .ttl { color: var(--ink-2); font-weight: 600; }
+/* 유동성 근거·지표 접기 */
+.liq-more { width: 100%; }
+.liq-more > summary { cursor: pointer; font-size: 0.8rem; font-weight: 600; color: var(--accent); list-style: none; padding: 4px 0; user-select: none; }
+.liq-more > summary::-webkit-details-marker { display: none; }
+.liq-more > summary::before { content: "▸ "; }
+.liq-more[open] > summary::before { content: "▾ "; }
+.liq-more-body { padding-top: 10px; }
+.liq-dgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 620px) { .liq-dgrid { grid-template-columns: 1fr; } }
+.liq-dcol h4 { font-size: 0.82rem; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.01em; }
+.liq-dcol .liq-drivers { margin: 0; }
+.liq-footbits { margin-top: 14px; padding-top: 11px; border-top: 1px solid var(--grid); display: flex; flex-direction: column; gap: 6px; }
+.liq-footbits .nc { color: var(--muted); font-size: 0.78rem; line-height: 1.5; }
+.liq-footbits a { color: var(--muted); }
 
 /* ── 주요 지수 기술적 분석 ── */
 .idx { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 22px 24px; margin-bottom: 26px; box-shadow: var(--shadow-sm); }
@@ -467,7 +482,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
 <body>
 <header class="topbar">
   <div class="topbar-in">
-    <div class="brand"><span class="fl">🔥</span> 주식 추천</div>
+    <div class="brand">주식 추천</div>
     <div class="top-actions">
       <span class="gen-date" id="genDate"></span>
       <button class="icon-btn" id="themeBtn" type="button" title="라이트·다크 전환" aria-label="테마 전환">🌓</button>
@@ -494,24 +509,23 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
 
   <div class="idx" id="idxBox" style="display:none">
     <div class="idx-head">
-      <h2>📈 주요 지수 기술적 분석</h2>
+      <h2>주요 지수</h2>
       <span class="idx-as" id="idxAs"></span>
     </div>
-    <div class="idx-note" id="idxNote"></div>
     <div class="idx-grid" id="idxGrid"></div>
   </div>
 
   <section class="picks" id="picksBox" style="display:none">
     <div class="picks-head">
       <h2>오늘의 Top Picks</h2>
-      <span class="crit">안전성(우량·저리스크·저평가)과 수익성(상승여력)을 우선하고 시장 국면(유동성·지수 로테이션)을 반영한 최우선 종목</span>
+      <span class="crit">안전성과 수익성을 우선한 최우선 종목</span>
     </div>
     <div class="picks-grid" id="picksGrid"></div>
   </section>
 
   <section class="roster" id="rosterBox" style="display:none">
     <div class="roster-head">
-      <div class="roster-title"><h2>📌 종목 변경</h2><span class="crit" id="rosterWhen"></span></div>
+      <div class="roster-title"><h2>종목 변경</h2><span class="crit" id="rosterWhen"></span></div>
       <select class="roster-date" id="rosterDate" aria-label="변경 날짜 선택"></select>
     </div>
     <div class="roster-body" id="rosterBody"></div>
@@ -521,8 +535,8 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     <div class="menu-row">
       <span class="menu-lbl">국가</span>
       <div class="seg" id="countrySeg">
-        <button data-c="korea" class="on" type="button">🇰🇷 한국</button>
-        <button data-c="us" type="button">🇺🇸 미국</button>
+        <button data-c="korea" class="on" type="button">한국</button>
+        <button data-c="us" type="button">미국</button>
       </div>
     </div>
     <div class="menu-row">
@@ -639,10 +653,8 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   (function () {
     var el = document.getElementById("updStatus");
     if (!el) return;
-    var liqD = (window.LIQUIDITY_DATA && window.LIQUIDITY_DATA.asOf) || "";
-    var base = "데이터 기준 분석 " + D.generatedAt + (liqD ? " · 유동성 " + liqD : "");
     function show(dot, txt, link) {
-      el.innerHTML = '<span class="us-dot ' + dot + '"></span><span>' + txt + (link || "") + " · " + esc(base) + "</span>";
+      el.innerHTML = '<span class="us-dot ' + dot + '"></span><span>' + txt + (link || "") + "</span>";
       el.hidden = false;
     }
     show("us-gray", "상태 확인 중…");   // 기본(조회 전/실패 시 유지)
@@ -923,14 +935,12 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     function tf(lbl, d) {
       if (!d) return "";
       var c = TA_SIG_COL[d.signal] || "var(--muted)";
-      var tc = d.trend === "상승" ? "var(--up)" : (d.trend === "하락" ? "var(--down)" : "var(--muted)");
       var tip = (d.read || "") + ((d.metrics && d.metrics.length)
         ? " | " + d.metrics.map(function (m) { return m[0] + " " + m[1]; }).join(" · ") : "");
       return '<span class="tas-tf" title="' + esc(tip) + '" data-basis="' + esc(tip) + '">' + lbl +
-        ' <span style="color:' + tc + '">' + (TA_TREND_MK[d.trend] || "") + "</span> " +
-        '<b style="color:' + c + '">' + esc(d.signal || "–") + "</b></span>";
+        ' <b style="color:' + c + '">' + esc(d.signal || "–") + "</b></span>";
     }
-    return '<div class="ta-split"><span class="tas-lbl">📈 기술분석 · 단·장기</span>' +
+    return '<div class="ta-split"><span class="tas-lbl">기술</span>' +
       tf("단기", t.short) + tf("장기", t.long) + "</div>";
   }
 
@@ -970,10 +980,10 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     var themeBadge = "";
     if (showTheme) {
       var thm = themeMeta(s.theme);
-      themeBadge = '<span class="badge">' + (thm.emoji ? esc(thm.emoji) + " " : "") + esc(thm.label) + "</span>";
+      themeBadge = '<span class="badge">' + esc(thm.label) + "</span>";
     }
     var warnBadge = (e.upside != null && e.upside <= 0)
-      ? '<span class="warn-badge">🎯 목표가 도달</span>' : "";
+      ? '<span class="warn-badge">목표가 도달</span>' : "";
     var unvBadge = (s.priceUnverified && !e.live)
       ? '<span class="warn-badge" title="최근 시세를 확인하지 못해 옛 가격 기준입니다. 표시된 상승여력이 실제와 다를 수 있습니다.">⚠ 현재가 확인 필요</span>' : "";
     var newBadge = NEW_TICKERS[s.ticker] ? '<span class="new-badge">NEW</span>' : "";
@@ -988,10 +998,10 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       '<span class="badge"><span class="dot" style="background:' + tm.color + '"></span>' + tm.label + "</span></span></div>" +
       '<div class="prices">' +
         '<div class="pv"><div class="k">' + priceLabel + priceTag + '</div><div class="v">' + fmtPrice(e.price, country) + "</div></div>" +
-        '<div class="pv"><div class="k">목표가 (컨센서스)</div><div class="v">' + fmtPrice(s.targetPrice, country) + "</div></div>" +
+        '<div class="pv"><div class="k">목표가</div><div class="v">' + fmtPrice(s.targetPrice, country) + "</div></div>" +
         (s.aiTarget != null
-          ? '<div class="pv" title="' + esc(s.aiBasis || "") + '" data-basis="' + esc(s.aiBasis || "") + '" style="cursor:help"><div class="k">🤖 AI 적정가</div><div class="v">' + fmtPrice(s.aiTarget, country) + "</div></div>"
-          : '<div class="pv" title="' + esc(aiPendingText(s)) + '" data-basis="' + esc(aiPendingText(s)) + '" style="cursor:help"><div class="k">🤖 AI 적정가</div><div class="v" style="color:var(--muted);font-weight:500">추정중</div></div>') +
+          ? '<div class="pv" title="' + esc(s.aiBasis || "") + '" data-basis="' + esc(s.aiBasis || "") + '" style="cursor:help"><div class="k">AI 적정가</div><div class="v">' + fmtPrice(s.aiTarget, country) + "</div></div>"
+          : '<div class="pv" title="' + esc(aiPendingText(s)) + '" data-basis="' + esc(aiPendingText(s)) + '" style="cursor:help"><div class="k">AI 적정가</div><div class="v" style="color:var(--muted);font-weight:500">추정중</div></div>') +
         '<div class="pv"><div class="k">배당수익률</div><div class="v">' + (s.dividendYield == null ? "–" : Number(s.dividendYield).toFixed(1) + "%") + "</div></div>" +
       "</div>" +
       '<div class="meter-row"><div class="meter"><i style="width:' + meterW + '%"></i></div>' +
@@ -1003,7 +1013,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
         '<div class="thesis">' + esc(s.thesis) + "</div>" +
         (risks ? '<div class="risks"><b>리스크</b> — ' + risks + "</div>" : "") +
       "</div></details>" +
-      '<div class="links"><a href="' + esc(s.chartUrl) + '" target="_blank" rel="noopener">📊 차트 보기</a>' +
+      '<div class="links"><a href="' + esc(s.chartUrl) + '" target="_blank" rel="noopener">차트 보기</a>' +
       '<span class="src">' + srcs + "</span></div>" +
       "</article>";
   }
@@ -1011,8 +1021,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   function renderThemeChips() {
     document.getElementById("themeChips").innerHTML = (D.themes || []).map(function (t) {
       return '<button class="chip' + (t.key === state.theme ? " on" : "") +
-        '" data-theme="' + esc(t.key) + '" type="button">' +
-        (t.emoji ? esc(t.emoji) + " " : "") + esc(t.label) + "</button>";
+        '" data-theme="' + esc(t.key) + '" type="button">' + esc(t.label) + "</button>";
     }).join("");
   }
 
@@ -1099,9 +1108,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     document.getElementById("rosterWhen").textContent = entry.prevDate + " → " + entry.date + " 기준";
 
     function item(s, cls) {
-      var flag = s.c === "us" ? "🇺🇸" : "🇰🇷";
-      return '<span class="roster-item ' + cls + '"><span class="rt-nm">' + esc(s.n) + "</span>" +
-        '<span class="rt-meta">' + flag + "</span></span>";
+      return '<span class="roster-item ' + cls + '"><span class="rt-nm">' + esc(s.n) + "</span></span>";
     }
     function line(list, cls, lead) {
       if (!list.length) return "";
@@ -1112,9 +1119,8 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       var added = entry.added.filter(function (s) { return s.th === key; });
       var removed = entry.removed.filter(function (s) { return s.th === key; });
       if (!added.length && !removed.length) return "";
-      return '<div class="roster-theme"><div class="rth-head">' +
-        (emoji ? esc(emoji) + " " : "") + esc(label) +
-        '<span class="rth-cnt">🟢' + added.length + " 🔴" + removed.length + "</span></div>" +
+      return '<div class="roster-theme"><div class="rth-head">' + esc(label) +
+        '<span class="rth-cnt">편입 ' + added.length + " · 제외 " + removed.length + "</span></div>" +
         line(added, "in", "편입") + line(removed, "out", "제외") + "</div>";
     }
 
@@ -1148,8 +1154,8 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     document.getElementById("picksGrid").innerHTML = picks.map(function (s, i) {
       var thm = themeMeta(s.theme);
       var e = effective(s);   // 가격·상승여력은 카드와 동일하게 실시간 우선
-      return '<div class="pick" data-ticker="' + esc(s.ticker) + '" data-theme="' + esc(s.theme) + '"><span class="rank">' + ["🥇", "🥈", "🥉"][i] + "</span>" +
-        '<span class="thm">' + (thm.emoji ? esc(thm.emoji) + " " : "") + esc(thm.label) + " · Tier 1</span>" +
+      return '<div class="pick" data-ticker="' + esc(s.ticker) + '" data-theme="' + esc(s.theme) + '"><span class="rank">' + (i + 1) + "</span>" +
+        '<span class="thm">' + esc(thm.label) + " · Tier 1</span>" +
         '<div class="nm">' + esc(s.name) + '<span class="tk">' + esc(s.ticker) + "</span></div>" +
         '<div class="up-big">' + fmtPct(e.upside) + "</div>" +
         '<div class="sub">' + fmtPrice(e.price, state.country) + " → 목표 " + fmtPrice(s.targetPrice, state.country) +
@@ -1172,13 +1178,13 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
           (s.priceUnverified ? ' <span class="stale" title="현재가 확인 필요 — 옛 가격 기준">⚠</span>' : "");
       return "<tr>" +
         '<td><span class="nm">' + esc(s.name) + '</span><br><span class="tk">' + esc(s.ticker) + " · " + esc(s.market) + "</span></td>" +
-        (showTheme ? "<td>" + (thm.emoji ? esc(thm.emoji) + " " : "") + esc(thm.label) + "</td>" : "") +
+        (showTheme ? "<td>" + esc(thm.label) + "</td>" : "") +
         '<td><span class="mini-dot" style="background:' + tm.color + '"></span>' + s.tier + "</td>" +
         '<td class="num">' + fmtPrice(e.price, state.country) + "</td>" +
         '<td class="num">' + dateCell + "</td>" +
         '<td class="num">' + fmtPrice(s.targetPrice, state.country) + "</td>" +
         '<td class="num">' + (s.aiTarget != null
-          ? '<span title="' + esc(s.aiBasis || "") + '" data-basis="' + esc(s.aiBasis || "") + '" style="cursor:help">🤖 ' + fmtPrice(s.aiTarget, state.country) + "</span>"
+          ? '<span title="' + esc(s.aiBasis || "") + '" data-basis="' + esc(s.aiBasis || "") + '" style="cursor:help">' + fmtPrice(s.aiTarget, state.country) + "</span>"
           : '<span title="' + esc(aiPendingText(s)) + '" data-basis="' + esc(aiPendingText(s)) + '" style="cursor:help;color:var(--muted)">추정중</span>') + "</td>" +
         '<td class="num ' + upCls + '">' + fmtPct(e.upside) + "</td>" +
         (function () {
@@ -1418,7 +1424,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
 
     var tmeta = themeMeta(state.theme);
     descEl.innerHTML =
-      "<strong>" + (tmeta.emoji ? esc(tmeta.emoji) + " " : "") + esc(tmeta.label) + "</strong> — " + esc(tmeta.desc || "");
+      "<strong>" + esc(tmeta.label) + "</strong> — " + esc(tmeta.desc || "");
 
     list = (D[state.country] || []).filter(function (s) { return s.theme === state.theme; });
     if (!list.length) {
@@ -1558,21 +1564,27 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     }
     function autoLine(a) {
       if (!a) return "";
-      return '<div class="liq-auto"><span class="ttl">🤖 자동 baseline</span> · 단기 ' +
+      return '<div class="liq-auto"><span class="ttl">자동 baseline</span> · 단기 ' +
              autoChip(a.shortTerm) + " · 중기 " + autoChip(a.midTerm) + "</div>";
     }
-    // c: 표시할 게이지 소스(온디맨드 우선, 없으면 auto), a: 병기용 auto 국가객체
-    function col(flag, title, c, a) {
-      var showAuto = !!(c && a && c !== a);   // 온디맨드가 주인일 때만 auto 병기
+    // 게이지 열(항상 표시) — 국가명 + 단기/중기 게이지만. 근거·지표는 아래 접기로.
+    function col(title, c, a) {
       c = c || a;
       if (!c) return "";
-      var drivers = (c.drivers || []).map(function (d) { return "<li>" + esc(d) + "</li>"; }).join("");
-      return '<div class="liq-col"><h3>' + flag + " " + title + "</h3>" +
+      return '<div class="liq-col"><h3>' + esc(title) + "</h3>" +
              termRow("단기 1–3M", c.shortTerm) +
-             termRow("중기 6–12M", c.midTerm) +
+             termRow("중기 6–12M", c.midTerm) + "</div>";
+    }
+    // 접힘 상세 열 — 국가별 판단 근거(drivers) + 자동 baseline 병기
+    function detailCol(title, c, a) {
+      var showAuto = !!(c && a && c !== a);
+      var s = c || a;
+      if (!s) return "";
+      var drivers = (s.drivers || []).map(function (d) { return "<li>" + esc(d) + "</li>"; }).join("");
+      if (!drivers && !showAuto) return "";
+      return '<div class="liq-dcol"><h4>' + esc(title) + "</h4>" +
              (drivers ? '<ul class="liq-drivers">' + drivers + "</ul>" : "") +
-             (showAuto ? autoLine(a) : "") +
-             "</div>";
+             (showAuto ? autoLine(a) : "") + "</div>";
     }
 
     var src = hasL ? L : A;
@@ -1581,18 +1593,27 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     document.getElementById("liqHeadline").innerHTML =
       "<strong>" + esc(hasL ? L.headline : A.note) + "</strong>";
     document.getElementById("liqGrid").innerHTML =
-      col("🇺🇸", "미국", hasL ? L.us : null, A ? A.us : null) +
-      col("🇰🇷", "한국", hasL ? L.korea : null, A ? A.korea : null);
+      col("미국", hasL ? L.us : null, A ? A.us : null) +
+      col("한국", hasL ? L.korea : null, A ? A.korea : null);
+
+    // 상세(근거·지표) — 한 번의 토글로 접는다
     var srcs = hasL ? (L.sources || []).slice(0, 3).map(function (u, i) {
       return '<a href="' + esc(u) + '" target="_blank" rel="noopener">출처' + (i + 1) + "</a>";
     }).join(" ") : "";
-    var autoNote = (A && A.inputs)
-      ? '<span class="nc">🤖 자동 지표 — 10Y ' + esc(A.inputs.us10y) + "% · 커브 " + esc(A.inputs.curve) +
-        " · VIX " + esc(A.inputs.vix) + " · 원/달러 " + esc(A.inputs.usdkrw) + "</span> "
-      : "";
+    var footBits = [];
+    if (hasL && L.nextCheck) footBits.push('<span class="nc">다음 체크 — ' + esc(L.nextCheck) + "</span>");
+    if (A && A.inputs) footBits.push('<span class="nc">자동 지표 · 10Y ' + esc(A.inputs.us10y) + "% · 커브 " +
+      esc(A.inputs.curve) + " · VIX " + esc(A.inputs.vix) + " · 원/달러 " + esc(A.inputs.usdkrw) + "</span>");
+    if (srcs) footBits.push('<span class="nc">' + srcs + "</span>");
+    var detailHtml = detailCol("미국", hasL ? L.us : null, A ? A.us : null) +
+                     detailCol("한국", hasL ? L.korea : null, A ? A.korea : null);
     document.getElementById("liqFoot").innerHTML =
-      (hasL && L.nextCheck ? '<span class="nc">🔔 다음 체크 — ' + esc(L.nextCheck) + "</span> " : "") +
-      autoNote + srcs;
+      (detailHtml || footBits.length)
+        ? '<details class="liq-more"><summary>판단 근거 · 지표</summary><div class="liq-more-body">' +
+          (detailHtml ? '<div class="liq-dgrid">' + detailHtml + "</div>" : "") +
+          (footBits.length ? '<div class="liq-footbits">' + footBits.join("") + "</div>" : "") +
+          "</div></details>"
+        : "";
   }
 
   function renderIndexTA() {
@@ -1612,37 +1633,31 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     function tfBlock(label, tf) {
       if (!tf) return "";
       var sigColor = SIG_COLORS[tf.signal] || "var(--muted)";
-      var trend = TREND_MARK[tf.trend] || "";
-      var trendColor = tf.trend === "상승" ? "var(--up)" : (tf.trend === "하락" ? "var(--down)" : "var(--muted)");
       var metrics = (tf.metrics || []).map(function (m) {
         return '<div class="im-row"><span class="im-k">' + esc(m[0]) +
                '</span><span class="im-v">' + esc(m[1]) + "</span></div>";
       }).join("");
       return '<div class="ic-tf">' +
-        '<div class="ic-tf-head"><span class="ic-tf-lbl">' + label +
-          ' <span style="color:' + trendColor + '">' + trend + "</span></span>" +
+        '<div class="ic-tf-head"><span class="ic-tf-lbl">' + label + "</span>" +
           '<span class="ic-sig" style="background:' + sigColor + ';color:#fff">' + esc(tf.signal || "–") + "</span></div>" +
         (metrics ? '<div class="idx-metrics">' + metrics + "</div>" : "") +
         '<div class="ic-read">' + esc(tf.read || "") + "</div>" +
         "</div>";
     }
-    // 요약 신호 칩(항상 표시) — 단기/장기 각각 추세 화살표 + 5단계 신호 배지
+    // 요약 신호 칩(항상 표시) — 단기/장기 각각 5단계 신호 배지(색으로 방향 표현, 화살표 제거)
     function sigChip(label, tf) {
       if (!tf) return "";
       var sigColor = SIG_COLORS[tf.signal] || "var(--muted)";
-      var trend = TREND_MARK[tf.trend] || "";
-      var trendColor = tf.trend === "상승" ? "var(--up)" : (tf.trend === "하락" ? "var(--down)" : "var(--muted)");
       return '<span class="ic-sc"><span class="ic-sc-l">' + label + "</span>" +
-        '<span style="color:' + trendColor + '">' + trend + "</span>" +
         '<span class="ic-sig" style="background:' + sigColor + ';color:#fff">' + esc(tf.signal || "–") + "</span></span>";
     }
     function card(x) {
       var chDir = x.changeDir === "up" ? "up" : "down";
       var detail = tfBlock("단기 1–3M", x.short) + tfBlock("장기 6–12M+", x.long) +
         (x.chartUrl ? '<a class="ic-chart" href="' + esc(x.chartUrl) +
-          '" target="_blank" rel="noopener">📈 네이버 차트 →</a>' : "");
+          '" target="_blank" rel="noopener">네이버 차트</a>' : "");
       return '<div class="idx-card">' +
-        '<div class="ic-top"><span class="ic-nm">' + esc(x.flag || "") + " " + esc(x.name) + "</span></div>" +
+        '<div class="ic-top"><span class="ic-nm">' + esc(x.name) + "</span></div>" +
         '<div class="ic-px">' +
           '<span class="ic-lv">' + esc(x.level) + "</span>" +
           '<span class="ic-ch ' + chDir + '">' + esc(x.change) + "</span>" +
@@ -1655,7 +1670,6 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     }
 
     document.getElementById("idxAs").textContent = "기준일 " + esc(T.asOf);
-    document.getElementById("idxNote").textContent = T.note || "";
     document.getElementById("idxGrid").innerHTML = T.indices.map(card).join("");
   }
 
