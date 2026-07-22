@@ -468,6 +468,8 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 0.86rem; min-widt
 .wl-card .wl-del:hover { background: var(--down); color: #fff; }
 .wl-card .wl-msg { color: var(--muted); font-size: 0.86rem; padding: 6px 0; }
 .wl-note { color: var(--muted); font-size: 0.76rem; line-height: 1.45; }
+.wl-note b { color: var(--ink-2); font-weight: 700; }
+.links a.wl-req { font-weight: 700; }
 
 footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--grid); color: var(--muted); font-size: 0.8rem; line-height: 1.6; }
 </style>
@@ -1449,14 +1451,21 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     var chartUrl = country === "korea"
       ? "https://finance.naver.com/item/main.naver?code=" + encodeURIComponent(item.t)
       : "https://finance.yahoo.com/quote/" + encodeURIComponent(item.t);
+    // 정밀분석 요청 — GitHub 이슈(요청 큐)를 미리 채워 여는 링크. 세션이 이 요청을 풀카드로 승격.
+    var reqTitle = "관심종목 정밀분석 요청: " + (item.n || item.t) + " " + item.t + " " + (country === "us" ? "미국" : "한국");
+    var reqBody = "관심종목을 추천 편성과 동일한 정밀 분석(컨센서스 목표가·논거·밸류·배당)으로 만들어 주세요.\n\n" +
+      "- 종목명: " + (item.n || "(미입력)") + "\n- 코드: " + item.t + "\n- 시장: " + (country === "us" ? "미국(US)" : "한국(KR)") +
+      "\n\n앱의 관심종목 '정밀분석 요청' 버튼으로 생성되었습니다.";
+    var reqUrl = "https://github.com/csy870617/stock/issues/new?title=" + encodeURIComponent(reqTitle) + "&body=" + encodeURIComponent(reqBody);
     return open + head +
       '<div class="c-hero"><div class="c-hcell"><div class="c-hv">' + fmtPrice(d.price, country) + '</div>' +
         '<div class="c-hk">현재가 · ' + esc(d.date || "실시간") + "</div></div>" +
         (ta && ta.change ? '<div class="c-hcell c-r"><div class="c-hv ' + chDir + '">' + esc(ta.change) + '</div><div class="c-hk">전일대비</div></div>' : "") +
       "</div>" +
       sigBox +
-      '<div class="wl-note">실시간 시세 + 기술분석만 보여주는 라이트 카드입니다. 목표가·논거 등 정밀 분석은 포함되지 않습니다.</div>' +
-      '<div class="links"><a href="' + chartUrl + '" target="_blank" rel="noopener">차트 보기</a></div>' +
+      '<div class="wl-note">실시간 시세 + 기술분석만 보여주는 라이트 카드입니다. 목표가·논거 등 정밀 분석은 아래 <b>정밀분석 요청</b>으로 신청하면 풀카드로 승격됩니다.</div>' +
+      '<div class="links"><a href="' + chartUrl + '" target="_blank" rel="noopener">차트 보기</a>' +
+      '<a class="wl-req" href="' + reqUrl + '" target="_blank" rel="noopener">정밀분석 요청 →</a></div>' +
       "</article>";
   }
 
@@ -1495,7 +1504,10 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     // 관심종목 — 추가 폼 + 편성(에스원 등) 풀카드 + 사용자 라이트 카드(localStorage). 뷰(카드/표) 무관.
     if (state.theme === "watch") {
       var baked = list.slice().sort(function (a, b) { return numOr(effective(b).upside, -Infinity) - numOr(effective(a).upside, -Infinity); });
-      var mine = getMyWatch().filter(function (w) { return w.c === state.country; });
+      // 정밀분석 승격으로 편성(recommendations.js)에 들어온 티커는 라이트 카드에서 숨긴다(중복 방지)
+      var bakedTickers = {};
+      (D[state.country] || []).forEach(function (s) { bakedTickers[s.ticker] = 1; });
+      var mine = getMyWatch().filter(function (w) { return w.c === state.country && !bakedTickers[w.t]; });
       var wparts = watchAddForm();
       if (baked.length) wparts += '<div class="grid">' + baked.map(function (s) { return card(s, state.country); }).join("") + "</div>";
       if (mine.length) wparts += '<div class="grid wl-grid">' + mine.map(wlLightCard).join("") + "</div>";
