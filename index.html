@@ -153,6 +153,8 @@ a { color: inherit; }
 
 /* ── 시황 리드 ── */
 .market-note { font-size: 1.02rem; color: var(--ink); line-height: 1.62; margin: 6px 0 28px; letter-spacing: -0.016em; }
+.market-note .mn-p { margin: 0 0 10px; }
+.market-note .mn-p:last-child { margin-bottom: 0; }
 .upd-status { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; font-size: 0.76rem; color: var(--muted); margin: 2px 0 16px; }
 .upd-status a { color: var(--ink-2); }
 .us-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: 0 0 auto; }
@@ -174,11 +176,6 @@ a { color: inherit; }
 .tile .v.up { color: var(--up); }
 
 /* ── 성과: 기간 선택 · 주제×Tier 매트릭스 ── */
-.filterbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 0 0 18px; }
-.fb-sel { font-size: 0.8rem; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line);
-  background: var(--surface); color: var(--ink); cursor: pointer; }
-.fb-reset { font-size: 0.78rem; padding: 6px 12px; border-radius: 8px; border: 1px solid var(--line);
-  background: transparent; color: var(--accent); cursor: pointer; font-weight: 600; }
 .perf-periods { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin: 0 0 16px; }
 .perf-periods .pp-lbl { color: var(--muted); font-size: 0.76rem; font-weight: 600; margin-right: 4px; }
 .perf-periods .chip { font-size: 0.8rem; padding: 5px 12px; border-radius: 999px; border: 1px solid var(--line);
@@ -678,8 +675,16 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       .catch(function () { show("us-gray", "최근 업데이트"); });
   })();
 
-  document.getElementById("marketNote").innerHTML =
-    '<span class="mn-tag">시황</span>' + esc(D.marketNote);
+  // 시황: 문장 단위(마침표+공백)로 끊어 문단으로 나눠 읽기 쉽게 표시
+  (function () {
+    var mn = String(D.marketNote || "").trim();
+    var parts = mn.split(/\.\s+/).map(function (x) { return x.trim(); }).filter(Boolean)
+      .map(function (x) { return /[.!?]$/.test(x) ? x : x + "."; });
+    if (!parts.length) parts = [mn];
+    document.getElementById("marketNote").innerHTML = parts.map(function (p, i) {
+      return '<p class="mn-p">' + (i === 0 ? '<span class="mn-tag">시황</span> ' : "") + esc(p) + "</p>";
+    }).join("");
+  })();
   document.getElementById("disclaimer").textContent = D.disclaimer;
 
   // AI 적정가 근거 팝업 — 터치 기기에선 title 툴팁이 안 뜨므로 탭/클릭으로 표시(다시 탭하거나 바깥 탭하면 닫힘)
@@ -969,7 +974,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     else if (vMid && techBull) { text = "단기 추세는 매수 우위이나 장기 상승여력은 제한적"; cls = "vt-mix"; }
     else if (vMid && techBear) { text = "장기 상승여력 제한 + 단기 약세 — 신중"; cls = "vt-warn"; }
     else { text = "밸류·타이밍 모두 뚜렷한 우위 없음 — 관망"; cls = "vt-neutral"; }
-    return '<span class="sig-k vt-k" title="밸류(컨센서스 상승여력·장기 펀더멘털)와 타이밍(기술 추세·단기)을 함께 읽는 종합 해석입니다. 새 예측이 아니라 두 신호의 관계를 설명합니다.">밸류 × 타이밍</span>' +
+    return '<span class="sig-k vt-k" title="밸류(컨센서스 상승여력·장기 펀더멘털)와 타이밍(기술 추세·단기)을 함께 읽는 종합 해석입니다. 새 예측이 아니라 두 신호의 관계를 설명합니다.">밸류</span>' +
       '<div class="sig-body sig-txt"><span class="vt-dot ' + cls + '"></span>' + esc(text) + "</div>";
   }
 
@@ -1380,46 +1385,8 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   // (모두 캐시된 뒤엔 ensureLive 의 todo 가 비어 재귀 호출이 즉시 멈춘다 — 무한 루프 없음)
   function refreshLive() { render(); renderTopPicks(); }
 
-  // ── 필터/정렬 (카드·표 뷰) — 순수 표시 제어(데이터·주장 변경 없음) ──
-  var SIG_OPTS = [{ v: "all", l: "신호 전체" }, { v: "buy", l: "매수 신호" }, { v: "hold", l: "관망" }, { v: "sell", l: "매도 신호" }];
-  var UP_OPTS = [{ v: 0, l: "상승여력 전체" }, { v: 10, l: "상승여력 10%+" }, { v: 20, l: "상승여력 20%+" }, { v: 30, l: "상승여력 30%+" }];
-  var DIV_OPTS = [{ v: 0, l: "배당 전체" }, { v: 2, l: "배당 2%+" }, { v: 3, l: "배당 3%+" }, { v: 4, l: "배당 4%+" }];
-  var SORT_OPTS = [{ v: "default", l: "정렬: 기본" }, { v: "upside", l: "정렬: 상승여력↓" }, { v: "div", l: "정렬: 배당↓" }, { v: "conf", l: "정렬: 단기신호↓" }, { v: "name", l: "정렬: 이름" }];
-
-  function techGroup(s) { return taGroup(s); }   // 단기 기술신호 기준
-  function applyFilters(list) {
-    return list.filter(function (s) {
-      var e = effective(s);
-      if (state.fUpside > 0 && !(e.upside != null && e.upside >= state.fUpside)) return false;
-      if (state.fDiv > 0 && !(s.dividendYield != null && s.dividendYield >= state.fDiv)) return false;
-      if (state.fSignal !== "all" && techGroup(s) !== state.fSignal) return false;
-      return true;
-    });
-  }
-  function sortByKey(list) {
-    var arr = list.slice();
-    if (state.sort === "upside") arr.sort(function (a, b) { return numOr(effective(b).upside, -Infinity) - numOr(effective(a).upside, -Infinity); });
-    else if (state.sort === "div") arr.sort(function (a, b) { return numOr(b.dividendYield, -1) - numOr(a.dividendYield, -1); });
-    else if (state.sort === "conf") arr.sort(function (a, b) { return numOr(TA_RANK[stTaShortSig(b)], -9) - numOr(TA_RANK[stTaShortSig(a)], -9); });
-    else if (state.sort === "name") arr.sort(function (a, b) { return String(a.name).localeCompare(String(b.name), "ko"); });
-    else arr = sortList(arr);   // default: Tier → 상승여력
-    return arr;
-  }
-  function filterBar() {
-    function sel(attr, opts, cur) {
-      return '<select class="fb-sel" ' + attr + '>' + opts.map(function (o) {
-        return '<option value="' + o.v + '"' + (String(o.v) === String(cur) ? " selected" : "") + ">" + esc(o.l) + "</option>";
-      }).join("") + "</select>";
-    }
-    var active = state.fSignal !== "all" || state.fUpside > 0 || state.fDiv > 0 || state.sort !== "default";
-    return '<div class="filterbar">' +
-      sel("data-fsort", SORT_OPTS, state.sort) +
-      sel("data-fs", SIG_OPTS, state.fSignal) +
-      sel("data-fu", UP_OPTS, state.fUpside) +
-      sel("data-fd", DIV_OPTS, state.fDiv) +
-      (active ? '<button class="fb-reset" data-freset="1" type="button">초기화</button>' : "") +
-      "</div>";
-  }
+  // ── 정렬 (카드·표 뷰) — 기본: Tier → 상승여력. 필터/정렬 선택 UI는 제거됨. ──
+  function sortByKey(list) { return sortList(list.slice()); }
 
   function render() {
     var host = document.getElementById("cards");
@@ -1446,37 +1413,28 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       return;
     }
 
-    var fl = applyFilters(list);
-    var bar = filterBar();
+    var fl = list;
 
     if (state.view === "table") {
-      host.innerHTML = bar + (fl.length ? tableView(sortByKey(fl), false) : '<div class="empty">조건에 맞는 종목이 없습니다.</div>');
+      host.innerHTML = (fl.length ? tableView(sortByKey(fl), false) : '<div class="empty">해당 종목이 없습니다.</div>');
       ensureLive(list, refreshLive);
       fetchHistory(list, refreshLive);
       return;
     }
 
-    var html;
-    if (!fl.length) {
-      html = '<div class="empty">조건에 맞는 종목이 없습니다.</div>';
-    } else if (state.sort === "default") {
-      // 기본: Tier 그룹 유지(상승여력 내림차순)
-      html = "";
-      [1, 2, 3].forEach(function (t) {
-        var group = fl.filter(function (s) { return s.tier === t; })
-                      .sort(function (a, b) { return numOr(effective(b).upside, -Infinity) - numOr(effective(a).upside, -Infinity); });
-        if (!group.length) return;
-        var tm = tierMeta(t);
-        html += '<div class="tier-group"><div class="tier-head">' +
-                '<span class="dot" style="background:' + tm.color + '"></span>' + esc(tm.label) +
-                ' <span class="tier-n">' + group.length + "종목</span></div>" +
-                '<div class="grid">' + group.map(function (s) { return card(s, state.country); }).join("") + "</div></div>";
-      });
-    } else {
-      // 명시적 정렬: Tier 구분 없이 전체를 선택 기준으로 정렬한 평면 그리드
-      html = '<div class="grid">' + sortByKey(fl).map(function (s) { return card(s, state.country); }).join("") + "</div>";
-    }
-    host.innerHTML = bar + html;
+    // 카드 뷰 — Tier 그룹 유지(상승여력 내림차순)
+    var html = "";
+    [1, 2, 3].forEach(function (t) {
+      var group = fl.filter(function (s) { return s.tier === t; })
+                    .sort(function (a, b) { return numOr(effective(b).upside, -Infinity) - numOr(effective(a).upside, -Infinity); });
+      if (!group.length) return;
+      var tm = tierMeta(t);
+      html += '<div class="tier-group"><div class="tier-head">' +
+              '<span class="dot" style="background:' + tm.color + '"></span>' + esc(tm.label) +
+              ' <span class="tier-n">' + group.length + "종목</span></div>" +
+              '<div class="grid">' + group.map(function (s) { return card(s, state.country); }).join("") + "</div></div>";
+    });
+    host.innerHTML = html;
     ensureLive(list, refreshLive);
     fetchHistory(list, refreshLive);
   }
@@ -1501,19 +1459,10 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     render();
   });
   // 성과 기간 칩 + 필터/정렬 — #cards 는 재렌더돼도 요소 자체는 유지되므로 위임 처리
+  // 성과 기간 칩 — #cards 는 재렌더돼도 요소 자체는 유지되므로 위임 처리
   document.getElementById("cards").addEventListener("click", function (e) {
-    var b = e.target.closest("[data-perfp],[data-freset]"); if (!b) return;
-    if (b.hasAttribute("data-perfp")) state.perfPeriod = b.dataset.perfp;
-    else if (b.hasAttribute("data-freset")) { state.fSignal = "all"; state.fUpside = 0; state.fDiv = 0; state.sort = "default"; }
-    render();
-  });
-  document.getElementById("cards").addEventListener("change", function (e) {
-    var sel = e.target.closest("select"); if (!sel) return;
-    if (sel.hasAttribute("data-fsort")) state.sort = sel.value;
-    else if (sel.hasAttribute("data-fs")) state.fSignal = sel.value;
-    else if (sel.hasAttribute("data-fu")) state.fUpside = +sel.value;
-    else if (sel.hasAttribute("data-fd")) state.fDiv = +sel.value;
-    else return;
+    var b = e.target.closest("[data-perfp]"); if (!b) return;
+    state.perfPeriod = b.dataset.perfp;
     render();
   });
   // Top Pick 클릭 → 해당 주제·카드 뷰로 전환하고 그 종목 카드로 스크롤·강조
