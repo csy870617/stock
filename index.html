@@ -1131,7 +1131,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     // 최우선(Tier 1) 확신 등급 & (실시간 기준) 목표가 미도달 종목만 후보로
     // — 카드와 동일한 effective() 상승여력으로 판정해, 실시간 시세가 붙어도 표시가 어긋나지 않게 한다.
     (D[state.country] || []).forEach(function (s) {
-      if (s.tier !== 1 || seen[s.ticker]) return;
+      if (s.tier !== 1 || seen[s.ticker] || s.theme === "watch") return;   // 관심종목은 Top Picks 후보에서 제외
       var up = effective(s).upside;
       if (up == null || up <= 0) return;
       seen[s.ticker] = true; picks.push(s);
@@ -1393,18 +1393,25 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       return;
     }
 
-    // 카드 뷰 — Tier 그룹 유지(상승여력 내림차순)
-    var html = "";
-    [1, 2, 3].forEach(function (t) {
-      var group = fl.filter(function (s) { return s.tier === t; })
-                    .sort(function (a, b) { return numOr(effective(b).upside, -Infinity) - numOr(effective(a).upside, -Infinity); });
-      if (!group.length) return;
-      var tm = tierMeta(t);
-      html += '<div class="tier-group"><div class="tier-head">' +
-              '<span class="dot" style="background:' + tm.color + '"></span>' + esc(tm.label) +
-              ' <span class="tier-n">' + group.length + "종목</span></div>" +
-              '<div class="grid">' + group.map(function (s) { return card(s, state.country); }).join("") + "</div></div>";
-    });
+    var html;
+    if (state.theme === "watch") {
+      // 관심종목 — Tier 구분 없이 상승여력 내림차순 평면 그리드
+      var wl = fl.slice().sort(function (a, b) { return numOr(effective(b).upside, -Infinity) - numOr(effective(a).upside, -Infinity); });
+      html = '<div class="grid">' + wl.map(function (s) { return card(s, state.country); }).join("") + "</div>";
+    } else {
+      // 카드 뷰 — Tier 그룹 유지(상승여력 내림차순)
+      html = "";
+      [1, 2, 3].forEach(function (t) {
+        var group = fl.filter(function (s) { return s.tier === t; })
+                      .sort(function (a, b) { return numOr(effective(b).upside, -Infinity) - numOr(effective(a).upside, -Infinity); });
+        if (!group.length) return;
+        var tm = tierMeta(t);
+        html += '<div class="tier-group"><div class="tier-head">' +
+                '<span class="dot" style="background:' + tm.color + '"></span>' + esc(tm.label) +
+                ' <span class="tier-n">' + group.length + "종목</span></div>" +
+                '<div class="grid">' + group.map(function (s) { return card(s, state.country); }).join("") + "</div></div>";
+      });
+    }
     host.innerHTML = html;
     ensureLive(list, refreshLive);
     fetchHistory(list, refreshLive);

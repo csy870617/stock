@@ -230,8 +230,9 @@ function validate(D, opts) {
       if (dupCheck[k] > 1) errors.push(c + ": (" + k + ") 이 같은 주제에 " + dupCheck[k] + "번 등장");
     });
 
-    // 주제별 9종목 · Tier 3×3 구조
+    // 주제별 9종목 · Tier 3×3 구조 (관심종목 'watch' 은 사용자 편성이라 구조 규칙 면제)
     themeKeys.forEach((tk) => {
+      if (tk === "watch") return;
       const g = groups[tk] || [];
       if (g.length !== PER_GROUP) {
         errors.push(c + "/" + tk + ": 종목 수 " + g.length + " ≠ " + PER_GROUP);
