@@ -190,13 +190,9 @@ a { color: inherit; }
 .perf-matrix tr.pm-tot { border-top: 2px solid var(--grid); font-weight: 700; }
 .perf-matrix tr.pm-tot td { background: var(--chip-bg); }
 
-/* ── 선택 메뉴 패널 ── */
-.menu { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); margin-bottom: 26px; box-shadow: var(--shadow-sm); overflow: hidden; }
-.menu-row { display: flex; align-items: center; gap: 14px; padding: 13px 18px; }
-.menu-row + .menu-row { border-top: 1px solid var(--line); }
-.menu-row-theme { align-items: flex-start; }
-.menu-lbl { color: var(--muted); font-size: 0.76rem; font-weight: 600; min-width: 32px; flex-shrink: 0; }
-.menu-row-theme .menu-lbl { padding-top: 7px; }
+/* ── 컨트롤(국가·보기·주제) — 라벨·박스 없이 컨트롤만 간결하게 ── */
+.controls { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
+.ctl-row { display: flex; gap: 10px; flex-wrap: wrap; }
 
 /* ── 세그먼트 · 칩 ── */
 .seg { display: inline-flex; gap: 2px; padding: 2px; background: var(--surface-2); border-radius: 11px; }
@@ -425,27 +421,22 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 0.86rem; min-widt
 .idx .idx-head h2 { font-size: 1.18rem; font-weight: 700; letter-spacing: -0.024em; }
 .idx .idx-as { color: var(--muted); font-size: 0.78rem; }
 .idx .idx-note { color: var(--muted); font-size: 0.8rem; line-height: 1.55; margin-bottom: 16px; }
-.idx-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-@media (max-width: 720px) { .idx-grid { grid-template-columns: 1fr; } }
-.idx-card { background: var(--inset); border: 1px solid transparent; border-radius: var(--r-sm); padding: 16px 18px; display: flex; flex-direction: column; }
-.idx-card .ic-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
-.idx-card .ic-nm { font-size: 0.95rem; font-weight: 750; }
-.idx-card .ic-sig { font-size: 0.74rem; font-weight: 700; padding: 3px 9px; border-radius: 999px; white-space: nowrap; }
-.idx-card .ic-px { display: flex; align-items: baseline; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
-.idx-card .ic-lv { font-size: 1.28rem; font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
-.idx-card .ic-ch { font-size: 0.86rem; font-weight: 700; }
-.idx-card .ic-ch.up { color: var(--up); }
-.idx-card .ic-ch.down { color: var(--down); }
-.idx-card .ic-pd { color: var(--muted); font-size: 0.74rem; margin-left: auto; }
-.idx-metrics { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; }
-.idx-metrics .im-row { display: flex; justify-content: space-between; gap: 10px; font-size: 0.8rem; }
-.idx-metrics .im-k { color: var(--muted); white-space: nowrap; }
-.idx-metrics .im-v { color: var(--ink); font-weight: 600; text-align: right; }
-.idx-card .ic-tf { border-top: 1px dashed var(--grid); padding-top: 10px; margin-top: 10px; }
-.idx-card .ic-tf:first-of-type { border-top: 0; padding-top: 2px; margin-top: 6px; }
-.idx-card .ic-tf-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
-.idx-card .ic-tf-lbl { font-size: 0.8rem; font-weight: 700; color: var(--ink-2); }
-.idx-card .ic-read { font-size: 0.82rem; color: var(--ink-2); line-height: 1.55; margin-bottom: 12px; }
+/* 지수: 카드 대신 컴팩트한 한 줄 리스트로 간결화 */
+.idx-grid { display: flex; flex-direction: column; }
+.idx-row { display: flex; align-items: center; justify-content: space-between; gap: 8px 16px; flex-wrap: wrap;
+  padding: 13px 2px; border-top: 1px solid var(--grid); text-decoration: none; color: inherit; }
+.idx-row:first-child { border-top: 0; padding-top: 2px; }
+.idx-row .ir-nm { font-size: 0.98rem; font-weight: 700; letter-spacing: -0.012em; flex: 1 1 120px; min-width: 0; }
+.idx-row:hover .ir-nm { text-decoration: underline; }
+.idx-row .ir-px { display: inline-flex; align-items: baseline; gap: 8px; }
+.idx-row .ir-lv { font-size: 1.06rem; font-weight: 750; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.idx-row .ir-ch { font-size: 0.84rem; font-weight: 700; }
+.idx-row .ir-ch.up { color: var(--up); }
+.idx-row .ir-ch.down { color: var(--down); }
+.idx-row .ir-sigs { display: inline-flex; gap: 10px; flex: 0 0 auto; }
+.idx-row .ir-sig { display: inline-flex; align-items: center; gap: 5px; }
+.idx-row .ir-sl { color: var(--muted); font-size: 0.75rem; }
+.idx-row .ir-sb { font-size: 0.72rem; font-weight: 700; color: #fff; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
 /* 통합 신호 박스 — 기술(단·장기 알약) + 밸류×타이밍(해석)을 한 카드에 정렬 */
 .sig-box { display: grid; grid-template-columns: auto 1fr; gap: 9px 12px; align-items: baseline;
   background: var(--inset); border-radius: var(--r-sm); padding: 12px 14px; }
@@ -461,19 +452,6 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 0.86rem; min-widt
 .vt-dot.vt-warn { background: var(--down); }
 .vt-dot.vt-mix { background: var(--tier3); }
 .vt-dot.vt-neutral { background: var(--muted); }
-.idx-card .ic-chart { display: inline-block; margin-top: 2px; align-self: flex-start; font-size: 0.76rem; font-weight: 700; color: var(--accent); text-decoration: none; }
-.idx-card .ic-chart:hover { text-decoration: underline; }
-/* 지수 카드 요약 신호 칩(항상 표시) + '자세히' 접기 */
-.idx-card .ic-sigrow { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-bottom: 2px; }
-.idx-card .ic-sc { display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem; }
-.idx-card .ic-sc-l { color: var(--muted); font-weight: 700; }
-.idx-card .ic-more { margin-top: 10px; }
-.idx-card .ic-more > summary { cursor: pointer; font-size: 0.78rem; font-weight: 700; color: var(--accent); list-style: none; padding: 3px 0; user-select: none; }
-.idx-card .ic-more > summary::-webkit-details-marker { display: none; }
-.idx-card .ic-more > summary::before { content: "▸ "; }
-.idx-card .ic-more[open] > summary::before { content: "▾ "; }
-.idx-card .ic-more-body { padding-top: 4px; }
-.idx-card .ic-more-body .ic-tf:first-of-type { border-top: 0; padding-top: 2px; margin-top: 4px; }
 
 footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--grid); color: var(--muted); font-size: 0.8rem; line-height: 1.6; }
 </style>
@@ -530,26 +508,19 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     <div class="roster-body" id="rosterBody"></div>
   </section>
 
-  <div class="menu">
-    <div class="menu-row">
-      <span class="menu-lbl">국가</span>
+  <div class="controls">
+    <div class="ctl-row">
       <div class="seg" id="countrySeg">
         <button data-c="korea" class="on" type="button">한국</button>
         <button data-c="us" type="button">미국</button>
       </div>
-    </div>
-    <div class="menu-row">
-      <span class="menu-lbl">보기</span>
       <div class="seg" id="viewSeg">
         <button data-v="cards" class="on" type="button">카드</button>
         <button data-v="table" type="button">표</button>
         <button data-v="perf" type="button">성과</button>
       </div>
     </div>
-    <div class="menu-row menu-row-theme">
-      <span class="menu-lbl">주제</span>
-      <div class="chips" id="themeChips"></div>
-    </div>
+    <div class="chips" id="themeChips"></div>
   </div>
 
   <div class="theme-desc" id="themeDesc"></div>
@@ -1585,55 +1556,35 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     if (!T || !Array.isArray(T.indices) || !T.indices.length) { box.style.display = "none"; return; }
     box.style.display = "";
 
-    // 신호별 색상: 매수 계열 → 초록, 중립 → 주황, 매도 계열 → 빨강
     var SIG_COLORS = {
       "적극매수": "var(--up)", "매수": "var(--tier2)", "중립": "var(--tier3)",
       "매도": "#eb6834", "적극매도": "var(--down)"
     };
-    var TREND_MARK = { "상승": "▲", "횡보": "▬", "하락": "▼" };
-
-    // 단기/장기 한 시계열 블록
-    function tfBlock(label, tf) {
+    // 단기/장기 신호 알약 — 세부 지표는 hover 툴팁으로만 제공(화면은 신호만 간결히)
+    function sigPill(lbl, tf) {
       if (!tf) return "";
-      var sigColor = SIG_COLORS[tf.signal] || "var(--muted)";
-      var metrics = (tf.metrics || []).map(function (m) {
-        return '<div class="im-row"><span class="im-k">' + esc(m[0]) +
-               '</span><span class="im-v">' + esc(m[1]) + "</span></div>";
-      }).join("");
-      return '<div class="ic-tf">' +
-        '<div class="ic-tf-head"><span class="ic-tf-lbl">' + label + "</span>" +
-          '<span class="ic-sig" style="background:' + sigColor + ';color:#fff">' + esc(tf.signal || "–") + "</span></div>" +
-        (metrics ? '<div class="idx-metrics">' + metrics + "</div>" : "") +
-        '<div class="ic-read">' + esc(tf.read || "") + "</div>" +
-        "</div>";
+      var c = SIG_COLORS[tf.signal] || "var(--muted)";
+      var tip = (tf.read || "") + ((tf.metrics && tf.metrics.length)
+        ? " | " + tf.metrics.map(function (m) { return m[0] + " " + m[1]; }).join(" · ") : "");
+      return '<span class="ir-sig" title="' + esc(tip) + '" data-basis="' + esc(tip) + '">' +
+        '<span class="ir-sl">' + lbl + "</span>" +
+        '<span class="ir-sb" style="background:' + c + '">' + esc(tf.signal || "–") + "</span></span>";
     }
-    // 요약 신호 칩(항상 표시) — 단기/장기 각각 5단계 신호 배지(색으로 방향 표현, 화살표 제거)
-    function sigChip(label, tf) {
-      if (!tf) return "";
-      var sigColor = SIG_COLORS[tf.signal] || "var(--muted)";
-      return '<span class="ic-sc"><span class="ic-sc-l">' + label + "</span>" +
-        '<span class="ic-sig" style="background:' + sigColor + ';color:#fff">' + esc(tf.signal || "–") + "</span></span>";
-    }
-    function card(x) {
+    // 지수 한 줄 — 이름 · 지수값 · 등락 · 단/장 신호. 이름 클릭 시 네이버 차트로.
+    function row(x) {
       var chDir = x.changeDir === "up" ? "up" : "down";
-      var detail = tfBlock("단기 1–3M", x.short) + tfBlock("장기 6–12M+", x.long) +
-        (x.chartUrl ? '<a class="ic-chart" href="' + esc(x.chartUrl) +
-          '" target="_blank" rel="noopener">네이버 차트</a>' : "");
-      return '<div class="idx-card">' +
-        '<div class="ic-top"><span class="ic-nm">' + esc(x.name) + "</span></div>" +
-        '<div class="ic-px">' +
-          '<span class="ic-lv">' + esc(x.level) + "</span>" +
-          '<span class="ic-ch ' + chDir + '">' + esc(x.change) + "</span>" +
-          (x.period ? '<span class="ic-pd">' + esc(x.period) + "</span>" : "") +
-        "</div>" +
-        '<div class="ic-sigrow">' + sigChip("단기", x.short) + sigChip("장기", x.long) + "</div>" +
-        (detail ? '<details class="ic-more"><summary>기술 지표 자세히</summary>' +
-          '<div class="ic-more-body">' + detail + "</div></details>" : "") +
-        "</div>";
+      var inner =
+        '<span class="ir-nm">' + esc(x.name) + "</span>" +
+        '<span class="ir-px"><span class="ir-lv">' + esc(x.level) + "</span>" +
+        '<span class="ir-ch ' + chDir + '">' + esc(x.change) + "</span></span>" +
+        '<span class="ir-sigs">' + sigPill("단기", x.short) + sigPill("장기", x.long) + "</span>";
+      return x.chartUrl
+        ? '<a class="idx-row" href="' + esc(x.chartUrl) + '" target="_blank" rel="noopener">' + inner + "</a>"
+        : '<div class="idx-row">' + inner + "</div>";
     }
 
     document.getElementById("idxAs").textContent = "기준일 " + esc(T.asOf);
-    document.getElementById("idxGrid").innerHTML = T.indices.map(card).join("");
+    document.getElementById("idxGrid").innerHTML = T.indices.map(row).join("");
   }
 
   renderLiquidity();
