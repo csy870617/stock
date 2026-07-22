@@ -262,4 +262,6 @@ function analyzeTimeframes(rows, opts) {
   };
 }
 
-module.exports = { sma, ema, rsi, rsiState, macd, stochastic, cci, williamsR, adx, momentum, chgN, fmtNum, levels, toWeekly, computeSuite, analyzeTimeframes };
+var _LIB_TA = { sma, ema, rsi, rsiState, macd, stochastic, cci, williamsR, adx, momentum, chgN, fmtNum, levels, toWeekly, computeSuite, analyzeTimeframes };
+if (typeof module !== "undefined" && module.exports) module.exports = _LIB_TA;   // Node (update 스크립트)
+if (typeof window !== "undefined") window.LIB_TA = _LIB_TA;                       // 브라우저(관심종목 라이트 분석)
