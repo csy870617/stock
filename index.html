@@ -453,16 +453,21 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 0.86rem; min-widt
 .vt-dot.vt-mix { background: var(--tier3); }
 .vt-dot.vt-neutral { background: var(--muted); }
 
-/* 관심종목 추가 폼 + 라이트 카드 */
-.wl-add { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 8px; }
-.wl-in { font-size: 0.9rem; padding: 9px 12px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+/* 관심종목 검색 추가 + 라이트 카드 */
+.wl-add { margin: 0 0 8px; }
+.wl-search { position: relative; max-width: 460px; }
+.wl-in { width: 100%; font-size: 0.92rem; padding: 11px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); box-shadow: var(--shadow-sm); }
 .wl-in:focus { outline: none; border-color: var(--accent); }
-.wl-name { flex: 1 1 130px; min-width: 0; }
-.wl-code { flex: 1 1 170px; min-width: 0; }
-.wl-mkt { flex: 0 0 auto; cursor: pointer; }
-.wl-btn { flex: 0 0 auto; font-size: 0.9rem; font-weight: 700; padding: 9px 18px; border-radius: 10px; border: 0; background: var(--accent); color: #fff; cursor: pointer; transition: transform .12s; }
-.wl-btn:active { transform: scale(0.97); }
-.wl-hint { color: var(--muted); font-size: 0.78rem; line-height: 1.5; margin: 0 0 18px; }
+.wl-sug { position: absolute; z-index: 30; left: 0; right: 0; top: calc(100% + 6px); background: var(--surface); border: 1px solid var(--line);
+  border-radius: 12px; box-shadow: var(--shadow-lg); overflow: hidden; max-height: 340px; overflow-y: auto; }
+.wl-sug-i { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; width: 100%; text-align: left;
+  border: 0; background: transparent; cursor: pointer; padding: 10px 14px; font-size: 0.9rem; color: var(--ink); }
+.wl-sug-i + .wl-sug-i { border-top: 1px solid var(--grid); }
+.wl-sug-i:hover { background: var(--surface-2); }
+.wl-sug-n { font-weight: 600; }
+.wl-sug-n b { color: var(--accent); }
+.wl-sug-t { color: var(--muted); font-size: 0.78rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.wl-hint { color: var(--muted); font-size: 0.78rem; line-height: 1.5; margin: 10px 0 18px; }
 .wl-grid { margin-top: 4px; }
 .wl-card .wl-del { border: 0; background: var(--surface-2); color: var(--muted); width: 24px; height: 24px; border-radius: 50%; cursor: pointer; font-size: 0.78rem; line-height: 1; display: grid; place-items: center; padding: 0; }
 .wl-card .wl-del:hover { background: var(--down); color: #fff; }
@@ -559,6 +564,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
 <script src="data/recommendations.js"></script>
 <script src="data/quotes.js"></script>
 <script src="data/history.js"></script>
+<script src="data/tickers.js"></script>
 <script src="scripts/lib-ta.js"></script>
 <script>
 (function () {
@@ -1469,15 +1475,62 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       "</article>";
   }
 
-  // 관심종목 추가 입력 폼
+  // 관심종목 추가 — 이름/코드 검색 자동완성
   function watchAddForm() {
-    return '<form class="wl-add" id="wlAdd">' +
-      '<input class="wl-in wl-name" id="wlName" placeholder="종목명 (선택)" autocomplete="off" maxlength="24">' +
-      '<input class="wl-in wl-code" id="wlCode" placeholder="코드 (예: 005930 · AAPL)" autocomplete="off" maxlength="10" required>' +
-      '<select class="wl-in wl-mkt" id="wlMkt"><option value="korea">한국</option><option value="us">미국</option></select>' +
-      '<button class="wl-btn" type="submit">추가</button>' +
+    return '<form class="wl-add" id="wlAdd" autocomplete="off">' +
+      '<div class="wl-search">' +
+        '<input class="wl-in wl-q" id="wlQ" placeholder="종목명 또는 코드로 검색 (예: 삼성전자 · 005930 · Apple)" autocomplete="off" maxlength="30">' +
+        '<div class="wl-sug" id="wlSug" hidden></div>' +
+      "</div>" +
       "</form>" +
-      '<div class="wl-hint">이 기기 브라우저에만 저장되는 개인 관심목록입니다. 추가하면 실시간 시세와 단·장기 기술분석이 표시됩니다(목표가·논거 등 정밀 분석은 미포함).</div>';
+      '<div class="wl-hint">종목명·코드로 검색해 추가하세요. 이 기기 브라우저에만 저장되며, 실시간 시세와 단·장기 기술분석이 표시됩니다(목표가·논거 등 정밀 분석은 카드의 ‘정밀분석 요청’으로).</div>';
+  }
+
+  // 사전(TICKER_DICT)에서 이름/코드로 후보 검색 (+ 미등록 코드는 직접추가 후보)
+  function wlSuggest(q) {
+    q = (q || "").trim();
+    if (!q) return [];
+    var ql = q.toLowerCase(), dict = window.TICKER_DICT || [];
+    var res = dict.filter(function (e) { return e.n.toLowerCase().indexOf(ql) >= 0 || e.t.toLowerCase().indexOf(ql) >= 0; });
+    res.sort(function (a, b) {
+      var ap = a.n.toLowerCase().indexOf(ql) === 0 || a.t.toLowerCase().indexOf(ql) === 0 ? 0 : 1;
+      var bp = b.n.toLowerCase().indexOf(ql) === 0 || b.t.toLowerCase().indexOf(ql) === 0 ? 0 : 1;
+      return ap - bp || a.n.length - b.n.length;
+    });
+    res = res.slice(0, 8);
+    // 사전에 없는 코드 직접 추가(한국 6자리 / 미국 티커)
+    var up = q.toUpperCase(), isKr = /^\d{6}$/.test(q), isUs = /^[A-Z][A-Z0-9.\-]{0,6}$/.test(up);
+    if ((isKr || isUs) && !res.some(function (e) { return e.t === (isKr ? q : up) && e.c === (isKr ? "korea" : "us"); })) {
+      res.push({ n: "직접 추가", t: isKr ? q : up, c: isKr ? "korea" : "us", raw: true });
+    }
+    return res;
+  }
+  function renderWlSug(items) {
+    var box = document.getElementById("wlSug");
+    if (!box) return;
+    if (!items.length) { box.hidden = true; box.innerHTML = ""; return; }
+    box.innerHTML = items.map(function (e) {
+      return '<button type="button" class="wl-sug-i" data-add="' + esc(e.c + "|" + e.t + "|" + (e.raw ? "" : e.n)) + '">' +
+        '<span class="wl-sug-n">' + esc(e.n) + (e.raw ? " <b>" + esc(e.t) + "</b>" : "") + "</span>" +
+        '<span class="wl-sug-t">' + esc(e.raw ? "" : e.t) + " · " + (e.c === "us" ? "US" : "KR") + "</span></button>";
+    }).join("");
+    box.hidden = false;
+  }
+  // 관심종목 편입 (중복·가드 확인 후 저장 → 재렌더)
+  function wlAddItem(t, n, c) {
+    t = (t || "").trim(); if (!t) return;
+    if ((D[c] || []).some(function (s) { return s.ticker === t; })) { alert("이미 추천·관심 편성에 있는 종목입니다."); return; }
+    var arr = getMyWatch();
+    if (arr.some(function (w) { return w.c === c && w.t === t; })) { alert("이미 추가된 관심종목입니다."); return; }
+    arr.push({ t: t, n: n || "", c: c }); saveMyWatch(arr);
+    state.theme = "watch";
+    if (state.country !== c) {
+      state.country = c;
+      document.getElementById("countrySeg").querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x.dataset.c === c); });
+      renderTopPicks();
+    }
+    renderThemeChips();
+    render();
   }
 
   function render() {
@@ -1573,8 +1626,14 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     this.querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x === b); });
     render();
   });
-  // #cards 위임 — 성과 기간 칩 + 관심종목 제거(✕)
+  // #cards 위임 — 성과 기간 칩 + 관심종목 제거(✕) + 검색 후보 선택(추가)
   document.getElementById("cards").addEventListener("click", function (e) {
+    var add = e.target.closest("[data-add]");
+    if (add) {
+      var a = add.getAttribute("data-add").split("|");   // "country|ticker|name"
+      wlAddItem(a[1], a.slice(2).join("|"), a[0]);
+      return;
+    }
     var del = e.target.closest("[data-wl]");
     if (del) {
       var p = del.getAttribute("data-wl").split("|");   // "country|ticker"
@@ -1586,29 +1645,20 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     state.perfPeriod = b.dataset.perfp;
     render();
   });
-  // 관심종목 추가 폼 제출(위임)
+  // 검색 입력 → 자동완성 후보 갱신
+  document.getElementById("cards").addEventListener("input", function (e) {
+    if (e.target && e.target.id === "wlQ") renderWlSug(wlSuggest(e.target.value));
+  });
+  // Enter → 첫 후보 추가
   document.getElementById("cards").addEventListener("submit", function (e) {
     var f = e.target.closest("#wlAdd"); if (!f) return;
     e.preventDefault();
-    var code = (document.getElementById("wlCode").value || "").trim().toUpperCase();
-    var name = (document.getElementById("wlName").value || "").trim();
-    var mkt = document.getElementById("wlMkt").value === "us" ? "us" : "korea";
-    if (!code) return;
-    var ok = mkt === "korea" ? /^\d{6}$/.test(code) : /^[A-Z][A-Z0-9.\-]{0,6}$/.test(code);
-    if (!ok) { alert("코드 형식을 확인해 주세요 — 한국: 6자리 숫자(예 005930), 미국: 알파벳 티커(예 AAPL)."); return; }
-    if ((D[mkt] || []).some(function (s) { return s.ticker === code; })) { alert("이미 추천·관심 편성에 있는 종목입니다."); return; }
-    var arr = getMyWatch();
-    if (arr.some(function (w) { return w.c === mkt && w.t === code; })) { alert("이미 추가된 관심종목입니다."); return; }
-    arr.push({ t: code, n: name, c: mkt });
-    saveMyWatch(arr);
-    state.theme = "watch";
-    if (state.country !== mkt) {
-      state.country = mkt;
-      document.getElementById("countrySeg").querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x.dataset.c === mkt); });
-      renderTopPicks();
-    }
-    renderThemeChips();
-    render();
+    var sug = wlSuggest((document.getElementById("wlQ") || {}).value || "");
+    if (sug.length) wlAddItem(sug[0].t, sug[0].raw ? "" : sug[0].n, sug[0].c);
+  });
+  // 바깥 클릭 시 자동완성 닫기
+  document.addEventListener("click", function (e) {
+    if (!e.target.closest(".wl-search")) { var box = document.getElementById("wlSug"); if (box) { box.hidden = true; } }
   });
   // Top Pick 클릭 → 해당 주제·카드 뷰로 전환하고 그 종목 카드로 스크롤·강조
   document.getElementById("picksGrid").addEventListener("click", function (e) {
