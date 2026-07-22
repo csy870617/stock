@@ -475,6 +475,9 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 0.86rem; min-widt
 .wl-note { color: var(--muted); font-size: 0.76rem; line-height: 1.45; }
 .wl-note b { color: var(--ink-2); font-weight: 700; }
 .links a.wl-req { font-weight: 700; }
+.wl-reqd { display: inline-flex; align-items: center; font-size: 0.78rem; font-weight: 700; padding: 5px 12px; border-radius: 999px;
+  background: color-mix(in srgb, var(--tier3) 16%, transparent); color: var(--tier3); width: fit-content; }
+.wl-reqd.done { background: color-mix(in srgb, var(--up) 16%, transparent); color: var(--up); }
 
 footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--grid); color: var(--muted); font-size: 0.8rem; line-height: 1.6; }
 </style>
@@ -1391,6 +1394,32 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   var wlCache = {};   // "country:ticker" → undefined(미조회) | "loading" | null(실패) | {price,date,ta,sym}
   function getMyWatch() { try { return JSON.parse(localStorage.getItem(MYWATCH_KEY)) || []; } catch (_e) { return []; } }
   function saveMyWatch(a) { try { localStorage.setItem(MYWATCH_KEY, JSON.stringify(a)); } catch (_e) {} }
+
+  // ── 정밀분석 요청 상태 — GitHub 이슈('관심종목 정밀분석 요청:')를 읽어 티커별 진행상태 표시 ──
+  var wlReqCache = null;   // null=미조회 | { ticker: {state:'open'|'closed', url} }
+  var wlReqInflight = false;
+  function fetchWatchReqs(onDone) {
+    if (wlReqCache || wlReqInflight) return;
+    wlReqInflight = true;
+    fetch("https://api.github.com/repos/csy870617/stock/issues?state=all&per_page=50&sort=created&direction=desc",
+      { headers: { "Accept": "application/vnd.github+json" } })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (list) {
+        wlReqInflight = false;
+        var map = {};
+        if (Array.isArray(list)) list.forEach(function (it) {
+          if (!it || (it.title || "").indexOf("관심종목 정밀분석 요청") !== 0) return;
+          var m = (it.title || "").match(/(\d{6}|[A-Z][A-Z0-9.\-]{0,6})\s+(?:한국|미국)\s*$/);
+          if (!m) return;
+          var tk = m[1], st = it.state === "closed" ? "closed" : "open";
+          // desc 정렬이라 최신이 먼저 — open 이 있으면 open 우선(진행중 표시)
+          if (!map[tk] || (st === "open" && map[tk].state !== "open")) map[tk] = { state: st, url: it.html_url };
+        });
+        wlReqCache = map;
+        if (onDone) onDone();
+      })
+      .catch(function () { wlReqInflight = false; });
+  }
   function wlSymbols(code, country) { return country === "us" ? [code] : [code + ".KS", code + ".KQ"]; }
 
   // 한 종목의 2년 일봉(종가)+실시간 시세를 시세 Worker 로 받아 브라우저에서 기술분석을 계산
@@ -1438,8 +1467,13 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     var head = '<div class="head"><h3>' + esc(title) + '<span class="tk">' + esc(item.t) + " · " + (item.c === "us" ? "US" : "KR") + "</span></h3>" +
       '<span class="badges"><span class="badge">관심종목</span>' +
       '<button class="wl-del" type="button" data-wl="' + esc(item.c + "|" + item.t) + '" title="관심종목에서 제거" aria-label="제거">✕</button></span></div>';
-    if (d === undefined || d === "loading") return open + head + '<div class="wl-msg">시세·기술분석 불러오는 중…</div></article>';
-    if (d === null) return open + head + '<div class="wl-msg">시세를 불러오지 못했습니다 — 코드·시장(한국/미국)을 확인해 주세요.</div></article>';
+    // 정밀분석 요청 진행 상태(있으면 표시)
+    var req = wlReqCache ? wlReqCache[item.t] : null;
+    var reqTag = req ? (req.state === "open"
+      ? '<div class="wl-reqd">🔧 정밀분석 요청됨 · 처리 대기</div>'
+      : '<div class="wl-reqd done">✓ 정밀분석 완료 · 반영 대기</div>') : "";
+    if (d === undefined || d === "loading") return open + head + reqTag + '<div class="wl-msg">시세·기술분석 불러오는 중…</div></article>';
+    if (d === null) return open + head + reqTag + '<div class="wl-msg">시세를 불러오지 못했습니다 — 코드·시장(한국/미국)을 확인해 주세요.</div></article>';
     var country = item.c;
     var ta = d.ta;
     var chDir = ta && ta.changeDir === "up" ? "up" : "down";
@@ -1469,9 +1503,11 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
         (ta && ta.change ? '<div class="c-hcell c-r"><div class="c-hv ' + chDir + '">' + esc(ta.change) + '</div><div class="c-hk">전일대비</div></div>' : "") +
       "</div>" +
       sigBox +
-      '<div class="wl-note">실시간 시세 + 기술분석만 보여주는 라이트 카드입니다. 목표가·논거 등 정밀 분석은 아래 <b>정밀분석 요청</b>으로 신청하면 풀카드로 승격됩니다.</div>' +
+      reqTag +
+      (req ? "" : '<div class="wl-note">실시간 시세 + 기술분석만 보여주는 라이트 카드입니다. 목표가·논거 등 정밀 분석은 아래 <b>정밀분석 요청</b>으로 신청하면 풀카드로 승격됩니다.</div>') +
       '<div class="links"><a href="' + chartUrl + '" target="_blank" rel="noopener">차트 보기</a>' +
-      '<a class="wl-req" href="' + reqUrl + '" target="_blank" rel="noopener">정밀분석 요청 →</a></div>' +
+      (req ? '<a class="wl-req" href="' + esc(req.url) + '" target="_blank" rel="noopener">요청 이슈 보기 →</a>'
+           : '<a class="wl-req" href="' + reqUrl + '" target="_blank" rel="noopener">정밀분석 요청 →</a>') + "</div>" +
       "</article>";
   }
 
@@ -1568,12 +1604,10 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       host.innerHTML = wparts;
       if (baked.length) { ensureLive(baked, refreshLive); fetchHistory(baked, refreshLive); }
       // 사용자 종목은 개별 비동기 조회 후 해당 카드만 교체(폼 포커스 유지)
-      mine.forEach(function (w) {
-        fetchWatchOne(w, function () {
-          var el = document.getElementById("wlc-" + w.c + "-" + w.t);
-          if (el) el.outerHTML = wlLightCard(w);
-        });
-      });
+      var wlRepaint = function (w) { var el = document.getElementById("wlc-" + w.c + "-" + w.t); if (el) el.outerHTML = wlLightCard(w); };
+      mine.forEach(function (w) { fetchWatchOne(w, function () { wlRepaint(w); }); });
+      // 정밀분석 요청 진행상태를 읽어 카드에 반영(요청됨/완료)
+      if (mine.length) fetchWatchReqs(function () { mine.forEach(wlRepaint); });
       return;
     }
 
