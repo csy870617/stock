@@ -322,19 +322,25 @@ a { color: inherit; }
 .badge .dot { width: 8px; height: 8px; border-radius: 50%; }
 .badges { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
 
-.prices { display: flex; gap: 20px; flex-wrap: wrap; }
-.pv .k { color: var(--muted); font-size: 0.72rem; }
-.pv .v { font-size: 1.02rem; font-weight: 700; font-variant-numeric: tabular-nums; }
-.pv .v.up { color: var(--up); }
-.pv .v.down { color: var(--down); }
+/* 카드 히어로: 현재가(좌) · 상승여력(우) */
+.c-hero { display: flex; align-items: flex-end; justify-content: space-between; gap: 14px; }
+.c-hcell { min-width: 0; }
+.c-hcell.c-r { text-align: right; }
+.c-hv { font-size: 1.52rem; font-weight: 750; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; line-height: 1.08; }
+.c-hv.up { color: var(--up); }
+.c-hv.down { color: var(--down); }
+.c-hk { color: var(--muted); font-size: 0.74rem; margin-top: 4px; }
+.c-live { color: var(--up); font-weight: 600; }
 
 .meter { height: 6px; border-radius: 4px; background: var(--meter-track); overflow: hidden; }
 .meter > i { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--meter-lo), var(--meter-hi)); }
-.meter-row { display: flex; align-items: center; gap: 10px; }
-.meter-row .meter { flex: 1; }
-.meter-row .pct { font-size: 0.85rem; font-weight: 700; font-variant-numeric: tabular-nums; min-width: 56px; text-align: right; }
-.meter-row .pct.up { color: var(--up); }
-.meter-row .pct.down { color: var(--down); }
+
+/* 카드 보조 지표: 목표가·AI적정가·배당 3열 정렬 그리드 */
+.c-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 12px 0; border-top: 1px solid var(--grid); border-bottom: 1px solid var(--grid); }
+.c-stat { min-width: 0; }
+.c-sk { color: var(--muted); font-size: 0.72rem; margin-bottom: 3px; white-space: nowrap; }
+.c-sv { font-size: 0.98rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.c-sv.c-muted { color: var(--muted); font-weight: 600; }
 
 .earn { color: var(--ink-2); font-size: 0.84rem; line-height: 1.55; border-left: 3px solid var(--grid); padding-left: 11px; }
 .thesis { font-size: 0.9rem; line-height: 1.6; }
@@ -444,10 +450,11 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 0.86rem; min-widt
 .idx-card .ic-tf-lbl { font-size: 0.8rem; font-weight: 700; color: var(--ink-2); }
 .idx-card .ic-read { font-size: 0.82rem; color: var(--ink-2); line-height: 1.55; margin-bottom: 12px; }
 /* 종목 카드 단·장기 기술분석 줄 */
-.ta-split { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 12px; margin: 7px 0 2px; font-size: 0.8rem; }
-.ta-split .tas-lbl { color: var(--muted); font-weight: 600; }
-.ta-split .tas-tf { color: var(--muted); cursor: help; white-space: nowrap; }
-.ta-split .tas-tf b { font-weight: 700; }
+.ta-split { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 2px 0; font-size: 0.8rem; }
+.ta-split .tas-lbl { color: var(--muted); font-weight: 600; margin-right: 2px; }
+.ta-split .tas-tf { display: inline-flex; align-items: center; gap: 5px; cursor: help; }
+.ta-split .tas-l { color: var(--muted); font-size: 0.78rem; }
+.ta-split .tas-sig { font-size: 0.72rem; font-weight: 700; color: #fff; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
 /* 밸류 × 타이밍 종합 해석 */
 .vt-note { font-size: 0.8rem; line-height: 1.5; padding: 7px 11px; border-radius: 8px; margin: 6px 0 2px;
   border-left: 3px solid var(--grid); background: var(--chip-bg); color: var(--ink-2); }
@@ -559,7 +566,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
 
   <footer class="site">
     <p id="disclaimer"></p>
-    <p style="margin-top:6px;">매일 오전 2시(LA) 자동 갱신 · 현재가 🟢는 실시간 시세</p>
+    <p style="margin-top:6px;">매일 오전 2시(LA) 자동 갱신 · 현재가에 '실시간' 표기가 있으면 장중 시세, 없으면 종가</p>
   </footer>
 </div>
 
@@ -937,8 +944,9 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       var c = TA_SIG_COL[d.signal] || "var(--muted)";
       var tip = (d.read || "") + ((d.metrics && d.metrics.length)
         ? " | " + d.metrics.map(function (m) { return m[0] + " " + m[1]; }).join(" · ") : "");
-      return '<span class="tas-tf" title="' + esc(tip) + '" data-basis="' + esc(tip) + '">' + lbl +
-        ' <b style="color:' + c + '">' + esc(d.signal || "–") + "</b></span>";
+      return '<span class="tas-tf" title="' + esc(tip) + '" data-basis="' + esc(tip) + '">' +
+        '<span class="tas-l">' + lbl + "</span>" +
+        '<span class="tas-sig" style="background:' + c + '">' + esc(d.signal || "–") + "</span></span>";
     }
     return '<div class="ta-split"><span class="tas-lbl">기술</span>' +
       tf("단기", t.short) + tf("장기", t.long) + "</div>";
@@ -988,24 +996,29 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       ? '<span class="warn-badge" title="최근 시세를 확인하지 못해 옛 가격 기준입니다. 표시된 상승여력이 실제와 다를 수 있습니다.">⚠ 현재가 확인 필요</span>' : "";
     var newBadge = NEW_TICKERS[s.ticker] ? '<span class="new-badge">NEW</span>' : "";
     var sd = staleDays(s);
-    var priceTag = e.live
-      ? ' <span class="live-tag" title="실시간">🟢</span>'
-      : (sd >= 7 ? ' <span class="stale">⏳ ' + sd + "일 전 종가</span>" : "");
-    var priceLabel = e.live ? "현재가" : "현재가 (" + esc(e.priceDate || D.generatedAt) + ")";
+    // 현재가 부제: 실시간이면 '실시간'(초록), 아니면 기준일 (오래되면 경과일 병기)
+    var priceSub = e.live
+      ? '현재가 · <span class="c-live">실시간</span>'
+      : "현재가 · " + esc(e.priceDate || D.generatedAt) + (sd >= 7 ? " (" + sd + "일 전)" : "");
+    var upLabel = (e.upside != null && e.upside < 0) ? "목표가 대비" : "상승여력";
+    var divVal = s.dividendYield == null ? "–" : Number(s.dividendYield).toFixed(1) + "%";
+    var aiStat = s.aiTarget != null
+      ? '<div class="c-stat" title="' + esc(s.aiBasis || "") + '" data-basis="' + esc(s.aiBasis || "") + '" style="cursor:help"><div class="c-sk">AI 적정가</div><div class="c-sv">' + fmtPrice(s.aiTarget, country) + "</div></div>"
+      : '<div class="c-stat" title="' + esc(aiPendingText(s)) + '" data-basis="' + esc(aiPendingText(s)) + '" style="cursor:help"><div class="c-sk">AI 적정가</div><div class="c-sv c-muted">추정중</div></div>';
     return '<article class="card" data-ticker="' + esc(s.ticker) + '">' +
       '<div class="head"><h3>' + esc(s.name) + '<span class="tk">' + esc(s.ticker) + " · " + esc(s.market) + "</span></h3>" +
       '<span class="badges">' + newBadge + themeBadge + warnBadge + unvBadge +
       '<span class="badge"><span class="dot" style="background:' + tm.color + '"></span>' + tm.label + "</span></span></div>" +
-      '<div class="prices">' +
-        '<div class="pv"><div class="k">' + priceLabel + priceTag + '</div><div class="v">' + fmtPrice(e.price, country) + "</div></div>" +
-        '<div class="pv"><div class="k">목표가</div><div class="v">' + fmtPrice(s.targetPrice, country) + "</div></div>" +
-        (s.aiTarget != null
-          ? '<div class="pv" title="' + esc(s.aiBasis || "") + '" data-basis="' + esc(s.aiBasis || "") + '" style="cursor:help"><div class="k">AI 적정가</div><div class="v">' + fmtPrice(s.aiTarget, country) + "</div></div>"
-          : '<div class="pv" title="' + esc(aiPendingText(s)) + '" data-basis="' + esc(aiPendingText(s)) + '" style="cursor:help"><div class="k">AI 적정가</div><div class="v" style="color:var(--muted);font-weight:500">추정중</div></div>') +
-        '<div class="pv"><div class="k">배당수익률</div><div class="v">' + (s.dividendYield == null ? "–" : Number(s.dividendYield).toFixed(1) + "%") + "</div></div>" +
+      '<div class="c-hero">' +
+        '<div class="c-hcell"><div class="c-hv">' + fmtPrice(e.price, country) + '</div><div class="c-hk">' + priceSub + "</div></div>" +
+        '<div class="c-hcell c-r"><div class="c-hv ' + upCls + '">' + fmtPct(e.upside) + '</div><div class="c-hk">' + upLabel + "</div></div>" +
       "</div>" +
-      '<div class="meter-row"><div class="meter"><i style="width:' + meterW + '%"></i></div>' +
-      '<div class="pct ' + upCls + '">' + fmtPct(e.upside) + "</div></div>" +
+      '<div class="meter"><i style="width:' + meterW + '%"></i></div>' +
+      '<div class="c-stats">' +
+        '<div class="c-stat"><div class="c-sk">목표가</div><div class="c-sv">' + fmtPrice(s.targetPrice, country) + "</div></div>" +
+        aiStat +
+        '<div class="c-stat"><div class="c-sk">배당수익률</div><div class="c-sv">' + divVal + "</div></div>" +
+      "</div>" +
       stockTaLine(s.ticker) +
       valueTimingLine(e.upside, s.ticker) +
       '<details class="card-more"><summary>분석 자세히</summary><div class="card-more-body">' +
@@ -1173,8 +1186,8 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       var thm = themeMeta(s.theme);
       var tm = tierMeta(s.tier);
       var dateCell = e.live
-        ? '<span class="live-tag" title="실시간">🟢</span>'
-        : esc(s.priceDate || "") + (sd >= 7 ? ' <span class="stale">⏳</span>' : "") +
+        ? '<span class="live-tag" title="장중 시세">실시간</span>'
+        : esc(s.priceDate || "") +
           (s.priceUnverified ? ' <span class="stale" title="현재가 확인 필요 — 옛 가격 기준">⚠</span>' : "");
       return "<tr>" +
         '<td><span class="nm">' + esc(s.name) + '</span><br><span class="tk">' + esc(s.ticker) + " · " + esc(s.market) + "</span></td>" +
