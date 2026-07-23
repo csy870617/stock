@@ -482,7 +482,7 @@ a.idx-tile:hover { background: color-mix(in srgb, var(--ink) 5%, var(--inset)); 
 .idx-tile .it-ch.up { color: var(--up); }
 .idx-tile .it-ch.down { color: var(--down); }
 .idx-tile .it-sigs { display: flex; flex-wrap: wrap; }
-.idx-tile .ta-strip { gap: 4px 14px; }
+.idx-tile .ta-strip { flex-direction: column; align-items: flex-start; gap: 5px; }   /* 지표는 단기·장기를 두 줄로 */
 /* 통합 신호 박스 — 기술(단·장기 알약) + 밸류×타이밍(해석)을 한 카드에 정렬 */
 .sig-box { display: grid; grid-template-columns: auto 1fr; gap: 9px 12px; align-items: baseline;
   background: var(--inset); border-radius: var(--r-sm); padding: 12px 14px; }
