@@ -1774,7 +1774,9 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     }
     function begin() {
       if (!dragging) return;
-      active = true; chipDragMoved = false;
+      active = true; chipDragMoved = true;               // 롱프레스/드래그가 시작되면 이 탭의 클릭 선택은 무시
+      try { wrap.setPointerCapture(pid); } catch (e) {}  // 포인터를 고정 — 손가락이 흔들려도 드래그가 풀리지 않음
+      if (ptype === "touch" && navigator.vibrate) { try { navigator.vibrate(12); } catch (e) {} }  // 진입 햅틱
       dragging.classList.add("chip-drag");
       wrap.classList.add("chips-reorder");
     }
@@ -1798,20 +1800,22 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     }
     wrap.addEventListener("pointerdown", function (e) {
       var chip = e.target.closest(".chip"); if (!chip) return;
-      dragging = chip; startX = e.clientX; startY = e.clientY; pid = e.pointerId; ptype = e.pointerType; active = false;
-      if (ptype === "touch") { lpTimer = setTimeout(begin, 360); }   // 긴터치로 진입(탭·스크롤과 구분)
+      dragging = chip; startX = e.clientX; startY = e.clientY; pid = e.pointerId; ptype = e.pointerType;
+      active = false; chipDragMoved = false;
+      if (ptype === "touch") { lpTimer = setTimeout(begin, 320); }   // 긴터치로 진입(탭과 구분)
     });
     wrap.addEventListener("pointermove", function (e) {
       if (!dragging || e.pointerId !== pid) return;
       var dx = e.clientX - startX, dy = e.clientY - startY;
       if (!active) {
         if (ptype === "touch") {
-          if (Math.abs(dx) > 8 || Math.abs(dy) > 8) { if (lpTimer) { clearTimeout(lpTimer); lpTimer = null; } dragging = null; }  // 움직이면 스크롤로 양보
+          // 칩은 touch-action:none 이라 페이지 스크롤이 시작되지 않는다 →
+          // 손가락 미세 흔들림으로 롱프레스가 풀리지 않도록 넉넉히 허용(뚜렷한 스와이프일 때만 취소).
+          if (Math.abs(dx) > 28 || Math.abs(dy) > 28) { if (lpTimer) { clearTimeout(lpTimer); lpTimer = null; } dragging = null; }
           return;
         }
         if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;             // 마우스: 임계 넘으면 드래그 시작
         begin();
-        try { wrap.setPointerCapture(pid); } catch (er) {}
       }
       if (active) { e.preventDefault(); moveOver(e.clientX, e.clientY); }
     });
