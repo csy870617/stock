@@ -390,13 +390,14 @@ a { color: inherit; }
 .tl-updel { display: flex; justify-content: flex-end; }
 .tl-del { background: transparent; border: 0; color: var(--muted); cursor: pointer; font-size: 0.9rem; line-height: 1; padding: 4px 2px 4px 8px; }
 .tl-del:hover { color: var(--down); }
-/* 표에서 인라인으로 펼친 상세 카드 */
-.tl-detail { border-top: 1px solid var(--grid); background: var(--inset); padding: 12px; }
-.tl-detail .card { box-shadow: none; border: 1px solid var(--line); }
+/* 표에서 인라인으로 펼친 상세 — 전체폭이 아니라 상세 뷰 카드 크기로(모바일=폭 맞춤, 넓은 화면=1장 크기) */
+.tl-detail { border-top: 1px solid var(--grid); background: var(--inset); padding: 12px 15px; }
+.tl-detail .card { box-shadow: var(--shadow-sm); border: 1px solid var(--line); }
 .tl-detail.flash { animation: cardflash 1.4s ease; }
 @media (min-width: 720px) {
   .tbl-list { display: grid; grid-template-columns: 1fr 1fr; align-items: start; }
   .tl-detail { grid-column: 1 / -1; }
+  .tl-detail .card { max-width: 340px; }
 }
 
 /* ── 표(성과 매트릭스 등 넓은 표) ── */
@@ -479,10 +480,8 @@ a.idx-tile:hover { background: color-mix(in srgb, var(--ink) 5%, var(--inset)); 
 .idx-tile .it-ch { font-size: 0.86rem; font-weight: 700; }
 .idx-tile .it-ch.up { color: var(--up); }
 .idx-tile .it-ch.down { color: var(--down); }
-.idx-tile .it-sigs { display: flex; flex-wrap: wrap; gap: 8px 12px; }
-.idx-tile .ir-sig { display: inline-flex; align-items: center; gap: 5px; }
-.idx-tile .ir-sl { color: var(--muted); font-size: 0.74rem; }
-.idx-tile .ir-sb { font-size: 0.7rem; font-weight: 700; color: #fff; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.idx-tile .it-sigs { display: flex; flex-wrap: wrap; }
+.idx-tile .ta-strip { gap: 4px 14px; }
 /* 통합 신호 박스 — 기술(단·장기 알약) + 밸류×타이밍(해석)을 한 카드에 정렬 */
 .sig-box { display: grid; grid-template-columns: auto 1fr; gap: 9px 12px; align-items: baseline;
   background: var(--inset); border-radius: var(--r-sm); padding: 12px 14px; }
@@ -2082,21 +2081,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     if (!T || !Array.isArray(T.indices) || !T.indices.length) { box.style.display = "none"; return; }
     box.style.display = "";
 
-    var SIG_COLORS = {
-      "적극매수": "var(--up)", "매수": "var(--tier2)", "중립": "var(--tier3)",
-      "매도": "#eb6834", "적극매도": "var(--down)"
-    };
-    // 단기/장기 신호 알약 — 세부 지표는 hover 툴팁으로만 제공(화면은 신호만 간결히)
-    function sigPill(lbl, tf) {
-      if (!tf) return "";
-      var c = SIG_COLORS[tf.signal] || "var(--muted)";
-      var tip = (tf.read || "") + ((tf.metrics && tf.metrics.length)
-        ? " | " + tf.metrics.map(function (m) { return m[0] + " " + m[1]; }).join(" · ") : "");
-      return '<span class="ir-sig" title="' + esc(tip) + '" data-basis="' + esc(tip) + '">' +
-        '<span class="ir-sl">' + lbl + "</span>" +
-        '<span class="ir-sb" style="background:' + c + '">' + esc(tf.signal || "–") + "</span></span>";
-    }
-    // 지수 타일 — 이름·기준일 / 지수값·등락 / 단·장 신호. 탭 시 네이버 차트로.
+    // 지수 타일 — 이름·기준일 / 지수값·등락 / 단·장 신호(종목과 동일한 taStrip). 탭 시 네이버 차트로.
     function tile(x) {
       var chDir = x.changeDir === "up" ? "up" : "down";
       var inner =
@@ -2104,7 +2089,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
           (x.period ? '<span class="it-pd">' + esc(x.period) + "</span>" : "") + "</div>" +
         '<div class="it-px"><span class="it-lv">' + esc(x.level) + "</span>" +
           '<span class="it-ch ' + chDir + '">' + esc(x.change) + "</span></div>" +
-        '<div class="it-sigs">' + sigPill("단기", x.short) + sigPill("장기", x.long) + "</div>";
+        '<div class="it-sigs">' + taStrip(x.short, x.long) + "</div>";
       return x.chartUrl
         ? '<a class="idx-tile" href="' + esc(x.chartUrl) + '" target="_blank" rel="noopener">' + inner + "</a>"
         : '<div class="idx-tile">' + inner + "</div>";
