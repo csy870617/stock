@@ -478,6 +478,13 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 0.86rem; min-widt
 .wl-reqd { display: inline-flex; align-items: center; font-size: 0.78rem; font-weight: 700; padding: 5px 12px; border-radius: 999px;
   background: color-mix(in srgb, var(--tier3) 16%, transparent); color: var(--tier3); width: fit-content; }
 .wl-reqd.done { background: color-mix(in srgb, var(--up) 16%, transparent); color: var(--up); }
+/* 추천 카드 → 관심종목 등록 토글 */
+.fav-btn { border: 1px solid var(--line); background: transparent; color: var(--accent); font-size: 0.82rem; font-weight: 600;
+  padding: 4px 11px; border-radius: 999px; cursor: pointer; transition: background .15s, color .15s, border-color .15s, transform .12s; }
+.fav-btn:hover { background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.fav-btn:active { transform: scale(0.96); }
+.fav-btn.on { background: var(--accent); color: #fff; border-color: var(--accent); }
+.links .src { margin-left: auto; }
 
 footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--grid); color: var(--muted); font-size: 0.8rem; line-height: 1.6; }
 </style>
@@ -1032,8 +1039,16 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       sigBox +
       analysis +
       '<div class="links"><a href="' + esc(s.chartUrl) + '" target="_blank" rel="noopener">차트 보기</a>' +
+      (s.theme !== "watch" ? favBtn(s, country) : "") +
       '<span class="src">' + srcs + "</span></div>" +
       "</article>";
+  }
+  // 추천 카드 → 관심종목 등록/해제 토글
+  function isFav(c, t) { return getMyWatch().some(function (w) { return w.c === c && w.t === t; }); }
+  function favBtn(s, country) {
+    var on = isFav(country, s.ticker);
+    return '<button class="fav-btn' + (on ? " on" : "") + '" type="button" data-fav="' +
+      esc(country + "|" + s.ticker + "|" + s.name) + '">' + (on ? "✓ 관심종목" : "+ 관심종목") + "</button>";
   }
 
   function renderThemeChips() {
@@ -1590,24 +1605,34 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
 
     list = (D[state.country] || []).filter(function (s) { return s.theme === state.theme; });
 
-    // 관심종목 — 추가 폼 + 편성(에스원 등) 풀카드 + 사용자 라이트 카드(localStorage). 뷰(카드/표) 무관.
+    // 관심종목 — 추가 폼 + (편성 watch + 등록한 추천종목) 풀카드 + 사용자 라이트 카드(localStorage).
     if (state.theme === "watch") {
-      var baked = list.slice().sort(function (a, b) { return numOr(effective(b).upside, -Infinity) - numOr(effective(a).upside, -Infinity); });
-      // 정밀분석 승격으로 편성(recommendations.js)에 들어온 티커는 라이트 카드에서 숨긴다(중복 방지)
-      var bakedTickers = {};
-      (D[state.country] || []).forEach(function (s) { bakedTickers[s.ticker] = 1; });
-      var mine = getMyWatch().filter(function (w) { return w.c === state.country && !bakedTickers[w.t]; });
+      var country = state.country;
+      var recoByTicker = {};
+      (D[country] || []).forEach(function (s) { recoByTicker[s.ticker] = s; });
+      // ① 편성 watch 종목(에스원·JYP 등)은 항상 표시
+      var fullStocks = list.slice();
+      var shown = {}; fullStocks.forEach(function (s) { shown[s.ticker] = 1; });
+      // ② 사용자가 등록한 종목: 추천 편성에 있으면 그 풀카드, 없으면 라이트 카드
+      var mine = getMyWatch().filter(function (w) { return w.c === country; });
+      var mineLight = [];
+      mine.forEach(function (w) {
+        if (shown[w.t]) return;                       // 이미 표시(편성 watch)
+        if (recoByTicker[w.t]) { fullStocks.push(recoByTicker[w.t]); shown[w.t] = 1; }  // 등록한 추천종목 → 풀카드
+        else mineLight.push(w);                        // 그 외 → 라이트 카드
+      });
+      fullStocks.sort(function (a, b) { return numOr(effective(b).upside, -Infinity) - numOr(effective(a).upside, -Infinity); });
+
       var wparts = watchAddForm();
-      if (baked.length) wparts += '<div class="grid">' + baked.map(function (s) { return card(s, state.country); }).join("") + "</div>";
-      if (mine.length) wparts += '<div class="grid wl-grid">' + mine.map(wlLightCard).join("") + "</div>";
-      else if (!baked.length) wparts += '<div class="empty">아직 추가한 관심종목이 없습니다. 위에서 코드를 입력해 추가하세요.</div>';
+      if (fullStocks.length) wparts += '<div class="grid">' + fullStocks.map(function (s) { return card(s, country); }).join("") + "</div>";
+      if (mineLight.length) wparts += '<div class="grid wl-grid">' + mineLight.map(wlLightCard).join("") + "</div>";
+      if (!fullStocks.length && !mineLight.length) wparts += '<div class="empty">아직 관심종목이 없습니다. 위에서 검색해 추가하거나, 추천 카드의 ‘+ 관심종목’으로 등록하세요.</div>';
       host.innerHTML = wparts;
-      if (baked.length) { ensureLive(baked, refreshLive); fetchHistory(baked, refreshLive); }
-      // 사용자 종목은 개별 비동기 조회 후 해당 카드만 교체(폼 포커스 유지)
+      if (fullStocks.length) { ensureLive(fullStocks, refreshLive); fetchHistory(fullStocks, refreshLive); }
+      // 라이트(비편성) 종목은 개별 비동기 조회 후 해당 카드만 교체(폼 포커스 유지)
       var wlRepaint = function (w) { var el = document.getElementById("wlc-" + w.c + "-" + w.t); if (el) el.outerHTML = wlLightCard(w); };
-      mine.forEach(function (w) { fetchWatchOne(w, function () { wlRepaint(w); }); });
-      // 정밀분석 요청 진행상태를 읽어 카드에 반영(요청됨/완료)
-      if (mine.length) fetchWatchReqs(function () { mine.forEach(wlRepaint); });
+      mineLight.forEach(function (w) { fetchWatchOne(w, function () { wlRepaint(w); }); });
+      if (mineLight.length) fetchWatchReqs(function () { mineLight.forEach(wlRepaint); });
       return;
     }
 
@@ -1660,8 +1685,21 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     this.querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x === b); });
     render();
   });
-  // #cards 위임 — 성과 기간 칩 + 관심종목 제거(✕) + 검색 후보 선택(추가)
+  // #cards 위임 — 성과 기간 칩 + 관심 등록토글 + 관심종목 제거(✕) + 검색 후보 선택(추가)
   document.getElementById("cards").addEventListener("click", function (e) {
+    var fav = e.target.closest("[data-fav]");
+    if (fav) {
+      var f = fav.getAttribute("data-fav").split("|");   // "country|ticker|name"
+      var arr = getMyWatch();
+      if (arr.some(function (w) { return w.c === f[0] && w.t === f[1]; })) {
+        arr = arr.filter(function (w) { return !(w.c === f[0] && w.t === f[1]); });
+      } else {
+        arr.push({ t: f[1], n: f.slice(2).join("|"), c: f[0] });
+      }
+      saveMyWatch(arr);
+      render();
+      return;
+    }
     var add = e.target.closest("[data-add]");
     if (add) {
       var a = add.getAttribute("data-add").split("|");   // "country|ticker|name"
