@@ -13127,7 +13127,7 @@ window.STOCK_HISTORY = [
     "c": "us",
     "th": "core",
     "tier": 1,
-    "p": 380.02,
+    "p": 381.78,
     "pd": "2026-07-23",
     "tp": 562.1
    },
@@ -13137,7 +13137,7 @@ window.STOCK_HISTORY = [
     "c": "us",
     "th": "core",
     "tier": 1,
-    "p": 349.68,
+    "p": 350.63,
     "pd": "2026-07-23",
     "tp": 395.48
    },
@@ -13147,7 +13147,7 @@ window.STOCK_HISTORY = [
     "c": "us",
     "th": "core",
     "tier": 1,
-    "p": 525.92,
+    "p": 527.91,
     "pd": "2026-07-23",
     "tp": 643.59
    },
@@ -13157,7 +13157,7 @@ window.STOCK_HISTORY = [
     "c": "us",
     "th": "core",
     "tier": 2,
-    "p": 318.366,
+    "p": 319.13,
     "pd": "2026-07-23",
     "tp": 428.71
    },
@@ -13167,7 +13167,7 @@ window.STOCK_HISTORY = [
     "c": "us",
     "th": "core",
     "tier": 2,
-    "p": 233.1,
+    "p": 233.81,
     "pd": "2026-07-23",
     "tp": 312.99
    },
@@ -13177,7 +13177,7 @@ window.STOCK_HISTORY = [
     "c": "us",
     "th": "core",
     "tier": 2,
-    "p": 920.07,
+    "p": 921.83,
     "pd": "2026-07-23",
     "tp": 1082.94
    },
@@ -13187,7 +13187,7 @@ window.STOCK_HISTORY = [
     "c": "us",
     "th": "core",
     "tier": 3,
-    "p": 488.56,
+    "p": 489.31,
     "pd": "2026-07-23",
     "tp": 520.33
    },
@@ -13197,7 +13197,7 @@ window.STOCK_HISTORY = [
     "c": "us",
     "th": "core",
     "tier": 3,
-    "p": 348.55,
+    "p": 348.03,
     "pd": "2026-07-23",
     "tp": 351.81
    },
@@ -13207,7 +13207,7 @@ window.STOCK_HISTORY = [
     "c": "us",
     "th": "growth",
     "tier": 1,
-    "p": 208.34,
+    "p": 207.91,
     "pd": "2026-07-23",
     "tp": 301.62
    },
@@ -13217,7 +13217,7 @@ window.STOCK_HISTORY = [
     "c": "us",
     "th": "growth",
     "tier": 1,
-    "p": 605,
+    "p": 607.12,
     "pd": "2026-07-23",
     "tp": 842.85
    },
@@ -13227,7 +13227,7 @@ window.STOCK_HISTORY = [
     "c": "us",
     "th": "growth",
     "tier": 1,
-    "p": 391.66,
+    "p": 390.295,
     "pd": "2026-07-23",
     "tp": 523.73
    },
@@ -13237,7 +13237,7 @@ window.STOCK_HISTORY = [
     "c": "us",
     "th": "value",
     "tier": 1,
-    "p": 417.18,
+    "p": 415.12,
     "pd": "2026-07-23",
     "tp": 520
    },
@@ -13247,7 +13247,7 @@ window.STOCK_HISTORY = [
     "c": "us",
     "th": "growth",
     "tier": 2,
-    "p": 176.15,
+    "p": 176,
     "pd": "2026-07-23",
     "tp": 190.09
    },
@@ -13257,7 +13257,7 @@ window.STOCK_HISTORY = [
     "c": "us",
     "th": "growth",
     "tier": 3,
-    "p": 121.89,
+    "p": 122.27,
     "pd": "2026-07-23",
     "tp": 182.75
    },
@@ -13267,7 +13267,7 @@ window.STOCK_HISTORY = [
     "c": "us",
     "th": "growth",
     "tier": 3,
-    "p": 69.205,
+    "p": 68.619,
     "pd": "2026-07-23",
     "tp": 108.12
    },
@@ -13277,7 +13277,7 @@ window.STOCK_HISTORY = [
     "c": "us",
     "th": "value",
     "tier": 1,
-    "p": 79.49,
+    "p": 79.815,
     "pd": "2026-07-23",
     "tp": 94.85
    },
@@ -13287,7 +13287,7 @@ window.STOCK_HISTORY = [
     "c": "us",
     "th": "value",
     "tier": 1,
-    "p": 25.015,
+    "p": 24.975,
     "pd": "2026-07-23",
     "tp": 29.15
    },
@@ -13297,7 +13297,7 @@ window.STOCK_HISTORY = [
     "c": "us",
     "th": "value",
     "tier": 2,
-    "p": 44.385,
+    "p": 43.905,
     "pd": "2026-07-23",
     "tp": 49
    },
@@ -13307,7 +13307,7 @@ window.STOCK_HISTORY = [
     "c": "us",
     "th": "value",
     "tier": 2,
-    "p": 131.88,
+    "p": 131.8,
     "pd": "2026-07-23",
     "tp": 149
    },
@@ -13327,7 +13327,7 @@ window.STOCK_HISTORY = [
     "c": "us",
     "th": "dividend",
     "tier": 1,
-    "p": 134.65,
+    "p": 134.615,
     "pd": "2026-07-23",
     "tp": 166.4
    },
@@ -13337,7 +13337,7 @@ window.STOCK_HISTORY = [
     "c": "us",
     "th": "dividend",
     "tier": 1,
-    "p": 65.285,
+    "p": 64.695,
     "pd": "2026-07-23",
     "tp": 67.91
    },
@@ -13347,7 +13347,7 @@ window.STOCK_HISTORY = [
     "c": "us",
     "th": "dividend",
     "tier": 1,
-    "p": 128.97,
+    "p": 129.19,
     "pd": "2026-07-23",
     "tp": 138.06
    },
@@ -13357,7 +13357,7 @@ window.STOCK_HISTORY = [
     "c": "us",
     "th": "dividend",
     "tier": 2,
-    "p": 107.42,
+    "p": 106.71,
     "pd": "2026-07-23",
     "tp": 114.8
    },
@@ -13367,7 +13367,7 @@ window.STOCK_HISTORY = [
     "c": "us",
     "th": "dividend",
     "tier": 3,
-    "p": 158,
+    "p": 157.79,
     "pd": "2026-07-23",
     "tp": 162.8
    },
@@ -13377,7 +13377,7 @@ window.STOCK_HISTORY = [
     "c": "us",
     "th": "dividend",
     "tier": 3,
-    "p": 81.47,
+    "p": 81.01,
     "pd": "2026-07-23",
     "tp": 85.97
    },
@@ -13387,7 +13387,7 @@ window.STOCK_HISTORY = [
     "c": "us",
     "th": "dividend",
     "tier": 3,
-    "p": 257.91,
+    "p": 258.425,
     "pd": "2026-07-23",
     "tp": 257.5
    },
@@ -13397,7 +13397,7 @@ window.STOCK_HISTORY = [
     "c": "us",
     "th": "rising",
     "tier": 1,
-    "p": 493.45,
+    "p": 492.155,
     "pd": "2026-07-23",
     "tp": 670.47
    },
@@ -13407,7 +13407,7 @@ window.STOCK_HISTORY = [
     "c": "us",
     "th": "rising",
     "tier": 1,
-    "p": 234.415,
+    "p": 234.915,
     "pd": "2026-07-23",
     "tp": 269.81
    },
@@ -13417,7 +13417,7 @@ window.STOCK_HISTORY = [
     "c": "us",
     "th": "rising",
     "tier": 1,
-    "p": 14.325,
+    "p": 14.165,
     "pd": "2026-07-23",
     "tp": 19
    },
@@ -13427,7 +13427,7 @@ window.STOCK_HISTORY = [
     "c": "us",
     "th": "rising",
     "tier": 2,
-    "p": 171.97,
+    "p": 171.31,
     "pd": "2026-07-23",
     "tp": 224.92
    },
@@ -13437,7 +13437,7 @@ window.STOCK_HISTORY = [
     "c": "us",
     "th": "rising",
     "tier": 2,
-    "p": 318.73,
+    "p": 315.085,
     "pd": "2026-07-23",
     "tp": 427
    },
@@ -13447,7 +13447,7 @@ window.STOCK_HISTORY = [
     "c": "us",
     "th": "rising",
     "tier": 2,
-    "p": 726.725,
+    "p": 724.7,
     "pd": "2026-07-23",
     "tp": 941
    },
@@ -13457,7 +13457,7 @@ window.STOCK_HISTORY = [
     "c": "us",
     "th": "rising",
     "tier": 3,
-    "p": 104.5,
+    "p": 104.52,
     "pd": "2026-07-23",
     "tp": 154
    },
@@ -13467,7 +13467,7 @@ window.STOCK_HISTORY = [
     "c": "us",
     "th": "rising",
     "tier": 3,
-    "p": 79.12,
+    "p": 80.845,
     "pd": "2026-07-23",
     "tp": 84
    },
@@ -13477,7 +13477,7 @@ window.STOCK_HISTORY = [
     "c": "us",
     "th": "rising",
     "tier": 3,
-    "p": 46.62,
+    "p": 46.66,
     "pd": "2026-07-23",
     "tp": 60
    },
@@ -13487,7 +13487,7 @@ window.STOCK_HISTORY = [
     "c": "us",
     "th": "value",
     "tier": 2,
-    "p": 43.025,
+    "p": 42.945,
     "pd": "2026-07-23",
     "tp": 77.05
    },
@@ -13497,7 +13497,7 @@ window.STOCK_HISTORY = [
     "c": "us",
     "th": "core",
     "tier": 3,
-    "p": 1181.56,
+    "p": 1181,
     "pd": "2026-07-23",
     "tp": 1236.52
    },
@@ -13507,7 +13507,7 @@ window.STOCK_HISTORY = [
     "c": "us",
     "th": "dividend",
     "tier": 2,
-    "p": 197.29,
+    "p": 195.55,
     "pd": "2026-07-23",
     "tp": 211.13
    },
@@ -13517,7 +13517,7 @@ window.STOCK_HISTORY = [
     "c": "us",
     "th": "value",
     "tier": 3,
-    "p": 288.14,
+    "p": 286.525,
     "pd": "2026-07-23",
     "tp": 341.94
    },
@@ -13527,7 +13527,7 @@ window.STOCK_HISTORY = [
     "c": "us",
     "th": "value",
     "tier": 3,
-    "p": 167.23,
+    "p": 167.9,
     "pd": "2026-07-23",
     "tp": 208
    },
@@ -13537,9 +13537,19 @@ window.STOCK_HISTORY = [
     "c": "us",
     "th": "growth",
     "tier": 3,
-    "p": 94.19,
+    "p": 93.22,
     "pd": "2026-07-23",
     "tp": 143
+   },
+   {
+    "t": "TSLA",
+    "n": "Tesla",
+    "c": "us",
+    "th": "watch",
+    "tier": 2,
+    "p": 320.66,
+    "pd": "2026-07-23",
+    "tp": 420
    }
   ]
  }
