@@ -525,8 +525,11 @@ a.idx-tile:hover { background: color-mix(in srgb, var(--ink) 5%, var(--inset)); 
 .wl-sug-t { color: var(--muted); font-size: 0.78rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
 .wl-hint { color: var(--muted); font-size: 0.78rem; line-height: 1.5; margin: 10px 0 18px; }
 .wl-grid { margin-top: 4px; }
-.wl-card .wl-del { border: 0; background: var(--surface-2); color: var(--muted); width: 24px; height: 24px; border-radius: 50%; cursor: pointer; font-size: 0.78rem; line-height: 1; display: grid; place-items: center; padding: 0; }
-.wl-card .wl-del:hover { background: var(--down); color: #fff; }
+.card .wl-del { border: 0; background: var(--surface-2); color: var(--muted); width: 24px; height: 24px; border-radius: 50%; cursor: pointer; font-size: 0.78rem; line-height: 1; display: grid; place-items: center; padding: 0; }
+.card .wl-del:hover { background: var(--down); color: #fff; }
+.wl-restore { margin: 14px 0 4px; text-align: center; }
+.wl-restore button { background: transparent; border: 0; color: var(--muted); font-size: 0.82rem; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+.wl-restore button:hover { color: var(--ink-2); }
 .wl-card .wl-msg { color: var(--muted); font-size: 0.86rem; padding: 6px 0; }
 .wl-note { color: var(--muted); font-size: 0.76rem; line-height: 1.45; }
 .wl-note b { color: var(--ink-2); font-weight: 700; }
@@ -1060,7 +1063,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       '<div class="sig-body sig-txt"><span class="vt-dot ' + cls + '"></span>' + esc(text) + "</div>";
   }
 
-  function card(s, country, showTheme) {
+  function card(s, country, showTheme, watchDel) {
     var tm = tierMeta(s.tier);
     var e = effective(s);
     var upCls = e.upside == null ? "" : e.upside >= 0 ? "up" : "down";
@@ -1098,10 +1101,12 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       (s.earnings ? '<div class="earn">' + esc(s.earnings) + "</div>" : "") +
       '<div class="thesis">' + esc(s.thesis) + "</div>" +
       (risks ? '<div class="risks"><b>리스크</b> — ' + risks + "</div>" : "");
+    var delBtn = watchDel
+      ? '<button class="wl-del" type="button" data-wl="' + esc(country + "|" + s.ticker) + '" title="관심종목에서 삭제" aria-label="삭제">✕</button>' : "";
     return '<article class="card" data-ticker="' + esc(s.ticker) + '">' +
       '<div class="head"><h3>' + esc(s.name) + '<span class="tk">' + esc(s.ticker) + " · " + esc(s.market) + "</span></h3>" +
       '<span class="badges">' + newBadge + themeBadge + warnBadge + unvBadge +
-      '<span class="badge"><span class="dot" style="background:' + tm.color + '"></span>' + tm.label + "</span></span></div>" +
+      '<span class="badge"><span class="dot" style="background:' + tm.color + '"></span>' + tm.label + "</span>" + delBtn + "</span></div>" +
       '<div class="c-hero">' +
         '<div class="c-hcell"><div class="c-hv">' + fmtPrice(e.price, country) + '</div><div class="c-hk">' + priceSub + "</div></div>" +
         '<div class="c-hcell c-r"><div class="c-hv ' + upCls + '">' + fmtPct(e.upside) + '</div><div class="c-hk">' + upLabel + "</div></div>" +
@@ -1115,7 +1120,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       sigBox +
       analysis +
       '<div class="links"><a href="' + esc(s.chartUrl) + '" target="_blank" rel="noopener">차트 보기</a>' +
-      (s.theme !== "watch" ? favBtn(s, country) : "") +
+      (s.theme !== "watch" && !watchDel ? favBtn(s, country) : "") +
       '<span class="src">' + srcs + "</span></div>" +
       "</article>";
   }
@@ -1293,8 +1298,8 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
 
   // 표 뷰 — 모바일 한 화면에 들어오는 종목당 2줄 컴팩트 리스트(가로 스크롤 없음). 탭 → 그 행만 상세 펼침.
   var tblExpanded = {};   // ticker → true (표에서 인라인으로 펼친 상세)
-  // 표 뷰의 한 행(추천/편성 종목) — 2줄 컴팩트 리스트
-  function tlRow(s) {
+  // 표 뷰의 한 행(추천/편성 종목) — 2줄 컴팩트 리스트. watchDel 이면 관심 삭제(✕) 표시.
+  function tlRow(s, watchDel) {
     var e = effective(s);
     var upCls = e.upside == null ? "" : e.upside >= 0 ? "up" : "down";
     var tm = tierMeta(s.tier);
@@ -1302,6 +1307,9 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     var tech = (t && (t.short || t.long)) ? taStrip(t.short, t.long, "ta-mini") : '<span class="tl-na">–</span>';
     var live = e.live ? ' <span class="live-tag">실시간</span>' : "";
     var exp = tblExpanded[s.ticker] ? " on" : "";
+    // 행 자체가 <button> 이라 삭제는 중첩 버튼 대신 role=button 스팬으로(위임 핸들러가 처리)
+    var del = watchDel
+      ? '<span class="tl-del" role="button" tabindex="0" data-wl="' + esc(state.country + "|" + s.ticker) + '" title="관심종목에서 삭제" aria-label="삭제">✕</span>' : "";
     return '<button class="tl-row' + exp + '" type="button" data-ticker="' + esc(s.ticker) + '" aria-expanded="' + (exp ? "true" : "false") + '">' +
       '<div class="tl-main">' +
         '<div class="tl-nm">' + esc(s.name) + '<span class="tl-tk">' + esc(s.ticker) + "</span></div>" +
@@ -1311,7 +1319,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
           (s.dividendYield != null ? ' · 배당 ' + Number(s.dividendYield).toFixed(1) + "%" : "") + "</div>" +
       "</div>" +
       '<div class="tl-r"><div class="tl-px">' + fmtPrice(e.price, state.country) + live + "</div>" +
-        '<div class="tl-up ' + upCls + '">' + fmtPct(e.upside) + "</div></div>" +
+        '<div class="tl-up ' + upCls + '">' + fmtPct(e.upside) + "</div></div>" + del +
       '<span class="tl-caret" aria-hidden="true"></span>' +
       "</button>";
   }
@@ -1319,9 +1327,9 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   function detailWrap(ticker, side, inner) {
     return '<div class="tl-detail' + (side === "right" ? " det-right" : "") + '" id="tld-' + esc(ticker) + '">' + inner + "</div>";
   }
-  function tlRowExp(s, detailFn) {
+  function tlRowExp(s, detailFn, watchDel) {
     var side = tblExpanded[s.ticker];
-    return tlRow(s) + (side ? detailWrap(s.ticker, side, detailFn()) : "");
+    return tlRow(s, watchDel) + (side ? detailWrap(s.ticker, side, detailFn()) : "");
   }
   function tableView(list, showTheme) {
     var c = state.country;
@@ -1535,9 +1543,19 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   //  라이트 카드: 실시간 시세 + 브라우저에서 계산한 단·장기 기술분석만 표시.
   //  (목표가·논거·밸류 등 정밀 분석은 리서치가 필요해 미포함)
   var MYWATCH_KEY = "myWatch.v1";
+  var WATCHHIDE_KEY = "watchHidden.v1";   // 편성(theme:"watch") 종목을 이 기기에서 숨김(로컬 삭제)
   var wlCache = {};   // "country:ticker" → undefined(미조회) | "loading" | null(실패) | {price,date,ta,sym}
   function getMyWatch() { try { return JSON.parse(localStorage.getItem(MYWATCH_KEY)) || []; } catch (_e) { return []; } }
   function saveMyWatch(a) { try { localStorage.setItem(MYWATCH_KEY, JSON.stringify(a)); } catch (_e) {} }
+  function getWatchHidden() { try { return JSON.parse(localStorage.getItem(WATCHHIDE_KEY)) || []; } catch (_e) { return []; } }
+  function saveWatchHidden(a) { try { localStorage.setItem(WATCHHIDE_KEY, JSON.stringify(a)); } catch (_e) {} }
+  function isWatchHidden(c, t) { return getWatchHidden().some(function (w) { return w.c === c && w.t === t; }); }
+  function isBakedWatch(c, t) { return (D[c] || []).some(function (s) { return s.ticker === t && s.theme === "watch"; }); }
+  // 관심종목에서 삭제 — 내가 추가한 종목(localStorage)은 목록에서 제거, 편성 watch 종목은 이 기기에서 숨김.
+  function removeFromWatch(c, t) {
+    saveMyWatch(getMyWatch().filter(function (w) { return !(w.c === c && w.t === t); }));
+    if (isBakedWatch(c, t) && !isWatchHidden(c, t)) { var h = getWatchHidden(); h.push({ c: c, t: t }); saveWatchHidden(h); }
+  }
 
   // ── 정밀분석 요청 상태 — GitHub 이슈('관심종목 정밀분석 요청:')를 읽어 티커별 진행상태 표시 ──
   var wlReqCache = null;   // null=미조회 | { ticker: {state:'open'|'closed', url} }
@@ -1728,8 +1746,8 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       var country = state.country;
       var recoByTicker = {};
       (D[country] || []).forEach(function (s) { recoByTicker[s.ticker] = s; });
-      // ① 편성 watch 종목(에스원·JYP 등)은 항상 표시
-      var fullStocks = list.slice();
+      // ① 편성 watch 종목(에스원·JYP 등) — 단, 이 기기에서 숨긴(삭제한) 종목은 제외
+      var fullStocks = list.filter(function (s) { return !isWatchHidden(country, s.ticker); });
       var shown = {}; fullStocks.forEach(function (s) { shown[s.ticker] = 1; });
       // ② 사용자가 등록한 종목: 추천 편성에 있으면 그 풀카드, 없으면 라이트 카드
       var mine = getMyWatch().filter(function (w) { return w.c === country; });
@@ -1744,16 +1762,19 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       var isTbl = state.view === "table";
       var wparts = watchAddForm();
       if (isTbl) {
-        // 표 뷰 — 편성 풀카드(상승여력순)는 tlRow, 라이트 종목은 wlLightRow. 탭 → 그 행만 상세 펼침.
-        var tbl = fullStocks.map(function (s) { return tlRowExp(s, function () { return card(s, country); }); }).join("") +
+        // 표 뷰 — 편성 풀카드(상승여력순)는 tlRow, 라이트 종목은 wlLightRow. 탭 → 그 행만 상세 펼침. ✕ 로 삭제.
+        var tbl = fullStocks.map(function (s) { return tlRowExp(s, function () { return card(s, country, false, true); }, true); }).join("") +
                   mineLight.map(wlLightRowExp).join("");
         wparts += tbl ? '<div class="tbl-list">' + tbl + "</div>"
                       : '<div class="empty">아직 관심종목이 없습니다. 위에서 검색해 추가하거나, 추천 카드의 ‘+ 관심종목’으로 등록하세요.</div>';
       } else {
-        if (fullStocks.length) wparts += '<div class="grid">' + fullStocks.map(function (s) { return card(s, country); }).join("") + "</div>";
+        if (fullStocks.length) wparts += '<div class="grid">' + fullStocks.map(function (s) { return card(s, country, false, true); }).join("") + "</div>";
         if (mineLight.length) wparts += '<div class="grid wl-grid">' + mineLight.map(wlLightCard).join("") + "</div>";
         if (!fullStocks.length && !mineLight.length) wparts += '<div class="empty">아직 관심종목이 없습니다. 위에서 검색해 추가하거나, 추천 카드의 ‘+ 관심종목’으로 등록하세요.</div>';
       }
+      // 이 기기에서 숨긴(삭제한) 편성 관심종목 복원 링크
+      var hid = getWatchHidden().filter(function (w) { return w.c === country; });
+      if (hid.length) wparts += '<div class="wl-restore"><button type="button" id="wlRestore">숨긴 관심종목 ' + hid.length + '개 다시 보기</button></div>';
       host.innerHTML = wparts;
       if (fullStocks.length) { ensureLive(fullStocks, refreshLive); fetchHistory(fullStocks, refreshLive); }
       // 라이트(비편성) 종목은 개별 비동기 조회 후 해당 노드만 교체(폼 포커스 유지). 펼친 상세도 함께 갱신.
@@ -1906,10 +1927,16 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   })();
   // #cards 위임 — 성과 기간 칩 + 관심 등록토글 + 관심종목 제거(✕) + 검색 후보 선택(추가)
   document.getElementById("cards").addEventListener("click", function (e) {
-    var delRow = e.target.closest("[data-wl]");           // 관심종목 제거(✕)는 행 탭보다 우선
+    var restore = e.target.closest("#wlRestore");          // 숨긴 관심종목 복원
+    if (restore) {
+      saveWatchHidden(getWatchHidden().filter(function (w) { return w.c !== state.country; }));
+      render();
+      return;
+    }
+    var delRow = e.target.closest("[data-wl]");           // 관심종목 삭제(✕)는 행 탭보다 우선
     if (delRow) {
       var pr = delRow.getAttribute("data-wl").split("|"); // "country|ticker"
-      saveMyWatch(getMyWatch().filter(function (w) { return !(w.c === pr[0] && w.t === pr[1]); }));
+      removeFromWatch(pr[0], pr[1]);                       // 내 목록에서 제거 + 편성 watch면 이 기기에서 숨김
       render();
       return;
     }
