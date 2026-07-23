@@ -354,7 +354,34 @@ a { color: inherit; }
 
 .empty { color: var(--muted); padding: 48px 0; text-align: center; }
 
-/* ── 표 ── */
+/* ── 표 뷰: 종목당 2줄 컴팩트 리스트(모바일 최적, 가로 스크롤 없음) ── */
+.tbl-list { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-sm); box-shadow: var(--shadow-sm); overflow: hidden; }
+.tl-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; text-align: left;
+  background: transparent; border: 0; border-top: 1px solid var(--grid); cursor: pointer; padding: 12px 15px; color: inherit; }
+.tl-row:first-child { border-top: 0; }
+.tl-row:hover { background: var(--surface-2); }
+.tl-row:active { background: var(--surface-2); }
+.tl-main { min-width: 0; }
+.tl-nm { font-size: 0.96rem; font-weight: 700; letter-spacing: -0.012em; }
+.tl-nm .tl-tk { color: var(--muted); font-size: 0.72rem; font-weight: 400; margin-left: 5px; }
+.tl-sub { color: var(--ink-2); font-size: 0.77rem; margin-top: 3px; line-height: 1.45; }
+.tl-sub .tl-tier { font-weight: 600; white-space: nowrap; }
+.tl-sub .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 4px; }
+.tl-sub .tl-na { color: var(--muted); }
+.tl-sub b { font-weight: 700; }
+.tl-r { text-align: right; flex: 0 0 auto; }
+.tl-px { font-size: 0.98rem; font-weight: 750; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+.tl-px .live-tag { font-size: 0.66rem; }
+.tl-up { font-size: 0.84rem; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 2px; }
+.tl-up.up { color: var(--up); }
+.tl-up.down { color: var(--down); }
+@media (min-width: 720px) {
+  .tbl-list { display: grid; grid-template-columns: 1fr 1fr; }
+  .tl-row:nth-child(2) { border-top: 0; }
+  .tl-row:nth-child(even) { border-left: 1px solid var(--grid); }
+}
+
+/* ── 표(성과 매트릭스 등 넓은 표) ── */
 .tbl-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-sm); box-shadow: var(--shadow-sm); }
 table.tbl { width: 100%; border-collapse: collapse; font-size: 0.86rem; min-width: 760px; }
 .tbl th {
@@ -1198,43 +1225,30 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     ensureLive(picks, refreshLive);
   }
 
+  // 표 뷰 — 모바일 한 화면에 들어오는 종목당 2줄 컴팩트 리스트(가로 스크롤 없음). 탭 → 상세 카드로 이동.
   function tableView(list, showTheme) {
+    function sig(d) { if (!d) return '<span class="tl-na">–</span>';
+      return '<b style="color:' + (TA_SIG_COL[d.signal] || "var(--muted)") + '">' + esc(d.signal || "–") + "</b>"; }
     var rows = list.map(function (s) {
       var e = effective(s);
       var upCls = e.upside == null ? "" : e.upside >= 0 ? "up" : "down";
-      var sd = staleDays(s);
-      var thm = themeMeta(s.theme);
       var tm = tierMeta(s.tier);
-      var dateCell = e.live
-        ? '<span class="live-tag" title="장중 시세">실시간</span>'
-        : esc(s.priceDate || "") +
-          (s.priceUnverified ? ' <span class="stale" title="현재가 확인 필요 — 옛 가격 기준">⚠</span>' : "");
-      return "<tr>" +
-        '<td><span class="nm">' + esc(s.name) + '</span><br><span class="tk">' + esc(s.ticker) + " · " + esc(s.market) + "</span></td>" +
-        (showTheme ? "<td>" + esc(thm.label) + "</td>" : "") +
-        '<td><span class="mini-dot" style="background:' + tm.color + '"></span>' + s.tier + "</td>" +
-        '<td class="num">' + fmtPrice(e.price, state.country) + "</td>" +
-        '<td class="num">' + dateCell + "</td>" +
-        '<td class="num">' + fmtPrice(s.targetPrice, state.country) + "</td>" +
-        '<td class="num">' + (s.aiTarget != null
-          ? '<span title="' + esc(s.aiBasis || "") + '" data-basis="' + esc(s.aiBasis || "") + '" style="cursor:help">' + fmtPrice(s.aiTarget, state.country) + "</span>"
-          : '<span title="' + esc(aiPendingText(s)) + '" data-basis="' + esc(aiPendingText(s)) + '" style="cursor:help;color:var(--muted)">추정중</span>') + "</td>" +
-        '<td class="num ' + upCls + '">' + fmtPct(e.upside) + "</td>" +
-        (function () {
-          var t = stTa(s.ticker);
-          function cell(d) { if (!d) return '<span style="color:var(--muted)">–</span>';
-            return '<b style="color:' + (TA_SIG_COL[d.signal] || "var(--muted)") + '">' + esc(d.signal || "–") + "</b>"; }
-          var tip = t ? ((t.short ? "단기: " + (t.short.read || "") : "") + (t.long ? "  장기: " + (t.long.read || "") : "")) : "";
-          return '<td class="sig-cell" title="' + esc(tip) + '" data-basis="' + esc(tip) + '">' +
-            (t ? cell(t.short) + ' <span style="color:var(--muted)">/</span> ' + cell(t.long) : '<span style="color:var(--muted)">–</span>') + "</td>";
-        })() +
-        '<td class="num">' + (s.dividendYield == null ? "–" : Number(s.dividendYield).toFixed(1) + "%") + "</td>" +
-        '<td><a href="' + esc(s.chartUrl) + '" target="_blank" rel="noopener">차트</a></td></tr>';
+      var t = stTa(s.ticker);
+      var tech = t ? (sig(t.short) + ' <span class="tl-na">/</span> ' + sig(t.long)) : '<span class="tl-na">–</span>';
+      var live = e.live ? ' <span class="live-tag">실시간</span>' : "";
+      return '<button class="tl-row" type="button" data-ticker="' + esc(s.ticker) + '">' +
+        '<div class="tl-main">' +
+          '<div class="tl-nm">' + esc(s.name) + '<span class="tl-tk">' + esc(s.ticker) + "</span></div>" +
+          '<div class="tl-sub"><span class="tl-tier"><span class="dot" style="background:' + tm.color + '"></span>' +
+            esc((tm.label || "").split(" · ")[0]) + "</span>" +
+            ' · ' + tech +
+            (s.dividendYield != null ? ' · 배당 ' + Number(s.dividendYield).toFixed(1) + "%" : "") + "</div>" +
+        "</div>" +
+        '<div class="tl-r"><div class="tl-px">' + fmtPrice(e.price, state.country) + live + "</div>" +
+          '<div class="tl-up ' + upCls + '">' + fmtPct(e.upside) + "</div></div>" +
+        "</button>";
     }).join("");
-    return '<div class="tbl-wrap"><table class="tbl"><thead><tr>' +
-      "<th>종목</th>" + (showTheme ? "<th>주제</th>" : "") + "<th>Tier</th><th class=\"num\">현재가</th>" +
-      '<th class="num">기준일</th><th class="num">목표가</th><th class="num" title="검증 입력값 기반 자체 분석(참고용)">AI적정가</th><th class="num">상승여력</th><th title="Yahoo 2년 일봉 기반 단기(1–3M) / 장기(6–12M+) 기술적 신호">기술 단/장</th><th class="num">배당</th><th>링크</th>' +
-      "</tr></thead><tbody>" + rows + "</tbody></table></div>";
+    return '<div class="tbl-list">' + rows + "</div>";
   }
 
   // ── 성과 기간 옵션 (기준일: 추천시점 또는 N개월/1년 전) ──
@@ -1710,6 +1724,21 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   })();
   // #cards 위임 — 성과 기간 칩 + 관심 등록토글 + 관심종목 제거(✕) + 검색 후보 선택(추가)
   document.getElementById("cards").addEventListener("click", function (e) {
+    var tl = e.target.closest(".tl-row");
+    if (tl) {                                             // 표 리스트 행 탭 → 상세 카드로 이동·강조
+      var tkr = tl.getAttribute("data-ticker");
+      state.view = "cards";
+      document.getElementById("viewSeg").querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x.dataset.v === "cards"); });
+      render();
+      requestAnimationFrame(function () {
+        var target = null;
+        document.querySelectorAll("#cards .card").forEach(function (c) { if (c.dataset.ticker === tkr) target = c; });
+        if (!target) return;
+        target.scrollIntoView({ behavior: "smooth", block: "center" });
+        target.classList.remove("flash"); void target.offsetWidth; target.classList.add("flash");
+      });
+      return;
+    }
     var fav = e.target.closest("[data-fav]");
     if (fav) {
       var f = fav.getAttribute("data-fav").split("|");   // "country|ticker|name"
