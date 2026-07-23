@@ -364,7 +364,11 @@ a { color: inherit; }
 .tl-row:first-child { border-top: 0; }
 .tl-row:hover { background: var(--surface-2); }
 .tl-row:active { background: var(--surface-2); }
-.tl-main { min-width: 0; }
+.tl-row.on { background: var(--surface-2); }
+.tl-main { min-width: 0; flex: 1 1 auto; }
+.tl-caret { flex: 0 0 auto; width: 7px; height: 7px; margin-left: 2px; border-right: 2px solid var(--muted); border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg); transition: transform .18s; align-self: center; }
+.tl-row.on .tl-caret { transform: rotate(-135deg); }
 .tl-nm { font-size: 0.96rem; font-weight: 700; letter-spacing: -0.012em; }
 .tl-nm .tl-tk { color: var(--muted); font-size: 0.72rem; font-weight: 400; margin-left: 5px; }
 .tl-sub { color: var(--ink-2); font-size: 0.77rem; margin-top: 3px; line-height: 1.45; }
@@ -379,17 +383,20 @@ a { color: inherit; }
 .tl-up.up { color: var(--up); }
 .tl-up.down { color: var(--down); }
 /* 라이트 관심종목 행(표 뷰) */
-.wl-lrow { cursor: default; }
+.wl-lrow { cursor: pointer; }
 .wl-lrow .tl-px .up { color: var(--up); font-size: 0.8rem; font-weight: 700; margin-left: 3px; }
 .wl-lrow .tl-px .down { color: var(--down); font-size: 0.8rem; font-weight: 700; margin-left: 3px; }
 .tl-reqdot { margin-left: 6px; font-size: 0.78rem; }
 .tl-updel { display: flex; justify-content: flex-end; }
 .tl-del { background: transparent; border: 0; color: var(--muted); cursor: pointer; font-size: 0.9rem; line-height: 1; padding: 4px 2px 4px 8px; }
 .tl-del:hover { color: var(--down); }
+/* 표에서 인라인으로 펼친 상세 카드 */
+.tl-detail { border-top: 1px solid var(--grid); background: var(--inset); padding: 12px; }
+.tl-detail .card { box-shadow: none; border: 1px solid var(--line); }
+.tl-detail.flash { animation: cardflash 1.4s ease; }
 @media (min-width: 720px) {
-  .tbl-list { display: grid; grid-template-columns: 1fr 1fr; }
-  .tl-row:nth-child(2) { border-top: 0; }
-  .tl-row:nth-child(even) { border-left: 1px solid var(--grid); }
+  .tbl-list { display: grid; grid-template-columns: 1fr 1fr; align-items: start; }
+  .tl-detail { grid-column: 1 / -1; }
 }
 
 /* ── 표(성과 매트릭스 등 넓은 표) ── */
@@ -491,6 +498,16 @@ a.idx-tile:hover { background: color-mix(in srgb, var(--ink) 5%, var(--inset)); 
 .vt-dot.vt-warn { background: var(--down); }
 .vt-dot.vt-mix { background: var(--tier3); }
 .vt-dot.vt-neutral { background: var(--muted); }
+/* 단·장기 기술신호 — 라벨(무채색) + 신호(색상 텍스트) 세그먼트. 카드·표·관심종목 공용 */
+.ta-strip { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; }
+.ta-seg { display: inline-flex; align-items: baseline; gap: 5px; cursor: help; white-space: nowrap; }
+.ta-seg .ta-k { color: var(--muted); font-size: 0.72rem; font-weight: 600; }
+.ta-seg .ta-v { font-size: 0.86rem; font-weight: 750; letter-spacing: -0.01em; }
+.ta-seg .ta-v.ta-na { color: var(--muted); font-weight: 600; }
+.ta-strip.ta-mini { gap: 3px 11px; }
+.ta-strip.ta-mini .ta-seg { cursor: inherit; }
+.ta-strip.ta-mini .ta-k { font-size: 0.7rem; }
+.ta-strip.ta-mini .ta-v { font-size: 0.78rem; font-weight: 700; }
 
 /* 관심종목 검색 추가 + 라이트 카드 */
 .wl-add { margin: 0 0 8px; }
@@ -981,21 +998,41 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     var r = TA_RANK[sig];
     if (r >= 1) return "buy"; if (r <= -1) return "sell"; return "hold";
   }
+  // 단·장기 기술신호를 깔끔한 라벨+색상 세그먼트로 — 카드·표·관심종목에서 공용.
+  //   [단기] 매수   [장기] 중립   (라벨은 작은 무채색, 신호는 색상 텍스트, hover 로 근거)
+  function taSeg(lbl, d) {
+    if (!d) return '<span class="ta-seg"><span class="ta-k">' + lbl + '</span><span class="ta-v ta-na">–</span></span>';
+    var c = TA_SIG_COL[d.signal] || "var(--muted)";
+    var tip = (d.read || "") + ((d.metrics && d.metrics.length)
+      ? " | " + d.metrics.map(function (m) { return m[0] + " " + m[1]; }).join(" · ") : "");
+    return '<span class="ta-seg" title="' + esc(tip) + '" data-basis="' + esc(tip) + '">' +
+      '<span class="ta-k">' + lbl + '</span><span class="ta-v" style="color:' + c + '">' + esc(d.signal || "–") + "</span></span>";
+  }
+  function taStrip(short, long, cls) {
+    if (!short && !long) return "";
+    return '<span class="ta-strip' + (cls ? " " + cls : "") + '">' + taSeg("단기", short) + taSeg("장기", long) + "</span>";
+  }
+
+  // 네이버 차트 URL — 한국은 국내 차트, 미국은 네이버 월드스톡(추천 데이터의 정확한 심볼 우선),
+  //   추천 편성에 없는 미국 종목은 네이버 통합검색(주가 카드)으로 — 관심종목도 모두 네이버로 연결.
+  var NAVER_US_MAP = (function () {
+    var m = {};
+    ((D && D.us) || []).forEach(function (s) {
+      if (s.ticker && s.chartUrl && s.chartUrl.indexOf("m.stock.naver.com/worldstock") >= 0) m[s.ticker] = s.chartUrl;
+    });
+    return m;
+  })();
+  function naverChartUrl(ticker, country) {
+    if (country === "korea") return "https://finance.naver.com/item/main.naver?code=" + encodeURIComponent(ticker);
+    if (NAVER_US_MAP[ticker]) return NAVER_US_MAP[ticker];
+    return "https://search.naver.com/search.naver?query=" + encodeURIComponent(ticker + " 주가");
+  }
+
   // 기술 신호 — 통합 신호 박스(sig-box)의 한 행(라벨 셀 + 본문 셀)을 반환. 없으면 "".
   function stockTaCells(ticker) {
     var T = window.STOCK_TA, t = T && T.ta && T.ta[ticker];
     if (!t || (!t.short && !t.long)) return "";
-    function pill(lbl, d) {
-      if (!d) return "";
-      var c = TA_SIG_COL[d.signal] || "var(--muted)";
-      var tip = (d.read || "") + ((d.metrics && d.metrics.length)
-        ? " | " + d.metrics.map(function (m) { return m[0] + " " + m[1]; }).join(" · ") : "");
-      return '<span class="sig-pill" title="' + esc(tip) + '" data-basis="' + esc(tip) + '">' +
-        '<span class="sig-pl">' + lbl + "</span>" +
-        '<span class="sig-sig" style="background:' + c + '">' + esc(d.signal || "–") + "</span></span>";
-    }
-    return '<span class="sig-k">기술</span><div class="sig-body">' +
-      pill("단기", t.short) + pill("장기", t.long) + "</div>";
+    return '<span class="sig-k">기술</span><div class="sig-body">' + taStrip(t.short, t.long) + "</div>";
   }
 
   // 밸류(컨센서스 상승여력·장기 펀더멘털) × 타이밍(기술 추세·단기) 종합 해석 —
@@ -1254,18 +1291,18 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     ensureLive(picks, refreshLive);
   }
 
-  // 표 뷰 — 모바일 한 화면에 들어오는 종목당 2줄 컴팩트 리스트(가로 스크롤 없음). 탭 → 상세 카드로 이동.
-  function tlSig(d) { if (!d) return '<span class="tl-na">–</span>';
-    return '<b style="color:' + (TA_SIG_COL[d.signal] || "var(--muted)") + '">' + esc(d.signal || "–") + "</b>"; }
+  // 표 뷰 — 모바일 한 화면에 들어오는 종목당 2줄 컴팩트 리스트(가로 스크롤 없음). 탭 → 그 행만 상세 펼침.
+  var tblExpanded = {};   // ticker → true (표에서 인라인으로 펼친 상세)
   // 표 뷰의 한 행(추천/편성 종목) — 2줄 컴팩트 리스트
   function tlRow(s) {
     var e = effective(s);
     var upCls = e.upside == null ? "" : e.upside >= 0 ? "up" : "down";
     var tm = tierMeta(s.tier);
     var t = stTa(s.ticker);
-    var tech = t ? (tlSig(t.short) + ' <span class="tl-na">/</span> ' + tlSig(t.long)) : '<span class="tl-na">–</span>';
+    var tech = (t && (t.short || t.long)) ? taStrip(t.short, t.long, "ta-mini") : '<span class="tl-na">–</span>';
     var live = e.live ? ' <span class="live-tag">실시간</span>' : "";
-    return '<button class="tl-row" type="button" data-ticker="' + esc(s.ticker) + '">' +
+    var exp = tblExpanded[s.ticker] ? " on" : "";
+    return '<button class="tl-row' + exp + '" type="button" data-ticker="' + esc(s.ticker) + '" aria-expanded="' + (exp ? "true" : "false") + '">' +
       '<div class="tl-main">' +
         '<div class="tl-nm">' + esc(s.name) + '<span class="tl-tk">' + esc(s.ticker) + "</span></div>" +
         '<div class="tl-sub"><span class="tl-tier"><span class="dot" style="background:' + tm.color + '"></span>' +
@@ -1275,39 +1312,55 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       "</div>" +
       '<div class="tl-r"><div class="tl-px">' + fmtPrice(e.price, state.country) + live + "</div>" +
         '<div class="tl-up ' + upCls + '">' + fmtPct(e.upside) + "</div></div>" +
+      '<span class="tl-caret" aria-hidden="true"></span>' +
       "</button>";
   }
-  function tableView(list, showTheme) {
-    return '<div class="tbl-list">' + list.map(tlRow).join("") + "</div>";
+  // 행 + (펼쳐졌으면) 인라인 상세. detailFn 은 그 종목의 상세 HTML(카드)을 반환.
+  function tlRowExp(s, detailFn) {
+    return tlRow(s) + (tblExpanded[s.ticker]
+      ? '<div class="tl-detail" id="tld-' + esc(s.ticker) + '">' + detailFn() + "</div>" : "");
   }
-  // 표 뷰의 한 행(라이트 관심종목) — 시세·기술분석만, 비동기 조회 후 이 노드만 교체
+  function tableView(list, showTheme) {
+    var c = state.country;
+    return '<div class="tbl-list">' + list.map(function (s) {
+      return tlRowExp(s, function () { return card(s, c); });
+    }).join("") + "</div>";
+  }
+  // 표 뷰의 한 행(라이트 관심종목) — 시세·기술분석만, 비동기 조회 후 이 노드만 교체. 탭 → 상세 펼침.
   function wlLightRow(item) {
     var key = item.c + ":" + item.t;
     var d = wlCache[key];
     var title = item.n || item.t;
     var rid = "wlr-" + item.c + "-" + item.t;
-    var open = '<div class="tl-row wl-lrow" id="' + esc(rid) + '">';
+    var exp = tblExpanded[item.t] ? " on" : "";
+    var open = '<div class="tl-row wl-lrow' + exp + '" id="' + esc(rid) + '" role="button" tabindex="0" data-ticker="' + esc(item.t) + '" aria-expanded="' + (exp ? "true" : "false") + '">';
     var req = wlReqCache ? wlReqCache[item.t] : null;
     var reqDot = req ? (req.state === "open" ? '<span class="tl-reqdot open" title="정밀분석 요청됨 · 처리 대기">🔧</span>'
                                               : '<span class="tl-reqdot done" title="정밀분석 완료 · 반영 대기">✓</span>') : "";
     var delBtn = '<button class="tl-del" type="button" data-wl="' + esc(item.c + "|" + item.t) + '" title="관심종목에서 제거" aria-label="제거">✕</button>';
+    var caret = '<span class="tl-caret" aria-hidden="true"></span>';
     var nameLine = '<div class="tl-nm">' + esc(title) + '<span class="tl-tk">' + esc(item.t) + "</span>" + reqDot + "</div>";
     if (d === undefined || d === "loading")
       return open + '<div class="tl-main">' + nameLine + '<div class="tl-sub tl-na">불러오는 중…</div></div>' +
-        '<div class="tl-r">' + delBtn + "</div></div>";
+        '<div class="tl-r">' + delBtn + "</div>" + caret + "</div>";
     if (d === null)
       return open + '<div class="tl-main">' + nameLine + '<div class="tl-sub tl-na">시세 확인 실패</div></div>' +
-        '<div class="tl-r">' + delBtn + "</div></div>";
+        '<div class="tl-r">' + delBtn + "</div>" + caret + "</div>";
     var ta = d.ta;
-    var tech = (ta && (ta.short || ta.long)) ? (tlSig(ta.short) + ' <span class="tl-na">/</span> ' + tlSig(ta.long)) : '<span class="tl-na">–</span>';
+    var tech = (ta && (ta.short || ta.long)) ? taStrip(ta.short, ta.long, "ta-mini") : '<span class="tl-na">–</span>';
     var chCls = ta && ta.changeDir === "up" ? "up" : "down";
     return open +
       '<div class="tl-main">' + nameLine +
         '<div class="tl-sub"><span class="tl-tier"><span class="dot" style="background:var(--muted)"></span>관심</span> · ' + tech + "</div>" +
       "</div>" +
       '<div class="tl-r"><div class="tl-px">' + fmtPrice(d.price, item.c) + (ta && ta.change ? ' <span class="' + chCls + '">' + esc(ta.change) + "</span>" : "") + "</div>" +
-        '<div class="tl-updel">' + delBtn + "</div></div>" +
+        '<div class="tl-updel">' + delBtn + "</div></div>" + caret +
       "</div>";
+  }
+  // 라이트 행 + (펼쳐졌으면) 인라인 상세(라이트 카드)
+  function wlLightRowExp(item) {
+    return wlLightRow(item) + (tblExpanded[item.t]
+      ? '<div class="tl-detail" id="tld-' + esc(item.t) + '">' + wlLightCard(item) + "</div>" : "");
   }
 
   // ── 성과 기간 옵션 (기준일: 추천시점 또는 N개월/1년 전) ──
@@ -1565,20 +1618,9 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     var country = item.c;
     var ta = d.ta;
     var chDir = ta && ta.changeDir === "up" ? "up" : "down";
-    var sigBox = "";
-    if (ta && (ta.short || ta.long)) {
-      var pill = function (lbl, tf) {
-        if (!tf) return "";
-        var c = TA_SIG_COL[tf.signal] || "var(--muted)";
-        var tip = (tf.read || "") + ((tf.metrics && tf.metrics.length) ? " | " + tf.metrics.map(function (m) { return m[0] + " " + m[1]; }).join(" · ") : "");
-        return '<span class="sig-pill" title="' + esc(tip) + '" data-basis="' + esc(tip) + '"><span class="sig-pl">' + lbl +
-          '</span><span class="sig-sig" style="background:' + c + '">' + esc(tf.signal || "–") + "</span></span>";
-      };
-      sigBox = '<div class="sig-box"><span class="sig-k">기술</span><div class="sig-body">' + pill("단기", ta.short) + pill("장기", ta.long) + "</div></div>";
-    }
-    var chartUrl = country === "korea"
-      ? "https://finance.naver.com/item/main.naver?code=" + encodeURIComponent(item.t)
-      : "https://finance.yahoo.com/quote/" + encodeURIComponent(item.t);
+    var sigBox = (ta && (ta.short || ta.long))
+      ? '<div class="sig-box"><span class="sig-k">기술</span><div class="sig-body">' + taStrip(ta.short, ta.long) + "</div></div>" : "";
+    var chartUrl = naverChartUrl(item.t, country);
     // 정밀분석 요청 — GitHub 이슈(요청 큐)를 미리 채워 여는 링크. 세션이 이 요청을 풀카드로 승격.
     var reqTitle = "관심종목 정밀분석 요청: " + (item.n || item.t) + " " + item.t + " " + (country === "us" ? "미국" : "한국");
     var reqBody = "관심종목을 추천 편성과 동일한 정밀 분석(컨센서스 목표가·논거·밸류·배당)으로 만들어 주세요.\n\n" +
@@ -1699,8 +1741,9 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       var isTbl = state.view === "table";
       var wparts = watchAddForm();
       if (isTbl) {
-        // 표 뷰 — 편성 풀카드(상승여력순)는 tlRow, 라이트 종목은 wlLightRow 로 한 리스트에
-        var tbl = fullStocks.map(tlRow).join("") + mineLight.map(wlLightRow).join("");
+        // 표 뷰 — 편성 풀카드(상승여력순)는 tlRow, 라이트 종목은 wlLightRow. 탭 → 그 행만 상세 펼침.
+        var tbl = fullStocks.map(function (s) { return tlRowExp(s, function () { return card(s, country); }); }).join("") +
+                  mineLight.map(wlLightRowExp).join("");
         wparts += tbl ? '<div class="tbl-list">' + tbl + "</div>"
                       : '<div class="empty">아직 관심종목이 없습니다. 위에서 검색해 추가하거나, 추천 카드의 ‘+ 관심종목’으로 등록하세요.</div>';
       } else {
@@ -1710,9 +1753,12 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       }
       host.innerHTML = wparts;
       if (fullStocks.length) { ensureLive(fullStocks, refreshLive); fetchHistory(fullStocks, refreshLive); }
-      // 라이트(비편성) 종목은 개별 비동기 조회 후 해당 노드만 교체(폼 포커스 유지)
+      // 라이트(비편성) 종목은 개별 비동기 조회 후 해당 노드만 교체(폼 포커스 유지). 펼친 상세도 함께 갱신.
       var wlRepaint = isTbl
-        ? function (w) { var el = document.getElementById("wlr-" + w.c + "-" + w.t); if (el) el.outerHTML = wlLightRow(w); }
+        ? function (w) {
+            var el = document.getElementById("wlr-" + w.c + "-" + w.t); if (el) el.outerHTML = wlLightRow(w);
+            if (tblExpanded[w.t]) { var dl = document.getElementById("tld-" + w.t); if (dl) dl.outerHTML = '<div class="tl-detail" id="tld-' + esc(w.t) + '">' + wlLightCard(w) + "</div>"; }
+          }
         : function (w) { var el = document.getElementById("wlc-" + w.c + "-" + w.t); if (el) el.outerHTML = wlLightCard(w); };
       mineLight.forEach(function (w) { fetchWatchOne(w, function () { wlRepaint(w); }); });
       if (mineLight.length) fetchWatchReqs(function () { mineLight.forEach(wlRepaint); });
@@ -1752,6 +1798,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   document.getElementById("countrySeg").addEventListener("click", function (e) {
     var b = e.target.closest("button"); if (!b) return;
     state.country = b.dataset.c;
+    tblExpanded = {};
     this.querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x === b); });
     renderTopPicks();
     render();
@@ -1760,6 +1807,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     if (chipDragMoved) { chipDragMoved = false; return; }   // 방금 드래그로 순서를 바꿨으면 선택 무시
     var b = e.target.closest("button"); if (!b) return;
     state.theme = b.dataset.theme;
+    tblExpanded = {};
     this.querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x === b); });
     render();
   });
@@ -1825,6 +1873,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   document.getElementById("viewSeg").addEventListener("click", function (e) {
     var b = e.target.closest("button"); if (!b) return;
     state.view = b.dataset.v;
+    tblExpanded = {};
     this.querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x === b); });
     render();
   });
@@ -1847,6 +1896,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       var keys = themeKeysOrdered();
       var i = keys.indexOf(state.theme); if (i < 0) return;
       state.theme = keys[dx < 0 ? (i + 1) % keys.length : (i - 1 + keys.length) % keys.length];
+      tblExpanded = {};
       renderThemeChips(); render();
       var on = document.querySelector("#themeChips .chip.on"); if (on && on.scrollIntoView) on.scrollIntoView({ inline: "center", block: "nearest" });
     }, { passive: true });
@@ -1862,16 +1912,15 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     }
     var tl = e.target.closest(".tl-row");
     var tkr = tl && tl.getAttribute("data-ticker");
-    if (tl && tkr) {                                      // 표 리스트 행 탭 → 상세 카드로 이동·강조 (라이트 행은 ticker 없음 → 무시)
-      state.view = "cards";
-      document.getElementById("viewSeg").querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x.dataset.v === "cards"); });
+    if (tl && tkr) {                                      // 표 리스트 행 탭 → 그 행만 인라인으로 상세 펼침/접기
+      var willOpen = !tblExpanded[tkr];
+      if (willOpen) tblExpanded[tkr] = true; else delete tblExpanded[tkr];
       render();
-      requestAnimationFrame(function () {
-        var target = null;
-        document.querySelectorAll("#cards .card").forEach(function (c) { if (c.dataset.ticker === tkr) target = c; });
-        if (!target) return;
-        target.scrollIntoView({ behavior: "smooth", block: "center" });
-        target.classList.remove("flash"); void target.offsetWidth; target.classList.add("flash");
+      if (willOpen) requestAnimationFrame(function () {
+        var d = document.getElementById("tld-" + tkr);
+        if (!d) return;
+        d.classList.remove("flash"); void d.offsetWidth; d.classList.add("flash");
+        d.scrollIntoView({ behavior: "smooth", block: "nearest" });
       });
       return;
     }
@@ -2067,6 +2116,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
 
   renderLiquidity();
   renderIndexTA();
+  state.theme = themeKeysOrdered()[0] || state.theme;   // 초기 선택 = 사용자가 정한 맨 앞 주제
   renderThemeChips();
   renderTopPicks();
   renderRoster();
