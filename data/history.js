@@ -15163,7 +15163,7 @@ window.STOCK_HISTORY = [
     "tier": 3,
     "p": 104.96,
     "pd": "2026-07-22",
-    "tp": 154
+    "tp": 128
    },
    {
     "t": "HALO",
