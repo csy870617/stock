@@ -1922,6 +1922,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
         var side = "left", lst = tl.closest(".tbl-list");
         if (lst) { var rr = tl.getBoundingClientRect(), lr = lst.getBoundingClientRect();
           if (rr.left + rr.width / 2 > lr.left + lr.width / 2 + 1) side = "right"; }
+        tblExpanded = {};          // 한 번에 하나만 — 이전에 펼친 종목은 접는다
         tblExpanded[tkr] = side;
       } else delete tblExpanded[tkr];
       render();
