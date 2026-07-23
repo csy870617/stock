@@ -548,8 +548,8 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
         <button data-c="us" type="button">미국</button>
       </div>
       <div class="seg" id="viewSeg">
-        <button data-v="cards" class="on" type="button">카드</button>
-        <button data-v="table" type="button">표</button>
+        <button data-v="table" class="on" type="button">표</button>
+        <button data-v="cards" type="button">상세</button>
         <button data-v="perf" type="button">성과</button>
       </div>
     </div>
@@ -609,7 +609,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   var state = {
     country: "korea",
     theme: (D && D.themes && D.themes[0] && D.themes[0].key) || "core",
-    view: "cards",
+    view: "table",
     perfPeriod: "since",  // 성과 기준일: since(추천시점) | 1m | 2m | 3m | 6m | 1y
     fSignal: "all",       // 필터: 기술신호 all|buy|hold|sell
     fUpside: 0,           // 필터: 최소 상승여력 %
@@ -1685,6 +1685,29 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     this.querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x === b); });
     render();
   });
+  // 주제탭 좌우 스와이프 — 콘텐츠 영역을 가로로 밀면 이전/다음 주제로 이동
+  (function () {
+    var el = document.getElementById("cards");
+    var sx = null, sy = null, tbl = null, atL = false, atR = false;
+    el.addEventListener("touchstart", function (e) {
+      if (e.touches.length !== 1) { sx = null; return; }
+      sx = e.touches[0].clientX; sy = e.touches[0].clientY;
+      tbl = e.target.closest ? e.target.closest(".tbl-wrap") : null;
+      if (tbl) { atL = tbl.scrollLeft <= 1; atR = tbl.scrollLeft + tbl.clientWidth >= tbl.scrollWidth - 1; }
+    }, { passive: true });
+    el.addEventListener("touchend", function (e) {
+      if (sx == null) return;
+      var dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
+      sx = null;
+      if (Math.abs(dx) < 55 || Math.abs(dx) < Math.abs(dy) * 1.4) return;      // 가로 스와이프만 인식
+      if (tbl) { if (dx < 0 && !atR) return; if (dx > 0 && !atL) return; }     // 표는 스크롤 여백이 있으면 양보
+      var keys = (D.themes || []).map(function (t) { return t.key; });
+      var i = keys.indexOf(state.theme); if (i < 0) return;
+      state.theme = keys[dx < 0 ? (i + 1) % keys.length : (i - 1 + keys.length) % keys.length];
+      renderThemeChips(); render();
+      var on = document.querySelector("#themeChips .chip.on"); if (on && on.scrollIntoView) on.scrollIntoView({ inline: "center", block: "nearest" });
+    }, { passive: true });
+  })();
   // #cards 위임 — 성과 기간 칩 + 관심 등록토글 + 관심종목 제거(✕) + 검색 후보 선택(추가)
   document.getElementById("cards").addEventListener("click", function (e) {
     var fav = e.target.closest("[data-fav]");
