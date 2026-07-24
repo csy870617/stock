@@ -511,6 +511,9 @@ a.idx-tile:hover { background: color-mix(in srgb, var(--ink) 5%, var(--inset)); 
 .tn-line + .tn-line { border-top: 1px solid var(--grid); padding-top: 7px; margin-top: 4px; }
 .tn-k { color: var(--muted); font-size: 0.76rem; font-weight: 600; white-space: nowrap; }
 .tn-v { font-size: 0.84rem; line-height: 1.5; color: var(--ink); letter-spacing: -0.005em; }
+.tn-sig { display: inline-block; font-size: 0.68rem; font-weight: 700; color: #fff; padding: 1px 8px; border-radius: 999px; margin-right: 6px; white-space: nowrap; vertical-align: 1px; }
+.tn-stale { margin-left: auto; font-size: 0.68rem; font-weight: 700; color: var(--down); background: color-mix(in srgb, var(--down) 14%, transparent); padding: 1px 8px; border-radius: 999px; white-space: nowrap; }
+.tech-note.stale { box-shadow: inset 3px 0 0 var(--down); }
 /* 단·장기 기술신호 — 라벨(무채색) + 신호(색상 텍스트) 세그먼트. 카드·표·관심종목 공용 */
 .ta-strip { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; }
 .ta-seg { display: inline-flex; align-items: baseline; gap: 5px; cursor: help; white-space: nowrap; }
@@ -1077,16 +1080,25 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       '<div class="sig-body sig-txt"><span class="vt-dot ' + cls + '"></span>' + esc(text) + "</div>";
   }
 
-  // 기술 대응(techNote) — 매일 LLM 루틴이 생성한 단기/장기 대응만 표시(정확도 우선).
+  // 기술 대응(techNote) — 매일 LLM 루틴이 생성한 단기/장기 대응 + 신호 등급(적극매도~적극매수).
+  //   오늘자(stock-ta.js asOf) 로 갱신되지 않았으면 '미갱신' 표시.
   function techNoteBlock(s) {
     var n = s.techNote;
     if (!n || (!n.short && !n.long)) return "";
-    function line(k, v) {
-      return v ? '<div class="tn-line"><span class="tn-k">' + k + '</span><span class="tn-v">' + esc(v) + "</span></div>" : "";
+    var T = window.STOCK_TA, taAsOf = T && T.asOf;
+    var stale = n.asOf && taAsOf && n.asOf < taAsOf;
+    function sigBadge(g) {
+      if (!g) return "";
+      return '<span class="tn-sig" style="background:' + (TA_SIG_COL[g] || "var(--muted)") + '">' + esc(g) + "</span>";
     }
-    return '<div class="tech-note">' +
-      '<div class="tn-head">기술 대응' + (n.asOf ? '<span class="tn-as">' + esc(n.asOf) + "</span>" : "") + "</div>" +
-      line("단기", n.short) + line("장기", n.long) + "</div>";
+    function line(k, v, g) {
+      return v ? '<div class="tn-line"><span class="tn-k">' + k + '</span><span class="tn-v">' + sigBadge(g) + esc(v) + "</span></div>" : "";
+    }
+    var staleBadge = stale
+      ? '<span class="tn-stale" title="오늘 데이터(' + esc(taAsOf) + ')로 아직 갱신되지 않았습니다. 표시는 ' + esc(n.asOf) + ' 기준입니다.">⚠ 미갱신</span>' : "";
+    return '<div class="tech-note' + (stale ? " stale" : "") + '">' +
+      '<div class="tn-head">기술 대응' + (n.asOf ? '<span class="tn-as">' + esc(n.asOf) + "</span>" : "") + staleBadge + "</div>" +
+      line("단기", n.short, n.sigShort) + line("장기", n.long, n.sigLong) + "</div>";
   }
 
   function card(s, country, showTheme, watchDel) {

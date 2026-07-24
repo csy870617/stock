@@ -200,6 +200,9 @@ function validate(D, opts) {
             else if (n.asOf > today) errors.push(tag + ": techNote.asOf 가 미래 날짜 " + n.asOf);
             else if ((new Date(today) - new Date(n.asOf)) / 86400000 > 10) warnings.push(tag + ": techNote 산출 후 10일 경과 (" + n.asOf + ") — 갱신 대상");
           }
+          const SIGS = ["적극매도", "매도", "중립", "매수", "적극매수"];
+          if (n.sigShort != null && SIGS.indexOf(n.sigShort) < 0) errors.push(tag + ": techNote.sigShort 는 5단계(" + SIGS.join("/") + ") 중 하나여야 함 (현재 '" + n.sigShort + "')");
+          if (n.sigLong != null && SIGS.indexOf(n.sigLong) < 0) errors.push(tag + ": techNote.sigLong 는 5단계 중 하나여야 함 (현재 '" + n.sigLong + "')");
         }
       }
 
