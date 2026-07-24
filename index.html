@@ -498,32 +498,14 @@ a.idx-tile:hover { background: color-mix(in srgb, var(--ink) 5%, var(--inset)); 
 .vt-dot.vt-warn { background: var(--down); }
 .vt-dot.vt-mix { background: var(--tier3); }
 .vt-dot.vt-neutral { background: var(--muted); }
-/* 기술 심층분석(techNote) — 접이식 */
-.tech-note { margin: 2px 0 4px; border: 1px solid var(--line); border-radius: var(--r-sm); background: var(--surface); overflow: hidden; }
-.tech-note > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 13px; }
-.tech-note > summary::-webkit-details-marker { display: none; }
-.tech-note > summary::after { content: "▾"; margin-left: auto; color: var(--muted); font-size: 0.8rem; transition: transform .15s; }
-.tech-note[open] > summary::after { transform: rotate(180deg); }
-.tn-badge { color: #fff; font-size: 0.68rem; font-weight: 700; padding: 2px 9px; border-radius: 999px; white-space: nowrap; }
-.tn-verdict { font-size: 0.86rem; font-weight: 700; letter-spacing: -0.01em; min-width: 0; }
-.tn-as { color: var(--muted); font-size: 0.7rem; }
-.tn-body { padding: 2px 13px 13px; }
-.tn-scores { display: flex; flex-wrap: wrap; gap: 6px 10px; padding: 8px 0 10px; border-top: 1px solid var(--grid); }
-.tn-sc { display: inline-flex; align-items: center; gap: 5px; }
-.tn-sk { color: var(--muted); font-size: 0.74rem; }
-.tn-sv { font-weight: 800; font-size: 0.82rem; width: 16px; text-align: center; }
-.tn-sv.pos { color: var(--up); } .tn-sv.neg { color: var(--down); } .tn-sv.neu { color: var(--muted); }
-.tn-basis { margin: 4px 0 10px; padding-left: 18px; }
-.tn-basis li { font-size: 0.81rem; line-height: 1.55; color: var(--ink-2); margin: 2px 0; }
-.tn-plan { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; background: var(--inset); border-radius: var(--r-sm); padding: 10px 12px; margin-bottom: 10px; }
-.tn-pl { display: flex; flex-direction: column; gap: 1px; }
-.tn-pk { color: var(--muted); font-size: 0.7rem; }
-.tn-pv { font-size: 0.85rem; font-weight: 700; font-variant-numeric: tabular-nums; }
-.tn-inval { font-size: 0.81rem; line-height: 1.5; margin-bottom: 8px; }
-.tn-inval b, .tn-next b { font-size: 0.74rem; color: var(--muted); font-weight: 700; }
-.tn-inval ul { margin: 3px 0 0; padding-left: 18px; } .tn-inval li { margin: 2px 0; color: var(--ink-2); }
-.tn-next { font-size: 0.81rem; line-height: 1.5; color: var(--ink-2); margin-bottom: 8px; }
-.tn-caveat { font-size: 0.74rem; color: var(--muted); border-top: 1px solid var(--grid); padding-top: 8px; }
+/* 기술 대응(techNote) — 단기/장기 대응만 간결히 */
+.tech-note { margin: 2px 0 4px; background: var(--inset); border-radius: var(--r-sm); padding: 11px 13px; }
+.tn-head { display: flex; align-items: baseline; gap: 8px; font-size: 0.76rem; font-weight: 700; color: var(--muted); margin-bottom: 7px; }
+.tn-as { color: var(--muted); font-size: 0.7rem; font-weight: 400; }
+.tn-line { display: grid; grid-template-columns: auto 1fr; gap: 9px; align-items: baseline; padding: 3px 0; }
+.tn-line + .tn-line { border-top: 1px solid var(--grid); padding-top: 7px; margin-top: 4px; }
+.tn-k { color: var(--muted); font-size: 0.76rem; font-weight: 600; white-space: nowrap; }
+.tn-v { font-size: 0.84rem; line-height: 1.5; color: var(--ink); letter-spacing: -0.005em; }
 /* 단·장기 기술신호 — 라벨(무채색) + 신호(색상 텍스트) 세그먼트. 카드·표·관심종목 공용 */
 .ta-strip { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; }
 .ta-seg { display: inline-flex; align-items: baseline; gap: 5px; cursor: help; white-space: nowrap; }
@@ -1089,35 +1071,17 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       '<div class="sig-body sig-txt"><span class="vt-dot ' + cls + '"></span>' + esc(text) + "</div>";
   }
 
-  // 기술 심층분석(techNote) — 온디맨드 루틴이 6단계 프레임워크로 생성. 접이식으로 표시.
-  var TN_SIG_COL = { "매우 우호": "var(--up)", "우호": "var(--tier2)", "중립": "var(--tier3)", "부정": "#eb6834", "매우 부정": "var(--down)" };
+  // 기술 대응(techNote) — 상세 설명 없이 '단기/장기 어떻게 대응할지'만 간결히.
   function techNoteBlock(s) {
     var n = s.techNote;
-    if (!n || !n.verdict) return "";
-    var col = TN_SIG_COL[n.signal] || "var(--muted)";
-    var sc = n.scores || {};
-    var scoreMap = [["추세", sc.trend], ["위치", sc.location], ["모멘텀", sc.momentum], ["거래량", sc.volume], ["지지", sc.support]];
-    var scores = scoreMap.map(function (x) {
-      var v = x[1] || "0", cl = v === "+" ? "pos" : v === "-" ? "neg" : "neu";
-      return '<span class="tn-sc"><span class="tn-sk">' + x[0] + '</span><span class="tn-sv ' + cl + '">' + esc(v) + "</span></span>";
-    }).join("");
-    var basis = (n.basis || []).map(function (b) { return "<li>" + esc(b) + "</li>"; }).join("");
-    var p = n.plan || {};
-    function pl(k, v) { return v ? '<div class="tn-pl"><span class="tn-pk">' + k + '</span><span class="tn-pv">' + esc(v) + "</span></div>" : ""; }
-    var plan = pl("1차 매수", p.buy1) + pl("2차 매수", p.buy2) + pl("손절 라인", p.stop) + pl("1차 저항", p.resist1);
-    var inval = (n.invalidation || []).map(function (b) { return "<li>" + esc(b) + "</li>"; }).join("");
-    return '<details class="tech-note"><summary>' +
-        '<span class="tn-badge" style="background:' + col + '">기술 심층 · ' + esc(n.signal || "") + "</span>" +
-        '<span class="tn-verdict">' + esc(n.verdict) + "</span>" +
-        (n.asOf ? '<span class="tn-as">' + esc(n.asOf) + "</span>" : "") + "</summary>" +
-      '<div class="tn-body">' +
-        '<div class="tn-scores">' + scores + "</div>" +
-        (basis ? '<ol class="tn-basis">' + basis + "</ol>" : "") +
-        (plan ? '<div class="tn-plan">' + plan + "</div>" : "") +
-        (inval ? '<div class="tn-inval"><b>반증 조건</b><ul>' + inval + "</ul></div>" : "") +
-        (n.nextCheck ? '<div class="tn-next"><b>다음 확인</b> — ' + esc(n.nextCheck) + "</div>" : "") +
-        '<div class="tn-caveat">펀더멘털(재무·배당·밸류)이 확인되지 않으면 위 신호는 무효</div>' +
-      "</div></details>";
+    if (!n || (!n.short && !n.long)) return "";
+    function line(k, v) {
+      return v ? '<div class="tn-line"><span class="tn-k">' + k + '</span><span class="tn-v">' + esc(v) + "</span></div>" : "";
+    }
+    return '<div class="tech-note">' +
+      '<div class="tn-head">기술 대응' + (n.asOf ? '<span class="tn-as">' + esc(n.asOf) + "</span>" : "") + "</div>" +
+      line("단기", n.short) + line("장기", n.long) +
+      "</div>";
   }
 
   function card(s, country, showTheme, watchDel) {
