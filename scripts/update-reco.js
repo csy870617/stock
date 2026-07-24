@@ -69,7 +69,7 @@ const warnings = [];
 let merged = 0, added = 0, removed = 0;
 
 // ── 상단 필드 ──
-["generatedAt", "marketNote", "disclaimer"].forEach((k) => {
+["generatedAt", "marketNote", "disclaimer", "topPicks"].forEach((k) => {
   if (patch[k] !== undefined) D[k] = patch[k];
 });
 if (patch.themes !== undefined) D.themes = patch.themes;
@@ -209,6 +209,16 @@ function serialize(D) {
   ["generatedAt", "marketNote", "disclaimer"].forEach((k) => {
     if (D[k] !== undefined) L.push("  " + k + ": " + JSON.stringify(D[k]) + ",");
   });
+  if (D.topPicks !== undefined) {
+    // 오늘의 Top Pick 3 — items 는 한 줄에 하나씩(일간 diff 최소화)
+    L.push("  topPicks: {");
+    L.push("    asOf: " + JSON.stringify(D.topPicks.asOf) + ",");
+    if (D.topPicks.note !== undefined) L.push("    note: " + JSON.stringify(D.topPicks.note) + ",");
+    L.push("    items: [");
+    (D.topPicks.items || []).forEach((it) => L.push("      " + JSON.stringify(it) + ","));
+    L.push("    ],");
+    L.push("  },");
+  }
   if (Array.isArray(D.themes)) {
     L.push("  themes: [");
     D.themes.forEach((t) => L.push("    " + JSON.stringify(t) + ","));
@@ -220,7 +230,7 @@ function serialize(D) {
     D[c].forEach((s) => L.push("    " + JSON.stringify(s) + ","));
     L.push("  ],");
   });
-  const known = ["generatedAt", "marketNote", "disclaimer", "themes", "korea", "us"];
+  const known = ["generatedAt", "marketNote", "disclaimer", "topPicks", "themes", "korea", "us"];
   Object.keys(D).forEach((k) => {
     if (known.includes(k)) return;
     L.push("  " + k + ": " + JSON.stringify(D[k]) + ",");
