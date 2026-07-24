@@ -514,6 +514,8 @@ a.idx-tile:hover { background: color-mix(in srgb, var(--ink) 5%, var(--inset)); 
 .tn-sig { display: inline-block; font-size: 0.68rem; font-weight: 700; color: #fff; padding: 1px 8px; border-radius: 999px; margin-right: 6px; white-space: nowrap; vertical-align: 1px; }
 .tn-stale { margin-left: auto; font-size: 0.68rem; font-weight: 700; color: var(--down); background: color-mix(in srgb, var(--down) 14%, transparent); padding: 1px 8px; border-radius: 999px; white-space: nowrap; }
 .tech-note.stale { box-shadow: inset 3px 0 0 var(--down); }
+.idx-tile.stale { box-shadow: inset 3px 0 0 var(--down); }
+.idx-tile .it-top .tn-stale { margin-left: auto; }
 /* 단·장기 기술신호 — 라벨(무채색) + 신호(색상 텍스트) 세그먼트. 카드·표·관심종목 공용 */
 .ta-strip { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; }
 .ta-seg { display: inline-flex; align-items: baseline; gap: 5px; cursor: help; white-space: nowrap; }
@@ -2169,16 +2171,21 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       var n = NT[x.key];
       var g = idxLiqGrade(x.key);
       var liqChip = g ? '<span class="it-liq" style="color:' + (LIQ_COL[g] || "var(--muted)") + '">유동성 ' + esc(g) + "</span>" : "";
+      function sigBadge(gr) { return gr ? '<span class="tn-sig" style="background:' + (TA_SIG_COL[gr] || "var(--muted)") + '">' + esc(gr) + "</span>" : ""; }
+      var nnAsOf = window.INDEX_NOTES && window.INDEX_NOTES.asOf;
+      var stale = nnAsOf && T.asOf && nnAsOf < T.asOf;
+      var staleBadge = stale ? '<span class="tn-stale" title="오늘 데이터(' + esc(T.asOf) + ')로 아직 갱신되지 않았습니다. 표시는 ' + esc(nnAsOf) + ' 기준입니다.">⚠ 미갱신</span>' : "";
       var body = (n && (n.value || n.short || n.long))
-        ? '<div class="it-note">' + noteLine("밸류", n.value, liqChip) + noteLine("단기", n.short) + noteLine("장기", n.long) + "</div>" : "";
+        ? '<div class="it-note">' + noteLine("밸류", n.value, liqChip) + noteLine("단기", n.short, sigBadge(n.sigShort)) + noteLine("장기", n.long, sigBadge(n.sigLong)) + "</div>" : "";
       var inner =
         '<div class="it-top"><span class="it-nm">' + esc(x.name) + "</span>" +
-          (x.period ? '<span class="it-pd">' + esc(x.period) + "</span>" : "") + "</div>" +
+          (x.period ? '<span class="it-pd">' + esc(x.period) + "</span>" : "") + staleBadge + "</div>" +
         '<div class="it-px"><span class="it-lv">' + esc(x.level) + "</span>" +
           '<span class="it-ch ' + chDir + '">' + esc(x.change) + "</span></div>" + body;
+      var cls = "idx-tile" + (stale ? " stale" : "");
       return x.chartUrl
-        ? '<a class="idx-tile" href="' + esc(x.chartUrl) + '" target="_blank" rel="noopener">' + inner + "</a>"
-        : '<div class="idx-tile">' + inner + "</div>";
+        ? '<a class="' + cls + '" href="' + esc(x.chartUrl) + '" target="_blank" rel="noopener">' + inner + "</a>"
+        : '<div class="' + cls + '">' + inner + "</div>";
     }
 
     var NN = window.INDEX_NOTES;
