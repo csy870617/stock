@@ -188,21 +188,17 @@ function validate(D, opts) {
         errors.push(tag + ": risks 는 한국어 1~4개 배열이어야 함");
       }
 
-      // 기술 심층분석(techNote, 선택) — 온디맨드 루틴이 6단계 프레임워크로 생성.
+      // 기술 대응(techNote, 선택) — 6단계 분석의 결론을 단기/장기 대응으로만 압축.
       if (s.techNote != null) {
         const n = s.techNote;
         if (typeof n !== "object" || Array.isArray(n)) errors.push(tag + ": techNote 는 객체여야 함");
         else {
-          const GRADES = ["매우 우호", "우호", "중립", "부정", "매우 부정"];
-          if (!n.verdict || !RE_HANGUL.test(n.verdict)) errors.push(tag + ": techNote.verdict 누락 또는 한국어 아님");
-          if (GRADES.indexOf(n.signal) < 0) errors.push(tag + ": techNote.signal 은 5단계(" + GRADES.join("/") + ") 중 하나여야 함 (현재 '" + n.signal + "')");
+          if (!n.short || !RE_HANGUL.test(n.short)) errors.push(tag + ": techNote.short(단기 대응) 누락 또는 한국어 아님");
+          if (!n.long || !RE_HANGUL.test(n.long)) errors.push(tag + ": techNote.long(장기 대응) 누락 또는 한국어 아님");
           if (n.asOf != null) {
             if (!RE_DATE.test(n.asOf)) errors.push(tag + ": techNote.asOf 형식 오류 '" + n.asOf + "'");
             else if (n.asOf > today) errors.push(tag + ": techNote.asOf 가 미래 날짜 " + n.asOf);
             else if ((new Date(today) - new Date(n.asOf)) / 86400000 > 10) warnings.push(tag + ": techNote 산출 후 10일 경과 (" + n.asOf + ") — 갱신 대상");
-          }
-          if (n.basis != null && (!Array.isArray(n.basis) || n.basis.some((b) => !b || !RE_HANGUL.test(b)))) {
-            errors.push(tag + ": techNote.basis 는 한국어 배열이어야 함");
           }
         }
       }
