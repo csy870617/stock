@@ -1077,30 +1077,16 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       '<div class="sig-body sig-txt"><span class="vt-dot ' + cls + '"></span>' + esc(text) + "</div>";
   }
 
-  // 기술 대응(techNote) — 하이브리드: 온디맨드 루틴의 서술형 대응(short/long)이 있고 신선하면 그걸,
-  //   없거나 stock-ta.js(매일 자동)보다 오래됐으면 그날 계산된 자동 지표 요약(read)을 fallback 으로 표시.
-  //   → LLM 루틴이 아직 안 돌았거나 실패해도 기술 분석이 매일 자동으로 갱신된다.
+  // 기술 대응(techNote) — 매일 LLM 루틴이 생성한 단기/장기 대응만 표시(정확도 우선).
   function techNoteBlock(s) {
+    var n = s.techNote;
+    if (!n || (!n.short && !n.long)) return "";
     function line(k, v) {
       return v ? '<div class="tn-line"><span class="tn-k">' + k + '</span><span class="tn-v">' + esc(v) + "</span></div>" : "";
     }
-    var T = window.STOCK_TA, taAsOf = T && T.asOf, t = stTa(s.ticker);
-    var n = s.techNote;
-    var haveNote = n && (n.short || n.long);
-    // 온디맨드 techNote 가 자동 지표 데이터보다 오래됐으면(=루틴이 안 돌아 정체) 자동 요약으로 대체
-    var noteStale = haveNote && n.asOf && taAsOf && n.asOf < taAsOf;
-    if (haveNote && !noteStale) {
-      return '<div class="tech-note">' +
-        '<div class="tn-head">기술 대응' + (n.asOf ? '<span class="tn-as">' + esc(n.asOf) + "</span>" : "") + "</div>" +
-        line("단기", n.short) + line("장기", n.long) + "</div>";
-    }
-    // fallback — 매일 자동 계산되는 stock-ta.js 지표 요약(read)
-    if (t && (t.short || t.long)) {
-      return '<div class="tech-note">' +
-        '<div class="tn-head">기술 대응' + (taAsOf ? '<span class="tn-as">' + esc(taAsOf) + " · 자동</span>" : "") + "</div>" +
-        line("단기", t.short && t.short.read) + line("장기", t.long && t.long.read) + "</div>";
-    }
-    return "";
+    return '<div class="tech-note">' +
+      '<div class="tn-head">기술 대응' + (n.asOf ? '<span class="tn-as">' + esc(n.asOf) + "</span>" : "") + "</div>" +
+      line("단기", n.short) + line("장기", n.long) + "</div>";
   }
 
   function card(s, country, showTheme, watchDel) {
@@ -2166,21 +2152,13 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     function noteLine(k, v, lead) {
       return v ? '<div class="tn-line"><span class="tn-k">' + k + '</span><span class="tn-v">' + (lead || "") + esc(v) + "</span></div>" : "";
     }
-    var NNAsOf = window.INDEX_NOTES && window.INDEX_NOTES.asOf;
     function tile(x) {
       var chDir = x.changeDir === "up" ? "up" : "down";
       var n = NT[x.key];
       var g = idxLiqGrade(x.key);
       var liqChip = g ? '<span class="it-liq" style="color:' + (LIQ_COL[g] || "var(--muted)") + '">유동성 ' + esc(g) + "</span>" : "";
-      // 온디맨드 대응(index-notes)이 자동 신호(indices.js)보다 오래됐으면 자동 지표 요약으로 대체
-      var noteStale = NNAsOf && T.asOf && NNAsOf < T.asOf;
-      var body;
-      if (n && (n.value || n.short || n.long) && !noteStale) {
-        body = '<div class="it-note">' + noteLine("밸류", n.value, liqChip) + noteLine("단기", n.short) + noteLine("장기", n.long) + "</div>";
-      } else if (x.short || x.long) {
-        body = '<div class="it-note">' + (liqChip ? '<div class="tn-line"><span class="tn-k">밸류</span><span class="tn-v">' + liqChip + '지역 유동성 게이지 기준</span></div>' : "") +
-          noteLine("단기", x.short && x.short.read) + noteLine("장기", x.long && x.long.read) + "</div>";
-      } else { body = ""; }
+      var body = (n && (n.value || n.short || n.long))
+        ? '<div class="it-note">' + noteLine("밸류", n.value, liqChip) + noteLine("단기", n.short) + noteLine("장기", n.long) + "</div>" : "";
       var inner =
         '<div class="it-top"><span class="it-nm">' + esc(x.name) + "</span>" +
           (x.period ? '<span class="it-pd">' + esc(x.period) + "</span>" : "") + "</div>" +
