@@ -188,6 +188,25 @@ function validate(D, opts) {
         errors.push(tag + ": risks 는 한국어 1~4개 배열이어야 함");
       }
 
+      // 기술 심층분석(techNote, 선택) — 온디맨드 루틴이 6단계 프레임워크로 생성.
+      if (s.techNote != null) {
+        const n = s.techNote;
+        if (typeof n !== "object" || Array.isArray(n)) errors.push(tag + ": techNote 는 객체여야 함");
+        else {
+          const GRADES = ["매우 우호", "우호", "중립", "부정", "매우 부정"];
+          if (!n.verdict || !RE_HANGUL.test(n.verdict)) errors.push(tag + ": techNote.verdict 누락 또는 한국어 아님");
+          if (GRADES.indexOf(n.signal) < 0) errors.push(tag + ": techNote.signal 은 5단계(" + GRADES.join("/") + ") 중 하나여야 함 (현재 '" + n.signal + "')");
+          if (n.asOf != null) {
+            if (!RE_DATE.test(n.asOf)) errors.push(tag + ": techNote.asOf 형식 오류 '" + n.asOf + "'");
+            else if (n.asOf > today) errors.push(tag + ": techNote.asOf 가 미래 날짜 " + n.asOf);
+            else if ((new Date(today) - new Date(n.asOf)) / 86400000 > 10) warnings.push(tag + ": techNote 산출 후 10일 경과 (" + n.asOf + ") — 갱신 대상");
+          }
+          if (n.basis != null && (!Array.isArray(n.basis) || n.basis.some((b) => !b || !RE_HANGUL.test(b)))) {
+            errors.push(tag + ": techNote.basis 는 한국어 배열이어야 함");
+          }
+        }
+      }
+
       // 출처 — 신규 편입·논거 변경의 증거 사슬
       if (!RE_URL.test(s.chartUrl || "")) errors.push(tag + ": chartUrl 오류");
       if (!Array.isArray(s.sources) || s.sources.length < 1 || s.sources.length > 3) {
