@@ -210,13 +210,17 @@ function serialize(D) {
     if (D[k] !== undefined) L.push("  " + k + ": " + JSON.stringify(D[k]) + ",");
   });
   if (D.topPicks !== undefined) {
-    // 오늘의 Top Pick 3 — items 는 한 줄에 하나씩(일간 diff 최소화)
+    // 오늘의 Top Pick — 국가별(korea·us) 3종목씩, 한 줄에 하나씩(일간 diff 최소화)
+    const tp = D.topPicks;
     L.push("  topPicks: {");
-    L.push("    asOf: " + JSON.stringify(D.topPicks.asOf) + ",");
-    if (D.topPicks.note !== undefined) L.push("    note: " + JSON.stringify(D.topPicks.note) + ",");
-    L.push("    items: [");
-    (D.topPicks.items || []).forEach((it) => L.push("      " + JSON.stringify(it) + ","));
-    L.push("    ],");
+    L.push("    asOf: " + JSON.stringify(tp.asOf) + ",");
+    if (tp.note !== undefined) L.push("    note: " + JSON.stringify(tp.note) + ",");
+    ["korea", "us", "items"].forEach((g) => {
+      if (!Array.isArray(tp[g])) return;
+      L.push("    " + g + ": [");
+      tp[g].forEach((it) => L.push("      " + JSON.stringify(it) + ","));
+      L.push("    ],");
+    });
     L.push("  },");
   }
   if (Array.isArray(D.themes)) {
