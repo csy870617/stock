@@ -486,6 +486,7 @@ a.idx-tile:hover { background: color-mix(in srgb, var(--ink) 5%, var(--inset)); 
 .idx-tile .it-note .tn-line + .tn-line { border-top: 1px solid var(--grid); padding-top: 7px; margin-top: 3px; }
 .idx-tile .it-note .tn-k { color: var(--muted); font-size: 0.74rem; font-weight: 600; white-space: nowrap; }
 .idx-tile .it-note .tn-v { font-size: 0.82rem; line-height: 1.5; color: var(--ink); }
+.idx-tile .it-liq { font-size: 0.68rem; font-weight: 700; border: 1px solid currentColor; border-radius: 999px; padding: 1px 7px; margin-right: 6px; white-space: nowrap; vertical-align: 1px; }
 .idx-tile .it-sigs { display: flex; flex-wrap: wrap; }
 /* 통합 신호 박스 — 기술(단·장기 알약) + 밸류×타이밍(해석)을 한 카드에 정렬 */
 .sig-box { display: grid; grid-template-columns: auto 1fr; gap: 9px 12px; align-items: baseline;
@@ -2140,15 +2141,25 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     box.style.display = "";
 
     var NT = (window.INDEX_NOTES && window.INDEX_NOTES.items) || {};
-    // 지수 카드 — 이름·기준일 / 지수값·등락 / 단·장기 대응(종목 '기술 대응'과 동일). 대응이 없으면 자동 신호(taStrip) 폴백. 탭 시 네이버 차트.
-    function noteLine(k, v) {
-      return v ? '<div class="tn-line"><span class="tn-k">' + k + '</span><span class="tn-v">' + esc(v) + "</span></div>" : "";
+    // 지수↔지역 유동성 매핑 + 게이지 색
+    var IDX_REGION = { nasdaq: "us", dow: "us", kospi: "korea", kosdaq: "korea" };
+    var LIQ_COL = { "매우 우호": "var(--up)", "우호": "var(--tier2)", "신중": "var(--tier3)", "부정": "#eb6834", "매우 부정": "var(--down)" };
+    function idxLiqGrade(key) {
+      var r = IDX_REGION[key]; if (!r) return "";
+      var L = window.LIQUIDITY_DATA, A = window.LIQUIDITY_AUTO, c = (L && L[r]) || (A && A[r]);
+      return (c && c.shortTerm) || "";
+    }
+    // 지수 카드 — 이름·기준일 / 지수값·등락 / 밸류(유동성 포함) + 단·장기 대응. 탭 시 네이버 차트.
+    function noteLine(k, v, lead) {
+      return v ? '<div class="tn-line"><span class="tn-k">' + k + '</span><span class="tn-v">' + (lead || "") + esc(v) + "</span></div>" : "";
     }
     function tile(x) {
       var chDir = x.changeDir === "up" ? "up" : "down";
       var n = NT[x.key];
-      var body = (n && (n.short || n.long))
-        ? '<div class="it-note">' + noteLine("단기", n.short) + noteLine("장기", n.long) + "</div>" : "";
+      var g = idxLiqGrade(x.key);
+      var liqChip = g ? '<span class="it-liq" style="color:' + (LIQ_COL[g] || "var(--muted)") + '">유동성 ' + esc(g) + "</span>" : "";
+      var body = (n && (n.value || n.short || n.long))
+        ? '<div class="it-note">' + noteLine("밸류", n.value, liqChip) + noteLine("단기", n.short) + noteLine("장기", n.long) + "</div>" : "";
       var inner =
         '<div class="it-top"><span class="it-nm">' + esc(x.name) + "</span>" +
           (x.period ? '<span class="it-pd">' + esc(x.period) + "</span>" : "") + "</div>" +
