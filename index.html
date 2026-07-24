@@ -242,7 +242,18 @@ a { color: inherit; }
 .pick .nm { font-weight: 700; font-size: 0.98rem; }
 .pick .nm .tk { color: var(--muted); font-weight: 400; font-size: 0.75rem; margin-left: 5px; }
 .pick .up-big { font-size: 1.35rem; font-weight: 800; color: var(--up); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.pick .up-big.down { color: var(--down); }
 .pick .sub { color: var(--ink-2); font-size: 0.8rem; }
+/* Top Pick 배너 확장: 시장 배지·신호 배지·선정 이유 */
+.pick .mkt { display: inline-flex; align-items: center; gap: 4px; font-size: 0.68rem; font-weight: 700; color: var(--ink-2);
+  background: var(--chip-bg); border-radius: 999px; padding: 3px 9px; width: fit-content; }
+.pick .psigs { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 1px; }
+.pick .psig { display: inline-flex; align-items: center; gap: 4px; font-size: 0.68rem; font-weight: 700; color: #fff;
+  padding: 1px 8px; border-radius: 999px; white-space: nowrap; }
+.pick .psig .psig-k { font-weight: 600; opacity: 0.85; font-size: 0.64rem; }
+.pick .reason { color: var(--ink-2); font-size: 0.8rem; line-height: 1.5; margin-top: 2px; }
+.picks-head .crit .pk-stale { display: inline-block; margin-left: 8px; font-weight: 700; color: var(--down);
+  background: color-mix(in srgb, var(--down) 14%, transparent); padding: 1px 8px; border-radius: 999px; }
 
 /* ── 종목 변경(편입·제외) ── */
 .roster { margin: 0 0 32px; background: var(--surface); border: 1px solid var(--line);
@@ -582,6 +593,15 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
 
 <div class="wrap">
   <div class="upd-status" id="updStatus" hidden></div>
+
+  <section class="picks" id="picksBox" style="display:none">
+    <div class="picks-head">
+      <h2>오늘의 Top Pick 3</h2>
+      <span class="crit" id="picksCrit">전 종목(정식 추천) 중 밸류·기술·유동성을 종합한 최선 3종목</span>
+    </div>
+    <div class="picks-grid" id="picksGrid"></div>
+  </section>
+
   <div class="market-note" id="marketNote"></div>
 
   <div class="liq" id="liqBox" style="display:none">
@@ -601,14 +621,6 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     </div>
     <div class="idx-grid" id="idxGrid"></div>
   </div>
-
-  <section class="picks" id="picksBox" style="display:none">
-    <div class="picks-head">
-      <h2>오늘의 Top Picks</h2>
-      <span class="crit">안전성과 수익성을 우선한 최우선 종목</span>
-    </div>
-    <div class="picks-grid" id="picksGrid"></div>
-  </section>
 
   <section class="roster" id="rosterBox" style="display:none">
     <div class="roster-head">
@@ -1306,33 +1318,78 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       html || '<div class="roster-empty">이 날짜에는 편입·제외 변경이 없습니다.</div>';
   }
 
+  // Top Pick 신호 배지 (단기/장기 5단계) — techNote sig 기준
+  function pickSigBadges(s) {
+    var n = s.techNote || {};
+    if (!n.sigShort && !n.sigLong) return "";
+    function one(k, g) {
+      return g ? '<span class="psig" style="background:' + (TA_SIG_COL[g] || "var(--muted)") + '"><span class="psig-k">' + k + "</span>" + esc(g) + "</span>" : "";
+    }
+    return '<div class="psigs">' + one("단기", n.sigShort) + one("장기", n.sigLong) + "</div>";
+  }
   function renderTopPicks() {
     var box = document.getElementById("picksBox");
+    var grid = document.getElementById("picksGrid");
+    var crit = document.getElementById("picksCrit");
+    var DEFAULT_CRIT = "전 종목(정식 추천) 중 밸류·기술·유동성을 종합한 최선 3종목";
+    var TP = D.topPicks;
+
+    // 1) 루틴 큐레이션(전 종목·양국 통합, watch 제외) 우선 — 밸류·기술·유동성 종합 선정 + 선정 이유
+    if (TP && Array.isArray(TP.items) && TP.items.length) {
+      var byT = {};
+      ["korea", "us"].forEach(function (c) {
+        (D[c] || []).forEach(function (s) { if (s.theme !== "watch" && !byT[s.ticker]) byT[s.ticker] = { c: c, s: s }; });
+      });
+      var rows = TP.items.map(function (it) { var e = byT[it.ticker]; return e ? { c: e.c, s: e.s, it: it } : null; }).filter(Boolean);
+      if (rows.length) {
+        box.style.display = "";
+        var taAsOf = window.STOCK_TA && window.STOCK_TA.asOf;
+        var stale = TP.asOf && taAsOf && TP.asOf < taAsOf;
+        crit.innerHTML = esc(TP.note || DEFAULT_CRIT) + (TP.asOf ? " · " + esc(TP.asOf) + " 기준" : "") +
+          (stale ? '<span class="pk-stale" title="오늘 데이터(' + esc(taAsOf) + ')로 아직 갱신되지 않았습니다. 표시는 ' + esc(TP.asOf) + ' 기준입니다.">⚠ 미갱신</span>' : "");
+        grid.innerHTML = rows.map(function (r, i) {
+          var s = r.s, it = r.it, cc = r.c;
+          var e = effective(s);   // 실시간 우선
+          var upCls = (e.upside != null && e.upside < 0) ? " down" : "";
+          var flag = cc === "korea" ? "🇰🇷" : "🇺🇸";
+          var reason = it.reason ? '<div class="reason">' + esc(it.reason) + "</div>" : "";
+          return '<div class="pick" data-ticker="' + esc(s.ticker) + '" data-theme="' + esc(s.theme) + '" data-country="' + cc + '"><span class="rank">' + (i + 1) + "</span>" +
+            '<span class="mkt">' + flag + " " + esc(s.market || "") + "</span>" +
+            '<div class="nm">' + esc(s.name) + '<span class="tk">' + esc(s.ticker) + "</span></div>" +
+            '<div class="up-big' + upCls + '">' + fmtPct(e.upside) + "</div>" +
+            '<div class="sub">' + fmtPrice(e.price, cc) + " → 목표 " + fmtPrice(s.targetPrice, cc) +
+            (s.dividendYield ? " · 배당 " + Number(s.dividendYield).toFixed(1) + "%" : "") + "</div>" +
+            pickSigBadges(s) + reason + "</div>";
+        }).join("");
+        ensureLive(rows.map(function (r) { return r.s; }), refreshLive);
+        return;
+      }
+    }
+
+    // 2) 폴백: 큐레이션 데이터가 없으면 현재 국가 Tier 1 상위 3종목(기존 휴리스틱)
+    crit.textContent = DEFAULT_CRIT;
     var seen = {}, picks = [];
-    // 최우선(Tier 1) 확신 등급 & (실시간 기준) 목표가 미도달 종목만 후보로
-    // — 카드와 동일한 effective() 상승여력으로 판정해, 실시간 시세가 붙어도 표시가 어긋나지 않게 한다.
     (D[state.country] || []).forEach(function (s) {
-      if (s.tier !== 1 || seen[s.ticker] || s.theme === "watch") return;   // 관심종목은 Top Picks 후보에서 제외
+      if (s.tier !== 1 || seen[s.ticker] || s.theme === "watch") return;
       var up = effective(s).upside;
       if (up == null || up <= 0) return;
       seen[s.ticker] = true; picks.push(s);
     });
-    // 종합 점수 내림차순(동점 시 상승여력)
     picks.sort(function (a, b) { return (pickScore(b) - pickScore(a)) || (numOr(b.upside, 0) - numOr(a.upside, 0)); });
     picks = picks.slice(0, 3);
     if (!picks.length) { box.style.display = "none"; return; }
     box.style.display = "";
-    document.getElementById("picksGrid").innerHTML = picks.map(function (s, i) {
+    grid.innerHTML = picks.map(function (s, i) {
       var thm = themeMeta(s.theme);
-      var e = effective(s);   // 가격·상승여력은 카드와 동일하게 실시간 우선
-      return '<div class="pick" data-ticker="' + esc(s.ticker) + '" data-theme="' + esc(s.theme) + '"><span class="rank">' + (i + 1) + "</span>" +
+      var e = effective(s);
+      return '<div class="pick" data-ticker="' + esc(s.ticker) + '" data-theme="' + esc(s.theme) + '" data-country="' + state.country + '"><span class="rank">' + (i + 1) + "</span>" +
         '<span class="thm">' + esc(thm.label) + " · Tier 1</span>" +
         '<div class="nm">' + esc(s.name) + '<span class="tk">' + esc(s.ticker) + "</span></div>" +
         '<div class="up-big">' + fmtPct(e.upside) + "</div>" +
         '<div class="sub">' + fmtPrice(e.price, state.country) + " → 목표 " + fmtPrice(s.targetPrice, state.country) +
-        (s.dividendYield ? " · 배당 " + Number(s.dividendYield).toFixed(1) + "%" : "") + "</div></div>";
+        (s.dividendYield ? " · 배당 " + Number(s.dividendYield).toFixed(1) + "%" : "") + "</div>" +
+        pickSigBadges(s) + "</div>";
     }).join("");
-    // 후보들의 실시간 시세도 확보해, 도착하면 카드와 함께 다시 그린다(현재 주제에 없어도).
     ensureLive(picks, refreshLive);
   }
 
@@ -2036,7 +2093,14 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   // Top Pick 클릭 → 해당 주제·카드 뷰로 전환하고 그 종목 카드로 스크롤·강조
   document.getElementById("picksGrid").addEventListener("click", function (e) {
     var el = e.target.closest(".pick"); if (!el) return;
-    var ticker = el.dataset.ticker, theme = el.dataset.theme;
+    var ticker = el.dataset.ticker, theme = el.dataset.theme, country = el.dataset.country;
+    // 다른 국가 종목이면 국가 세그먼트도 전환(양국 통합 Top Pick 대응)
+    if (country && country !== state.country) {
+      state.country = country;
+      document.getElementById("countrySeg").querySelectorAll("button").forEach(function (x) {
+        x.classList.toggle("on", x.dataset.c === country);
+      });
+    }
     if (theme) state.theme = theme;
     state.view = "cards";
     renderThemeChips();

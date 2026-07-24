@@ -262,6 +262,37 @@ function validate(D, opts) {
     });
   });
 
+  // ── 오늘의 Top Pick 3 (선택) — 정식 추천(비-watch) 종목 중에서만 선정 ──
+  if (D.topPicks != null) {
+    const tp = D.topPicks;
+    if (typeof tp !== "object" || Array.isArray(tp)) {
+      errors.push("topPicks 는 {asOf, items[]} 객체여야 함");
+    } else {
+      if (!RE_DATE.test(tp.asOf || "")) errors.push("topPicks.asOf 형식 오류: " + tp.asOf);
+      else if (tp.asOf > today) errors.push("topPicks.asOf 가 미래 날짜: " + tp.asOf);
+      const items = tp.items;
+      if (!Array.isArray(items) || items.length !== 3) {
+        errors.push("topPicks.items 는 정확히 3종목 배열이어야 함 (현재 " + (Array.isArray(items) ? items.length : "비배열") + ")");
+      } else {
+        // 정식 추천(비-watch) 종목 티커 집합
+        const pickable = new Set();
+        ["korea", "us"].forEach((c) => (D[c] || []).forEach((s) => { if (s.theme !== "watch") pickable.add(s.ticker); }));
+        const seen = {};
+        items.forEach((it, i) => {
+          const tag = "topPicks[" + i + "]";
+          if (!it || typeof it !== "object") { errors.push(tag + ": 객체 아님"); return; }
+          if (!it.ticker) errors.push(tag + ": ticker 누락");
+          else {
+            if (!pickable.has(it.ticker)) errors.push(tag + ": '" + it.ticker + "' 는 정식 추천 종목이 아님 (watch 제외·미편성 티커는 Top Pick 불가)");
+            seen[it.ticker] = (seen[it.ticker] || 0) + 1;
+          }
+          if (!it.reason || !RE_HANGUL.test(it.reason)) errors.push(tag + ": reason(선정 이유) 누락 또는 한국어 아님");
+        });
+        Object.keys(seen).forEach((t) => { if (seen[t] > 1) errors.push("topPicks: '" + t + "' 중복 선정"); });
+      }
+    }
+  }
+
   return { errors, warnings };
 }
 
