@@ -20,10 +20,15 @@ window.STOCK_DATA = {
   topPicks: {
     asOf: "2026-07-24",
     note: "급락 변동성 국면 — 밸류(상승여력)와 단기·장기 기술 신호(매수 이상)를 함께 충족하는 종목 우선",
-    items: [
+    korea: [
+      {"rank":1,"ticker":"207940","market":"KOSPI","name":"삼성바이오로직스","reason":"적극매수·매수 신호 + 상승여력 약 39%, CDMO 수주 성장의 core tier1 우량주로 급락장 방어형 성격이 강하다."},
+      {"rank":2,"ticker":"139130","market":"KOSPI","name":"iM금융지주","reason":"단기·장기 모두 적극매수 최상위 신호에 배당 쿠션까지, 변동성 국면에서 상승여력 약 32%로 방어와 수익을 겸비."},
+      {"rank":3,"ticker":"096770","market":"KOSPI","name":"SK이노베이션","reason":"단기·장기 적극매수 전환에 상승여력 약 25%, 정유·배터리 밸류에이션 매력이 부각되는 저평가 가치주."},
+    ],
+    us: [
       {"rank":1,"ticker":"NVDA","market":"NASDAQ","name":"NVIDIA","reason":"단기·장기 매수 신호에 상승여력 약 45%로 최상위 — AI 반도체 구조적 수요가 이어지고 조정장에서도 기술 신호가 견조하다."},
-      {"rank":2,"ticker":"207940","market":"KOSPI","name":"삼성바이오로직스","reason":"적극매수·매수 신호 + 상승여력 약 39%, CDMO 수주 성장의 core tier1 우량주로 급락장 방어형 성격이 강하다."},
-      {"rank":3,"ticker":"139130","market":"KOSPI","name":"iM금융지주","reason":"단기·장기 모두 적극매수 최상위 신호에 배당 쿠션까지, 변동성 국면에서 상승여력 약 32%로 방어와 수익을 겸비."},
+      {"rank":2,"ticker":"GM","market":"NYSE","name":"General Motors","reason":"단기·장기 모두 적극매수에 상승여력 약 19%, 저PER 가치주로 위험회피 로테이션의 수혜가 기대된다."},
+      {"rank":3,"ticker":"CVX","market":"NYSE","name":"Chevron","reason":"단기·장기 적극매수 + 배당 매력, 유가 강세 국면에서 방어력을 갖춘 고배당 에너지주."},
     ],
   },
   themes: [

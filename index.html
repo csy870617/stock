@@ -221,6 +221,8 @@ a { color: inherit; }
 .picks-head h2 { font-size: 1.24rem; font-weight: 700; letter-spacing: -0.026em; }
 .picks-head .crit { display: block; color: var(--muted); font-size: 0.8rem; margin-top: 4px; line-height: 1.5; }
 .picks-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.picks-group + .picks-group { margin-top: 16px; }
+.picks-sub { font-size: 0.92rem; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 9px; color: var(--ink); }
 .pick {
   background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-sm);
   padding: 16px 18px; display: flex; flex-direction: column; gap: 6px; position: relative; cursor: pointer;
@@ -594,14 +596,6 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
 <div class="wrap">
   <div class="upd-status" id="updStatus" hidden></div>
 
-  <section class="picks" id="picksBox" style="display:none">
-    <div class="picks-head">
-      <h2>오늘의 Top Pick 3</h2>
-      <span class="crit" id="picksCrit">전 종목(정식 추천) 중 밸류·기술·유동성을 종합한 최선 3종목</span>
-    </div>
-    <div class="picks-grid" id="picksGrid"></div>
-  </section>
-
   <div class="market-note" id="marketNote"></div>
 
   <div class="liq" id="liqBox" style="display:none">
@@ -621,6 +615,21 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     </div>
     <div class="idx-grid" id="idxGrid"></div>
   </div>
+
+  <section class="picks" id="picksBox" style="display:none">
+    <div class="picks-head">
+      <h2>오늘의 Top Pick</h2>
+      <span class="crit" id="picksCrit">전 종목(정식 추천) 중 밸류·기술·유동성을 종합한 국가별 최선 3종목</span>
+    </div>
+    <div class="picks-group" id="picksGroupKR">
+      <div class="picks-sub">🇰🇷 한국 Top 3</div>
+      <div class="picks-grid" id="picksGridKR"></div>
+    </div>
+    <div class="picks-group" id="picksGroupUS">
+      <div class="picks-sub">🇺🇸 미국 Top 3</div>
+      <div class="picks-grid" id="picksGridUS"></div>
+    </div>
+  </section>
 
   <section class="roster" id="rosterBox" style="display:none">
     <div class="roster-head">
@@ -1327,70 +1336,66 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     }
     return '<div class="psigs">' + one("단기", n.sigShort) + one("장기", n.sigLong) + "</div>";
   }
-  function renderTopPicks() {
-    var box = document.getElementById("picksBox");
-    var grid = document.getElementById("picksGrid");
-    var crit = document.getElementById("picksCrit");
-    var DEFAULT_CRIT = "전 종목(정식 추천) 중 밸류·기술·유동성을 종합한 최선 3종목";
-    var TP = D.topPicks;
-
-    // 1) 루틴 큐레이션(전 종목·양국 통합, watch 제외) 우선 — 밸류·기술·유동성 종합 선정 + 선정 이유
-    if (TP && Array.isArray(TP.items) && TP.items.length) {
-      var byT = {};
-      ["korea", "us"].forEach(function (c) {
-        (D[c] || []).forEach(function (s) { if (s.theme !== "watch" && !byT[s.ticker]) byT[s.ticker] = { c: c, s: s }; });
-      });
-      var rows = TP.items.map(function (it) { var e = byT[it.ticker]; return e ? { c: e.c, s: e.s, it: it } : null; }).filter(Boolean);
-      if (rows.length) {
-        box.style.display = "";
-        var taAsOf = window.STOCK_TA && window.STOCK_TA.asOf;
-        var stale = TP.asOf && taAsOf && TP.asOf < taAsOf;
-        crit.innerHTML = esc(TP.note || DEFAULT_CRIT) + (TP.asOf ? " · " + esc(TP.asOf) + " 기준" : "") +
-          (stale ? '<span class="pk-stale" title="오늘 데이터(' + esc(taAsOf) + ')로 아직 갱신되지 않았습니다. 표시는 ' + esc(TP.asOf) + ' 기준입니다.">⚠ 미갱신</span>' : "");
-        grid.innerHTML = rows.map(function (r, i) {
-          var s = r.s, it = r.it, cc = r.c;
-          var e = effective(s);   // 실시간 우선
-          var upCls = (e.upside != null && e.upside < 0) ? " down" : "";
-          var flag = cc === "korea" ? "🇰🇷" : "🇺🇸";
-          var reason = it.reason ? '<div class="reason">' + esc(it.reason) + "</div>" : "";
-          return '<div class="pick" data-ticker="' + esc(s.ticker) + '" data-theme="' + esc(s.theme) + '" data-country="' + cc + '"><span class="rank">' + (i + 1) + "</span>" +
-            '<span class="mkt">' + flag + " " + esc(s.market || "") + "</span>" +
-            '<div class="nm">' + esc(s.name) + '<span class="tk">' + esc(s.ticker) + "</span></div>" +
-            '<div class="up-big' + upCls + '">' + fmtPct(e.upside) + "</div>" +
-            '<div class="sub">' + fmtPrice(e.price, cc) + " → 목표 " + fmtPrice(s.targetPrice, cc) +
-            (s.dividendYield ? " · 배당 " + Number(s.dividendYield).toFixed(1) + "%" : "") + "</div>" +
-            pickSigBadges(s) + reason + "</div>";
-        }).join("");
-        ensureLive(rows.map(function (r) { return r.s; }), refreshLive);
-        return;
-      }
-    }
-
-    // 2) 폴백: 큐레이션 데이터가 없으면 현재 국가 Tier 1 상위 3종목(기존 휴리스틱)
-    crit.textContent = DEFAULT_CRIT;
+  // 한 종목 → Top Pick 카드 HTML (cc=국가, rankNum=순위, reason=선정 이유·선택)
+  function pickCard(s, cc, rankNum, reason) {
+    var e = effective(s);
+    var upCls = (e.upside != null && e.upside < 0) ? " down" : "";
+    var flag = cc === "korea" ? "🇰🇷" : "🇺🇸";
+    var rz = reason ? '<div class="reason">' + esc(reason) + "</div>" : "";
+    return '<div class="pick" data-ticker="' + esc(s.ticker) + '" data-theme="' + esc(s.theme) + '" data-country="' + cc + '"><span class="rank">' + rankNum + "</span>" +
+      '<span class="mkt">' + flag + " " + esc(s.market || "") + "</span>" +
+      '<div class="nm">' + esc(s.name) + '<span class="tk">' + esc(s.ticker) + "</span></div>" +
+      '<div class="up-big' + upCls + '">' + fmtPct(e.upside) + "</div>" +
+      '<div class="sub">' + fmtPrice(e.price, cc) + " → 목표 " + fmtPrice(s.targetPrice, cc) +
+      (s.dividendYield ? " · 배당 " + Number(s.dividendYield).toFixed(1) + "%" : "") + "</div>" +
+      pickSigBadges(s) + rz + "</div>";
+  }
+  // 국가별 상위 3 폴백(큐레이션 데이터 없을 때) — 그 국가 정식 추천 중 종합점수 상위 3
+  function fallbackPicks(cc) {
     var seen = {}, picks = [];
-    (D[state.country] || []).forEach(function (s) {
-      if (s.tier !== 1 || seen[s.ticker] || s.theme === "watch") return;
+    (D[cc] || []).forEach(function (s) {
+      if (seen[s.ticker] || s.theme === "watch") return;
       var up = effective(s).upside;
       if (up == null || up <= 0) return;
       seen[s.ticker] = true; picks.push(s);
     });
     picks.sort(function (a, b) { return (pickScore(b) - pickScore(a)) || (numOr(b.upside, 0) - numOr(a.upside, 0)); });
-    picks = picks.slice(0, 3);
-    if (!picks.length) { box.style.display = "none"; return; }
+    return picks.slice(0, 3);
+  }
+  function renderTopPicks() {
+    var box = document.getElementById("picksBox");
+    var crit = document.getElementById("picksCrit");
+    var DEFAULT_CRIT = "전 종목(정식 추천) 중 밸류·기술·유동성을 종합한 국가별 최선 3종목";
+    var TP = D.topPicks || {};
+    var live = [];
+
+    // 국가별 그룹 렌더 — 큐레이션(topPicks[cc]) 우선, 없으면 그 국가 상위 3 폴백
+    function renderGroup(cc, gridId, groupId) {
+      var grid = document.getElementById(gridId);
+      var group = document.getElementById(groupId);
+      var byT = {};
+      (D[cc] || []).forEach(function (s) { if (s.theme !== "watch" && !byT[s.ticker]) byT[s.ticker] = s; });
+      var rows = [];
+      if (Array.isArray(TP[cc]) && TP[cc].length) {
+        TP[cc].forEach(function (it) { var s = byT[it.ticker]; if (s) rows.push({ s: s, reason: it.reason }); });
+      }
+      if (!rows.length) fallbackPicks(cc).forEach(function (s) { rows.push({ s: s, reason: "" }); });
+      if (!rows.length) { group.style.display = "none"; return 0; }
+      group.style.display = "";
+      grid.innerHTML = rows.map(function (r, i) { return pickCard(r.s, cc, i + 1, r.reason); }).join("");
+      rows.forEach(function (r) { live.push(r.s); });
+      return rows.length;
+    }
+
+    var n = renderGroup("korea", "picksGridKR", "picksGroupKR") + renderGroup("us", "picksGridUS", "picksGroupUS");
+    if (!n) { box.style.display = "none"; return; }
     box.style.display = "";
-    grid.innerHTML = picks.map(function (s, i) {
-      var thm = themeMeta(s.theme);
-      var e = effective(s);
-      return '<div class="pick" data-ticker="' + esc(s.ticker) + '" data-theme="' + esc(s.theme) + '" data-country="' + state.country + '"><span class="rank">' + (i + 1) + "</span>" +
-        '<span class="thm">' + esc(thm.label) + " · Tier 1</span>" +
-        '<div class="nm">' + esc(s.name) + '<span class="tk">' + esc(s.ticker) + "</span></div>" +
-        '<div class="up-big">' + fmtPct(e.upside) + "</div>" +
-        '<div class="sub">' + fmtPrice(e.price, state.country) + " → 목표 " + fmtPrice(s.targetPrice, state.country) +
-        (s.dividendYield ? " · 배당 " + Number(s.dividendYield).toFixed(1) + "%" : "") + "</div>" +
-        pickSigBadges(s) + "</div>";
-    }).join("");
-    ensureLive(picks, refreshLive);
+
+    var taAsOf = window.STOCK_TA && window.STOCK_TA.asOf;
+    var stale = TP.asOf && taAsOf && TP.asOf < taAsOf;
+    crit.innerHTML = esc(TP.note || DEFAULT_CRIT) + (TP.asOf ? " · " + esc(TP.asOf) + " 기준" : "") +
+      (stale ? '<span class="pk-stale" title="오늘 데이터(' + esc(taAsOf) + ')로 아직 갱신되지 않았습니다. 표시는 ' + esc(TP.asOf) + ' 기준입니다.">⚠ 미갱신</span>' : "");
+    ensureLive(live, refreshLive);
   }
 
   // 표 뷰 — 모바일 한 화면에 들어오는 종목당 2줄 컴팩트 리스트(가로 스크롤 없음). 탭 → 그 행만 상세 펼침.
@@ -2091,7 +2096,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     if (!e.target.closest(".wl-search")) { var box = document.getElementById("wlSug"); if (box) { box.hidden = true; } }
   });
   // Top Pick 클릭 → 해당 주제·카드 뷰로 전환하고 그 종목 카드로 스크롤·강조
-  document.getElementById("picksGrid").addEventListener("click", function (e) {
+  document.getElementById("picksBox").addEventListener("click", function (e) {
     var el = e.target.closest(".pick"); if (!el) return;
     var ticker = el.dataset.ticker, theme = el.dataset.theme, country = el.dataset.country;
     // 다른 국가 종목이면 국가 세그먼트도 전환(양국 통합 Top Pick 대응)

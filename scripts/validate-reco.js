@@ -262,34 +262,43 @@ function validate(D, opts) {
     });
   });
 
-  // ── 오늘의 Top Pick 3 (선택) — 정식 추천(비-watch) 종목 중에서만 선정 ──
+  // ── 오늘의 Top Pick (선택) — 국가별(korea·us) 정식 추천(비-watch) 3종목씩 ──
   if (D.topPicks != null) {
     const tp = D.topPicks;
     if (typeof tp !== "object" || Array.isArray(tp)) {
-      errors.push("topPicks 는 {asOf, items[]} 객체여야 함");
+      errors.push("topPicks 는 {asOf, korea[], us[]} 객체여야 함");
     } else {
       if (!RE_DATE.test(tp.asOf || "")) errors.push("topPicks.asOf 형식 오류: " + tp.asOf);
       else if (tp.asOf > today) errors.push("topPicks.asOf 가 미래 날짜: " + tp.asOf);
-      const items = tp.items;
-      if (!Array.isArray(items) || items.length !== 3) {
-        errors.push("topPicks.items 는 정확히 3종목 배열이어야 함 (현재 " + (Array.isArray(items) ? items.length : "비배열") + ")");
-      } else {
-        // 정식 추천(비-watch) 종목 티커 집합
-        const pickable = new Set();
-        ["korea", "us"].forEach((c) => (D[c] || []).forEach((s) => { if (s.theme !== "watch") pickable.add(s.ticker); }));
+      // 국가별 정식 추천(비-watch) 티커 집합
+      function pickableOf(cc) {
+        const set = new Set();
+        const src = cc === "items" ? ["korea", "us"] : [cc];
+        src.forEach((c) => (D[c] || []).forEach((s) => { if (s.theme !== "watch") set.add(s.ticker); }));
+        return set;
+      }
+      const groups = ["korea", "us", "items"].filter((g) => tp[g] !== undefined);
+      if (!groups.length) errors.push("topPicks 에 korea·us 그룹이 없음 (각 국가 3종목 필요)");
+      groups.forEach((g) => {
+        const arr = tp[g];
+        if (!Array.isArray(arr) || arr.length !== 3) {
+          errors.push("topPicks." + g + " 는 정확히 3종목 배열이어야 함 (현재 " + (Array.isArray(arr) ? arr.length : "비배열") + ")");
+          return;
+        }
+        const pickable = pickableOf(g);
         const seen = {};
-        items.forEach((it, i) => {
-          const tag = "topPicks[" + i + "]";
+        arr.forEach((it, i) => {
+          const tag = "topPicks." + g + "[" + i + "]";
           if (!it || typeof it !== "object") { errors.push(tag + ": 객체 아님"); return; }
           if (!it.ticker) errors.push(tag + ": ticker 누락");
           else {
-            if (!pickable.has(it.ticker)) errors.push(tag + ": '" + it.ticker + "' 는 정식 추천 종목이 아님 (watch 제외·미편성 티커는 Top Pick 불가)");
+            if (!pickable.has(it.ticker)) errors.push(tag + ": '" + it.ticker + "' 는 " + (g === "us" ? "미국" : g === "korea" ? "한국" : "") + " 정식 추천 종목이 아님 (watch·타국·미편성 불가)");
             seen[it.ticker] = (seen[it.ticker] || 0) + 1;
           }
           if (!it.reason || !RE_HANGUL.test(it.reason)) errors.push(tag + ": reason(선정 이유) 누락 또는 한국어 아님");
         });
-        Object.keys(seen).forEach((t) => { if (seen[t] > 1) errors.push("topPicks: '" + t + "' 중복 선정"); });
-      }
+        Object.keys(seen).forEach((t) => { if (seen[t] > 1) errors.push("topPicks." + g + ": '" + t + "' 중복 선정"); });
+      });
     }
   }
 
