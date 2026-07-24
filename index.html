@@ -1113,10 +1113,9 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     var aiStat = s.aiTarget != null
       ? '<div class="c-stat" title="' + esc(s.aiBasis || "") + '" data-basis="' + esc(s.aiBasis || "") + '" style="cursor:help"><div class="c-sk">AI 적정가</div><div class="c-sv">' + fmtPrice(s.aiTarget, country) + "</div></div>"
       : '<div class="c-stat" title="' + esc(aiPendingText(s)) + '" data-basis="' + esc(aiPendingText(s)) + '" style="cursor:help"><div class="c-sk">AI 적정가</div><div class="c-sv c-muted">추정중</div></div>';
-    // 기술 + 밸류×타이밍을 하나의 통합 신호 박스로 묶는다(라벨 정렬 그리드). 둘 다 없으면 생략.
-    var taCells = stockTaCells(s.ticker);
+    // 밸류×타이밍 해석만 신호 박스에 둔다(기술 단·장기 신호는 아래 '기술 대응' 블록으로 대체·제거).
     var vtCells = valueTimingCells(e.upside, s.ticker);
-    var sigBox = (taCells || vtCells) ? '<div class="sig-box">' + taCells + vtCells + "</div>" : "";
+    var sigBox = vtCells ? '<div class="sig-box">' + vtCells + "</div>" : "";
     // 분석(실적·논거·리스크)은 접지 않고 바로 표시
     var analysis =
       (s.earnings ? '<div class="earn">' + esc(s.earnings) + "</div>" : "") +
