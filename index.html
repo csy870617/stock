@@ -468,21 +468,25 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 0.86rem; min-widt
 .idx .idx-head h2 { font-size: 1.18rem; font-weight: 700; letter-spacing: -0.024em; }
 .idx .idx-as { color: var(--muted); font-size: 0.78rem; }
 .idx .idx-note { color: var(--muted); font-size: 0.8rem; line-height: 1.55; margin-bottom: 16px; }
-/* 지수: 반응형 타일 그리드 — 모바일 2×2, 넓은 화면 1×4 */
-.idx-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-@media (min-width: 620px) { .idx-grid { grid-template-columns: repeat(4, 1fr); } }
+/* 지수: 단기/장기 대응 카드 — 모바일 1열, 넓은 화면 2열 */
+.idx-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
+@media (min-width: 640px) { .idx-grid { grid-template-columns: 1fr 1fr; } }
 .idx-tile { display: block; background: var(--inset); border-radius: var(--r-sm); padding: 14px 16px; text-decoration: none; color: inherit; transition: background .15s; }
 a.idx-tile:hover { background: color-mix(in srgb, var(--ink) 5%, var(--inset)); }
-.idx-tile .it-top { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; margin-bottom: 9px; flex-wrap: nowrap; }
+.idx-tile .it-top { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; margin-bottom: 7px; flex-wrap: nowrap; }
 .idx-tile .it-nm { font-size: 0.9rem; font-weight: 700; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .idx-tile .it-pd { color: var(--muted); font-size: 0.67rem; white-space: nowrap; flex: 0 0 auto; }
-.idx-tile .it-px { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.idx-tile .it-px { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 11px; }
 .idx-tile .it-lv { font-size: 1.4rem; font-weight: 800; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; line-height: 1; }
 .idx-tile .it-ch { font-size: 0.86rem; font-weight: 700; }
 .idx-tile .it-ch.up { color: var(--up); }
 .idx-tile .it-ch.down { color: var(--down); }
+.idx-tile .it-note { border-top: 1px solid var(--grid); padding-top: 9px; }
+.idx-tile .it-note .tn-line { display: grid; grid-template-columns: auto 1fr; gap: 9px; align-items: baseline; padding: 3px 0; }
+.idx-tile .it-note .tn-line + .tn-line { border-top: 1px solid var(--grid); padding-top: 7px; margin-top: 3px; }
+.idx-tile .it-note .tn-k { color: var(--muted); font-size: 0.74rem; font-weight: 600; white-space: nowrap; }
+.idx-tile .it-note .tn-v { font-size: 0.82rem; line-height: 1.5; color: var(--ink); }
 .idx-tile .it-sigs { display: flex; flex-wrap: wrap; }
-.idx-tile .ta-strip { flex-direction: column; align-items: flex-start; gap: 5px; }   /* 지표는 단기·장기를 두 줄로 */
 /* 통합 신호 박스 — 기술(단·장기 알약) + 밸류×타이밍(해석)을 한 카드에 정렬 */
 .sig-box { display: grid; grid-template-columns: auto 1fr; gap: 9px 12px; align-items: baseline;
   background: var(--inset); border-radius: var(--r-sm); padding: 12px 14px; }
@@ -637,6 +641,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
 <script src="data/liquidity.js"></script>
 <script src="data/liquidity-auto.js"></script>
 <script src="data/indices.js"></script>
+<script src="data/index-notes.js"></script>
 <script src="data/stock-ta.js"></script>
 <script src="data/recommendations.js"></script>
 <script src="data/quotes.js"></script>
@@ -1324,8 +1329,6 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     var e = effective(s);
     var upCls = e.upside == null ? "" : e.upside >= 0 ? "up" : "down";
     var tm = tierMeta(s.tier);
-    var t = stTa(s.ticker);
-    var tech = (t && (t.short || t.long)) ? taStrip(t.short, t.long, "ta-mini") : '<span class="tl-na">–</span>';
     var live = e.live ? ' <span class="live-tag">실시간</span>' : "";
     var exp = tblExpanded[s.ticker] ? " on" : "";
     // 행 자체가 <button> 이라 삭제는 중첩 버튼 대신 role=button 스팬으로(위임 핸들러가 처리)
@@ -1336,7 +1339,6 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
         '<div class="tl-nm">' + esc(s.name) + '<span class="tl-tk">' + esc(s.ticker) + "</span></div>" +
         '<div class="tl-sub"><span class="tl-tier"><span class="dot" style="background:' + tm.color + '"></span>' +
           esc((tm.label || "").split(" · ")[0]) + "</span>" +
-          ' · ' + tech +
           (s.dividendYield != null ? ' · 배당 ' + Number(s.dividendYield).toFixed(1) + "%" : "") + "</div>" +
       "</div>" +
       '<div class="tl-r"><div class="tl-px">' + fmtPrice(e.price, state.country) + live + "</div>" +
@@ -1379,11 +1381,11 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       return open + '<div class="tl-main">' + nameLine + '<div class="tl-sub tl-na">시세 확인 실패</div></div>' +
         '<div class="tl-r">' + delBtn + "</div>" + caret + "</div>";
     var ta = d.ta;
-    var tech = (ta && (ta.short || ta.long)) ? taStrip(ta.short, ta.long, "ta-mini") : '<span class="tl-na">–</span>';
     var chCls = ta && ta.changeDir === "up" ? "up" : "down";
     return open +
       '<div class="tl-main">' + nameLine +
-        '<div class="tl-sub"><span class="tl-tier"><span class="dot" style="background:var(--muted)"></span>관심</span> · ' + tech + "</div>" +
+        '<div class="tl-sub"><span class="tl-tier"><span class="dot" style="background:var(--muted)"></span>관심</span>' +
+          ' <span class="tl-na">· 정밀분석 요청 시 단기/장기 대응 제공</span></div>' +
       "</div>" +
       '<div class="tl-r"><div class="tl-px">' + fmtPrice(d.price, item.c) + (ta && ta.change ? ' <span class="' + chCls + '">' + esc(ta.change) + "</span>" : "") + "</div>" +
         '<div class="tl-updel">' + delBtn + "</div></div>" + caret +
@@ -1655,13 +1657,11 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     var reqTag = req ? (req.state === "open"
       ? '<div class="wl-reqd">🔧 정밀분석 요청됨 · 처리 대기</div>'
       : '<div class="wl-reqd done">✓ 정밀분석 완료 · 반영 대기</div>') : "";
-    if (d === undefined || d === "loading") return open + head + reqTag + '<div class="wl-msg">시세·기술분석 불러오는 중…</div></article>';
+    if (d === undefined || d === "loading") return open + head + reqTag + '<div class="wl-msg">시세 불러오는 중…</div></article>';
     if (d === null) return open + head + reqTag + '<div class="wl-msg">시세를 불러오지 못했습니다 — 코드·시장(한국/미국)을 확인해 주세요.</div></article>';
     var country = item.c;
     var ta = d.ta;
     var chDir = ta && ta.changeDir === "up" ? "up" : "down";
-    var sigBox = (ta && (ta.short || ta.long))
-      ? '<div class="sig-box"><span class="sig-k">기술</span><div class="sig-body">' + taStrip(ta.short, ta.long) + "</div></div>" : "";
     var chartUrl = naverChartUrl(item.t, country);
     // 정밀분석 요청 — GitHub 이슈(요청 큐)를 미리 채워 여는 링크. 세션이 이 요청을 풀카드로 승격.
     var reqTitle = "관심종목 정밀분석 요청: " + (item.n || item.t) + " " + item.t + " " + (country === "us" ? "미국" : "한국");
@@ -1674,9 +1674,8 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
         '<div class="c-hk">현재가 · ' + esc(d.date || "실시간") + "</div></div>" +
         (ta && ta.change ? '<div class="c-hcell c-r"><div class="c-hv ' + chDir + '">' + esc(ta.change) + '</div><div class="c-hk">전일대비</div></div>' : "") +
       "</div>" +
-      sigBox +
       reqTag +
-      (req ? "" : '<div class="wl-note">실시간 시세 + 기술분석만 보여주는 라이트 카드입니다. 목표가·논거 등 정밀 분석은 아래 <b>정밀분석 요청</b>으로 신청하면 풀카드로 승격됩니다.</div>') +
+      (req ? "" : '<div class="wl-note">실시간 시세만 보여주는 라이트 카드입니다. 단기/장기 기술 대응·목표가·논거 등 분석은 아래 <b>정밀분석 요청</b>으로 신청하면 풀카드로 승격됩니다.</div>') +
       '<div class="links"><a href="' + chartUrl + '" target="_blank" rel="noopener">차트 보기</a>' +
       (req ? '<a class="wl-req" href="' + esc(req.url) + '" target="_blank" rel="noopener">요청 이슈 보기 →</a>'
            : '<a class="wl-req" href="' + reqUrl + '" target="_blank" rel="noopener">정밀분석 요청 →</a>') + "</div>" +
@@ -1691,7 +1690,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
         '<div class="wl-sug" id="wlSug" hidden></div>' +
       "</div>" +
       "</form>" +
-      '<div class="wl-hint">종목명·코드로 검색해 추가하세요. 이 기기 브라우저에만 저장되며, 실시간 시세와 단·장기 기술분석이 표시됩니다(목표가·논거 등 정밀 분석은 카드의 ‘정밀분석 요청’으로).</div>';
+      '<div class="wl-hint">종목명·코드로 검색해 추가하세요. 이 기기 브라우저에만 저장되며, 실시간 시세가 표시됩니다(단기/장기 기술 대응·목표가·논거 등 분석은 카드의 ‘정밀분석 요청’으로).</div>';
   }
 
   // 사전(TICKER_DICT)에서 이름/코드로 후보 검색 (+ 미등록 코드는 직접추가 후보)
@@ -2140,21 +2139,29 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     if (!T || !Array.isArray(T.indices) || !T.indices.length) { box.style.display = "none"; return; }
     box.style.display = "";
 
-    // 지수 타일 — 이름·기준일 / 지수값·등락 / 단·장 신호(종목과 동일한 taStrip). 탭 시 네이버 차트로.
+    var NT = (window.INDEX_NOTES && window.INDEX_NOTES.items) || {};
+    // 지수 카드 — 이름·기준일 / 지수값·등락 / 단·장기 대응(종목 '기술 대응'과 동일). 대응이 없으면 자동 신호(taStrip) 폴백. 탭 시 네이버 차트.
+    function noteLine(k, v) {
+      return v ? '<div class="tn-line"><span class="tn-k">' + k + '</span><span class="tn-v">' + esc(v) + "</span></div>" : "";
+    }
     function tile(x) {
       var chDir = x.changeDir === "up" ? "up" : "down";
+      var n = NT[x.key];
+      var body = (n && (n.short || n.long))
+        ? '<div class="it-note">' + noteLine("단기", n.short) + noteLine("장기", n.long) + "</div>" : "";
       var inner =
         '<div class="it-top"><span class="it-nm">' + esc(x.name) + "</span>" +
           (x.period ? '<span class="it-pd">' + esc(x.period) + "</span>" : "") + "</div>" +
         '<div class="it-px"><span class="it-lv">' + esc(x.level) + "</span>" +
-          '<span class="it-ch ' + chDir + '">' + esc(x.change) + "</span></div>" +
-        '<div class="it-sigs">' + taStrip(x.short, x.long) + "</div>";
+          '<span class="it-ch ' + chDir + '">' + esc(x.change) + "</span></div>" + body;
       return x.chartUrl
         ? '<a class="idx-tile" href="' + esc(x.chartUrl) + '" target="_blank" rel="noopener">' + inner + "</a>"
         : '<div class="idx-tile">' + inner + "</div>";
     }
 
-    document.getElementById("idxAs").textContent = "기준일 " + esc(T.asOf);
+    var NN = window.INDEX_NOTES;
+    document.getElementById("idxAs").textContent = "기준일 " + esc(T.asOf) +
+      (NN && NN.asOf && NN.asOf !== T.asOf ? " · 대응 " + esc(NN.asOf) : "");
     document.getElementById("idxGrid").innerHTML = T.indices.map(tile).join("");
   }
 
