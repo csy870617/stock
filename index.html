@@ -202,6 +202,15 @@ a { color: inherit; }
 }
 .seg button:active { transform: scale(0.96); }
 .seg button.on { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,0.10); }
+
+/* ── 상단 국가 선택 바 — 페이지 전체를 국가별로 전환하는 주 컨트롤 ── */
+.country-bar { margin: 4px 0 20px; }
+.seg-country { display: flex; width: 100%; gap: 4px; padding: 4px; border-radius: 14px; }
+.seg-country button {
+  flex: 1; padding: 12px 16px; font-size: 1.02rem; font-weight: 700; border-radius: 10px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px; letter-spacing: -0.01em;
+}
+.seg-country button.on { box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
 .chips { display: flex; gap: 6px; flex-wrap: wrap; }
 .chip {
   border: 1px solid transparent; background: var(--surface-2); color: var(--ink-2);
@@ -598,6 +607,13 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
 <div class="wrap">
   <div class="upd-status" id="updStatus" hidden></div>
 
+  <div class="country-bar">
+    <div class="seg seg-country" id="countrySeg">
+      <button data-c="korea" class="on" type="button">🇰🇷 한국</button>
+      <button data-c="us" type="button">🇺🇸 미국</button>
+    </div>
+  </div>
+
   <div class="market-note" id="marketNote"></div>
 
   <div class="liq" id="liqBox" style="display:none">
@@ -633,20 +649,8 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     </div>
   </section>
 
-  <section class="roster" id="rosterBox" style="display:none">
-    <div class="roster-head">
-      <div class="roster-title"><h2>종목 변경</h2><span class="crit" id="rosterWhen"></span></div>
-      <select class="roster-date" id="rosterDate" aria-label="변경 날짜 선택"></select>
-    </div>
-    <div class="roster-body" id="rosterBody"></div>
-  </section>
-
   <div class="controls">
     <div class="ctl-row">
-      <div class="seg" id="countrySeg">
-        <button data-c="korea" class="on" type="button">한국</button>
-        <button data-c="us" type="button">미국</button>
-      </div>
       <div class="seg" id="viewSeg">
         <button data-v="table" class="on" type="button">표</button>
         <button data-v="cards" type="button">상세</button>
@@ -659,6 +663,14 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   <div class="theme-desc" id="themeDesc"></div>
 
   <div id="cards"></div>
+
+  <section class="roster" id="rosterBox" style="display:none">
+    <div class="roster-head">
+      <div class="roster-title"><h2>종목 변경</h2><span class="crit" id="rosterWhen"></span></div>
+      <select class="roster-date" id="rosterDate" aria-label="변경 날짜 선택"></select>
+    </div>
+    <div class="roster-body" id="rosterBody"></div>
+  </section>
 
   <footer class="site">
     <p id="disclaimer"></p>
@@ -782,16 +794,20 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       .catch(function () { show("us-gray", "최근 업데이트"); });
   })();
 
-  // 시황: 문장 단위(마침표+공백)로 끊어 문단으로 나눠 읽기 쉽게 표시
-  (function () {
-    var mn = String(D.marketNote || "").trim();
+  // 시황: 선택된 국가의 시황을 문장 단위로 끊어 문단으로 표시(국가 전환 시 갱신).
+  // 국가별 시황(marketNoteUS·marketNoteKR)이 있으면 우선, 없으면 통합 marketNote 로 폴백.
+  function renderMarketNote() {
+    var c = state.country;
+    var mn = String((c === "us" ? D.marketNoteUS : D.marketNoteKR) || D.marketNote || "").trim();
     var parts = mn.split(/\.\s+/).map(function (x) { return x.trim(); }).filter(Boolean)
       .map(function (x) { return /[.!?]$/.test(x) ? x : x + "."; });
     if (!parts.length) parts = [mn];
+    var tag = "시황 · " + (c === "us" ? "🇺🇸 미국" : "🇰🇷 한국");
     document.getElementById("marketNote").innerHTML = parts.map(function (p, i) {
-      return '<p class="mn-p">' + (i === 0 ? '<span class="mn-tag">시황</span> ' : "") + esc(p) + "</p>";
+      return '<p class="mn-p">' + (i === 0 ? '<span class="mn-tag">' + tag + "</span> " : "") + esc(p) + "</p>";
     }).join("");
-  })();
+  }
+  renderMarketNote();
   document.getElementById("disclaimer").textContent = D.disclaimer;
 
   // AI추정가 근거 팝업 — 터치 기기에선 title 툴팁이 안 뜨므로 탭/클릭으로 표시(다시 탭하거나 바깥 탭하면 닫힘)
@@ -1403,7 +1419,13 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       return rows.length;
     }
 
-    var n = renderGroup("korea", "picksGridKR", "picksGroupKR") + renderGroup("us", "picksGridUS", "picksGroupUS");
+    // 선택된 국가의 Top Pick 만 표시(다른 국가 그룹은 숨김)
+    var cc = state.country;
+    document.getElementById("picksGroupKR").style.display = "none";
+    document.getElementById("picksGroupUS").style.display = "none";
+    var n = cc === "us"
+      ? renderGroup("us", "picksGridUS", "picksGroupUS")
+      : renderGroup("korea", "picksGridKR", "picksGroupKR");
     if (!n) { box.style.display = "none"; return; }
     box.style.display = "";
 
@@ -1836,6 +1858,8 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     if (state.country !== c) {
       state.country = c;
       document.getElementById("countrySeg").querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x.dataset.c === c); });
+      renderMarketNote();
+      renderIndexTA();
       renderTopPicks();
     }
     renderThemeChips();
@@ -1943,9 +1967,12 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
 
   document.getElementById("countrySeg").addEventListener("click", function (e) {
     var b = e.target.closest("button"); if (!b) return;
+    if (state.country === b.dataset.c) return;
     state.country = b.dataset.c;
     tblExpanded = {};
     this.querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x === b); });
+    renderMarketNote();
+    renderIndexTA();
     renderTopPicks();
     render();
   });
@@ -2125,12 +2152,15 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   document.getElementById("picksBox").addEventListener("click", function (e) {
     var el = e.target.closest(".pick"); if (!el) return;
     var ticker = el.dataset.ticker, theme = el.dataset.theme, country = el.dataset.country;
-    // 다른 국가 종목이면 국가 세그먼트도 전환(양국 통합 Top Pick 대응)
+    // 다른 국가 종목이면 국가 세그먼트도 전환하고 국가별 섹션을 갱신
     if (country && country !== state.country) {
       state.country = country;
       document.getElementById("countrySeg").querySelectorAll("button").forEach(function (x) {
         x.classList.toggle("on", x.dataset.c === country);
       });
+      renderMarketNote();
+      renderIndexTA();
+      renderTopPicks();
     }
     if (theme) state.theme = theme;
     state.view = "cards";
@@ -2286,7 +2316,10 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     var NN = window.INDEX_NOTES;
     document.getElementById("idxAs").textContent = "기준일 " + esc(T.asOf) +
       (NN && NN.asOf && NN.asOf !== T.asOf ? " · 대응 " + esc(NN.asOf) : "");
-    document.getElementById("idxGrid").innerHTML = T.indices.map(tile).join("");
+    // 선택된 국가의 지수만 표시(미국=나스닥·다우, 한국=코스피·코스닥)
+    var shown = T.indices.filter(function (x) { return IDX_REGION[x.key] === state.country; });
+    if (!shown.length) shown = T.indices;   // 매핑 밖이면 전체 폴백
+    document.getElementById("idxGrid").innerHTML = shown.map(tile).join("");
   }
 
   renderLiquidity();

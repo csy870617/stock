@@ -69,7 +69,7 @@ const warnings = [];
 let merged = 0, added = 0, removed = 0;
 
 // ── 상단 필드 ──
-["generatedAt", "marketNote", "disclaimer", "topPicks"].forEach((k) => {
+["generatedAt", "marketNote", "marketNoteUS", "marketNoteKR", "disclaimer", "topPicks"].forEach((k) => {
   if (patch[k] !== undefined) D[k] = patch[k];
 });
 if (patch.themes !== undefined) D.themes = patch.themes;
@@ -200,7 +200,7 @@ function serialize(D) {
   L.push("//  5. 근거가 약하면 그날은 바꾸지 않는다(변경 0건이 정상). 하루 최대 10교체.");
   L.push("//  6. 판단 전 scripts/performance-report.js 와 scripts/validate-reco.js 실행 — 목표가 소진·성과 부진·'신뢰 출처 0개' 경고 종목이 재평가 우선 대상.");
   L.push("window.STOCK_DATA = {");
-  ["generatedAt", "marketNote", "disclaimer"].forEach((k) => {
+  ["generatedAt", "marketNote", "marketNoteUS", "marketNoteKR", "disclaimer"].forEach((k) => {
     if (D[k] !== undefined) L.push("  " + k + ": " + JSON.stringify(D[k]) + ",");
   });
   if (D.topPicks !== undefined) {
@@ -228,7 +228,7 @@ function serialize(D) {
     D[c].forEach((s) => L.push("    " + JSON.stringify(s) + ","));
     L.push("  ],");
   });
-  const known = ["generatedAt", "marketNote", "disclaimer", "topPicks", "themes", "korea", "us"];
+  const known = ["generatedAt", "marketNote", "marketNoteUS", "marketNoteKR", "disclaimer", "topPicks", "themes", "korea", "us"];
   Object.keys(D).forEach((k) => {
     if (known.includes(k)) return;
     L.push("  " + k + ": " + JSON.stringify(D[k]) + ",");
