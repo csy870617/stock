@@ -108,6 +108,39 @@ const bigLosers = rows.filter((r) => r.retPct <= -15).sort((a, b) => a.retPct - 
 const winners = [...rows].sort((a, b) => b.retPct - a.retPct).slice(0, 5);
 const losers = [...rows].sort((a, b) => a.retPct - b.retPct).slice(0, 5);
 
+// ── 티어 재검토 신호 — (주제×국가) 그룹 안에서 tier 순위가 실제 성과와 어긋나는 종목을 짚는다.
+//    tier 는 '주제 그룹 안 상대 확신순위'(3/3/3)이므로 재조정도 반드시 같은 그룹 안에서 판단한다.
+//    지표: 편입일 정렬 초과수익(excessPct) 우선, 없으면 원수익률(retPct). 표본이 작으면 잠정 신호.
+function metricOf(r) { return r.excessPct != null ? r.excessPct : r.retPct; }
+const tierReview = [];
+Object.keys(byTheme).sort().forEach((gk) => {
+  const g = byTheme[gk];                       // 이 (주제×국가) 그룹의 종목들
+  const byT = { 1: [], 2: [], 3: [] };
+  g.forEach((r) => { if (byT[r.tier]) byT[r.tier].push(r); });
+  const tAvg = {};
+  [1, 2, 3].forEach((t) => {
+    const v = byT[t].map(metricOf).filter((x) => x != null);
+    tAvg[t] = v.length ? +(v.reduce((a, b) => a + b, 0) / v.length).toFixed(2) : null;
+  });
+  const promote = [], demote = [];
+  // 승격 후보: 하위 tier(2·3) 종목이 같은 그룹 Tier1 평균을 능가
+  if (tAvg[1] != null) g.forEach((r) => {
+    const m = metricOf(r);
+    if (r.tier > 1 && m != null && m > tAvg[1]) promote.push({ ticker: r.ticker, name: r.name, tier: r.tier, metric: +m.toFixed(2) });
+  });
+  // 강등 후보: Tier1 종목이 같은 그룹 Tier3 평균을 하회
+  if (tAvg[3] != null) g.forEach((r) => {
+    const m = metricOf(r);
+    if (r.tier === 1 && m != null && m < tAvg[3]) demote.push({ ticker: r.ticker, name: r.name, tier: r.tier, metric: +m.toFixed(2) });
+  });
+  // tier 평균 역전(하위 tier 평균이 상위 tier 평균보다 높음)
+  const inverted = (tAvg[1] != null && tAvg[3] != null && tAvg[3] > tAvg[1]) ||
+                   (tAvg[1] != null && tAvg[2] != null && tAvg[2] > tAvg[1]);
+  if (promote.length || demote.length || inverted) {
+    tierReview.push({ group: gk, n: g.length, tierAvg: tAvg, inverted, promote, demote });
+  }
+});
+
 const report = {
   asOf: latest.date,
   snapshotDays: H.length,
@@ -130,6 +163,9 @@ const report = {
   byTier: Object.fromEntries(Object.keys(byTier).sort().map((k) => [k, +avg(byTier[k]).toFixed(2)])),
   byTierExcess: Object.fromEntries(Object.keys(byTier).sort().map((k) => [k, avgEx(byTier[k]) == null ? null : +avgEx(byTier[k]).toFixed(2)])),
   byTheme: Object.fromEntries(Object.keys(byTheme).sort().map((k) => [k, +avg(byTheme[k]).toFixed(2)])),
+  // 티어 재검토 신호(그룹 내 tier↔성과 불일치) — 루틴이 매 업데이트 시 승격·강등 검토에 사용
+  tierReviewNote: "각 (주제×국가) 그룹 안에서만 tier 를 재조정하고 3/3/3 을 유지한다. tier 는 중기 확신 축이므로 단일 노이즈 1회로 뒤집지 말고 논거·상승여력·기술과 함께 종합 판단한다" + (H.length < 20 ? " (표본 " + H.length + "일 — 잠정 신호)" : ""),
+  tierReview,
   reevalPriority: {
     targetReached: targetReached.map((r) => ({ ticker: r.ticker, name: r.name, country: r.country, liveUpsidePct: r.liveUpsidePct })),
     bigLosers: bigLosers.map((r) => ({ ticker: r.ticker, name: r.name, country: r.country, retPct: r.retPct }))
@@ -149,6 +185,16 @@ console.log("초과수익(편입일 정렬·지수대비): 한국  " + fmt(repor
 console.log("");
 console.log("티어별 (원수익률 / 초과수익) — Tier1 > Tier3 이어야 확신도가 유효:");
 Object.keys(report.byTier).forEach((k) => console.log("  " + k + ": " + fmt(report.byTier[k]) + "  /  초과 " + fmt(report.byTierExcess[k])));
+console.log("");
+if (tierReview.length) {
+  console.log("🔁 티어 재검토 신호 (그룹 내 성과와 tier 순위 불일치 — 3/3/3 유지하며 승격·강등 검토):");
+  if (H.length < 20) console.log("   ⚠ 표본 부족 — 잠정 신호, 논거·상승여력·기술과 함께 종합 판단(단일 노이즈로 뒤집지 말 것)");
+  tierReview.forEach((g) => {
+    console.log("  [" + g.group + "] Tier평균 T1 " + fmt(g.tierAvg[1]) + " / T2 " + fmt(g.tierAvg[2]) + " / T3 " + fmt(g.tierAvg[3]) + (g.inverted ? "  ⚠역전" : ""));
+    g.promote.forEach((p) => console.log("     ↑ 승격후보 T" + p.tier + " " + p.name + " (" + p.ticker + ") " + fmt(p.metric) + " > 그룹 T1평균"));
+    g.demote.forEach((p) => console.log("     ↓ 강등후보 T" + p.tier + " " + p.name + " (" + p.ticker + ") " + fmt(p.metric) + " < 그룹 T3평균"));
+  });
+} else console.log("🔁 티어 재검토: 그룹 내 tier↔성과 불일치 없음");
 console.log("");
 console.log("주제별 평균:");
 Object.keys(report.byTheme).forEach((k) => console.log("  " + k + ": " + fmt(report.byTheme[k])));
