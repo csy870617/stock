@@ -2252,12 +2252,15 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     }
 
     var src = hasL ? L : A;
+    var lqCC = state.country;   // 선택된 국가(미국=us, 한국=korea)
     document.getElementById("liqAs").textContent = "기준일 " + esc(src.asOf) +
       (hasL && A && A.asOf && A.asOf !== L.asOf ? " · 자동 " + esc(A.asOf) : "");
-    document.getElementById("liqHeadline").innerHTML =
-      "<strong>" + esc(hasL ? L.headline : A.note) + "</strong>";
+    // 선택된 국가의 headline 우선 표시(없으면 통합 headline / 자동 note 폴백)
+    var lqHead = hasL
+      ? (lqCC === "us" ? (L.headlineUS || L.headline) : (L.headlineKR || L.headline))
+      : (A ? A.note : "");
+    document.getElementById("liqHeadline").innerHTML = "<strong>" + esc(lqHead) + "</strong>";
     // 선택된 국가의 유동성만 표시(미국=us, 한국=korea)
-    var lqCC = state.country;
     document.getElementById("liqGrid").innerHTML = lqCC === "us"
       ? col("미국", hasL ? L.us : null, A ? A.us : null)
       : col("한국", hasL ? L.korea : null, A ? A.korea : null);
