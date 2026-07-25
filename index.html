@@ -1794,7 +1794,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       var bp = b.n.toLowerCase().indexOf(ql) === 0 || b.t.toLowerCase().indexOf(ql) === 0 ? 0 : 1;
       return ap - bp || a.n.length - b.n.length;
     });
-    res = res.slice(0, 8);
+    res = res.slice(0, 10);
     // 사전에 없는 코드 직접 추가(한국 6자리 / 미국 티커)
     var up = q.toUpperCase(), isKr = /^\d{6}$/.test(q), isUs = /^[A-Z][A-Z0-9.\-]{0,6}$/.test(up);
     if ((isKr || isUs) && !res.some(function (e) { return e.t === (isKr ? q : up) && e.c === (isKr ? "korea" : "us"); })) {
