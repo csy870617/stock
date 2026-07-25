@@ -206,6 +206,12 @@ function validate(D, opts) {
         }
       }
 
+      // 밸류 설명(valueNote, 선택) — 그 종목의 밸류에이션(멀티플·저평가/고평가)+상승여력 해석 1~2문장.
+      if (s.valueNote != null) {
+        if (typeof s.valueNote !== "string" || !RE_HANGUL.test(s.valueNote)) errors.push(tag + ": valueNote 는 한국어 문자열이어야 함");
+        else if (s.valueNote.length > 220) warnings.push(tag + ": valueNote 가 너무 김(" + s.valueNote.length + "자) — 1~2문장으로 압축 권장");
+      }
+
       // 출처 — 신규 편입·논거 변경의 증거 사슬
       if (!RE_URL.test(s.chartUrl || "")) errors.push(tag + ": chartUrl 오류");
       if (!Array.isArray(s.sources) || s.sources.length < 1 || s.sources.length > 3) {

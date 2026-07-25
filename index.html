@@ -1080,9 +1080,10 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
 
   // 밸류(컨센서스 상승여력·장기 펀더멘털) × 타이밍(기술 추세·단기) 종합 해석 —
   // Tier(펀더멘털 확신)와 기술신호(모멘텀)가 어긋날 때 어떻게 읽는지 안내한다(급락 우량주=분할매수·눌림목 등).
-  function valueTimingCells(upside, ticker) {
+  // 밸류×타이밍 종합 해석(템플릿) — 종목별 valueNote 가 없을 때의 폴백. {text, cls} 반환.
+  function vtRead(upside, ticker) {
     var t = stTa(ticker);
-    if (upside == null || !t || !t.short) return "";
+    if (upside == null || !t || !t.short) return null;
     var sig = t.short.signal;
     var techBull = sig === "매수" || sig === "적극매수";
     var techBear = sig === "매도" || sig === "적극매도";
@@ -1099,7 +1100,20 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     else if (vMid && techBull) { text = "단기 추세는 매수 우위이나 장기 상승여력은 제한적"; cls = "vt-mix"; }
     else if (vMid && techBear) { text = "장기 상승여력 제한 + 단기 약세 — 신중"; cls = "vt-warn"; }
     else { text = "밸류·타이밍 모두 뚜렷한 우위 없음 — 관망"; cls = "vt-neutral"; }
-    return '<span class="sig-k vt-k" title="밸류(컨센서스 상승여력·장기 펀더멘털)와 타이밍(기술 추세·단기)을 함께 읽는 종합 해석입니다. 새 예측이 아니라 두 신호의 관계를 설명합니다.">밸류</span>' +
+    return { text: text, cls: cls };
+  }
+  // 밸류 설명 — 종목별 LLM 서술(valueNote, 그 종목의 멀티플·저평가/고평가·상승여력 해석) 우선,
+  //   없으면 밸류×타이밍 종합 해석(템플릿)으로 폴백. 점 색은 밸류·기술 관계로 계산.
+  function valueCells(s, upside) {
+    var r = vtRead(upside, s.ticker);
+    var hasNote = s.valueNote && /[가-힣]/.test(s.valueNote);
+    var text = hasNote ? s.valueNote : (r ? r.text : null);
+    if (!text) return "";
+    var cls = r ? r.cls : "vt-neutral";
+    var title = hasNote
+      ? "이 종목의 밸류에이션(멀티플·저평가/고평가)과 상승여력을 함께 읽은 설명입니다."
+      : "밸류(컨센서스 상승여력·장기 펀더멘털)와 타이밍(기술 추세·단기)을 함께 읽는 종합 해석입니다. 새 예측이 아니라 두 신호의 관계를 설명합니다.";
+    return '<span class="sig-k vt-k" title="' + esc(title) + '">밸류</span>' +
       '<div class="sig-body sig-txt"><span class="vt-dot ' + cls + '"></span>' + esc(text) + "</div>";
   }
 
@@ -1154,7 +1168,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       ? '<div class="c-stat" title="' + esc(s.aiBasis || "") + '" data-basis="' + esc(s.aiBasis || "") + '" style="cursor:help"><div class="c-sk">AI 적정가</div><div class="c-sv">' + fmtPrice(s.aiTarget, country) + "</div></div>"
       : '<div class="c-stat" title="' + esc(aiPendingText(s)) + '" data-basis="' + esc(aiPendingText(s)) + '" style="cursor:help"><div class="c-sk">AI 적정가</div><div class="c-sv c-muted">추정중</div></div>';
     // 밸류×타이밍 해석만 신호 박스에 둔다(기술 단·장기 신호는 아래 '기술 대응' 블록으로 대체·제거).
-    var vtCells = valueTimingCells(e.upside, s.ticker);
+    var vtCells = valueCells(s, e.upside);
     var sigBox = vtCells ? '<div class="sig-box">' + vtCells + "</div>" : "";
     // 분석(실적·논거·리스크)은 접지 않고 바로 표시
     var analysis =
