@@ -211,15 +211,22 @@ a { color: inherit; }
   display: inline-flex; align-items: center; justify-content: center; gap: 7px; letter-spacing: -0.01em;
 }
 .seg-country button.on { box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
-.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+
+/* 보기 세그먼트(표·상세·성과) — 국가 바처럼 전폭 세그먼트로 깔끔하게 */
+.seg-view { display: flex; width: 100%; gap: 4px; padding: 4px; border-radius: 12px; }
+.seg-view button { flex: 1; padding: 10px 16px; font-size: 0.95rem; font-weight: 700; border-radius: 9px; }
+.seg-view button.on { box-shadow: 0 2px 6px rgba(0,0,0,0.10); }
+
+/* 주제 탭 — 국가·보기 세그먼트와 동일한 트랙+활성 세그 스타일로 통일 */
+.chips { display: flex; gap: 4px; flex-wrap: wrap; background: var(--surface-2); padding: 4px; border-radius: 12px; }
 .chip {
-  border: 1px solid transparent; background: var(--surface-2); color: var(--ink-2);
-  border-radius: 999px; padding: 6px 14px; font-size: 0.83rem; font-weight: 500; cursor: pointer;
+  border: 0; background: transparent; color: var(--ink-2);
+  border-radius: 9px; padding: 7px 13px; font-size: 0.85rem; font-weight: 600; cursor: pointer;
   display: inline-flex; align-items: center; gap: 6px; transition: background .15s, color .15s, transform .12s;
 }
-.chip:hover { background: color-mix(in srgb, var(--ink) 9%, var(--surface-2)); }
+.chip:hover { background: color-mix(in srgb, var(--ink) 7%, transparent); }
 .chip:active { transform: scale(0.96); }
-.chip.on { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.chip.on { background: var(--surface); color: var(--ink); box-shadow: 0 1px 3px rgba(0,0,0,0.10); }
 .chip { touch-action: none; }   /* 긴터치 드래그 재정렬을 위해 (탭·클릭은 그대로 동작) */
 .chips-reorder .chip { transition: transform .12s, background .15s, color .15s; }
 .chip.chip-drag { opacity: 0.85; transform: scale(1.06); box-shadow: var(--shadow-lg); cursor: grabbing; z-index: 2; position: relative; }
@@ -650,12 +657,10 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   </section>
 
   <div class="controls">
-    <div class="ctl-row">
-      <div class="seg" id="viewSeg">
-        <button data-v="table" class="on" type="button">표</button>
-        <button data-v="cards" type="button">상세</button>
-        <button data-v="perf" type="button">성과</button>
-      </div>
+    <div class="seg seg-view" id="viewSeg">
+      <button data-v="table" class="on" type="button">표</button>
+      <button data-v="cards" type="button">상세</button>
+      <button data-v="perf" type="button">성과</button>
     </div>
     <div class="chips" id="themeChips"></div>
   </div>
@@ -1859,6 +1864,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       state.country = c;
       document.getElementById("countrySeg").querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x.dataset.c === c); });
       renderMarketNote();
+      renderLiquidity();
       renderIndexTA();
       renderTopPicks();
     }
@@ -1972,6 +1978,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     tblExpanded = {};
     this.querySelectorAll("button").forEach(function (x) { x.classList.toggle("on", x === b); });
     renderMarketNote();
+    renderLiquidity();
     renderIndexTA();
     renderTopPicks();
     render();
@@ -2159,6 +2166,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
         x.classList.toggle("on", x.dataset.c === country);
       });
       renderMarketNote();
+      renderLiquidity();
       renderIndexTA();
       renderTopPicks();
     }
@@ -2248,9 +2256,11 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       (hasL && A && A.asOf && A.asOf !== L.asOf ? " · 자동 " + esc(A.asOf) : "");
     document.getElementById("liqHeadline").innerHTML =
       "<strong>" + esc(hasL ? L.headline : A.note) + "</strong>";
-    document.getElementById("liqGrid").innerHTML =
-      col("미국", hasL ? L.us : null, A ? A.us : null) +
-      col("한국", hasL ? L.korea : null, A ? A.korea : null);
+    // 선택된 국가의 유동성만 표시(미국=us, 한국=korea)
+    var lqCC = state.country;
+    document.getElementById("liqGrid").innerHTML = lqCC === "us"
+      ? col("미국", hasL ? L.us : null, A ? A.us : null)
+      : col("한국", hasL ? L.korea : null, A ? A.korea : null);
 
     // 상세(근거·지표) — 한 번의 토글로 접는다
     var srcs = hasL ? (L.sources || []).slice(0, 3).map(function (u, i) {
@@ -2261,8 +2271,9 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     if (A && A.inputs) footBits.push('<span class="nc">자동 지표 · 10Y ' + esc(A.inputs.us10y) + "% · 커브 " +
       esc(A.inputs.curve) + " · VIX " + esc(A.inputs.vix) + " · 원/달러 " + esc(A.inputs.usdkrw) + "</span>");
     if (srcs) footBits.push('<span class="nc">' + srcs + "</span>");
-    var detailHtml = detailCol("미국", hasL ? L.us : null, A ? A.us : null) +
-                     detailCol("한국", hasL ? L.korea : null, A ? A.korea : null);
+    var detailHtml = lqCC === "us"
+      ? detailCol("미국", hasL ? L.us : null, A ? A.us : null)
+      : detailCol("한국", hasL ? L.korea : null, A ? A.korea : null);
     document.getElementById("liqFoot").innerHTML =
       (detailHtml || footBits.length)
         ? '<details class="liq-more"><summary>판단 근거 · 지표</summary><div class="liq-more-body">' +
