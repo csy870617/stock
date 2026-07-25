@@ -10,8 +10,8 @@ title: 전체 업데이트 요청 (분석·추천 + 유동성)
 
 ## A. 분석·추천 (data/recommendations.js)
 1. generatedAt·marketNote(오늘 시황)를 갱신하고 `node scripts/snapshot.js` 로 스냅샷을 기록한다.
-2. `node scripts/performance-report.js` 로 우선순위(목표가 소진·성과 부진)를, `validate-reco.js` 로 신뢰 출처 부족·재추가 금지 위반을 선별한다.
-3. 목표가는 컨센서스(신뢰 출처 2개 이상 교차확인), 논거·리스크·tier·dividendYield·earnings를 최신화한다. 지배구조 스크리닝과 BANNED_TICKERS(재추가 금지)를 준수한다.
+2. `node scripts/performance-report.js` 로 우선순위(목표가 소진·성과 부진)를, `validate-reco.js` 로 신뢰 출처 부족을 선별한다.
+3. 목표가는 컨센서스(신뢰 출처 2개 이상 교차확인), 논거·리스크·tier·dividendYield·earnings를 최신화한다. 지배구조 스크리닝을 수행한다(과거 편출 종목도 결격 해소·교체 기준 충족 시 재편입 가능 — 영구 금지 목록 없음).
 4. (주제×국가) 9종목·tier 3/3/3 구조를 유지하고 `node scripts/update-reco.js <패치.json>` 증분 패치로 적용한다.
 5. 시세(price·priceDate·upside)는 refresh-quotes Action 담당이므로 건드리지 않는다.
 

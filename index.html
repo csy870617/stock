@@ -304,7 +304,7 @@ a { color: inherit; }
 .tier-head .dot { width: 9px; height: 9px; border-radius: 50%; }
 .tier-head .tier-n { color: var(--muted); font-weight: 400; font-size: 0.8rem; }
 
-/* AI 적정가 근거 팝업 — 데스크톱 호버(title)와 별개로 탭/클릭으로 표시 */
+/* AI추정가 근거 팝업 — 데스크톱 호버(title)와 별개로 탭/클릭으로 표시 */
 .tip-pop {
   position: fixed; z-index: 90; max-width: min(340px, calc(100vw - 24px)); max-height: 45vh; overflow-y: auto;
   background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-sm); box-shadow: var(--shadow-lg);
@@ -344,7 +344,7 @@ a { color: inherit; }
 .meter { height: 6px; border-radius: 4px; background: var(--meter-track); overflow: hidden; }
 .meter > i { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--meter-lo), var(--meter-hi)); }
 
-/* 카드 보조 지표: 목표가·AI적정가·배당 3열 정렬 그리드 */
+/* 카드 보조 지표: 목표가·AI추정가·배당 3열 정렬 그리드 */
 .c-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 12px 0; border-top: 1px solid var(--grid); border-bottom: 1px solid var(--grid); }
 .c-stat { min-width: 0; }
 .c-sk { color: var(--muted); font-size: 0.72rem; margin-bottom: 3px; white-space: nowrap; }
@@ -794,7 +794,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   })();
   document.getElementById("disclaimer").textContent = D.disclaimer;
 
-  // AI 적정가 근거 팝업 — 터치 기기에선 title 툴팁이 안 뜨므로 탭/클릭으로 표시(다시 탭하거나 바깥 탭하면 닫힘)
+  // AI추정가 근거 팝업 — 터치 기기에선 title 툴팁이 안 뜨므로 탭/클릭으로 표시(다시 탭하거나 바깥 탭하면 닫힘)
   (function () {
     var pop = document.createElement("div");
     pop.className = "tip-pop"; pop.hidden = true;
@@ -820,10 +820,10 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
     });
   }
-  // AI 적정가 미산출 종목의 보류 사유 문구 (탭/호버 팝업용)
+  // AI추정가 미산출 종목의 보류 사유 문구 (탭/호버 팝업용)
   function aiPendingText(s) {
     var why = s.aiPending || "입력값(2026E EPS·배당) 검증이 아직 완료되지 않았습니다";
-    return "AI 적정가 추정중 — " + why + ". 매 업데이트마다 재검증해 산출되는 대로 표시됩니다.";
+    return "AI추정가 추정중 — " + why + ". 매 업데이트마다 재검증해 산출되는 대로 표시됩니다.";
   }
   function fmtPrice(v, country) {
     if (v == null) return "–";
@@ -1167,8 +1167,8 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     var upLabel = (e.upside != null && e.upside < 0) ? "목표가 대비" : "상승여력";
     var divVal = s.dividendYield == null ? "–" : Number(s.dividendYield).toFixed(1) + "%";
     var aiStat = s.aiTarget != null
-      ? '<div class="c-stat" title="' + esc(s.aiBasis || "") + '" data-basis="' + esc(s.aiBasis || "") + '" style="cursor:help"><div class="c-sk">AI 적정가</div><div class="c-sv">' + fmtPrice(s.aiTarget, country) + "</div></div>"
-      : '<div class="c-stat" title="' + esc(aiPendingText(s)) + '" data-basis="' + esc(aiPendingText(s)) + '" style="cursor:help"><div class="c-sk">AI 적정가</div><div class="c-sv c-muted">추정중</div></div>';
+      ? '<div class="c-stat" title="' + esc(s.aiBasis || "") + '" data-basis="' + esc(s.aiBasis || "") + '" style="cursor:help"><div class="c-sk">AI추정가</div><div class="c-sv">' + fmtPrice(s.aiTarget, country) + "</div></div>"
+      : '<div class="c-stat" title="' + esc(aiPendingText(s)) + '" data-basis="' + esc(aiPendingText(s)) + '" style="cursor:help"><div class="c-sk">AI추정가</div><div class="c-sv c-muted">추정중</div></div>';
     // 밸류×타이밍 해석만 신호 박스에 둔다(기술 단·장기 신호는 아래 '기술 대응' 블록으로 대체·제거).
     var vtCells = valueCells(s, e.upside);
     var sigBox = vtCells ? '<div class="sig-box">' + vtCells + "</div>" : "";

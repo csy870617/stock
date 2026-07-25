@@ -83,17 +83,6 @@ function matchDomain(host, list) {
 function isTrustedSource(u) { return matchDomain(sourceHost(u), TRUSTED_SOURCES); }
 function isBlockedSource(u) { return matchDomain(sourceHost(u), BLOCKED_SOURCES); }
 
-// ── 재추가 금지 종목 — 지배구조·실적정정 등으로 편출된 뒤 조용히 재편입되는 것을 막는다 ──
-// (재평가 Routine 프롬프트의 "재추가 금지" 목록을 코드로 강제 — 티커→사유)
-// 기존 데이터에 있으면 경고(편출 대상 표시), 새 패치의 add 에서는 update-reco.js 가 거부.
-const BANNED_TICKERS = {
-  "278470": "에이피알", "316140": "우리금융지주", "017670": "SK텔레콤",
-  "033780": "KT&G", "005830": "DB손해보험", "259960": "크래프톤",
-  "257720": "실리콘투 (실적 정정 논란)", "237690": "에스티팜",
-  "214450": "파마리서치 (인적분할 승계 논란)", "454910": "두산로보틱스",
-  "TEM": "Tempus AI", "SYM": "Symbotic",
-};
-function isBannedTicker(t) { return Object.prototype.hasOwnProperty.call(BANNED_TICKERS, t); }
 
 const MARKETS = { korea: ["KOSPI", "KOSDAQ"], us: ["NASDAQ", "NYSE"] };
 const PER_GROUP = 9;              // (주제×국가)당 종목 수
@@ -142,7 +131,6 @@ function validate(D, opts) {
       const tickRe = c === "korea" ? RE_KR_TICKER : RE_US_TICKER;
       if (!tickRe.test(s.ticker || "")) errors.push(tag + ": " + c + " 티커 형식 오류 '" + s.ticker + "'");
       if (!(MARKETS[c] || []).includes(s.market)) errors.push(tag + ": market 은 " + MARKETS[c].join("|") + " 여야 함 ('" + s.market + "')");
-      if (isBannedTicker(s.ticker)) warnings.push(tag + ": 재추가 금지 종목 (" + BANNED_TICKERS[s.ticker] + ") — 편출 대상");
 
       // 가격·목표가·계산 정합성
       if (!(typeof s.price === "number" && isFinite(s.price) && s.price > 0)) errors.push(tag + ": price 오류 (" + s.price + ")");
@@ -160,7 +148,7 @@ function validate(D, opts) {
         errors.push(tag + ": dividendYield 오류 (" + s.dividendYield + ")");
       }
 
-      // AI 적정가(선택) — 컨센서스와 별개인 자체 분석치. 근거(aiBasis) 없이는 저장 거부.
+      // AI추정가(선택) — 컨센서스와 별개인 자체 분석치. 근거(aiBasis) 없이는 저장 거부.
       if (s.aiTarget != null) {
         if (!(typeof s.aiTarget === "number" && isFinite(s.aiTarget) && s.aiTarget > 0)) {
           errors.push(tag + ": aiTarget 오류 (" + s.aiTarget + ")");
@@ -176,7 +164,7 @@ function validate(D, opts) {
           if (!RE_DATE.test(s.aiAsOf)) errors.push(tag + ": aiAsOf 형식 오류 '" + s.aiAsOf + "'");
           else {
             const aiAge = (new Date(today) - new Date(s.aiAsOf)) / 86400000;
-            if (aiAge > 45) warnings.push(tag + ": AI 적정가 산출 후 " + Math.round(aiAge) + "일 경과 — 재산출 대상");
+            if (aiAge > 45) warnings.push(tag + ": AI추정가 산출 후 " + Math.round(aiAge) + "일 경과 — 재산출 대상");
           }
         }
       }
@@ -341,4 +329,4 @@ if (require.main === module) {
   console.log("✓ 검증 통과: " + total + "종목, 오류 0건, 경고 " + warnings.length + "건 (" + path.relative(ROOT, file) + ")");
 }
 
-module.exports = { validate, isTrustedSource, isBlockedSource, sourceHost, isBannedTicker, BANNED_TICKERS };
+module.exports = { validate, isTrustedSource, isBlockedSource, sourceHost };

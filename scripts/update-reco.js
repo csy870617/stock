@@ -33,7 +33,7 @@
 
 const fs = require("fs");
 const path = require("path");
-const { validate, isTrustedSource, isBlockedSource, sourceHost, isBannedTicker, BANNED_TICKERS } = require("./validate-reco");
+const { validate, isTrustedSource, isBlockedSource, sourceHost } = require("./validate-reco");
 
 const ROOT = path.join(__dirname, "..");
 const RECO = path.join(ROOT, "data", "recommendations.js");
@@ -141,12 +141,6 @@ const guardErrors = [];
   if (!country || !D[country]) { warnings.push("add 국가 오류: " + JSON.stringify(s).slice(0, 80)); return; }
   const obj = Object.assign({}, s); delete obj.country;
   if (!obj.ticker || !obj.name) { warnings.push("add 에 ticker/name 필요: " + JSON.stringify(s).slice(0, 80)); return; }
-
-  // 가드레일: 재추가 금지 종목(지배구조·실적정정 등으로 편출)은 --force 로도 재편입 불가
-  if (isBannedTicker(obj.ticker)) {
-    guardErrors.push("add " + country + ":" + obj.ticker + " — 재추가 금지 종목(" + BANNED_TICKERS[obj.ticker] + ") 은 편입할 수 없음");
-    return;
-  }
 
   // 가드레일: 신규 편입은 근거 전체가 새로 만들어지므로 출처 신뢰도를 가장 엄격히 본다
   const srcs = Array.isArray(obj.sources) ? obj.sources : [];
