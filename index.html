@@ -799,13 +799,13 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       .catch(function () { show("us-gray", "최근 업데이트"); });
   })();
 
-  // 시황: 선택된 국가의 시황을 문장 단위로 끊어 문단으로 표시(국가 전환 시 갱신).
+  // 시황: 선택된 국가의 시황을 headline 처럼 자연스럽게 이어지는 산문으로 표시(국가 전환 시 갱신).
+  // 문장마다 끊지 않고 실제 문단(빈 줄) 단위로만 나눠, 문단 안의 문장들은 흐르듯 이어 읽게 한다.
   // 국가별 시황(marketNoteUS·marketNoteKR)이 있으면 우선, 없으면 통합 marketNote 로 폴백.
   function renderMarketNote() {
     var c = state.country;
     var mn = String((c === "us" ? D.marketNoteUS : D.marketNoteKR) || D.marketNote || "").trim();
-    var parts = mn.split(/\.\s+/).map(function (x) { return x.trim(); }).filter(Boolean)
-      .map(function (x) { return /[.!?]$/.test(x) ? x : x + "."; });
+    var parts = mn.split(/\n\s*\n/).map(function (x) { return x.replace(/\s+/g, " ").trim(); }).filter(Boolean);
     if (!parts.length) parts = [mn];
     var tag = "시황 · " + (c === "us" ? "🇺🇸 미국" : "🇰🇷 한국");
     document.getElementById("marketNote").innerHTML = parts.map(function (p, i) {
