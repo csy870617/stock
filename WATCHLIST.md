@@ -95,3 +95,17 @@ CLAUDE.md '신규 후보 탐색 프로토콜'이 참조하는 작업 메모. 매
 - **ABT (Abbott Laboratories, us/core 신규 후보)** — TipRanks 외 독립 도메인(MarketBeat/StockAnalysis 등) 1개만 확보하면 BRK.B/JPM 대비 우월성 근거 완성, 최우선 편입 검토 대상.
 - **덕산네오룩스·비츠로셀·HPSP·한솔케미칼·ISC·클래시스·셀트리온·iM금융지주·한화에어로스페이스** — priceDate가 47~159일 경과(quotes.js 자동 갱신 대상, 이 루틴 담당 아님).
 - **korea/growth 전반** — 스냅샷 20거래일(2026-07-03 시작) 도달 시 성과 부진 종목(삼성전기·두산에너빌리티 등) 재평가 — 7월 말~8월 초 판단 가능.
+
+## 티어 재검증 이력 (품질 기준)
+- **[2026-07-25] 전 10개 그룹 품질 기준 재-tier 완료** — 각 그룹 9종목의 펀더멘털(ROE·자본건전성·마진·해자·성장·주주환원·밸류)을 WebSearch로 검증해 3/3/3 재배치(과거 성과 아닌 기업 질 기준). 그룹별 주요 변경:
+  - **korea/core**: 변경 없음(기존 tier가 이미 품질 정합 — T1 삼성전자·KB금융·삼성바이오, T2 삼성화재·신한·현대차, T3 삼성물산·현대모비스·하나금융).
+  - **korea/growth**: 삼성바이오로직스 T2→T1↑(CDMO 1위·고마진), HD한국조선해양 T1→T2↓(지주·순환성).
+  - **korea/value**: 대한항공 T3→T1↑↑(아시아나 통합 지배력·이익·배당), 금호석유 T3→T2↑(최저부채·자사주소각), POSCO홀딩스 T1→T2↓(철강 ROE 저조), 한국전력 T2→T3↓(과중부채·미미배당), SK이노베이션 T2→T3↓(적자·무배당).
+  - **korea/rising**: 클래시스 T2→T1↑·티씨케이 T3→T1↑↑(SiC링 독점), 덕산네오룩스 T3→T2↑, 이오테크닉스 T1→T2↓, ISC T1→T3↓↓(ROE 9%), 한솔케미칼 T2→T3↓(최저마진·최고부채).
+  - **us/core**: LLY T3→T2↑(마진·성장), COST T2→T3↓(박한 마진·고밸류).
+  - **us/dividend**: KO T3→T1↑↑·JNJ T3→T1↑↑(배당 King·AAA·낮은 성향), XOM T3→T2↑(최강 재무), O T1→T2↓, DUK T1→T3↓↓(단기 인상기록·FCF 부족), KMB T2→T3↓(고성향·고부채), VZ T2→T3↓(막대한 부채).
+  - **us/growth**: NOW T3→T2↑(엔터SaaS 해자·FCF), AMZN T2→T3↓(저마진·capex발 FCF 붕괴).
+  - **us/rising**: HALO T3→T1↑↑(ENHANZE 로열티·ROE 158%), RDDT T2→T1↑(초고마진·FCF), NXT T3→T2↑, CRDO T1→T2↓(고객집중), AEIS T2→T3↓, LITE T1→T3↓↓(순차입·적자회복 이력).
+  - **us/value**: CSCO T3→T1↑↑(자본효율)·ALGN T3→T1↑↑(순현금·90% 점유), CI T3→T2↑, C T2→T3↓(ROE 7.7%), GM T1→T3↓↓(ROE 4%·$128B 부채), PFE T1→T3↓↓(특허절벽·배당성향 131%).
+  - (korea/dividend 는 [2026-07-25] 선행 완료 — 위 그룹별 탐색일 표 참조.)
+  - 방법: 그룹별 서브에이전트가 종목당 신뢰 출처(FnGuide·증권사 리포트·StockAnalysis·SEC·TipRanks 등)로 수치 검증, 미확인 항목은 기존 판단 유지. 성과 정합 신호와 대체로 일치.
