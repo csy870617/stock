@@ -565,9 +565,11 @@ a.idx-tile:hover { background: color-mix(in srgb, var(--ink) 5%, var(--inset)); 
 .wl-note { color: var(--muted); font-size: 0.76rem; line-height: 1.45; }
 .wl-note b { color: var(--ink-2); font-weight: 700; }
 .links a.wl-req { font-weight: 700; }
-.wl-reqd { display: inline-flex; align-items: center; font-size: 0.78rem; font-weight: 700; padding: 5px 12px; border-radius: 999px;
-  background: color-mix(in srgb, var(--tier3) 16%, transparent); color: var(--tier3); width: fit-content; }
+.wl-reqd { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 0 8px; font-size: 0.78rem; font-weight: 700; padding: 5px 12px; border-radius: 999px;
+  background: color-mix(in srgb, var(--tier3) 16%, transparent); color: var(--tier3); width: fit-content; max-width: 100%; }
 .wl-reqd.done { background: color-mix(in srgb, var(--up) 16%, transparent); color: var(--up); }
+.wl-reqd .wl-reqeta { font-weight: 500; opacity: 0.9; }
+.wl-reqd .wl-reqeta::before { content: "·"; margin-right: 8px; opacity: 0.55; }
 /* 추천 카드 → 관심종목 등록 토글 */
 .fav-btn { border: 1px solid var(--line); background: transparent; color: var(--accent); font-size: 0.82rem; font-weight: 600;
   padding: 4px 11px; border-radius: 999px; cursor: pointer; transition: background .15s, color .15s, border-color .15s, transform .12s; }
@@ -1459,8 +1461,8 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     var exp = tblExpanded[item.t] ? " on" : "";
     var open = '<div class="tl-row wl-lrow' + exp + '" id="' + esc(rid) + '" role="button" tabindex="0" data-ticker="' + esc(item.t) + '" aria-expanded="' + (exp ? "true" : "false") + '">';
     var req = wlReqCache ? wlReqCache[item.t] : null;
-    var reqDot = req ? (req.state === "open" ? '<span class="tl-reqdot open" title="정밀분석 요청됨 · 처리 대기">🔧</span>'
-                                              : '<span class="tl-reqdot done" title="정밀분석 완료 · 반영 대기">✓</span>') : "";
+    var reqDot = req ? (req.state === "open" ? '<span class="tl-reqdot open" title="정밀분석 요청됨 · ' + esc(nextAnalysisEta()) + '">🔧</span>'
+                                              : '<span class="tl-reqdot done" title="정밀분석 완료 · 곧 반영">✓</span>') : "";
     var delBtn = '<button class="tl-del" type="button" data-wl="' + esc(item.c + "|" + item.t) + '" title="관심종목에서 제거" aria-label="제거">✕</button>';
     var caret = '<span class="tl-caret" aria-hidden="true"></span>';
     var nameLine = '<div class="tl-nm">' + esc(title) + '<span class="tl-tk">' + esc(item.t) + "</span>" + reqDot + "</div>";
@@ -1670,6 +1672,16 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     if (isBakedWatch(c, t) && !isWatchHidden(c, t)) { var h = getWatchHidden(); h.push({ c: c, t: t }); saveWatchHidden(h); }
   }
 
+  // 정밀분석 요청 → 다음 정기 분석(매일 LA 오전 2시=09:00 UTC 통합 루틴) 반영 시점 안내.
+  //   요청은 이 루틴이 매일 처리하고, LA 6am 안전망이 재점검한다.
+  function nextAnalysisEta() {
+    var now = new Date();
+    var next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 9, 0, 0));
+    if (next.getTime() <= now.getTime()) next = new Date(next.getTime() + 86400000);
+    var hrs = Math.max(1, Math.round((next.getTime() - now.getTime()) / 3600000));
+    return "매일 오전 2시(LA) 정기 분석에 반영 · 약 " + hrs + "시간 뒤";
+  }
+
   // ── 정밀분석 요청 상태 — GitHub 이슈('관심종목 정밀분석 요청:')를 읽어 티커별 진행상태 표시 ──
   var wlReqCache = null;   // null=미조회 | { ticker: {state:'open'|'closed', url} }
   var wlReqInflight = false;
@@ -1745,8 +1757,8 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     // 정밀분석 요청 진행 상태(있으면 표시)
     var req = wlReqCache ? wlReqCache[item.t] : null;
     var reqTag = req ? (req.state === "open"
-      ? '<div class="wl-reqd">🔧 정밀분석 요청됨 · 처리 대기</div>'
-      : '<div class="wl-reqd done">✓ 정밀분석 완료 · 반영 대기</div>') : "";
+      ? '<div class="wl-reqd">🔧 정밀분석 요청됨<span class="wl-reqeta">' + esc(nextAnalysisEta()) + "</span></div>"
+      : '<div class="wl-reqd done">✓ 정밀분석 완료 · 곧 반영</div>') : "";
     if (d === undefined || d === "loading") return open + head + reqTag + '<div class="wl-msg">시세 불러오는 중…</div></article>';
     if (d === null) return open + head + reqTag + '<div class="wl-msg">시세를 불러오지 못했습니다 — 코드·시장(한국/미국)을 확인해 주세요.</div></article>';
     var country = item.c;
@@ -1765,7 +1777,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
         (ta && ta.change ? '<div class="c-hcell c-r"><div class="c-hv ' + chDir + '">' + esc(ta.change) + '</div><div class="c-hk">전일대비</div></div>' : "") +
       "</div>" +
       reqTag +
-      (req ? "" : '<div class="wl-note">실시간 시세만 보여주는 라이트 카드입니다. 단기/장기 기술 대응·목표가·논거 등 분석은 아래 <b>정밀분석 요청</b>으로 신청하면 풀카드로 승격됩니다.</div>') +
+      (req ? "" : '<div class="wl-note">실시간 시세만 보여주는 라이트 카드입니다. 단기/장기 기술 대응·목표가·논거 등 분석은 아래 <b>정밀분석 요청</b>으로 신청하면 풀카드로 승격됩니다. <b>요청 시 매일 오전 2시(LA) 정기 분석에 반영</b>됩니다.</div>') +
       '<div class="links"><a href="' + chartUrl + '" target="_blank" rel="noopener">차트 보기</a>' +
       (req ? '<a class="wl-req" href="' + esc(req.url) + '" target="_blank" rel="noopener">요청 이슈 보기 →</a>'
            : '<a class="wl-req" href="' + reqUrl + '" target="_blank" rel="noopener">정밀분석 요청 →</a>') + "</div>" +
