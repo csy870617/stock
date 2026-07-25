@@ -140,6 +140,7 @@ window.STOCK_DATA = {
 |---|---|
 | `theme` | 주제 키 (`core` / `growth` / `value` / `dividend`) |
 | `tier` | 주제 안 **기업 질(우수성)** 등급 — 1 최우수 / 2 우수 / 3 양호 (각 주제당 3종목씩, 성과 아닌 품질 기준) |
+| `tierAsOf` | 그 종목의 티어를 품질 평가한 기준일 — 티어를 항상 최신 데이터로 유지하기 위한 신선도 추적(14일 경과 시 validate 경고, 오래된 그룹부터 회전 재평가·실적 발표 시 즉시 재평가) |
 | `name` / `ticker` / `market` | 종목명 / 코드 / 거래소 |
 | `price` / `priceDate` | 현재가와 기준일 (한국: 원, 미국: USD) |
 | `targetPrice` / `upside` | 컨센서스 목표가 / 상승여력 % |

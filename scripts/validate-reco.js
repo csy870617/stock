@@ -89,6 +89,7 @@ const PER_GROUP = 9;              // (주제×국가)당 종목 수
 const PER_TIER = 3;               // 티어당 종목 수
 const UPSIDE_TOL = 1.5;           // upside 필드 vs (target-price)/price*100 허용 오차(%p)
 const STALE_PRICE_DAYS = 45;      // priceDate 가 이보다 오래되면 경고
+const TIER_STALE_DAYS = 14;       // tierAsOf(티어 품질 평가일)가 이보다 오래되면 경고 — 티어를 최신 데이터로 유지
 
 function validate(D, opts) {
   opts = opts || {};
@@ -231,6 +232,15 @@ function validate(D, opts) {
       if (RE_DATE.test(s.priceDate || "")) {
         const age = (new Date(today) - new Date(s.priceDate)) / 86400000;
         if (age > STALE_PRICE_DAYS) warnings.push(tag + ": priceDate 가 " + Math.round(age) + "일 경과 (" + s.priceDate + ")");
+      }
+      // 티어 신선도 — 티어는 항상 최신 펀더멘털로 유지(watch 는 tier 구조 면제라 제외)
+      if (s.theme !== "watch") {
+        if (!RE_DATE.test(s.tierAsOf || "")) {
+          warnings.push(tag + ": tierAsOf(티어 품질 평가일) 없음 — 최신 데이터로 티어 재평가 필요");
+        } else {
+          const tAge = (new Date(today) - new Date(s.tierAsOf)) / 86400000;
+          if (tAge > TIER_STALE_DAYS) warnings.push(tag + ": tierAsOf 가 " + Math.round(tAge) + "일 경과 (" + s.tierAsOf + ") — 최신 펀더멘털로 티어 재평가 대상");
+        }
       }
       if (typeof s.dividendYield === "number" && s.dividendYield > 12) {
         warnings.push(tag + ": 배당수익률 " + s.dividendYield + "% — 비정상적으로 높음, 확인 필요");
