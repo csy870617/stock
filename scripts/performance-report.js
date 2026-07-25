@@ -3,7 +3,7 @@
 //
 // 역할: data/history.js 스냅샷을 기반으로
 //   1) 종목별 수익률 (첫 스냅샷 편입가 → 최신 시세) vs KOSPI/S&P500 벤치마크
-//   2) 주제·티어별 평균 수익률 (Tier1 이 Tier3 보다 나은가? = 확신도 검증)
+//   2) 주제·티어별 평균 수익률 (Tier1 이 Tier3 보다 나은가? = 품질 tier 가 성과로 뒷받침되는지 참고 점검 — tier 는 성과로 바꾸지 않음)
 //   3) 재평가 우선 대상 스크리닝: 목표가 소진(상승여력 ≤0%), 큰 폭 하락(-15% 이상)
 // 을 출력한다. 매일 재평가 루틴이 판단 전에 실행해 '데이터에 근거한' 교체 후보를 얻는다.
 //
@@ -108,8 +108,9 @@ const bigLosers = rows.filter((r) => r.retPct <= -15).sort((a, b) => a.retPct - 
 const winners = [...rows].sort((a, b) => b.retPct - a.retPct).slice(0, 5);
 const losers = [...rows].sort((a, b) => a.retPct - b.retPct).slice(0, 5);
 
-// ── 티어 재검토 신호 — (주제×국가) 그룹 안에서 tier 순위가 실제 성과와 어긋나는 종목을 짚는다.
-//    tier 는 '주제 그룹 안 상대 확신순위'(3/3/3)이므로 재조정도 반드시 같은 그룹 안에서 판단한다.
+// ── 티어(품질)↔성과 정합 점검 [참고] — tier 는 '기업 질' 기준으로 배정하므로, 성과가 tier 를
+//    직접 바꾸지 않는다. 이 신호는 각 (주제×국가) 그룹에서 품질 tier 와 실제 성과가 어긋나는
+//    종목을 짚어 '품질 판단이 맞는지 되돌아보게' 하는 참고용일 뿐(자동 승격·강등 아님).
 //    지표: 편입일 정렬 초과수익(excessPct) 우선, 없으면 원수익률(retPct). 표본이 작으면 잠정 신호.
 function metricOf(r) { return r.excessPct != null ? r.excessPct : r.retPct; }
 const tierReview = [];
@@ -122,22 +123,22 @@ Object.keys(byTheme).sort().forEach((gk) => {
     const v = byT[t].map(metricOf).filter((x) => x != null);
     tAvg[t] = v.length ? +(v.reduce((a, b) => a + b, 0) / v.length).toFixed(2) : null;
   });
-  const promote = [], demote = [];
-  // 승격 후보: 하위 tier(2·3) 종목이 같은 그룹 Tier1 평균을 능가
+  const perfAheadOfTier = [], perfBehindTier = [];
+  // 성과가 tier(품질)보다 앞섬: 하위 tier(2·3) 종목이 같은 그룹 Tier1 평균 성과를 능가 → 품질 상향 여지 점검
   if (tAvg[1] != null) g.forEach((r) => {
     const m = metricOf(r);
-    if (r.tier > 1 && m != null && m > tAvg[1]) promote.push({ ticker: r.ticker, name: r.name, tier: r.tier, metric: +m.toFixed(2) });
+    if (r.tier > 1 && m != null && m > tAvg[1]) perfAheadOfTier.push({ ticker: r.ticker, name: r.name, tier: r.tier, metric: +m.toFixed(2) });
   });
-  // 강등 후보: Tier1 종목이 같은 그룹 Tier3 평균을 하회
+  // 성과가 tier(품질)보다 뒤짐: Tier1 종목이 같은 그룹 Tier3 평균 성과를 하회 → 품질 근거 재확인
   if (tAvg[3] != null) g.forEach((r) => {
     const m = metricOf(r);
-    if (r.tier === 1 && m != null && m < tAvg[3]) demote.push({ ticker: r.ticker, name: r.name, tier: r.tier, metric: +m.toFixed(2) });
+    if (r.tier === 1 && m != null && m < tAvg[3]) perfBehindTier.push({ ticker: r.ticker, name: r.name, tier: r.tier, metric: +m.toFixed(2) });
   });
-  // tier 평균 역전(하위 tier 평균이 상위 tier 평균보다 높음)
+  // tier 평균 역전(하위 tier 평균 성과가 상위 tier 평균보다 높음)
   const inverted = (tAvg[1] != null && tAvg[3] != null && tAvg[3] > tAvg[1]) ||
                    (tAvg[1] != null && tAvg[2] != null && tAvg[2] > tAvg[1]);
-  if (promote.length || demote.length || inverted) {
-    tierReview.push({ group: gk, n: g.length, tierAvg: tAvg, inverted, promote, demote });
+  if (perfAheadOfTier.length || perfBehindTier.length || inverted) {
+    tierReview.push({ group: gk, n: g.length, tierAvg: tAvg, inverted, perfAheadOfTier, perfBehindTier });
   }
 });
 
@@ -163,8 +164,9 @@ const report = {
   byTier: Object.fromEntries(Object.keys(byTier).sort().map((k) => [k, +avg(byTier[k]).toFixed(2)])),
   byTierExcess: Object.fromEntries(Object.keys(byTier).sort().map((k) => [k, avgEx(byTier[k]) == null ? null : +avgEx(byTier[k]).toFixed(2)])),
   byTheme: Object.fromEntries(Object.keys(byTheme).sort().map((k) => [k, +avg(byTheme[k]).toFixed(2)])),
-  // 티어 재검토 신호(그룹 내 tier↔성과 불일치) — 루틴이 매 업데이트 시 승격·강등 검토에 사용
-  tierReviewNote: "각 (주제×국가) 그룹 안에서만 tier 를 재조정하고 3/3/3 을 유지한다. tier 는 중기 확신 축이므로 단일 노이즈 1회로 뒤집지 말고 논거·상승여력·기술과 함께 종합 판단한다" + (H.length < 20 ? " (표본 " + H.length + "일 — 잠정 신호)" : ""),
+  // 티어(품질)↔성과 정합 점검 [참고] — tier 는 '기업 질' 기준으로 배정하므로 성과로 직접 바꾸지 않는다.
+  // 이 신호는 품질 판단이 맞는지 되돌아보는 참고용: 성과가 tier 를 앞서면 품질 상향 여지를, 뒤지면 품질 근거를 재검토.
+  tierReviewNote: "tier 는 기업 질(재무·수익성·해자·성장·주주환원·밸류·논거) 기준으로 배정한다. 이 점검은 참고 신호일 뿐 성과로 tier 를 자동 조정하지 않는다 — 성과가 tier 를 지속적으로 앞서면 품질 근거를 다시 보고(상향 여지), 뒤지면 품질 판단을 재확인한다" + (H.length < 20 ? " (표본 " + H.length + "일 — 잠정 신호)" : ""),
   tierReview,
   reevalPriority: {
     targetReached: targetReached.map((r) => ({ ticker: r.ticker, name: r.name, country: r.country, liveUpsidePct: r.liveUpsidePct })),
@@ -183,18 +185,18 @@ console.log("벤치마크(전체구간):  KOSPI " + fmt(report.benchmark.kospi) 
 console.log("추천 평균(원수익률): 한국  " + fmt(report.avgReturn.korea) + "   미국   " + fmt(report.avgReturn.us));
 console.log("초과수익(편입일 정렬·지수대비): 한국  " + fmt(report.avgExcess.korea) + "   미국   " + fmt(report.avgExcess.us) + "   ← 추천 능력의 like-for-like 지표");
 console.log("");
-console.log("티어별 (원수익률 / 초과수익) — Tier1 > Tier3 이어야 확신도가 유효:");
+console.log("티어별 (원수익률 / 초과수익) — 품질 tier 가 성과로 뒷받침되는지 참고 점검(Tier1>Tier3 이면 정합, tier 는 성과로 바꾸지 않음):");
 Object.keys(report.byTier).forEach((k) => console.log("  " + k + ": " + fmt(report.byTier[k]) + "  /  초과 " + fmt(report.byTierExcess[k])));
 console.log("");
 if (tierReview.length) {
-  console.log("🔁 티어 재검토 신호 (그룹 내 성과와 tier 순위 불일치 — 3/3/3 유지하며 승격·강등 검토):");
-  if (H.length < 20) console.log("   ⚠ 표본 부족 — 잠정 신호, 논거·상승여력·기술과 함께 종합 판단(단일 노이즈로 뒤집지 말 것)");
+  console.log("🔎 티어(품질)↔성과 정합 점검 [참고] — tier 는 '기업 질'로 배정, 성과로 바꾸지 말 것. 품질 판단 재검토 신호:");
+  if (H.length < 20) console.log("   ⚠ 표본 부족 — 잠정 신호(성과 노이즈), 품질 축으로만 tier 판단");
   tierReview.forEach((g) => {
-    console.log("  [" + g.group + "] Tier평균 T1 " + fmt(g.tierAvg[1]) + " / T2 " + fmt(g.tierAvg[2]) + " / T3 " + fmt(g.tierAvg[3]) + (g.inverted ? "  ⚠역전" : ""));
-    g.promote.forEach((p) => console.log("     ↑ 승격후보 T" + p.tier + " " + p.name + " (" + p.ticker + ") " + fmt(p.metric) + " > 그룹 T1평균"));
-    g.demote.forEach((p) => console.log("     ↓ 강등후보 T" + p.tier + " " + p.name + " (" + p.ticker + ") " + fmt(p.metric) + " < 그룹 T3평균"));
+    console.log("  [" + g.group + "] Tier평균성과 T1 " + fmt(g.tierAvg[1]) + " / T2 " + fmt(g.tierAvg[2]) + " / T3 " + fmt(g.tierAvg[3]) + (g.inverted ? "  ⚠역전" : ""));
+    g.perfAheadOfTier.forEach((p) => console.log("     · 성과>tier T" + p.tier + " " + p.name + " (" + p.ticker + ") " + fmt(p.metric) + " > 그룹 T1평균 → 품질 상향 여지 점검"));
+    g.perfBehindTier.forEach((p) => console.log("     · 성과<tier T" + p.tier + " " + p.name + " (" + p.ticker + ") " + fmt(p.metric) + " < 그룹 T3평균 → 품질 근거 재확인"));
   });
-} else console.log("🔁 티어 재검토: 그룹 내 tier↔성과 불일치 없음");
+} else console.log("🔎 티어↔성과 정합 점검: 불일치 없음");
 console.log("");
 console.log("주제별 평균:");
 Object.keys(report.byTheme).forEach((k) => console.log("  " + k + ": " + fmt(report.byTheme[k])));
