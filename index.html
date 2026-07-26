@@ -183,12 +183,35 @@ a { color: inherit; }
 .perf-periods .chip.on { background: var(--accent); color: #fff; border-color: var(--accent); }
 .perf-sec-t { font-size: 0.9rem; font-weight: 700; color: var(--ink); margin: 22px 0 9px; }
 .perf-sec-t span { color: var(--muted); font-weight: 500; font-size: 0.8rem; }
-.perf-matrix td.num, .perf-matrix th.num { text-align: right; }
-.perf-matrix .pm-th { font-weight: 600; }
-.perf-matrix .pm-n { display: inline-block; color: var(--muted); font-size: 0.68rem; font-weight: 500; margin-left: 5px; }
-.perf-matrix .pm-na { color: var(--muted); }
-.perf-matrix tr.pm-tot { border-top: 2px solid var(--grid); font-weight: 700; }
-.perf-matrix tr.pm-tot td { background: var(--chip-bg); }
+/* 주제×Tier 컴팩트 매트릭스 — 모바일 한 화면(가로 스크롤 없음, 값+종목수 2줄 셀) */
+.perf-mtx { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-sm); box-shadow: var(--shadow-sm); overflow: hidden; margin-bottom: 6px; }
+.pm-tbl { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.pm-tbl th, .pm-tbl td { padding: 7px 3px; text-align: center; border-bottom: 1px solid var(--grid); }
+.pm-tbl tr:last-child td { border-bottom: 0; }
+.pm-tbl th { color: var(--muted); font-weight: 600; font-size: 0.72rem; }
+.pm-tbl th:first-child, .pm-tbl td:first-child { text-align: left; padding-left: 10px; width: 33%; }
+.pm-tbl .pm-th { font-weight: 600; font-size: 0.75rem; line-height: 1.2; }
+.pm-tbl td b { display: block; font-weight: 700; font-size: 0.8rem; font-variant-numeric: tabular-nums; }
+.pm-tbl td i { display: block; color: var(--muted); font-size: 0.62rem; font-style: normal; margin-top: 1px; }
+.pm-tbl td.up b { color: var(--up); }
+.pm-tbl td.down b { color: var(--down); }
+.pm-tbl td.pm-na { color: var(--muted); }
+.pm-tbl tr.pm-tot td { background: var(--chip-bg); border-top: 2px solid var(--grid); font-weight: 700; }
+
+/* 종목별 성과 — 2줄 컴팩트 리스트(가로 스크롤 없음) */
+.perf-list { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-sm); box-shadow: var(--shadow-sm); overflow: hidden; }
+.pl-row { display: flex; align-items: center; gap: 10px; padding: 9px 13px; border-bottom: 1px solid var(--grid); }
+.pl-row:last-child { border-bottom: 0; }
+.pl-main { flex: 1; min-width: 0; }
+.pl-nm { font-weight: 600; font-size: 0.9rem; }
+.pl-nm .pl-tk { color: var(--muted); font-weight: 400; font-size: 0.72rem; margin-left: 5px; }
+.pl-sub { color: var(--ink-2); font-size: 0.75rem; margin-top: 2px; }
+.pl-sub .mini-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin: 0 4px 0 0; }
+.pl-sub .up { color: var(--up); font-weight: 700; }
+.pl-sub .down { color: var(--down); font-weight: 700; }
+.pl-ret { font-size: 1.02rem; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pl-ret.up { color: var(--up); }
+.pl-ret.down { color: var(--down); }
 
 /* ── 컨트롤(국가·보기·주제) — 라벨·박스 없이 컨트롤만 간결하게 ── */
 .controls { display: flex; flex-direction: column; gap: 12px; margin-bottom: 24px; }
@@ -1627,16 +1650,16 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     }
   }
 
-  // 주제 × Tier 매트릭스 (셀 = 평균 수익률 + 종목수) — 세분화 성과 검증
+  // 주제 × Tier 매트릭스 (셀 = 평균 수익률 + 종목수) — 모바일 한 화면용 컴팩트 표(셀은 값+종목수 2줄)
   function perfMatrix(rows) {
     var themes = D.themes || [];
     function avgOf(a) { var t = a.filter(function (r) { return r.ret != null; }); return t.length ? t.reduce(function (s, r) { return s + r.ret; }, 0) / t.length : null; }
     function cnt(a) { return a.filter(function (r) { return r.ret != null; }).length; }
     function cell(v, n) {
-      if (v == null) return '<td class="num pm-na">–</td>';
-      return '<td class="num ' + (v >= 0 ? "up" : "down") + '">' + fmtPct(v) + '<span class="pm-n">' + n + "</span></td>";
+      if (v == null) return '<td class="pm-na">–</td>';
+      return '<td class="' + (v >= 0 ? "up" : "down") + '"><b>' + fmtPct(v) + '</b><i>' + n + "종목</i></td>";
     }
-    var head = '<tr><th>주제 \\ Tier</th><th class="num">Tier 1</th><th class="num">Tier 2</th><th class="num">Tier 3</th><th class="num">주제 전체</th></tr>';
+    var head = '<tr><th>주제＼T</th><th>T1</th><th>T2</th><th>T3</th><th>전체</th></tr>';
     var body = themes.map(function (th) {
       var tr = rows.filter(function (r) { return r.theme === th.key; });
       var cells = [1, 2, 3].map(function (t) { var g = tr.filter(function (r) { return r.tier === t; }); return cell(avgOf(g), cnt(g)); }).join("");
@@ -1645,33 +1668,33 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     // 'Tier 전체' 합계행·우하단 총합은 티커 기준 유니크 집합에서(멀티테마 티커 이중집계 방지).
     // 개별 주제×Tier 셀·'주제 전체' 열은 주제 내 유니크하므로 원본 rows 유지.
     var uniq = dedupByTicker(rows);
-    var totRow = '<tr class="pm-tot"><td>Tier 전체</td>' +
+    var totRow = '<tr class="pm-tot"><td>전체</td>' +
       [1, 2, 3].map(function (t) { var g = uniq.filter(function (r) { return r.tier === t; }); return cell(avgOf(g), cnt(g)); }).join("") +
       cell(avgOf(uniq), cnt(uniq)) + "</tr>";
-    return '<div class="tbl-wrap"><table class="tbl perf-matrix"><thead>' + head + "</thead><tbody>" + body + totRow + "</tbody></table></div>";
+    return '<div class="perf-mtx"><table class="pm-tbl"><thead>' + head + "</thead><tbody>" + body + totRow + "</tbody></table></div>";
   }
 
-  // 종목별 성과 표 (티커 중복 제거, 수익률 내림차순)
+  // 종목별 성과 — 모바일 한 화면용 2줄 컴팩트 리스트(가로 스크롤 없음, 수익률 내림차순)
+  // 1줄: 종목명·티커 + 수익률 / 2줄: 주제 · Tier · (시장/지수)대비 초과수익
   function perfTable(rows, country, mode) {
     var seen = {}, uniq = [];
     rows.forEach(function (r) { if (!seen[r.ticker]) { seen[r.ticker] = 1; uniq.push(r); } });
+    var alphaLbl = mode === "since" ? "시장대비" : "지수대비";
     var body = uniq.slice().sort(function (a, b) { return (b.ret == null ? -1e9 : b.ret) - (a.ret == null ? -1e9 : a.ret); }).map(function (r) {
       var thm = themeMeta(r.theme), tm = tierMeta(r.tier);
       var retCls = r.ret == null ? "" : r.ret >= 0 ? "up" : "down";
       var alCls = r.alpha == null ? "" : r.alpha >= 0 ? "up" : "down";
-      return "<tr>" +
-        '<td><span class="nm">' + esc(r.name) + '</span><br><span class="tk">' + esc(r.ticker) + "</span></td>" +
-        "<td>" + (thm.emoji ? esc(thm.emoji) + " " : "") + esc(thm.label) + "</td>" +
-        '<td><span class="mini-dot" style="background:' + tm.color + '"></span>' + r.tier + "</td>" +
-        '<td class="num">' + fmtPrice(r.basePrice, country) + "</td>" +
-        '<td class="num">' + fmtPrice(r.lastPrice, country) + "</td>" +
-        '<td class="num ' + retCls + '">' + (r.ret == null ? "–" : fmtPct(r.ret)) + "</td>" +
-        '<td class="num ' + alCls + '">' + (r.alpha == null ? "–" : fmtPct(r.alpha)) + "</td></tr>";
+      var alpha = r.alpha == null ? "" : ' · <span class="' + alCls + '">' + alphaLbl + " " + fmtPct(r.alpha) + "</span>";
+      return '<div class="pl-row">' +
+        '<div class="pl-main">' +
+          '<div class="pl-nm">' + esc(r.name) + '<span class="pl-tk">' + esc(r.ticker) + "</span></div>" +
+          '<div class="pl-sub"><span class="mini-dot" style="background:' + tm.color + '"></span>' +
+            (thm.emoji ? esc(thm.emoji) + " " : "") + esc(thm.label) + " · T" + r.tier + alpha + "</div>" +
+        "</div>" +
+        '<div class="pl-ret ' + retCls + '">' + (r.ret == null ? "–" : fmtPct(r.ret)) + "</div>" +
+      "</div>";
     }).join("");
-    return '<div class="tbl-wrap"><table class="tbl"><thead><tr>' +
-      '<th>종목</th><th>주제</th><th>Tier</th><th class="num">' + (mode === "since" ? "기록시 가격" : "기준가") + '</th>' +
-      '<th class="num">최신 가격</th><th class="num">수익률</th><th class="num">' + (mode === "since" ? "시장 대비" : "지수 대비") +
-      "</th></tr></thead><tbody>" + body + "</tbody></table></div>";
+    return '<div class="perf-list">' + body + "</div>";
   }
 
   // 실시간 시세가 도착하면 카드와 Top Picks 를 함께 다시 그려 표시를 일치시킨다.
