@@ -296,30 +296,27 @@ a { color: inherit; }
 .picks-head .crit .pk-stale { display: inline-block; margin-left: 8px; font-weight: 700; color: var(--down);
   background: color-mix(in srgb, var(--down) 14%, transparent); padding: 1px 8px; border-radius: 999px; }
 
-/* ── 종목 업데이트(편입·제외) ── */
-.roster { margin: 0 0 32px; background: var(--surface); border: 1px solid var(--line);
-  border-radius: var(--r); padding: 20px 22px; box-shadow: var(--shadow-sm); }
-.roster-head { margin-bottom: 15px; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
-.roster-head h2 { font-size: 1.16rem; font-weight: 700; letter-spacing: -0.024em; }
-.roster-head .crit { display: block; color: var(--muted); font-size: 0.78rem; margin-top: 3px; }
-.roster-date { flex-shrink: 0; font: inherit; font-size: 0.82rem; color: var(--ink); background: var(--surface-2);
-  border: 1px solid transparent; border-radius: 10px; padding: 6px 11px; cursor: pointer; max-width: 100%; }
+/* ── 종목 업데이트(편입·제외) — 접힌 한 줄 요약, 탭하면 간단 목록 ── */
+.roster { margin: 0 0 28px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-sm); }
+.roster-fold summary { list-style: none; cursor: pointer; display: flex; align-items: baseline; gap: 9px;
+  padding: 11px 15px; font-size: 0.86rem; font-weight: 700; color: var(--ink-2); }
+.roster-fold summary::-webkit-details-marker { display: none; }
+.roster-fold summary::after { content: "▸"; margin-left: auto; color: var(--muted); font-size: 0.8rem; transition: transform .15s; }
+.roster-fold[open] summary::after { transform: rotate(90deg); }
+.roster-fold .crit { color: var(--muted); font-size: 0.76rem; font-weight: 500; }
+.roster-in { padding: 2px 15px 12px; display: flex; flex-direction: column; gap: 8px; }
+.roster-date { align-self: flex-start; font: inherit; font-size: 0.78rem; color: var(--ink-2); background: var(--surface-2);
+  border: 1px solid transparent; border-radius: 8px; padding: 4px 9px; cursor: pointer; max-width: 100%; }
 .roster-date:focus { outline: none; border-color: var(--accent); }
-.roster-empty { color: var(--muted); font-size: 0.85rem; }
-.roster-body { display: grid; grid-template-columns: repeat(auto-fit, minmax(258px, 1fr)); gap: 12px; }
-.roster-theme { background: var(--inset); border: 1px solid transparent; border-radius: 12px; padding: 13px 15px; }
-.rth-head { font-size: 0.85rem; font-weight: 750; letter-spacing: -0.01em; margin-bottom: 7px;
-  display: flex; align-items: center; gap: 6px; }
-.rth-cnt { margin-left: auto; color: var(--muted); font-weight: 600; font-size: 0.72rem; font-variant-numeric: tabular-nums; }
-.roster-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: 5px 8px; font-size: 0.85rem; }
-.roster-line + .roster-line { margin-top: 5px; }
-.roster-line .rl-lead { font-weight: 700; font-size: 0.72rem; flex-shrink: 0; }
+.roster-empty { color: var(--muted); font-size: 0.82rem; }
+.roster-line { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; font-size: 0.83rem; }
+.roster-line .rl-lead { font-weight: 700; font-size: 0.7rem; flex-shrink: 0; }
 .roster-line.in  .rl-lead { color: var(--up); }
 .roster-line.out .rl-lead { color: var(--down); }
-.roster-list { display: inline-flex; flex-wrap: wrap; gap: 4px 9px; }
+.roster-list { display: inline-flex; flex-wrap: wrap; gap: 3px 9px; }
 .roster-item { display: inline-flex; align-items: baseline; gap: 3px; }
 .roster-item .rt-nm { font-weight: 600; }
-.roster-item .rt-meta { color: var(--muted); font-size: 0.72rem; }
+.roster-item .rt-meta { color: var(--muted); font-size: 0.7rem; }
 .roster-item.out .rt-nm { text-decoration: line-through; opacity: 0.72; }
 /* 카드의 신규 편입 배지 */
 .new-badge { display: inline-flex; align-items: center; font-size: 0.66rem; font-weight: 800;
@@ -693,11 +690,13 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   <div id="cards"></div>
 
   <section class="roster" id="rosterBox" style="display:none">
-    <div class="roster-head">
-      <div class="roster-title"><h2>종목 업데이트</h2><span class="crit" id="rosterWhen"></span></div>
-      <select class="roster-date" id="rosterDate" aria-label="변경 날짜 선택"></select>
-    </div>
-    <div class="roster-body" id="rosterBody"></div>
+    <details class="roster-fold">
+      <summary><span class="rf-t">종목 업데이트</span><span class="crit" id="rosterWhen"></span></summary>
+      <div class="roster-in">
+        <select class="roster-date" id="rosterDate" aria-label="변경 날짜 선택"></select>
+        <div class="roster-body" id="rosterBody"></div>
+      </div>
+    </details>
   </section>
 
   <footer class="site">
@@ -1362,39 +1361,28 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     renderRosterBody(def.date);
   }
 
-  // 선택된 날짜의 편입/제외를 주제별로 묶어서 렌더
+  // 선택된 날짜의 편입/제외 — 심플한 두 줄(편입/제외) 플랫 목록, 주제는 종목 옆에 작게
   function renderRosterBody(date) {
     var entry = null;
     for (var i = 0; i < ROSTER_HIST.length; i++) { if (ROSTER_HIST[i].date === date) { entry = ROSTER_HIST[i]; break; } }
     if (!entry) return;
-    document.getElementById("rosterWhen").textContent = entry.prevDate + " → " + entry.date + " 기준";
+    document.getElementById("rosterWhen").textContent =
+      entry.date + " · 편입 " + entry.added.length + " · 제외 " + entry.removed.length;
 
     function item(s, cls) {
-      return '<span class="roster-item ' + cls + '"><span class="rt-nm">' + esc(s.n) + "</span></span>";
+      var t = themeMeta(s.th);
+      return '<span class="roster-item ' + cls + '"><span class="rt-nm">' + esc(s.n) + "</span>" +
+        '<span class="rt-meta">' + esc((t && t.label) || s.th) + "</span></span>";
     }
     function line(list, cls, lead) {
       if (!list.length) return "";
       return '<div class="roster-line ' + cls + '"><span class="rl-lead">' + lead + "</span>" +
         '<span class="roster-list">' + list.map(function (s) { return item(s, cls); }).join("") + "</span></div>";
     }
-    function themeBlock(key, label, emoji) {
-      var added = entry.added.filter(function (s) { return s.th === key; });
-      var removed = entry.removed.filter(function (s) { return s.th === key; });
-      if (!added.length && !removed.length) return "";
-      return '<div class="roster-theme"><div class="rth-head">' + esc(label) +
-        '<span class="rth-cnt">편입 ' + added.length + " · 제외 " + removed.length + "</span></div>" +
-        line(added, "in", "편입") + line(removed, "out", "제외") + "</div>";
-    }
-
-    var themes = D.themes || [];
-    var covered = {};
-    var html = themes.map(function (t) { covered[t.key] = 1; return themeBlock(t.key, t.label, t.emoji); }).join("");
-    var otherKeys = {};
-    entry.added.concat(entry.removed).forEach(function (s) { if (!covered[s.th]) otherKeys[s.th] = 1; });
-    Object.keys(otherKeys).forEach(function (k) { html += themeBlock(k, k, ""); });
 
     document.getElementById("rosterBody").innerHTML =
-      html || '<div class="roster-empty">이 날짜에는 편입·제외 변경이 없습니다.</div>';
+      (line(entry.added, "in", "편입") + line(entry.removed, "out", "제외")) ||
+      '<div class="roster-empty">이 날짜에는 편입·제외 변경이 없습니다.</div>';
   }
 
   // Top Pick 신호 배지 (단기/장기 5단계) — techNote sig 기준
