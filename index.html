@@ -1232,10 +1232,12 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       (risks ? '<div class="risks"><b>리스크</b> — ' + risks + "</div>" : "");
     var delBtn = watchDel
       ? '<button class="wl-del" type="button" data-wl="' + esc(country + "|" + s.ticker) + '" title="관심종목에서 삭제" aria-label="삭제">✕</button>' : "";
+    // 관심종목(watch)은 tier 개념(추천 그룹 내 상대 품질순위)이 적용되지 않으므로 tier 배지를 표시하지 않는다
+    var tierBadge = s.theme === "watch" ? "" :
+      '<span class="badge"><span class="dot" style="background:' + tm.color + '"></span>' + tm.label + "</span>";
     return '<article class="card" data-ticker="' + esc(s.ticker) + '">' +
       '<div class="head"><h3>' + esc(s.name) + '<span class="tk">' + esc(s.ticker) + " · " + esc(s.market) + "</span></h3>" +
-      '<span class="badges">' + newBadge + themeBadge + warnBadge + unvBadge +
-      '<span class="badge"><span class="dot" style="background:' + tm.color + '"></span>' + tm.label + "</span>" + delBtn + "</span></div>" +
+      '<span class="badges">' + newBadge + themeBadge + warnBadge + unvBadge + tierBadge + delBtn + "</span></div>" +
       '<div class="c-hero">' +
         '<div class="c-hcell"><div class="c-hv">' + fmtPrice(e.price, country) + '</div><div class="c-hk">' + priceSub + "</div></div>" +
         '<div class="c-hcell c-r"><div class="c-hv ' + upCls + '">' + fmtPct(e.upside) + '</div><div class="c-hk">' + upLabel + "</div></div>" +
@@ -1477,9 +1479,11 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     return '<button class="tl-row' + exp + '" type="button" data-ticker="' + esc(s.ticker) + '" aria-expanded="' + (exp ? "true" : "false") + '">' +
       '<div class="tl-main">' +
         '<div class="tl-nm">' + esc(s.name) + '<span class="tl-tk">' + esc(s.ticker) + "</span></div>" +
-        '<div class="tl-sub"><span class="tl-tier"><span class="dot" style="background:' + tm.color + '"></span>' +
-          esc((tm.label || "").split(" · ")[0]) + "</span>" +
-          (s.dividendYield != null ? ' · 배당 ' + Number(s.dividendYield).toFixed(1) + "%" : "") + "</div>" +
+        '<div class="tl-sub">' +
+          (s.theme === "watch" ? "" :   // 관심종목은 tier 개념 미적용 — 표 행에서도 tier 숨김
+            '<span class="tl-tier"><span class="dot" style="background:' + tm.color + '"></span>' +
+            esc((tm.label || "").split(" · ")[0]) + "</span>") +
+          (s.dividendYield != null ? (s.theme === "watch" ? "배당 " : " · 배당 ") + Number(s.dividendYield).toFixed(1) + "%" : (s.theme === "watch" ? "관심종목" : "")) + "</div>" +
       "</div>" +
       '<div class="tl-r"><div class="tl-px">' + fmtPrice(e.price, state.country) + live + "</div>" +
         '<div class="tl-up ' + upCls + '">' + fmtPct(e.upside) + "</div></div>" + del +
@@ -1696,8 +1700,11 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       return '<div class="pl-row">' +
         '<div class="pl-main">' +
           '<div class="pl-nm">' + esc(r.name) + '<span class="pl-tk">' + esc(r.ticker) + "</span></div>" +
-          '<div class="pl-sub"><span class="mini-dot" style="background:' + tm.color + '"></span>' +
-            (thm.emoji ? esc(thm.emoji) + " " : "") + esc(thm.label) + " · T" + r.tier + alpha + "</div>" +
+          '<div class="pl-sub">' +
+            (r.theme === "watch"   // 관심종목은 tier 개념 미적용 — 성과 리스트에서도 tier 숨김
+              ? (thm.emoji ? esc(thm.emoji) + " " : "") + esc(thm.label) + alpha
+              : '<span class="mini-dot" style="background:' + tm.color + '"></span>' +
+                (thm.emoji ? esc(thm.emoji) + " " : "") + esc(thm.label) + " · T" + r.tier + alpha) + "</div>" +
         "</div>" +
         '<div class="pl-ret ' + retCls + '">' + (r.ret == null ? "–" : fmtPct(r.ret)) + "</div>" +
       "</div>";
