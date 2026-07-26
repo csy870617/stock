@@ -1,7 +1,7 @@
 // 서비스워커 — 앱 설치(PWA) 및 오프라인 대비 캐시
 // 전략: 네트워크 우선(항상 최신 데이터를 먼저 시도), 실패 시에만 캐시 사용.
 // 데이터 정확성이 최우선이므로 캐시가 최신 데이터를 가리는 일이 없도록 한다.
-var CACHE = "mystock-v7";
+var CACHE = "mystock-v8";
 var SHELL = [
   "./",
   "./index.html",
@@ -10,8 +10,8 @@ var SHELL = [
   "./data/quotes.js",
   "./data/liquidity.js",
   "./data/history.js",
-  "./icons/icon-192.png",
-  "./icons/icon-512.png"
+  "./icons/app-icon-192.png",
+  "./icons/app-icon-512.png"
 ];
 
 self.addEventListener("install", function (e) {
