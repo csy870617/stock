@@ -803,6 +803,13 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       el.innerHTML = '<span class="us-dot ' + dot + '"></span><span>' + txt + (link || "") + "</span>";
       el.hidden = false;
     }
+    // ISO 시각 → 'YYYY-MM-DD HH:MM'(뷰어 로컬 시간)
+    function fmtTime(iso) {
+      if (!iso) return "";
+      var d = new Date(iso); if (isNaN(d.getTime())) return "";
+      var p = function (n) { return (n < 10 ? "0" : "") + n; };
+      return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) + " " + p(d.getHours()) + ":" + p(d.getMinutes());
+    }
     show("us-gray", "상태 확인 중…");   // 기본(조회 전/실패 시 유지)
     fetch("https://api.github.com/repos/csy870617/stock/issues?state=all&per_page=15&sort=created&direction=desc",
       { headers: { "Accept": "application/vnd.github+json" } })
@@ -817,7 +824,10 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
         var link = ' · <a href="' + esc(it.html_url) + '" target="_blank" rel="noopener">#' + it.number + "</a>";
         if (it.state === "open" && it.comments > 0) show("us-amber", "🔧 업데이트 처리 중", link);
         else if (it.state === "open") show("us-yellow", "🟡 업데이트 요청 접수됨 — 처리 대기중", link);
-        else show("us-green", "🟢 최근 업데이트 완료", link);
+        else {
+          var when = fmtTime(it.closed_at);
+          show("us-green", "🟢 최근 업데이트 완료" + (when ? " · " + when : ""), link);
+        }
       })
       .catch(function () { show("us-gray", "최근 업데이트"); });
   })();
