@@ -149,7 +149,7 @@ function validate(D, opts) {
         errors.push(tag + ": dividendYield 오류 (" + s.dividendYield + ")");
       }
 
-      // AI추정가(선택) — 컨센서스와 별개인 자체 분석치. 근거(aiBasis) 없이는 저장 거부.
+      // AI적정가(선택) — 컨센서스와 별개인 자체 분석치. 근거(aiBasis) 없이는 저장 거부.
       if (s.aiTarget != null) {
         if (!(typeof s.aiTarget === "number" && isFinite(s.aiTarget) && s.aiTarget > 0)) {
           errors.push(tag + ": aiTarget 오류 (" + s.aiTarget + ")");
@@ -165,7 +165,7 @@ function validate(D, opts) {
           if (!RE_DATE.test(s.aiAsOf)) errors.push(tag + ": aiAsOf 형식 오류 '" + s.aiAsOf + "'");
           else {
             const aiAge = (new Date(today) - new Date(s.aiAsOf)) / 86400000;
-            if (aiAge > 45) warnings.push(tag + ": AI추정가 산출 후 " + Math.round(aiAge) + "일 경과 — 재산출 대상");
+            if (aiAge > 45) warnings.push(tag + ": AI적정가 산출 후 " + Math.round(aiAge) + "일 경과 — 재산출 대상");
           }
         }
       }

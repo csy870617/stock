@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// AI추정가 패치 생성기 — 조사된 입력값(inputs.json) + 밸류에이션 규칙(rules.json)으로
+// AI적정가 패치 생성기 — 조사된 입력값(inputs.json) + 밸류에이션 규칙(rules.json)으로
 // update-reco.js 용 패치 JSON을 만든다. 검증 안 된 종목은 자동 제외(생략이 정상).
 //
 // inputs.json: { korea: [{t, eps, epsNote, dps, fpe, src[], note}], us: [...] }
@@ -49,15 +49,15 @@ const skipped = [];
     const srcNote = row.epsNote || "";
     if (rule.method === "per" && typeof row.eps === "number" && row.eps > 0) {
       v = row.eps * rule.mult;
-      basis = "추정가 = 2026E EPS " + fmt(row.eps, c) + (srcNote ? "(" + srcNote + ", 검증)" : "(검증)") +
+      basis = "적정가 = 2026E EPS " + fmt(row.eps, c) + (srcNote ? "(" + srcNote + ", 검증)" : "(검증)") +
         " × 적정 PER " + rule.mult + "배(" + rule.rationale + ") ≈ " + fmt(round(v, c), c);
     } else if (rule.method === "yield" && typeof row.dps === "number" && row.dps > 0) {
       v = row.dps / (rule.yld / 100);
-      basis = "추정가 = 연간 주당배당 " + fmt(row.dps, c) + "(검증) ÷ 요구 배당수익률 " + rule.yld +
+      basis = "적정가 = 연간 주당배당 " + fmt(row.dps, c) + "(검증) ÷ 요구 배당수익률 " + rule.yld +
         "%(" + rule.rationale + ") ≈ " + fmt(round(v, c), c) + " — 배당가치 기준 보수적 추정";
     } else if (rule.method === "fpe" && typeof row.fpe === "number" && row.fpe > 0 && s0.price > 0) {
       v = (s0.price / row.fpe) * rule.mult;
-      basis = "추정가 = 12개월 선행 PER " + row.fpe + "배(검증)로 역산한 선행 EPS × 적정 PER " +
+      basis = "적정가 = 12개월 선행 PER " + row.fpe + "배(검증)로 역산한 선행 EPS × 적정 PER " +
         rule.mult + "배(" + rule.rationale + ") ≈ " + fmt(round(v, c), c);
     } else {
       skipped.push(key + " (입력값 미검증: " + rule.method + ")");
