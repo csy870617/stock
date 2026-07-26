@@ -1641,9 +1641,16 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
         pTile("시장 대비 초과수익", avgAlpha == null ? "–" : fmtPct(avgAlpha), avgAlpha != null && avgAlpha > 0) + "</div>";
     }
 
+    // 종목별 성과는 상단에서 선택된 주제의 종목만 표시(주제 × Tier 매트릭스는 전체 유지)
+    var selTheme = themeMeta(state.theme);
+    var themeRows = data.rows.filter(function (r) { return r.theme === state.theme; });
+    var perfList = themeRows.length
+      ? perfTable(themeRows, country, data.mode)
+      : '<div class="empty">이 주제의 성과 기록이 아직 없습니다.</div>';
+
     return chips + tiles +
       '<div class="perf-sec-t">주제 × Tier 세분화 <span>(평균 수익률 · 종목수)</span></div>' + perfMatrix(data.rows) +
-      '<div class="perf-sec-t">종목별 성과</div>' + perfTable(data.rows, country, data.mode);
+      '<div class="perf-sec-t">종목별 성과 <span>(' + (selTheme.emoji ? esc(selTheme.emoji) + " " : "") + esc(selTheme.label) + ")</span></div>" + perfList;
 
     function pTile(k, v, up) {
       return '<div class="tile"><div class="k">' + esc(k) + '</div><div class="v' + (up ? " up" : "") + '">' + v + "</div></div>";
