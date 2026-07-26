@@ -273,7 +273,7 @@ a { color: inherit; }
 .picks-head .crit .pk-stale { display: inline-block; margin-left: 8px; font-weight: 700; color: var(--down);
   background: color-mix(in srgb, var(--down) 14%, transparent); padding: 1px 8px; border-radius: 999px; }
 
-/* ── 종목 변경(편입·제외) ── */
+/* ── 종목 업데이트(편입·제외) ── */
 .roster { margin: 0 0 32px; background: var(--surface); border: 1px solid var(--line);
   border-radius: var(--r); padding: 20px 22px; box-shadow: var(--shadow-sm); }
 .roster-head { margin-bottom: 15px; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
@@ -671,7 +671,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
 
   <section class="roster" id="rosterBox" style="display:none">
     <div class="roster-head">
-      <div class="roster-title"><h2>종목 변경</h2><span class="crit" id="rosterWhen"></span></div>
+      <div class="roster-title"><h2>종목 업데이트</h2><span class="crit" id="rosterWhen"></span></div>
       <select class="roster-date" id="rosterDate" aria-label="변경 날짜 선택"></select>
     </div>
     <div class="roster-body" id="rosterBody"></div>
@@ -704,7 +704,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     .filter(function (s) { return s && typeof s.date === "string" && Array.isArray(s.stocks); })
     .sort(function (a, b) { return a.date.localeCompare(b.date); });
 
-  // ── 종목 변경(편입·제외) 계산 — 인접 스냅샷쌍마다 diff 축적(history.js) ──
+  // ── 종목 업데이트(편입·제외) 계산 — 인접 스냅샷쌍마다 diff 축적(history.js) ──
   // 날짜별로 편입/제외를 조회할 수 있도록, 각 스냅샷을 직전 스냅샷과 비교해 기록한다.
   var NEW_TICKERS = {};    // 가장 최근 갱신에 새로 편입된 티커 → true (카드 NEW 배지용)
   var ROSTER_HIST = [];    // [{date, prevDate, added:[snapStock], removed:[snapStock]}], 과거→최신
@@ -1304,7 +1304,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     return base + tilt * (THEME_QUALITY[s.theme] || 0);
   }
 
-  // 종목 변경(편입·제외) 섹션 — 날짜 드롭다운으로 과거 변경도 조회. 스냅샷쌍이 없으면 숨김.
+  // 종목 업데이트(편입·제외) 섹션 — 날짜 드롭다운으로 과거 변경도 조회. 스냅샷쌍이 없으면 숨김.
   function renderRoster() {
     var box = document.getElementById("rosterBox");
     if (!ROSTER_HIST.length) { box.style.display = "none"; return; }
