@@ -261,14 +261,14 @@ window.STOCK_QUOTES = {
    "changePct": 1.9
   },
   "V": {
-   "price": 362.355,
+   "price": 362.53,
    "date": "2026-07-27",
    "changePct": 1.9
   },
   "MA": {
-   "price": 551.87,
+   "price": 551.71,
    "date": "2026-07-27",
-   "changePct": 2.3
+   "changePct": 2.2
   },
   "GOOGL": {
    "price": 326.56,
@@ -286,7 +286,7 @@ window.STOCK_QUOTES = {
    "changePct": 1.8
   },
   "BRK.B": {
-   "price": 497.23,
+   "price": 497.18,
    "date": "2026-07-27",
    "changePct": 0.5
   },
@@ -306,9 +306,9 @@ window.STOCK_QUOTES = {
    "changePct": 0.3
   },
   "TSM": {
-   "price": 399.27,
+   "price": 399.09,
    "date": "2026-07-27",
-   "changePct": -1
+   "changePct": -1.1
   },
   "PLTR": {
    "price": 131.53,
@@ -316,22 +316,22 @@ window.STOCK_QUOTES = {
    "changePct": 7
   },
   "UBER": {
-   "price": 68.15,
+   "price": 68.18,
    "date": "2026-07-27",
    "changePct": 3.4
   },
   "GM": {
-   "price": 87.035,
+   "price": 87.04,
    "date": "2026-07-27",
    "changePct": 5.3
   },
   "VZ": {
-   "price": 47.35,
+   "price": 47.32,
    "date": "2026-07-27",
-   "changePct": 2.1
+   "changePct": 2
   },
   "C": {
-   "price": 133.12,
+   "price": 133.1,
    "date": "2026-07-27",
    "changePct": 0.7
   },
@@ -346,27 +346,27 @@ window.STOCK_QUOTES = {
    "changePct": 2.3
   },
   "O": {
-   "price": 65.49,
+   "price": 65.5,
    "date": "2026-07-27",
    "changePct": -0.2
   },
   "DUK": {
-   "price": 128.84,
+   "price": 128.83,
    "date": "2026-07-27",
    "changePct": -1.3
   },
   "XOM": {
-   "price": 154.79,
+   "price": 154.77,
    "date": "2026-07-27",
    "changePct": -1.4
   },
   "KO": {
-   "price": 84.1,
+   "price": 84.07,
    "date": "2026-07-27",
    "changePct": 2.2
   },
   "JNJ": {
-   "price": 265.97,
+   "price": 265.95,
    "date": "2026-07-27",
    "changePct": 1
   },
@@ -381,7 +381,7 @@ window.STOCK_QUOTES = {
    "changePct": -2.4
   },
   "RDDT": {
-   "price": 179.18,
+   "price": 179.23,
    "date": "2026-07-27",
    "changePct": 6.2
   },
@@ -406,9 +406,9 @@ window.STOCK_QUOTES = {
    "changePct": -0.5
   },
   "FOUR": {
-   "price": 49.96,
+   "price": 49.97,
    "date": "2026-07-27",
-   "changePct": 3.3
+   "changePct": 3.4
   },
   "TCOM": {
    "price": 44.77,
@@ -416,17 +416,17 @@ window.STOCK_QUOTES = {
    "changePct": 2.6
   },
   "LLY": {
-   "price": 1197.99,
+   "price": 1197.53,
    "date": "2026-07-27",
-   "changePct": 0.2
+   "changePct": 0.1
   },
   "CVX": {
-   "price": 189.98,
+   "price": 190,
    "date": "2026-07-27",
    "changePct": -2.5
   },
   "CI": {
-   "price": 291.09,
+   "price": 291.02,
    "date": "2026-07-27",
    "changePct": 0.5
   },
@@ -456,7 +456,7 @@ window.STOCK_QUOTES = {
    "changePct": 0.9
   },
   "PG": {
-   "price": 148.635,
+   "price": 148.63,
    "date": "2026-07-27",
    "changePct": 0.8
   },
@@ -466,27 +466,27 @@ window.STOCK_QUOTES = {
    "changePct": 0.2
   },
   "SYK": {
-   "price": 336.75,
+   "price": 336.74,
    "date": "2026-07-27",
    "changePct": 2
   },
   "HWM": {
-   "price": 287.76,
+   "price": 287.94,
    "date": "2026-07-27",
    "changePct": -0.5
   },
   "RTX": {
-   "price": 218.4,
+   "price": 218.42,
    "date": "2026-07-27",
    "changePct": 2.6
   },
   "WM": {
-   "price": 237.885,
+   "price": 237.9,
    "date": "2026-07-27",
    "changePct": -0.4
   },
   "PH": {
-   "price": 987.2,
+   "price": 987.31,
    "date": "2026-07-27",
    "changePct": 0
   },
@@ -501,9 +501,9 @@ window.STOCK_QUOTES = {
    "changePct": 1.2
   },
   "ABT": {
-   "price": 104.57,
+   "price": 104.49,
    "date": "2026-07-27",
-   "changePct": 1.5
+   "changePct": 1.4
   },
   "MU": {
    "price": 900.2,
@@ -511,12 +511,12 @@ window.STOCK_QUOTES = {
    "changePct": -2.3
   },
   "CRM": {
-   "price": 173.55,
+   "price": 173.6,
    "date": "2026-07-27",
-   "changePct": 6
+   "changePct": 6.1
   },
   "MDT": {
-   "price": 84.21,
+   "price": 84.22,
    "date": "2026-07-27",
    "changePct": 1.2
   },
