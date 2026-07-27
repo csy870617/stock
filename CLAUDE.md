@@ -4,12 +4,13 @@
 
 ## 운영 모델
 - **시세·지수/종목 기술적 분석·유동성 baseline·관심종목 차트 후보·스냅샷·배포**: `refresh-quotes` GitHub Action이 매일 자동 처리(순수 스크립트, LLM 0). `data/quotes.js`·`data/indices.js`·`data/stock-ta.js`·`data/liquidity-auto.js`·`data/history.js`·`price`·`priceDate`·`upside`·`generatedAt`은 이 Action이 담당 — **직접 조사·수정하지 않는다.** (`data/indices.js`=나스닥·다우·코스피·코스닥, `data/stock-ta.js`=전 종목 — 둘 다 Yahoo 일봉에서 **단기(1–3M: 5·20·60일선·RSI14)·장기(6–12M+: 60·120·200일선·골든크로스)** 로 분리 계산 `scripts/update-indices.js`·`scripts/update-stock-ta.js`, 공유 `scripts/lib-ta.js`; `data/liquidity-auto.js`=금리·일드커브·VIX·HY신용·달러·원달러·코스피 합성 유동성 게이지 baseline `scripts/update-liquidity-gauge.js`; `data/watch-candidates.js`=관심종목 차트 후보(턴어라운드·신고가)와 기존 관심종목 태그 유효성 `scripts/screen-watch.js`.)
-- **분석·추천(`data/recommendations.js`)·유동성 판단(`data/liquidity.js`)·기술 대응(`techNote`)·지수 대응(`index-notes.js`)·오늘의 Top Pick(`topPicks`)**: **사용자가 채팅으로 "업데이트"를 요청할 때만 온디맨드로 수행한다(자동 스케줄 루틴 없음 — 2026-07-27 전부 삭제).** 한 세션에서 ①전 종목 기술(techNote)+밸류(aiTarget) 분석 ②신규 후보 탐색·교체 ③시황·유동성 ④지수 대응 ⑤Top Pick 3 선정 ⑥**관심종목 차트 스크리닝 편입·교체(D절)**까지 끝내고 배포한다. **범위는 항상 풀 업데이트**이며 완료 판정은 `scripts/coverage.js` 가 한다(아래 ★★ 절). 요청이 없으면 이 레이어는 갱신되지 않으므로, 앱에 표시되는 `asOf`·'⚠ 미갱신' 표시가 마지막 요청 시점을 그대로 드러낸다. **유동성은 하이브리드** — 시장지표 baseline(`liquidity-auto.js`)은 매일 Action이 자동 산출하고, `data/liquidity.js`는 거시 이벤트(FOMC·지정학)·내러티브 판단으로 이를 **보정/덮어쓰기**한다. 앱은 `liquidity.js`가 있으면 그것을 우선 표시하고 baseline 을 병기하며, 없으면 baseline 을 게이지로 쓴다.
+- **분석·추천(`data/recommendations.js`)·유동성 판단(`data/liquidity.js`)·기술 대응(`techNote`)·지수 대응(`index-notes.js`)·오늘의 Top Pick(`topPicks`)**: **"업데이트" 요청이 들어올 때 온디맨드로 수행한다 — 사용자가 채팅으로 직접 요청하거나, 매일 LA 01:00(=08:00 UTC) 루틴이 새 세션에 `업데이트 해줘` 한 줄을 발화하거나 둘 중 하나다(루틴 `trig_01DskdsSYkxFaojtufE6Bav4`, 2026-07-27 신설. 이전의 긴 프롬프트 루틴들은 전부 삭제됐고, 루틴은 프롬프트를 지시로 싣지 않고 이 CLAUDE.md 를 유일한 지시서로 삼는다 — 절차를 바꾸려면 루틴이 아니라 이 파일을 고친다).** 한 세션에서 ①전 종목 기술(techNote)+밸류(aiTarget) 분석 ②신규 후보 탐색·교체 ③시황·유동성 ④지수 대응 ⑤Top Pick 3 선정 ⑥**관심종목 차트 스크리닝 편입·교체(D절)**까지 끝내고 배포한다. **범위는 항상 풀 업데이트**이며 완료 판정은 `scripts/coverage.js` 가 한다(아래 ★★ 절). 요청도 없고 루틴 발화도 실패하면 이 레이어는 갱신되지 않으므로, 앱에 표시되는 `asOf`·'⚠ 미갱신' 표시가 마지막 성공 시점을 그대로 드러낸다. **유동성은 하이브리드** — 시장지표 baseline(`liquidity-auto.js`)은 매일 Action이 자동 산출하고, `data/liquidity.js`는 거시 이벤트(FOMC·지정학)·내러티브 판단으로 이를 **보정/덮어쓰기**한다. 앱은 `liquidity.js`가 있으면 그것을 우선 표시하고 baseline 을 병기하며, 없으면 baseline 을 게이지로 쓴다.
 - **오늘의 Top Pick (`data/recommendations.js`의 top-level `topPicks`)**: 온디맨드 업데이트가 **정식 추천(watch 제외)** 중 밸류(상승여력)+단기·장기 기술 신호(매수 이상 우대·급락장 falling knife 회피)+유동성 국면 정합을 종합해 **한국·미국 각각 최선 3종목**을 선정(요청마다 최신 분석으로 처음부터 재선정 → 더 나은 종목이 나오면 교체된다). 스키마 `{asOf, note, korea:[{rank,ticker,market,name,reason(한국어 1문장)}×3], us:[…×3]}`. 앱은 **주요 지수 아래 배너**('오늘의 Top Pick')에 **상단 국가 선택 버튼으로 선택된 국가의 Top 3만** 시장 배지·상승여력·현재가→목표가·단기/장기 신호 배지·선정 이유로 표시하고(korea·us 데이터는 둘 다 유지, 표시만 선택 국가), 카드 탭 시 해당 카드로 이동한다. `topPicks.asOf`가 `stock-ta.js` asOf보다 오래되면 '⚠ 미갱신' 표시. `update-reco.js`의 topPicks 패치로 반영(korea·us 그룹), `validate-reco.js`가 국가별 3종목·해당국 정식 추천·한국어 이유·중복을 검증. 큐레이션 데이터가 없으면 앱이 국가별 상위 3으로 폴백.
 - **기본(=배포) 브랜치**: `claude/stock-analysis-recommendation-v9310x` (여기 push하면 `deploy-pages`가 자동 배포). 세션에 별도의 지정 작업 브랜치가 있으면 거기에도 같은 커밋을 함께 반영한다(고정 개발 브랜치는 없음 — 세션마다 다르다).
+- **자동 발화 루틴 (Routine `trig_01DskdsSYkxFaojtufE6Bav4`, 2026-07-27~)**: cron `0 8 * * *`(UTC) 로 매일 **새 세션**을 띄워 `업데이트 해줘` 한 줄만 발화한다 → 그 세션은 이 CLAUDE.md 를 읽고 ★·★★ 절대로 풀 업데이트를 수행한다. 프롬프트를 일부러 한 줄로 유지하는 이유: 이전의 11KB 지시 프롬프트 루틴이 세션 시작 후 커밋·이슈 코멘트 0건으로 조용히 실패하는 패턴이 반복됐다(2026-07-26~27). **지시는 루틴이 아니라 이 파일에만 둔다.** ⚠ cron 은 UTC 고정이라 서머타임에 따라 LA 기준 시각이 바뀐다 — **PDT(3~11월) = 01:00, PST(11~3월) = 00:00**. LA 01:00 을 유지하려면 11월 DST 종료 시 `0 9 * * *` 로 바꾼다(`mcp__Claude_Code_Remote__update_trigger`).
 
 ## ★ "업데이트" 요청 처리 프로토콜 (반드시 지킬 것)
-사용자가 업데이트를 요청하면 — **버튼(이슈)을 눌렀든 안 눌렀든** — 앱 상단 상태칩이 진행을 표시하도록 **항상 GitHub 이슈로 추적**한다:
+업데이트 요청이 들어오면 — **사용자 채팅이든 매일 LA 01:00 루틴 발화든, 버튼(이슈)을 눌렀든 안 눌렀든** — 앱 상단 상태칩이 진행을 표시하도록 **항상 GitHub 이슈로 추적**한다:
 
 1. **이슈 확보**: title에 `업데이트 요청` 이 든 **열린 이슈**를 찾는다(`mcp__github__list_issues`). 있으면 재사용, 없으면 새로 만든다(title: `전체 업데이트 요청 (분석·추천 + 유동성)`).
 2. **착수 표시**: 그 이슈에 `🔧 처리 시작` 코멘트를 단다 → 상태칩이 **🔧 처리중**으로 바뀐다.
@@ -18,8 +19,10 @@
 
 > 앱 상태칩(`index.html`의 `#updStatus`)은 title에 `업데이트 요청`이 든 **최신 이슈**를 GitHub 공개 API로 읽어 **🟡(열림·코멘트0) → 🔧(열림·코멘트≥1) → 🟢(닫힘)** 로 표시한다. 위 순서를 지켜야 색이 올바르게 흐른다.
 
+**`mcp__github__*` 도구가 없는 세션이라면**(루틴이 발화한 세션은 GitHub MCP 없이 뜰 수 있다) 이슈 추적은 건너뛰되 **데이터 갱신·검증·커밋·push 는 그대로 전량 수행한다** — 상태칩이 갱신되지 않을 뿐 앱 데이터는 정상이다. 이 경우 마지막 커밋 메시지에 `(이슈 추적 생략: github MCP 없음)` 을 남긴다.
+
 ## ★★ 온디맨드 업데이트 = 항상 **풀 업데이트** (회전·부분 갱신 금지)
-사용자가 채팅으로 "업데이트"를 요청하면 **매번 아래 전 항목을 전량 수행한다.** 평상시 토큰 절약을 위한 **회전 커버리지(롤링 재검증 10종목·tier 1개 그룹·aiTarget 45일 주기)는 온디맨드 요청에서는 적용하지 않는다** — 앱에 들어가는 모든 정보가 그 시점 기준으로 전부 새로 검증돼야 한다. 일부만 하고 "완료"라고 보고하지 말 것.
+"업데이트" 요청(채팅 또는 루틴 발화)이 들어오면 **매번 아래 전 항목을 전량 수행한다.** 평상시 토큰 절약을 위한 **회전 커버리지(롤링 재검증 10종목·tier 1개 그룹·aiTarget 45일 주기)는 온디맨드 요청에서는 적용하지 않는다** — 앱에 들어가는 모든 정보가 그 시점 기준으로 전부 새로 검증돼야 한다. 일부만 하고 "완료"라고 보고하지 말 것.
 
 **풀 업데이트 범위(전 항목 필수)**
 1. **backbone 최신화(스크립트, LLM 0)**: `update-quotes.js`·`update-stock-ta.js`·`update-indices.js`·`update-liquidity-gauge.js`·`screen-watch.js` 를 먼저 실행해 시세·기술지표·유동성 baseline·관심 후보를 그 시점 최신으로 만든다(최신 거래일 T 확정).
