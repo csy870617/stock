@@ -99,7 +99,13 @@ async function oneQuote(symbol) {
       throw new Error("stale quote (" + date + ", " + Math.round(ageDays) + "일 경과)");
     }
   }
-  return { price: m.regularMarketPrice, date };
+  // 일간 등락률 — 전일 종가 대비. 야후 meta 의 previousClose(정규장 기준) 를 우선 쓰고,
+  // 없으면 chartPreviousClose 로 대체한다. 둘 다 없으면 null(앱이 등락률을 숨김).
+  const prev = typeof m.previousClose === "number" && isFinite(m.previousClose) ? m.previousClose
+    : (typeof m.chartPreviousClose === "number" && isFinite(m.chartPreviousClose) ? m.chartPreviousClose : null);
+  let changePct = null;
+  if (prev && prev > 0) changePct = Math.round(((m.regularMarketPrice - prev) / prev) * 1000) / 10;
+  return { price: m.regularMarketPrice, date, prevClose: prev, changePct };
 }
 
 // 동시 요청 수 제한(야후 부하·차단 방지)
@@ -133,7 +139,7 @@ async function mapLimit(items, limit, fn) {
 
   results.forEach(({ t, q, ok }) => {
     if (ok) {
-      quotes[t.ticker] = { price: q.price, date: q.date };
+      quotes[t.ticker] = { price: q.price, date: q.date, changePct: q.changePct };
       live++;
     } else if (prev[t.ticker] && prev[t.ticker].price != null) {
       quotes[t.ticker] = prev[t.ticker];   // 이전 시세 유지
