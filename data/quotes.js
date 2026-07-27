@@ -416,6 +416,10 @@ window.STOCK_QUOTES = {
   "SCHW": {
    "price": 101.97,
    "date": "2026-07-24"
+  },
+  "AAPL": {
+   "price": 333.02,
+   "date": "2026-07-24"
   }
  }
 };
