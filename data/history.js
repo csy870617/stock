@@ -16165,7 +16165,7 @@ window.STOCK_HISTORY = [
     "c": "korea",
     "th": "core",
     "tier": 1,
-    "p": 247000,
+    "p": 249750,
     "pd": "2026-07-27",
     "tp": 430000
    },
@@ -16175,7 +16175,7 @@ window.STOCK_HISTORY = [
     "c": "korea",
     "th": "core",
     "tier": 1,
-    "p": 173000,
+    "p": 171700,
     "pd": "2026-07-27",
     "tp": 220000
    },
@@ -16185,7 +16185,7 @@ window.STOCK_HISTORY = [
     "c": "korea",
     "th": "core",
     "tier": 1,
-    "p": 1560000,
+    "p": 1554000,
     "pd": "2026-07-27",
     "tp": 2103500
    },
@@ -16195,7 +16195,7 @@ window.STOCK_HISTORY = [
     "c": "korea",
     "th": "core",
     "tier": 3,
-    "p": 399000,
+    "p": 397500,
     "pd": "2026-07-27",
     "tp": 740000
    },
@@ -16205,7 +16205,7 @@ window.STOCK_HISTORY = [
     "c": "korea",
     "th": "core",
     "tier": 2,
-    "p": 105200,
+    "p": 104600,
     "pd": "2026-07-27",
     "tp": 137000
    },
@@ -16225,7 +16225,7 @@ window.STOCK_HISTORY = [
     "c": "korea",
     "th": "core",
     "tier": 2,
-    "p": 336500,
+    "p": 333500,
     "pd": "2026-07-27",
     "tp": 630000
    },
@@ -16235,7 +16235,7 @@ window.STOCK_HISTORY = [
     "c": "korea",
     "th": "core",
     "tier": 3,
-    "p": 461500,
+    "p": 458000,
     "pd": "2026-07-27",
     "tp": 700000
    },
@@ -16245,7 +16245,7 @@ window.STOCK_HISTORY = [
     "c": "korea",
     "th": "dividend",
     "tier": 1,
-    "p": 131000,
+    "p": 130600,
     "pd": "2026-07-27",
     "tp": 151095
    },
@@ -16255,7 +16255,7 @@ window.STOCK_HISTORY = [
     "c": "korea",
     "th": "growth",
     "tier": 1,
-    "p": 1744000,
+    "p": 1762000,
     "pd": "2026-07-27",
     "tp": 4100000
    },
@@ -16265,7 +16265,7 @@ window.STOCK_HISTORY = [
     "c": "korea",
     "th": "growth",
     "tier": 2,
-    "p": 900000,
+    "p": 883000,
     "pd": "2026-07-27",
     "tp": 1738810
    },
@@ -16275,7 +16275,7 @@ window.STOCK_HISTORY = [
     "c": "korea",
     "th": "growth",
     "tier": 1,
-    "p": 371500,
+    "p": 370500,
     "pd": "2026-07-27",
     "tp": 559667
    },
@@ -16285,7 +16285,7 @@ window.STOCK_HISTORY = [
     "c": "korea",
     "th": "growth",
     "tier": 2,
-    "p": 484000,
+    "p": 481500,
     "pd": "2026-07-27",
     "tp": 883955
    },
@@ -16295,7 +16295,7 @@ window.STOCK_HISTORY = [
     "c": "korea",
     "th": "growth",
     "tier": 3,
-    "p": 1307000,
+    "p": 1305000,
     "pd": "2026-07-27",
     "tp": 2300000
    },
@@ -16305,7 +16305,7 @@ window.STOCK_HISTORY = [
     "c": "korea",
     "th": "growth",
     "tier": 2,
-    "p": 181100,
+    "p": 180000,
     "pd": "2026-07-27",
     "tp": 265333
    },
@@ -16315,7 +16315,7 @@ window.STOCK_HISTORY = [
     "c": "korea",
     "th": "growth",
     "tier": 3,
-    "p": 227000,
+    "p": 224000,
     "pd": "2026-07-27",
     "tp": 326045
    },
@@ -16325,7 +16325,7 @@ window.STOCK_HISTORY = [
     "c": "korea",
     "th": "growth",
     "tier": 3,
-    "p": 70000,
+    "p": 69700,
     "pd": "2026-07-27",
     "tp": 124000
    },
@@ -16335,7 +16335,7 @@ window.STOCK_HISTORY = [
     "c": "korea",
     "th": "value",
     "tier": 1,
-    "p": 128900,
+    "p": 127900,
     "pd": "2026-07-27",
     "tp": 215385
    },
@@ -16345,7 +16345,7 @@ window.STOCK_HISTORY = [
     "c": "korea",
     "th": "value",
     "tier": 1,
-    "p": 101400,
+    "p": 100400,
     "pd": "2026-07-27",
     "tp": 171500
    },
@@ -16355,7 +16355,7 @@ window.STOCK_HISTORY = [
     "c": "korea",
     "th": "value",
     "tier": 2,
-    "p": 318000,
+    "p": 315500,
     "pd": "2026-07-27",
     "tp": 521950
    },
@@ -16365,7 +16365,7 @@ window.STOCK_HISTORY = [
     "c": "korea",
     "th": "value",
     "tier": 2,
-    "p": 35700,
+    "p": 35800,
     "pd": "2026-07-27",
     "tp": 54448
    },
@@ -16375,7 +16375,7 @@ window.STOCK_HISTORY = [
     "c": "korea",
     "th": "value",
     "tier": 3,
-    "p": 118000,
+    "p": 116400,
     "pd": "2026-07-27",
     "tp": 163000
    },
@@ -16385,7 +16385,7 @@ window.STOCK_HISTORY = [
     "c": "korea",
     "th": "value",
     "tier": 3,
-    "p": 259500,
+    "p": 259000,
     "pd": "2026-07-27",
     "tp": 441000
    },
@@ -16395,7 +16395,7 @@ window.STOCK_HISTORY = [
     "c": "korea",
     "th": "value",
     "tier": 3,
-    "p": 60200,
+    "p": 59800,
     "pd": "2026-07-27",
     "tp": 112000
    },
@@ -16405,7 +16405,7 @@ window.STOCK_HISTORY = [
     "c": "korea",
     "th": "value",
     "tier": 2,
-    "p": 26300,
+    "p": 26150,
     "pd": "2026-07-27",
     "tp": 38000
    },
@@ -16415,7 +16415,7 @@ window.STOCK_HISTORY = [
     "c": "korea",
     "th": "dividend",
     "tier": 2,
-    "p": 14890,
+    "p": 14780,
     "pd": "2026-07-27",
     "tp": 20000
    },
@@ -16425,7 +16425,7 @@ window.STOCK_HISTORY = [
     "c": "korea",
     "th": "dividend",
     "tier": 1,
-    "p": 10180,
+    "p": 10170,
     "pd": "2026-07-27",
     "tp": 14400
    },
@@ -16435,7 +16435,7 @@ window.STOCK_HISTORY = [
     "c": "korea",
     "th": "dividend",
     "tier": 3,
-    "p": 50300,
+    "p": 50000,
     "pd": "2026-07-27",
     "tp": 59000
    },
@@ -16445,7 +16445,7 @@ window.STOCK_HISTORY = [
     "c": "korea",
     "th": "dividend",
     "tier": 3,
-    "p": 54500,
+    "p": 54400,
     "pd": "2026-07-27",
     "tp": 75375
    },
@@ -16465,7 +16465,7 @@ window.STOCK_HISTORY = [
     "c": "korea",
     "th": "dividend",
     "tier": 2,
-    "p": 21350,
+    "p": 21450,
     "pd": "2026-07-27",
     "tp": 27000
    },
@@ -16475,7 +16475,7 @@ window.STOCK_HISTORY = [
     "c": "korea",
     "th": "rising",
     "tier": 1,
-    "p": 69500,
+    "p": 69700,
     "pd": "2026-07-27",
     "tp": 140000
    },
@@ -16485,7 +16485,7 @@ window.STOCK_HISTORY = [
     "c": "korea",
     "th": "rising",
     "tier": 2,
-    "p": 133900,
+    "p": 131300,
     "pd": "2026-07-27",
     "tp": 220000
    },
@@ -16495,7 +16495,7 @@ window.STOCK_HISTORY = [
     "c": "korea",
     "th": "rising",
     "tier": 1,
-    "p": 46000,
+    "p": 45600,
     "pd": "2026-07-27",
     "tp": 83000
    },
@@ -16505,7 +16505,7 @@ window.STOCK_HISTORY = [
     "c": "korea",
     "th": "rising",
     "tier": 2,
-    "p": 30600,
+    "p": 30800,
     "pd": "2026-07-27",
     "tp": 62000
    },
@@ -16515,7 +16515,7 @@ window.STOCK_HISTORY = [
     "c": "korea",
     "th": "rising",
     "tier": 3,
-    "p": 31150,
+    "p": 30950,
     "pd": "2026-07-27",
     "tp": 57500
    },
@@ -16525,7 +16525,7 @@ window.STOCK_HISTORY = [
     "c": "korea",
     "th": "rising",
     "tier": 1,
-    "p": 190700,
+    "p": 190100,
     "pd": "2026-07-27",
     "tp": 320000
    },
@@ -16535,7 +16535,7 @@ window.STOCK_HISTORY = [
     "c": "korea",
     "th": "rising",
     "tier": 3,
-    "p": 37000,
+    "p": 37250,
     "pd": "2026-07-27",
     "tp": 61500
    },
@@ -16545,7 +16545,7 @@ window.STOCK_HISTORY = [
     "c": "korea",
     "th": "rising",
     "tier": 3,
-    "p": 228000,
+    "p": 227500,
     "pd": "2026-07-27",
     "tp": 375000
    },
@@ -16565,7 +16565,7 @@ window.STOCK_HISTORY = [
     "c": "korea",
     "th": "dividend",
     "tier": 3,
-    "p": 18270,
+    "p": 18080,
     "pd": "2026-07-27",
     "tp": 24000
    },
@@ -16575,7 +16575,7 @@ window.STOCK_HISTORY = [
     "c": "korea",
     "th": "value",
     "tier": 1,
-    "p": 123300,
+    "p": 121700,
     "pd": "2026-07-27",
     "tp": 174733
    },
@@ -16585,7 +16585,7 @@ window.STOCK_HISTORY = [
     "c": "korea",
     "th": "watch",
     "tier": 2,
-    "p": 73900,
+    "p": 73400,
     "pd": "2026-07-27",
     "tp": 81000
    },
@@ -16595,7 +16595,7 @@ window.STOCK_HISTORY = [
     "c": "korea",
     "th": "watch",
     "tier": 2,
-    "p": 47400,
+    "p": 47200,
     "pd": "2026-07-27",
     "tp": 84629
    },
@@ -16605,7 +16605,7 @@ window.STOCK_HISTORY = [
     "c": "korea",
     "th": "watch",
     "tier": 2,
-    "p": 250000,
+    "p": 248000,
     "pd": "2026-07-27",
     "tp": 350000
    },
@@ -16615,7 +16615,7 @@ window.STOCK_HISTORY = [
     "c": "korea",
     "th": "watch",
     "tier": 2,
-    "p": 123600,
+    "p": 123900,
     "pd": "2026-07-27",
     "tp": 173370
    },
@@ -16630,34 +16630,34 @@ window.STOCK_HISTORY = [
     "tp": 118182
    },
    {
-    "t": "271560",
-    "n": "오리온",
-    "c": "korea",
-    "th": "watch",
-    "tier": 2,
-    "p": 131500,
-    "pd": "2026-07-27",
-    "tp": 163412
-   },
-   {
-    "t": "003230",
-    "n": "삼양식품",
-    "c": "korea",
-    "th": "watch",
-    "tier": 2,
-    "p": 1235000,
-    "pd": "2026-07-27",
-    "tp": 1856111
-   },
-   {
     "t": "033780",
     "n": "KT&G",
     "c": "korea",
     "th": "watch",
     "tier": 2,
-    "p": 184700,
+    "p": 183300,
     "pd": "2026-07-27",
     "tp": 220588
+   },
+   {
+    "t": "316140",
+    "n": "우리금융지주",
+    "c": "korea",
+    "th": "watch",
+    "tier": 2,
+    "p": 33225,
+    "pd": "2026-07-27",
+    "tp": 41816
+   },
+   {
+    "t": "192820",
+    "n": "코스맥스",
+    "c": "korea",
+    "th": "watch",
+    "tier": 2,
+    "p": 193200,
+    "pd": "2026-07-27",
+    "tp": 250000
    },
    {
     "t": "MSFT",
@@ -16730,16 +16730,6 @@ window.STOCK_HISTORY = [
     "tp": 520.33
    },
    {
-    "t": "JPM",
-    "n": "JPMorgan Chase",
-    "c": "us",
-    "th": "core",
-    "tier": 3,
-    "p": 353.21,
-    "pd": "2026-07-24",
-    "tp": 351.81
-   },
-   {
     "t": "NVDA",
     "n": "NVIDIA",
     "c": "us",
@@ -16780,16 +16770,6 @@ window.STOCK_HISTORY = [
     "tp": 520
    },
    {
-    "t": "ANET",
-    "n": "Arista Networks",
-    "c": "us",
-    "th": "growth",
-    "tier": 2,
-    "p": 173.99,
-    "pd": "2026-07-24",
-    "tp": 190.09
-   },
-   {
     "t": "PLTR",
     "n": "Palantir Technologies",
     "c": "us",
@@ -16818,16 +16798,6 @@ window.STOCK_HISTORY = [
     "p": 82.64,
     "pd": "2026-07-24",
     "tp": 95.85
-   },
-   {
-    "t": "PFE",
-    "n": "Pfizer",
-    "c": "us",
-    "th": "value",
-    "tier": 3,
-    "p": 24.54,
-    "pd": "2026-07-24",
-    "tp": 29.15
    },
    {
     "t": "VZ",
@@ -16888,16 +16858,6 @@ window.STOCK_HISTORY = [
     "p": 130.52,
     "pd": "2026-07-24",
     "tp": 138.46
-   },
-   {
-    "t": "KMB",
-    "n": "Kimberly-Clark",
-    "c": "us",
-    "th": "dividend",
-    "tier": 3,
-    "p": 109.7,
-    "pd": "2026-07-24",
-    "tp": 114.8
    },
    {
     "t": "XOM",
@@ -17090,16 +17050,6 @@ window.STOCK_HISTORY = [
     "tp": 420
    },
    {
-    "t": "MDT",
-    "n": "Medtronic",
-    "c": "us",
-    "th": "watch",
-    "tier": 2,
-    "p": 83.21,
-    "pd": "2026-07-24",
-    "tp": 98
-   },
-   {
     "t": "GILD",
     "n": "Gilead Sciences",
     "c": "us",
@@ -17198,6 +17148,46 @@ window.STOCK_HISTORY = [
     "p": 333.02,
     "pd": "2026-07-24",
     "tp": 318.81
+   },
+   {
+    "t": "ABT",
+    "n": "애보트",
+    "c": "us",
+    "th": "core",
+    "tier": 3,
+    "p": 103.06,
+    "pd": "2026-07-24",
+    "tp": 116.54
+   },
+   {
+    "t": "MU",
+    "n": "마이크론 테크놀로지",
+    "c": "us",
+    "th": "growth",
+    "tier": 2,
+    "p": 920.95,
+    "pd": "2026-07-24",
+    "tp": 1492
+   },
+   {
+    "t": "CRM",
+    "n": "세일즈포스",
+    "c": "us",
+    "th": "value",
+    "tier": 3,
+    "p": 163.66,
+    "pd": "2026-07-24",
+    "tp": 245.6
+   },
+   {
+    "t": "MDT",
+    "n": "메드트로닉",
+    "c": "us",
+    "th": "dividend",
+    "tier": 3,
+    "p": 83.21,
+    "pd": "2026-07-24",
+    "tp": 98
    }
   ]
  }
