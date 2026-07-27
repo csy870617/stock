@@ -51,6 +51,17 @@ function loadPrev() {
   } catch (_e) { return {}; }
 }
 
+// 직전 asOf — 전 종목 조회 실패 시 실행일로 덮어쓰지 않기 위한 폴백
+function loadPrevAsOf() {
+  if (!fs.existsSync(OUT)) return null;
+  try {
+    global.window = {};
+    delete require.cache[require.resolve(OUT)];
+    require(OUT);
+    return (global.window.STOCK_TA && global.window.STOCK_TA.asOf) || null;
+  } catch (_e) { return null; }
+}
+
 async function fetchRows(symbol) {
   if (typeof fetch !== "function") return null;
   const ctrl = new AbortController();
@@ -72,7 +83,13 @@ async function fetchRows(symbol) {
       high: q.high && q.high[i] != null ? q.high[i] : q.close[i],
       low: q.low && q.low[i] != null ? q.low[i] : q.close[i] });
   }
-  return rows.length >= 30 ? rows : null;
+  if (rows.length < 30) return null;
+  // 마지막 봉의 거래소 현지 날짜 = 실제 최신 거래일. 주말·휴장일에 돌려도 실행일이 아닌
+  // 이 날짜가 asOf 가 돼야 techNote.asOf 비교에서 전 종목이 '구식'으로 오판되지 않는다.
+  const off = ((res.meta && res.meta.gmtoffset) || 0) * 1000;
+  const lastT = rows[rows.length - 1].t;
+  rows.lastDate = lastT ? new Date(lastT * 1000 + off).toISOString().slice(0, 10) : null;
+  return rows;
 }
 
 // 동시성 제한 실행
@@ -86,18 +103,23 @@ async function mapLimit(items, limit, fn) {
 (async () => {
   const stocks = loadStocks();
   const prev = loadPrev();
-  const asOf = argVal("date") || new Date().toISOString().slice(0, 10);
-  let live = 0, fellBack = 0;
+  let live = 0, fellBack = 0, lastBar = null;
   const ta = {};
 
   await mapLimit(stocks, 8, async (s) => {
     const rows = await fetchRows(s.symbol);
     const dp = s.market === "KOSPI" || s.market === "KOSDAQ" ? 0 : 2;   // 한국주=정수, 미국주=소수 2
     const a = rows ? TA.analyzeTimeframes(rows, { dp: dp, srDp: dp }) : null;
-    if (a) { ta[s.ticker] = { short: a.short, long: a.long }; live++; }
+    if (a) {
+      ta[s.ticker] = { short: a.short, long: a.long }; live++;
+      if (rows.lastDate && (!lastBar || rows.lastDate > lastBar)) lastBar = rows.lastDate;
+    }
     else if (prev[s.ticker]) { ta[s.ticker] = prev[s.ticker]; fellBack++; }
     else fellBack++;   // 최초 실패는 생략(렌더가 해당 종목 TA를 숨김)
   });
+
+  // 폴백만 남은 경우(전 종목 조회 실패)엔 이전 asOf 를 유지해 신선도 오판을 막는다.
+  const asOf = argVal("date") || lastBar || loadPrevAsOf() || new Date().toISOString().slice(0, 10);
 
   const T = {
     asOf: asOf,

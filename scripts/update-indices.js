@@ -75,6 +75,11 @@ async function fetchSeries(symbol) {
     });
   }
   if (rows.length < 30) return null;   // 계산이 무의미할 만큼 짧으면 실패 처리(폴백)
+  // 마지막 봉의 거래소 현지 날짜 = 실제 최신 거래일. 주말·휴장일에 돌려도 실행일이 아닌
+  // 이 날짜가 asOf 가 돼야 INDEX_NOTES.asOf 비교에서 '구식'으로 오판되지 않는다.
+  const off = ((res.meta && res.meta.gmtoffset) || 0) * 1000;
+  const lastT = rows[rows.length - 1].t;
+  rows.lastDate = lastT ? new Date(lastT * 1000 + off).toISOString().slice(0, 10) : null;
   return rows;
 }
 
@@ -102,10 +107,20 @@ function loadPrev() {
   } catch (_e) { return {}; }
 }
 
+// 직전 asOf — 전 지수 조회 실패 시 실행일로 덮어쓰지 않기 위한 폴백
+function loadPrevAsOf() {
+  if (!fs.existsSync(OUT)) return null;
+  try {
+    global.window = {};
+    delete require.cache[require.resolve(OUT)];
+    require(OUT);
+    return (global.window.INDEX_TA && global.window.INDEX_TA.asOf) || null;
+  } catch (_e) { return null; }
+}
+
 (async () => {
   const prev = loadPrev();
-  const asOf = argVal("date") || new Date().toISOString().slice(0, 10);
-  let live = 0, fellBack = 0;
+  let live = 0, fellBack = 0, lastBar = null;
 
   const indices = [];
   for (const cfg of INDICES) {
@@ -114,6 +129,7 @@ function loadPrev() {
     if (a) {
       indices.push(a);
       live++;
+      if (rows.lastDate && (!lastBar || rows.lastDate > lastBar)) lastBar = rows.lastDate;
     } else if (prev[cfg.key]) {
       indices.push(prev[cfg.key]);   // 이전 계산값 유지
       fellBack++;
@@ -127,6 +143,9 @@ function loadPrev() {
       fellBack++;
     }
   }
+
+  // 폴백만 남은 경우(전 지수 조회 실패)엔 이전 asOf 를 유지해 신선도 오판을 막는다.
+  const asOf = argVal("date") || lastBar || loadPrevAsOf() || new Date().toISOString().slice(0, 10);
 
   const T = {
     asOf: asOf,
