@@ -901,6 +901,13 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     if (v == null) return "";
     return (v > 0 ? "▲" : (v < 0 ? "▼" : "―")) + Math.abs(Number(v)).toFixed(1) + "%";
   }
+  // LIB_TA 가 만든 등락 문자열("+1.8%")을 숫자로 — 라이트 카드도 같은 배지를 쓰게 한다
+  function chgNum(v) {
+    if (typeof v === "number") return isFinite(v) ? v : null;
+    if (typeof v !== "string") return null;
+    var n = parseFloat(v.replace(/[%,\s]/g, ""));
+    return isFinite(n) ? n : null;
+  }
   // size: "sm" (표·라이트카드) | "md" (카드·Top Pick)
   function chgBadge(v, size) {
     if (v == null) return "";
@@ -1555,13 +1562,12 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       return open + '<div class="tl-main">' + nameLine + '<div class="tl-sub tl-na">시세 확인 실패</div></div>' +
         '<div class="tl-r">' + delBtn + "</div>" + caret + "</div>";
     var ta = d.ta;
-    var chCls = ta && ta.changeDir === "up" ? "up" : "down";
     return open +
       '<div class="tl-main">' + nameLine +
         '<div class="tl-sub"><span class="tl-tier"><span class="dot" style="background:var(--muted)"></span>관심</span>' +
           ' <span class="tl-na">· 정밀분석 요청 시 단기/장기 대응 제공</span></div>' +
       "</div>" +
-      '<div class="tl-r"><div class="tl-px">' + fmtPrice(d.price, item.c) + (ta && ta.change ? ' <span class="' + chCls + '">' + esc(ta.change) + "</span>" : "") + "</div>" +
+      '<div class="tl-r"><div class="tl-px">' + fmtPrice(d.price, item.c) + (chgNum(ta && ta.change) != null ? " " + chgBadge(chgNum(ta.change), "sm") : "") + "</div>" +
         '<div class="tl-updel">' + delBtn + "</div></div>" + caret +
       "</div>";
   }
@@ -1868,7 +1874,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     var reqUrl = "https://github.com/csy870617/stock/issues/new?title=" + encodeURIComponent(reqTitle) + "&body=" + encodeURIComponent(reqBody);
     return open + head +
       '<div class="c-hero"><div class="c-hcell"><div class="c-hv">' + fmtPrice(d.price, country) + '</div>' +
-        '<div class="c-hk">현재가 · ' + esc(d.date || "실시간") + "</div></div>" +
+        '<div class="c-hk">' + (chgNum(ta && ta.change) != null ? chgBadge(chgNum(ta.change), "sm") + " " : "") + "현재가 · " + esc(d.date || "실시간") + "</div></div>" +
         (ta && ta.change ? '<div class="c-hcell c-r"><div class="c-hv ' + chDir + '">' + esc(ta.change) + '</div><div class="c-hk">전일대비</div></div>' : "") +
       "</div>" +
       reqTag +
