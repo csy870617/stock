@@ -171,7 +171,12 @@ function loadRoster() {
   return { held: held, watch: watch };
 }
 
-async function fetchCloses(symbol) {
+const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
+
+// 야후는 다건 연속 조회 시 간헐적으로 429/5xx 를 돌려준다. 한 번 실패했다고 버리면
+// 유니버스의 상당수가 스크리닝에서 빠져(2026-07-27 실측: 182건 중 64건 실패) 후보를
+// 놓치므로, 지수 백오프로 최대 3회까지 재시도한다.
+async function fetchClosesOnce(symbol) {
   if (typeof fetch !== "function") return null;
   const ctrl = new AbortController();
   const to = setTimeout(() => ctrl.abort(), 10000);
@@ -189,6 +194,15 @@ async function fetchCloses(symbol) {
   if (!q || !q.close) return null;
   const cl = q.close.filter((v) => typeof v === "number" && isFinite(v));
   return cl.length >= 130 ? cl : null;
+}
+
+async function fetchCloses(symbol) {
+  for (let i = 0; i < 3; i++) {
+    const cl = await fetchClosesOnce(symbol);
+    if (cl) return cl;
+    if (i < 2) await sleep(400 * Math.pow(2, i));   // 400ms → 800ms
+  }
+  return null;
 }
 
 // 한 종목의 두 패턴 지표를 계산한다
@@ -236,6 +250,21 @@ function analyze(cl) {
     rel: r1(rel), baseDays: baseDays, baseWidth: r1(baseWidth),
     turnOk: turnOk, turnScore: Math.round(turnScore),
     highOk: highOk, highScore: Math.round(highScore),
+    // 미충족 사유 — 정원을 못 채웠을 때 '얼마나 모자랐는지'를 데이터로 남기기 위함
+    highMiss: highOk ? null : [
+      rel < REL_MIN ? "고점 대비 " + r1(rel) + "%(하한 " + REL_MIN + "%)" : null,
+      rel > REL_MAX ? "이미 " + r1(rel) + "% 급등(상한 " + REL_MAX + "%)" : null,
+      !wasBelow ? "갓 돌파 아님(이미 고점 위)" : null,
+      baseDays < BASE_MIN_DAYS ? "베이스 " + baseDays + "일(최소 " + BASE_MIN_DAYS + "일)" : null,
+      baseWidth > BASE_WIDTH_MAX ? "베이스 폭 " + r1(baseWidth) + "%(상한 " + BASE_WIDTH_MAX + "%)" : null,
+    ].filter(Boolean),
+    turnMiss: turnOk ? null : [
+      spread > SPREAD_MAX ? "이평 수렴 " + r1(spread) + "%(상한 " + SPREAD_MAX + "%)" : null,
+      !(stacked || nearStacked) ? "정배열 아님" : null,
+      offHigh > OFF_HIGH_MAX ? "고점 대비 " + r1(offHigh) + "%(상한 " + OFF_HIGH_MAX + "%)" : null,
+      aboveLow < ABOVE_LOW_MIN ? "저점 대비 " + r1(aboveLow) + "%(최소 " + ABOVE_LOW_MIN + "%)" : null,
+      !turningUp ? "5일선 하락 중" : null,
+    ].filter(Boolean),
   };
 }
 
@@ -259,6 +288,9 @@ async function mapLimit(items, limit, fn) {
 
   const turnaround = { korea: [], us: [] };
   const breakout = { korea: [], us: [] };
+  // 조건 1개만 아슬아슬하게 미달한 종목 — 후보 0건일 때 '왜 없는지'를 보여준다
+  const nearHigh = { korea: [], us: [] };
+  const nearTurn = { korea: [], us: [] };
   let ok = 0, fail = 0;
 
   await mapLimit(targets, 8, async (t) => {
@@ -279,6 +311,12 @@ async function mapLimit(items, limit, fn) {
         score: a.highScore, rel: a.rel, baseDays: a.baseDays, baseWidth: a.baseWidth,
         state: a.rel >= 0 ? "돌파" : "돌파 임박",
       }));
+    } else if (a.highMiss && a.highMiss.length === 1) {
+      // 조건 하나만 아슬아슬하게 못 넘긴 종목 — 정원 미달 사유를 설명하고 다음 회차 추적에 쓴다
+      nearHigh[t.country].push(Object.assign({}, base, { rel: a.rel, why: a.highMiss[0] }));
+    }
+    if (!a.turnOk && a.turnMiss && a.turnMiss.length === 1) {
+      nearTurn[t.country].push(Object.assign({}, base, { why: a.turnMiss[0] }));
     }
   });
 
@@ -287,6 +325,9 @@ async function mapLimit(items, limit, fn) {
     breakout[c].sort((x, y) => y.score - x.score);
     turnaround[c] = turnaround[c].slice(0, TOP_N);
     breakout[c] = breakout[c].slice(0, TOP_N);
+    nearHigh[c].sort((x, y) => y.rel - x.rel);
+    nearHigh[c] = nearHigh[c].slice(0, 5);
+    nearTurn[c] = nearTurn[c].slice(0, 5);
   });
 
   // 2) 현재 관심종목의 태그 유효성 점검(루틴의 교체 판단용)
@@ -326,6 +367,8 @@ async function mapLimit(items, limit, fn) {
     universe: { korea: UNIVERSE.korea.length, us: UNIVERSE.us.length, screened: ok, failed: fail },
     turnaround: turnaround,
     breakout: breakout,
+    // 조건 1개만 미달한 근접 후보 — 정원을 못 채웠을 때 그 사유를 데이터로 남긴다
+    nearMiss: { turnaround: nearTurn, breakout: nearHigh },
     current: current,
   };
   fs.writeFileSync(OUT,
@@ -340,6 +383,15 @@ async function mapLimit(items, limit, fn) {
       (turnaround[c].map((x) => x.name).join(", ") || "없음"));
     console.log("  [" + kn + "] 신고가 " + breakout[c].length + "건: " +
       (breakout[c].map((x) => x.name).join(", ") || "없음"));
+    // 후보가 정원(5)에 못 미치면 '얼마나 모자랐는지'를 함께 찍어 다음 회차 판단을 돕는다
+    if (breakout[c].length < 5 && nearHigh[c].length) {
+      console.log("     └ 근접(조건 1개 미달): " +
+        nearHigh[c].map((x) => x.name + "(" + x.why + ")").join(" · "));
+    }
+    if (turnaround[c].length < 5 && nearTurn[c].length) {
+      console.log("     └ 턴어라운드 근접: " +
+        nearTurn[c].map((x) => x.name + "(" + x.why + ")").join(" · "));
+    }
   });
   const out = current.filter((x) => x.status === "이탈");
   const grad = current.filter((x) => x.status === "졸업");
