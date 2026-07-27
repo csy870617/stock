@@ -34,7 +34,9 @@ const TOP_N = 8;                 // 국가·패턴별로 남길 후보 수(루�
 const SPREAD_MAX = 5;            // 턴어라운드: 5·20·60일선 수렴 폭 상한(현재가 대비 %)
 const OFF_HIGH_MAX = -8;         // 턴어라운드: 52주 고점 대비 이 이하로 조정됐어야 '바닥'
 const ABOVE_LOW_MIN = 1;         // 턴어라운드: 90일 저점 대비 이 이상 반등
-const BASE_MIN_DAYS = 15;        // 신고가: 직전 고점이 최소 이만큼 예전(물량 소화)
+const BASE_MIN_DAYS = 15;        // 신고가: 직전 고점이 베이스 구간 안에서 최소 이만큼 예전(물량 소화)
+                                 //   ※ 베이스 구간은 마지막 FRESH_GAP(15일)을 제외하고 계산하므로,
+                                 //     '오늘 기준' 직전 고점 경과는 실질 최소 30거래일(15+15)이다.
 const BASE_WIDTH_MAX = 25;       // 신고가: 베이스 폭 상한(현재가 대비 %)
 const REL_MIN = -5;              // 신고가: 직전 고점 대비 하한(돌파 임박 허용)
 const REL_MAX = 15;              // 신고가: 직전 고점 대비 상한(이미 급등한 종목 배제)
@@ -180,14 +182,14 @@ async function fetchClosesOnce(symbol) {
   if (typeof fetch !== "function") return null;
   const ctrl = new AbortController();
   const to = setTimeout(() => ctrl.abort(), 10000);
-  let r;
+  let j;
   try {
-    r = await fetch("https://query1.finance.yahoo.com/v8/finance/chart/" + encodeURIComponent(symbol) +
+    const r = await fetch("https://query1.finance.yahoo.com/v8/finance/chart/" + encodeURIComponent(symbol) +
       "?interval=1d&range=1y", { signal: ctrl.signal, headers: { "User-Agent": "Mozilla/5.0", "Accept": "application/json" } });
-  } catch (_e) { clearTimeout(to); return null; }
-  clearTimeout(to);
-  if (!r.ok) return null;
-  let j; try { j = await r.json(); } catch (_e) { return null; }
+    if (!r.ok) return null;
+    j = await r.json();   // 본문 수신도 타임아웃 범위 안에서(스톨 방지)
+  } catch (_e) { return null; }
+  finally { clearTimeout(to); }
   const q = j && j.chart && j.chart.result && j.chart.result[0] &&
             j.chart.result[0].indicators && j.chart.result[0].indicators.quote &&
             j.chart.result[0].indicators.quote[0];

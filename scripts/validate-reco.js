@@ -91,7 +91,7 @@ function trustedDomainOf(u) {
 function isBlockedSource(u) { return matchDomain(sourceHost(u), BLOCKED_SOURCES); }
 
 
-const MARKETS = { korea: ["KOSPI", "KOSDAQ"], us: ["NASDAQ", "NYSE"] };
+const MARKETS = { korea: ["KOSPI", "KOSDAQ"], us: ["NASDAQ", "NYSE", "AMEX"] };   // AMEX 우량주(예: 일부 ETF·중형주) 편입 허용
 const PER_GROUP = 9;              // (주제×국가)당 종목 수
 const PER_TIER = 3;               // 티어당 종목 수
 const UPSIDE_TOL = 1.5;           // upside 필드 vs (target-price)/price*100 허용 오차(%p)
@@ -132,7 +132,10 @@ function validate(D, opts) {
 
       if (!s || typeof s !== "object") { errors.push(tag + ": 항목이 객체가 아님"); return; }
       if (!themeKeys.includes(s.theme)) errors.push(tag + ": 미정의 theme '" + s.theme + "'");
-      if (![1, 2, 3].includes(s.tier)) errors.push(tag + ": tier 는 1|2|3 이어야 함 (" + s.tier + ")");
+      // 관심종목(watch)은 tier 구조 면제 대상이라 tier 자체도 선택 — 있으면 형식만 검사
+      if (s.theme === "watch") {
+        if (s.tier != null && ![1, 2, 3].includes(s.tier)) errors.push(tag + ": tier 는 1|2|3 이어야 함 (" + s.tier + ")");
+      } else if (![1, 2, 3].includes(s.tier)) errors.push(tag + ": tier 는 1|2|3 이어야 함 (" + s.tier + ")");
       if (!s.name || typeof s.name !== "string") errors.push(tag + ": name 누락");
 
       // 티커·시장 형식 (국가별)

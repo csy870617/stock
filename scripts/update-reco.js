@@ -25,7 +25,8 @@
 // 시세(price·priceDate·upside)는 quotes.js 가 담당하므로 패치에 넣을 필요가 없다.
 //
 // 신뢰도 가드레일 (자동 재평가의 기계적 안전장치):
-//   1) 일일 편입+편출 합계가 20건(=10교체) 초과 → --force 없이 거부 (과도한 대량 개편 차단)
+//   1) 일일 편입+편출 합계가 20건(=10교체) 초과 → --force 없이 거부 — 하루(UTC) 누적을
+//      data/reco-ops.json 레저로 추적하므로 실행을 나눠도 우회되지 않는다
 //   2) 기존 종목의 targetPrice 를 ±50% 초과 변경 → --force 없이 거부, ±25% 초과는 경고
 //      (단일 증권사 최고치를 컨센서스로 착각하는 실수 차단)
 //   3) targetPrice/thesis/earnings 를 바꾸는 stocks 항목은 sources(근거 URL) 필수
@@ -49,13 +50,21 @@ const FORCE = process.argv.includes("--force");
 
 const patch = JSON.parse(fs.readFileSync(patchPath, "utf8"));
 
-// ── 가드레일: 과도한 변경 차단 ──
-// ⚠ 이 상한은 '실행 1회당'이다. 세션이 패치를 나눠 여러 번 실행하면 기계적으로는 넘을 수 있으므로,
-//   '하루 최대 10교체'의 최종 준수는 CLAUDE.md 프로토콜(세션의 자기 제한)이 담당한다.
-const MAX_RUN_OPS = 20;   // add+remove 합계 (교체 1건 = add 1 + remove 1) → 실행당 최대 10교체
+// ── 가드레일: 과도한 변경 차단 — '하루' 누적 상한(UTC 기준) ──
+// 패치를 여러 번 나눠 실행해 실행당 상한을 우회하는 경로를 막기 위해, 오늘 소진한
+// 편입+편출 건수를 data/reco-ops.json(레저, 커밋 대상)에 기록해 하루 누적으로 강제한다.
+// 날짜가 바뀌면(UTC) 레저는 자동 리셋된다. --force 는 상한을 무시하되 소진량은 기록한다.
+const MAX_DAILY_OPS = 20;   // add+remove 하루 합계 (교체 1건 = add 1 + remove 1) → 하루 최대 10교체
+const LEDGER = path.join(ROOT, "data", "reco-ops.json");
+const todayUTC = new Date().toISOString().slice(0, 10);
+let ledgerOps = 0;
+try {
+  const lj = JSON.parse(fs.readFileSync(LEDGER, "utf8"));
+  if (lj && lj.date === todayUTC && typeof lj.ops === "number" && lj.ops >= 0) ledgerOps = lj.ops;
+} catch (_e) { /* 레저 없음/손상 → 0 부터 */ }
 const ops = (patch.add || []).length + (patch.remove || []).length;
-if (ops > MAX_RUN_OPS && !FORCE) {
-  console.error("✗ 가드레일: 이번 실행의 편입+편출 " + ops + "건 > 허용 " + MAX_RUN_OPS + "건.");
+if (ledgerOps + ops > MAX_DAILY_OPS && !FORCE) {
+  console.error("✗ 가드레일: 오늘 누적 편입+편출 " + ledgerOps + "건 + 이번 " + ops + "건 > 하루 허용 " + MAX_DAILY_OPS + "건.");
   console.error("  보수적 교체 원칙 위반 가능성 — 정말 의도한 대규모 개편이면 --force 로 재실행.");
   process.exit(1);
 }
@@ -284,6 +293,12 @@ try {
 }
 
 fs.writeFileSync(OUT, out);
+
+// 하루 편입+편출 레저 갱신 — 실제 저장(원본 경로)에 성공했고 소진이 있을 때만 기록.
+// (--out 미리보기는 소진하지 않는다. 레저 파일도 함께 커밋해야 다음 세션에 이어진다.)
+if (OUT === RECO && ops > 0) {
+  fs.writeFileSync(LEDGER, JSON.stringify({ date: todayUTC, ops: ledgerOps + ops }) + "\n");
+}
 
 console.log("recommendations.js 갱신 → " + OUT);
 console.log("  merge " + merged + "종목 · add " + added + " · remove " + removed +

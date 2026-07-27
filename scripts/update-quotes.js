@@ -75,14 +75,14 @@ async function oneQuote(symbol) {
   // 멈추는 것을 막는다(index.html 실시간 조회와 동일한 방어). 실패는 폴백으로 처리된다.
   const ctrl = new AbortController();
   const to = setTimeout(function () { ctrl.abort(); }, 8000);
-  let r;
+  let j;
   try {
-    r = await fetch(url, { signal: ctrl.signal, headers: { "User-Agent": "Mozilla/5.0", "Accept": "application/json" } });
+    const r = await fetch(url, { signal: ctrl.signal, headers: { "User-Agent": "Mozilla/5.0", "Accept": "application/json" } });
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    j = await r.json();   // 본문 수신도 8초 타임아웃 안에서 — 스톨된 body 로 워커가 매달리지 않게
   } finally {
     clearTimeout(to);
   }
-  if (!r.ok) throw new Error("HTTP " + r.status);
-  const j = await r.json();
   const m = j && j.chart && j.chart.result && j.chart.result[0] && j.chart.result[0].meta;
   if (!m || typeof m.regularMarketPrice !== "number" || !isFinite(m.regularMarketPrice)) {
     throw new Error("no price");

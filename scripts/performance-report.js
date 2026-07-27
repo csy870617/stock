@@ -65,12 +65,21 @@ const lastSp = H.reduce((a, h) => (h.sp500 != null ? h.sp500 : a), null);
 
 // ── 현재 보유 종목의 수익률 계산 ──
 const latest = H[H.length - 1];
+// 현재 tier(여러 주제 중복 시 최고 확신 = 최소값) — tierReview 는 '지금의 품질 배정'이
+// 성과로 뒷받침되는지 보는 점검이므로, 편입 당시(baseline) tier 가 아니라 현재 tier 로 대조한다.
+// (baseline tier 를 쓰면 그 사이 승격·강등된 종목의 정합 신호가 과거 배정 기준으로 왜곡된다.)
+const curTier = {};
+["korea", "us"].forEach((c) => (D[c] || []).forEach((s) => {
+  if (typeof s.tier !== "number") return;   // watch 등 tier 없는 항목은 제외(baseline 폴백)
+  const k = c + ":" + s.ticker;
+  if (curTier[k] == null || s.tier < curTier[k]) curTier[k] = s.tier;
+}));
 const rows = [];
 const seen = {};
 ["korea", "us"].forEach((c) => {
   (D[c] || []).forEach((s) => {
     const k = c + ":" + s.ticker;
-    if (seen[k]) return; seen[k] = 1;         // 여러 주제 중복 → 1회만 (tier 는 baseline 기준)
+    if (seen[k]) return; seen[k] = 1;         // 여러 주제 중복 → 1회만
     const b = baseline[k];
     const q = Q[s.ticker];
     const cur = q && typeof q.price === "number" ? q.price : s.price;
@@ -83,7 +92,8 @@ const seen = {};
     const lastIdx = c === "korea" ? lastKospi : lastSp;
     const benchPct = (fromIdx && lastIdx) ? (lastIdx - fromIdx) / fromIdx * 100 : null;
     const excess = benchPct == null ? null : +(ret - benchPct).toFixed(2);
-    rows.push({ country: c, ticker: s.ticker, name: s.name, theme: b.theme, tier: b.tier,
+    rows.push({ country: c, ticker: s.ticker, name: s.name, theme: b.theme,
+      tier: curTier[k] != null ? curTier[k] : b.tier,
       since: b.date, basePrice: b.price, curPrice: cur, retPct: +ret.toFixed(2), excessPct: excess,
       targetPrice: s.targetPrice, liveUpsidePct: liveUpside == null ? null : +liveUpside.toFixed(1) });
   });

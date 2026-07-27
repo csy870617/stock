@@ -65,14 +65,13 @@ async function fetchSeriesOnce(symbol) {
     encodeURIComponent(symbol) + "?interval=1d&range=2y";
   const ctrl = new AbortController();
   const to = setTimeout(() => ctrl.abort(), 10000);
-  let r;
-  try {
-    r = await fetch(url, { signal: ctrl.signal, headers: { "User-Agent": "Mozilla/5.0", "Accept": "application/json" } });
-  } catch (_e) { clearTimeout(to); return null; }
-  clearTimeout(to);
-  if (!r.ok) return null;
   let j;
-  try { j = await r.json(); } catch (_e) { return null; }
+  try {
+    const r = await fetch(url, { signal: ctrl.signal, headers: { "User-Agent": "Mozilla/5.0", "Accept": "application/json" } });
+    if (!r.ok) return null;
+    j = await r.json();   // 본문 수신도 타임아웃 범위 안에서 — 스톨된 body 에 워커가 무한정 매달리지 않게
+  } catch (_e) { return null; }
+  finally { clearTimeout(to); }
   const res = j && j.chart && j.chart.result && j.chart.result[0];
   if (!res || !res.indicators || !res.indicators.quote || !res.indicators.quote[0]) return null;
   const q = res.indicators.quote[0];

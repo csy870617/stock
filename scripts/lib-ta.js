@@ -101,7 +101,8 @@ function adx(h, l, c, n) {
   const trS = rma(tr), pS = rma(pDM), mS = rma(mDM);
   const dx = [];
   for (let i = 0; i < trS.length; i++) {
-    const pdi = 100 * pS[i] / trS[i], mdi = 100 * mS[i] / trS[i];
+    // TR 합이 0(전 구간 완전 보합·데이터 이상)이면 0 으로 나눠 NaN/Infinity 가 전파되므로 0 처리
+    const pdi = trS[i] ? 100 * pS[i] / trS[i] : 0, mdi = trS[i] ? 100 * mS[i] / trS[i] : 0;
     const sum = pdi + mdi;
     dx.push(sum === 0 ? 0 : 100 * Math.abs(pdi - mdi) / sum);
   }
@@ -109,7 +110,7 @@ function adx(h, l, c, n) {
   let adxV = 0; for (let i = 0; i < n; i++) adxV += dx[i]; adxV /= n;
   for (let i = n; i < dx.length; i++) adxV = (adxV * (n - 1) + dx[i]) / n;
   const li = trS.length - 1;
-  return { adx: adxV, pdi: 100 * pS[li] / trS[li], mdi: 100 * mS[li] / trS[li] };
+  return { adx: adxV, pdi: trS[li] ? 100 * pS[li] / trS[li] : 0, mdi: trS[li] ? 100 * mS[li] / trS[li] : 0 };
 }
 
 function momentum(c, n) { n = n || 10; return c.length > n ? c[c.length - 1] - c[c.length - 1 - n] : null; }
@@ -120,11 +121,13 @@ function fmtNum(x, dp) {
   return Number(x).toLocaleString("en-US", { minimumFractionDigits: dp, maximumFractionDigits: dp });
 }
 
-// 일봉 → 주봉 리샘플 (7일 버킷: 마지막 종가, 최고/최저)
+// 일봉 → 주봉 리샘플 (월요일 시작 주 버킷: 마지막 종가, 최고/최저)
+// 유닉스 epoch(1970-01-01)는 목요일이라 단순 t/604800 버킷은 주가 목~수로 잘린다.
+// +3일(259200초)을 보정해 경계를 월요일 00:00 UTC 에 맞춘다(실제 거래주 단위와 일치).
 function toWeekly(rows) {
   const map = {}, order = [];
   rows.forEach((r) => {
-    const k = Math.floor(r.t / 604800);
+    const k = Math.floor((r.t + 259200) / 604800);
     if (!map[k]) { map[k] = { t: r.t, close: r.close, high: r.high, low: r.low }; order.push(k); }
     else { const w = map[k]; w.high = Math.max(w.high, r.high); w.low = Math.min(w.low, r.low); w.close = r.close; w.t = r.t; }
   });
@@ -191,7 +194,7 @@ function macdText(m) {
   return (m.macd > m.signal ? "매수(시그널 상회)" : "매도(시그널 하회)") + (m.hist >= 0 ? " · 히스토그램+" : " · 히스토그램−");
 }
 function adxText(ax) {
-  if (!ax) return "–";
+  if (!ax || !isFinite(ax.adx)) return "–";
   const strength = ax.adx >= 40 ? "매우 강" : ax.adx >= 25 ? "강" : ax.adx >= 20 ? "보통" : "약(횡보)";
   const dir = ax.pdi > ax.mdi ? "상승우위" : "하락우위";
   return "ADX " + ax.adx.toFixed(0) + " · " + strength + " · " + dir;
@@ -211,7 +214,9 @@ function analyzeTimeframes(rows, opts) {
   const S = computeSuite(rows);
   if (!S) return null;
   const weekly = toWeekly(rows);
-  const L = computeSuite(weekly) || S;   // 주봉이 짧으면 일봉으로 폴백
+  const Lw = computeSuite(weekly);
+  const L = Lw || S;                     // 주봉이 짧으면 일봉으로 폴백
+  const wkName = Lw ? "주간" : "일봉";   // 폴백 시 라벨도 정직하게 — '주간 지표'로 오표기하지 않는다
 
   // 지지/저항
   const winS = rows.slice(-20);
@@ -244,12 +249,12 @@ function analyzeTimeframes(rows, opts) {
     trend: trendFromSignal(L.signal),
     signal: L.signal,
     metrics: [
-      ["주간 RSI(14)", (L.rsi == null ? "–" : L.rsi.toFixed(1)) + (rsL ? " · " + rsL : "")],
+      [wkName + " RSI(14)", (L.rsi == null ? "–" : L.rsi.toFixed(1)) + (rsL ? " · " + rsL : "")],
       ["50/200 배열", cross + (vs200 != null ? " · 200일선 " + (vs200 >= 0 ? "+" : "") + vs200.toFixed(1) + "%" : "")],
       ["지지 / 저항", fmtNum(srL.support, srDp) + " / " + fmtNum(srL.resistance, srDp)]
     ],
-    read: "주간 지표 매수 " + L.buy + "·매도 " + L.sell + (L.neu ? "·중립 " + L.neu : "") +
-      " → 장기 '" + L.signal + "'. " + (L.macd ? "주간 MACD " + (L.macd.macd > L.macd.signal ? "매수" : "매도") : "") +
+    read: wkName + " 지표 매수 " + L.buy + "·매도 " + L.sell + (L.neu ? "·중립 " + L.neu : "") +
+      " → 장기 '" + L.signal + "'. " + (L.macd ? wkName + " MACD " + (L.macd.macd > L.macd.signal ? "매수" : "매도") : "") +
       ", " + cross + "."
   };
 

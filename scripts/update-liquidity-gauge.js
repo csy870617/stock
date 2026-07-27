@@ -45,14 +45,14 @@ async function seriesOnce(sym) {
   if (typeof fetch !== "function") return null;
   const ctrl = new AbortController();
   const to = setTimeout(() => ctrl.abort(), 10000);
-  let r;
+  let j;
   try {
-    r = await fetch("https://query1.finance.yahoo.com/v8/finance/chart/" + encodeURIComponent(sym) +
+    const r = await fetch("https://query1.finance.yahoo.com/v8/finance/chart/" + encodeURIComponent(sym) +
       "?interval=1d&range=6mo", { signal: ctrl.signal, headers: { "User-Agent": "Mozilla/5.0", "Accept": "application/json" } });
-  } catch (_e) { clearTimeout(to); return null; }
-  clearTimeout(to);
-  if (!r.ok) return null;
-  let j; try { j = await r.json(); } catch (_e) { return null; }
+    if (!r.ok) return null;
+    j = await r.json();   // 본문 수신도 타임아웃 범위 안에서(스톨 방지)
+  } catch (_e) { return null; }
+  finally { clearTimeout(to); }
   const res = j && j.chart && j.chart.result && j.chart.result[0];
   // quote[0] 까지 가드 — 야후가 indicators:{} 또는 quote:[] 를 돌려주면 TypeError 로
   // 프로세스가 죽고, refresh-quotes 워크플로우의 후속 스텝(screen-watch·commit)까지 전멸한다.

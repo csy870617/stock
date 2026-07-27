@@ -48,24 +48,33 @@ jobs:
         with:
           node-version: "20"
 
+      # 데이터 스텝은 continue-on-error — 한 스크립트가 야후 장애 등으로 죽어도 나머지가
+      # 만든 갱신분은 살려서 커밋한다(스크립트 내부 폴백이 이전 값을 유지하므로 부분 갱신이 안전).
+      # 정합성은 마지막 validate 스텝이 하드 게이트로 보증한다.
       - name: Update quotes (Yahoo → data/quotes.js)
         run: node scripts/update-quotes.js
+        continue-on-error: true
 
       - name: Update index technicals (Yahoo → data/indices.js, token-free)
         run: node scripts/update-indices.js
+        continue-on-error: true
 
       - name: Update stock technicals (Yahoo → data/stock-ta.js, token-free)
         run: node scripts/update-stock-ta.js
+        continue-on-error: true
 
       - name: Update liquidity gauge baseline (Yahoo → data/liquidity-auto.js, token-free)
         run: node scripts/update-liquidity-gauge.js
+        continue-on-error: true
 
       # 관심종목 차트 후보(턴어라운드·신고가) + 기존 관심종목 태그 유효성 — LLM 루틴이 읽어 리서치·편입
       - name: Screen watch candidates (Yahoo → data/watch-candidates.js, token-free)
         run: node scripts/screen-watch.js
+        continue-on-error: true
 
       - name: Daily maintenance (generatedAt + 지수·스냅샷, token-free)
         run: node scripts/daily-maintenance.js
+        continue-on-error: true
 
       # 신뢰도 게이트 — 구조·형식·계산 정합성이 깨진 데이터는 커밋하지 않는다
       - name: Validate data (guardrail)

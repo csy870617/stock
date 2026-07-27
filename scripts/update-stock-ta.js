@@ -79,14 +79,14 @@ async function fetchRowsOnce(symbol) {
   if (typeof fetch !== "function") return null;
   const ctrl = new AbortController();
   const to = setTimeout(() => ctrl.abort(), 10000);
-  let r;
+  let j;
   try {
-    r = await fetch("https://query1.finance.yahoo.com/v8/finance/chart/" + encodeURIComponent(symbol) +
+    const r = await fetch("https://query1.finance.yahoo.com/v8/finance/chart/" + encodeURIComponent(symbol) +
       "?interval=1d&range=2y", { signal: ctrl.signal, headers: { "User-Agent": "Mozilla/5.0", "Accept": "application/json" } });
-  } catch (_e) { clearTimeout(to); return null; }
-  clearTimeout(to);
-  if (!r.ok) return null;
-  let j; try { j = await r.json(); } catch (_e) { return null; }
+    if (!r.ok) return null;
+    j = await r.json();   // 본문 수신도 타임아웃 범위 안에서(스톨 방지)
+  } catch (_e) { return null; }
+  finally { clearTimeout(to); }
   const res = j && j.chart && j.chart.result && j.chart.result[0];
   if (!res || !res.indicators || !res.indicators.quote || !res.indicators.quote[0]) return null;
   const q = res.indicators.quote[0], ts = res.timestamp || [], rows = [];

@@ -71,7 +71,7 @@ const snap = {
 // 가드: 스냅샷 날짜는 generatedAt 인데 가격은 '오늘' quotes.js 값이다.
 // generatedAt 이 과거인 채 실행하면 과거 날짜 스냅샷을 오늘 가격으로 덮어써
 // 성과 기준선이 오염되므로, 날짜가 어긋나면 기록을 건너뛴다(--force 로 강행 가능).
-const TODAY = new Date().toISOString().slice(0, 10);
+const TODAY = new Date().toISOString().slice(0, 10);   // UTC 달력일 — generatedAt 과 동일 기준
 const FORCE = process.argv.includes("--force");
 if (snap.date !== TODAY && !FORCE) {
   console.warn("스냅샷 건너뜀: generatedAt(" + snap.date + ") ≠ 오늘(" + TODAY + ") — " +
