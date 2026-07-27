@@ -33,7 +33,7 @@
 
 const fs = require("fs");
 const path = require("path");
-const { validate, isTrustedSource, isBlockedSource, sourceHost } = require("./validate-reco");
+const { validate, isTrustedSource, isBlockedSource, sourceHost, trustedDomainOf } = require("./validate-reco");
 
 const ROOT = path.join(__dirname, "..");
 const RECO = path.join(ROOT, "data", "recommendations.js");
@@ -49,11 +49,13 @@ const FORCE = process.argv.includes("--force");
 
 const patch = JSON.parse(fs.readFileSync(patchPath, "utf8"));
 
-// ── 가드레일: 과도한 일일 변경 차단 ──
-const MAX_DAILY_OPS = 20;   // add+remove 합계 (교체 1건 = add 1 + remove 1) → 최대 10교체
+// ── 가드레일: 과도한 변경 차단 ──
+// ⚠ 이 상한은 '실행 1회당'이다. 세션이 패치를 나눠 여러 번 실행하면 기계적으로는 넘을 수 있으므로,
+//   '하루 최대 10교체'의 최종 준수는 CLAUDE.md 프로토콜(세션의 자기 제한)이 담당한다.
+const MAX_RUN_OPS = 20;   // add+remove 합계 (교체 1건 = add 1 + remove 1) → 실행당 최대 10교체
 const ops = (patch.add || []).length + (patch.remove || []).length;
-if (ops > MAX_DAILY_OPS && !FORCE) {
-  console.error("✗ 가드레일: 일일 편입+편출 " + ops + "건 > 허용 " + MAX_DAILY_OPS + "건.");
+if (ops > MAX_RUN_OPS && !FORCE) {
+  console.error("✗ 가드레일: 이번 실행의 편입+편출 " + ops + "건 > 허용 " + MAX_RUN_OPS + "건.");
   console.error("  보수적 교체 원칙 위반 가능성 — 정말 의도한 대규모 개편이면 --force 로 재실행.");
   process.exit(1);
 }
@@ -69,13 +71,19 @@ const warnings = [];
 let merged = 0, added = 0, removed = 0;
 
 // ── 상단 필드 ──
-["generatedAt", "marketNote", "marketNoteUS", "marketNoteKR", "disclaimer", "topPicks"].forEach((k) => {
+["generatedAt", "marketNote", "marketNoteUS", "marketNoteKR", "marketNoteAsOf", "disclaimer", "topPicks"].forEach((k) => {
   if (patch[k] !== undefined) D[k] = patch[k];
 });
 if (patch.themes !== undefined) D.themes = patch.themes;
 
 // ── 종목 필드 merge (국가+티커[+주제]) ──
 const guardErrors = [];
+// 목표가 급변 검사는 '패치 적용 전 원본값' 기준 — 같은 패치에 동일 티커 entry 를 2개 넣어
+// +49% × 2 = +122% 로 체이닝하는 우회를 막는다.
+const origTp = {};
+["korea", "us"].forEach((c) => (D[c] || []).forEach((st) => {
+  origTp[c + ":" + st.ticker + ":" + st.theme] = st.targetPrice;
+}));
 (patch.stocks || []).forEach((entry) => {
   const country = entry.country, ticker = entry.ticker, theme = entry.theme;
   if (!country || !D[country] || !ticker) { warnings.push("stocks 항목에 country/ticker 필요: " + JSON.stringify(entry)); return; }
@@ -104,7 +112,7 @@ const guardErrors = [];
       return;
     }
     // 신뢰 출처는 '서로 다른 도메인' 기준으로 센다(동일 도메인·동일 URL 2개로 '교차확인' 우회 방지)
-    const trustedN = new Set(fields.sources.filter(isTrustedSource).map(sourceHost).filter(Boolean)).size;
+    const trustedN = new Set(fields.sources.map(trustedDomainOf).filter(Boolean)).size;
     if (changesAnalysis && trustedN < 2 && !FORCE) {
       guardErrors.push(country + ":" + ticker + " — targetPrice/thesis/earnings 변경엔 서로 다른 신뢰 출처(FnGuide·WiseReport·TipRanks·MarketBeat·공시·주요 언론·증권사 등) 2개 이상 필수 (현재 신뢰 도메인 " +
         trustedN + "개: " + fields.sources.map(sourceHost).join(", ") + ")");
@@ -117,7 +125,8 @@ const guardErrors = [];
   if (typeof fields.targetPrice === "number") {
     let blocked = false;
     for (const m of matches) {
-      const prevTp = m.targetPrice;
+      const ok = country + ":" + ticker + ":" + m.theme;
+      const prevTp = (ok in origTp) ? origTp[ok] : m.targetPrice;
       if (typeof prevTp !== "number" || prevTp <= 0) continue;
       const chg = (fields.targetPrice - prevTp) / prevTp * 100;
       if (Math.abs(chg) > 50 && !FORCE) {
@@ -136,6 +145,14 @@ const guardErrors = [];
 });
 
 // ── 종목 추가 ──
+// ── 종목 제거 (add 보다 먼저 — 같은 패치에서 동일 티커 '카드 교체' 시 신규분이 지워지지 않도록) ──
+(patch.remove || []).forEach((r) => {
+  if (!r.country || !D[r.country] || !r.ticker) { warnings.push("remove 에 country/ticker 필요"); return; }
+  const before = D[r.country].length;
+  D[r.country] = D[r.country].filter((s) => !(s.ticker === r.ticker && (r.theme == null || s.theme === r.theme)));
+  removed += before - D[r.country].length;
+});
+
 (patch.add || []).forEach((s) => {
   const country = s.country;
   if (!country || !D[country]) { warnings.push("add 국가 오류: " + JSON.stringify(s).slice(0, 80)); return; }
@@ -149,7 +166,7 @@ const guardErrors = [];
     guardErrors.push("add " + country + ":" + obj.ticker + " — 커뮤니티/블로그/SNS 는 근거 출처로 쓸 수 없음: " + blocked.map(sourceHost).join(", "));
     return;
   }
-  const trustedN = new Set(srcs.filter(isTrustedSource).map(sourceHost).filter(Boolean)).size;
+  const trustedN = new Set(srcs.map(trustedDomainOf).filter(Boolean)).size;
   if (trustedN < 2 && !FORCE) {
     guardErrors.push("add " + country + ":" + obj.ticker + " — 신규 편입엔 서로 다른 신뢰 출처(컨센서스 집계·공시·주요 언론·증권사) 2개 이상 필수 (현재 신뢰 도메인 " +
       trustedN + "개: " + (srcs.length ? srcs.map(sourceHost).join(", ") : "없음") + ")");
@@ -165,14 +182,6 @@ if (guardErrors.length) {
   guardErrors.forEach((e) => console.error("  - " + e));
   process.exit(1);
 }
-
-// ── 종목 제거 ──
-(patch.remove || []).forEach((r) => {
-  if (!r.country || !D[r.country] || !r.ticker) { warnings.push("remove 에 country/ticker 필요"); return; }
-  const before = D[r.country].length;
-  D[r.country] = D[r.country].filter((s) => !(s.ticker === r.ticker && (r.theme == null || s.theme === r.theme)));
-  removed += before - D[r.country].length;
-});
 
 // ── 파생 필드 재계산 — upside 는 price·targetPrice 에서 유도 (수기 값 불일치 방지) ──
 ["korea", "us"].forEach((c) => (D[c] || []).forEach((s) => {
@@ -200,7 +209,7 @@ function serialize(D) {
   L.push("//  5. 근거가 약하면 그날은 바꾸지 않는다(변경 0건이 정상). 하루 최대 10교체.");
   L.push("//  6. 판단 전 scripts/performance-report.js 와 scripts/validate-reco.js 실행 — 목표가 소진·성과 부진·'신뢰 출처 0개' 경고 종목이 재평가 우선 대상.");
   L.push("window.STOCK_DATA = {");
-  ["generatedAt", "marketNote", "marketNoteUS", "marketNoteKR", "disclaimer"].forEach((k) => {
+  ["generatedAt", "marketNote", "marketNoteUS", "marketNoteKR", "marketNoteAsOf", "disclaimer"].forEach((k) => {
     if (D[k] !== undefined) L.push("  " + k + ": " + JSON.stringify(D[k]) + ",");
   });
   if (D.topPicks !== undefined) {
@@ -228,7 +237,7 @@ function serialize(D) {
     D[c].forEach((s) => L.push("    " + JSON.stringify(s) + ","));
     L.push("  ],");
   });
-  const known = ["generatedAt", "marketNote", "marketNoteUS", "marketNoteKR", "disclaimer", "topPicks", "themes", "korea", "us"];
+  const known = ["generatedAt", "marketNote", "marketNoteUS", "marketNoteKR", "marketNoteAsOf", "disclaimer", "topPicks", "themes", "korea", "us"];
   Object.keys(D).forEach((k) => {
     if (known.includes(k)) return;
     L.push("  " + k + ": " + JSON.stringify(D[k]) + ",");

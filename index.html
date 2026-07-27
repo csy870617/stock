@@ -815,7 +815,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) + " " + p(d.getHours()) + ":" + p(d.getMinutes());
     }
     show("us-gray", "상태 확인 중…");   // 기본(조회 전/실패 시 유지)
-    fetch("https://api.github.com/repos/csy870617/stock/issues?state=all&per_page=15&sort=created&direction=desc",
+    fetch("https://api.github.com/repos/csy870617/stock/issues?state=all&per_page=50&sort=created&direction=desc",
       { headers: { "Accept": "application/vnd.github+json" } })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (list) {
@@ -850,7 +850,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     }).join("");
   }
   renderMarketNote();
-  document.getElementById("disclaimer").textContent = D.disclaimer;
+  document.getElementById("disclaimer").textContent = D.disclaimer || "";
 
   // AI적정가 근거 팝업 — 터치 기기에선 title 툴팁이 안 뜨므로 탭/클릭으로 표시(다시 탭하거나 바깥 탭하면 닫힘)
   (function () {
@@ -874,8 +874,8 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   })();
 
   function esc(s) {
-    return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) {
-      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c];
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
     });
   }
   // AI적정가 미산출 종목의 보류 사유 문구 (탭/호버 팝업용)
@@ -1338,7 +1338,9 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   var THEME_QUALITY = { core: 1, value: 0.6, dividend: 0.1, growth: -0.6, rising: -0.9 };
   function idxSignal(key) {
     var T = window.INDEX_TA, x = T && (T.indices || []).filter(function (i) { return i.key === key; })[0];
-    return x ? (IDX_SIG[x.signal] || 0) : 0;
+    // 지수 스키마는 단기/장기 분리(short.signal/long.signal) — 방어 로테이션은 단기 신호 기준
+    var sig = x && x.short && x.short.signal;
+    return sig ? (IDX_SIG[sig] || 0) : 0;
   }
   function gaugeTilt(country) {
     var L = window.LIQUIDITY_DATA, A = window.LIQUIDITY_AUTO;
@@ -1761,9 +1763,9 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   var MYWATCH_KEY = "myWatch.v1";
   var WATCHHIDE_KEY = "watchHidden.v1";   // 편성(theme:"watch") 종목을 이 기기에서 숨김(로컬 삭제)
   var wlCache = {};   // "country:ticker" → undefined(미조회) | "loading" | null(실패) | {price,date,ta,sym}
-  function getMyWatch() { try { return JSON.parse(localStorage.getItem(MYWATCH_KEY)) || []; } catch (_e) { return []; } }
+  function getMyWatch() { try { var v = JSON.parse(localStorage.getItem(MYWATCH_KEY)); return Array.isArray(v) ? v : []; } catch (_e) { return []; } }
   function saveMyWatch(a) { try { localStorage.setItem(MYWATCH_KEY, JSON.stringify(a)); } catch (_e) {} }
-  function getWatchHidden() { try { return JSON.parse(localStorage.getItem(WATCHHIDE_KEY)) || []; } catch (_e) { return []; } }
+  function getWatchHidden() { try { var v = JSON.parse(localStorage.getItem(WATCHHIDE_KEY)); return Array.isArray(v) ? v : []; } catch (_e) { return []; } }
   function saveWatchHidden(a) { try { localStorage.setItem(WATCHHIDE_KEY, JSON.stringify(a)); } catch (_e) {} }
   function isWatchHidden(c, t) { return getWatchHidden().some(function (w) { return w.c === c && w.t === t; }); }
   function isBakedWatch(c, t) { return (D[c] || []).some(function (s) { return s.ticker === t && s.theme === "watch"; }); }
@@ -1773,11 +1775,10 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     if (isBakedWatch(c, t) && !isWatchHidden(c, t)) { var h = getWatchHidden(); h.push({ c: c, t: t }); saveWatchHidden(h); }
   }
 
-  // 정밀분석 요청 → 다음 정기 분석(매일 LA 오전 2시=09:00 UTC 통합 루틴) 반영 시점 안내.
-  //   요청은 이 루틴이 매일 처리하고, LA 6am 안전망이 재점검한다.
+  // 정밀분석 요청 → 다음 정기 분석(매일 08:00 UTC 루틴, PDT 기준 LA 01:00) 반영 시점 안내.
   function nextAnalysisEta() {
     var now = new Date();
-    var next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 9, 0, 0));
+    var next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 8, 0, 0));
     if (next.getTime() <= now.getTime()) next = new Date(next.getTime() + 86400000);
     var hrs = Math.max(1, Math.round((next.getTime() - now.getTime()) / 3600000));
     return "매일 오전 2시(LA) 정기 분석에 반영 · 약 " + hrs + "시간 뒤";
@@ -1808,7 +1809,10 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       })
       .catch(function () { wlReqInflight = false; });
   }
-  function wlSymbols(code, country) { return country === "us" ? [code] : [code + ".KS", code + ".KQ"]; }
+  function wlSymbols(code, country) {
+    // 정식 편성 경로(symbolFor)와 동일하게 점 포함 미국 티커를 야후 형식으로(BRK.B → BRK-B)
+    return country === "us" ? [code.replace(/\./g, "-")] : [code + ".KS", code + ".KQ"];
+  }
 
   // 한 종목의 2년 일봉(종가)+실시간 시세를 시세 Worker 로 받아 브라우저에서 기술분석을 계산
   function fetchWatchOne(item, onDone) {
@@ -2001,7 +2005,14 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       // 이 기기에서 숨긴(삭제한) 편성 관심종목 복원 링크
       var hid = getWatchHidden().filter(function (w) { return w.c === country; });
       if (hid.length) wparts += '<div class="wl-restore"><button type="button" id="wlRestore">숨긴 관심종목 ' + hid.length + '개 다시 보기</button></div>';
+      // 재렌더 전 검색 입력 보존 — 시세 도착(refreshLive)마다 innerHTML 을 통째로 갈아끼우므로
+      // 입력값·포커스를 잡아뒀다 복원한다(안 하면 타이핑 중 검색어가 사라진다).
+      var prevQ = document.getElementById("wlQ");
+      var prevQVal = prevQ ? prevQ.value : "", prevQFocus = prevQ && document.activeElement === prevQ;
       host.innerHTML = wparts;
+      var newQ = document.getElementById("wlQ");
+      if (newQ && prevQVal) newQ.value = prevQVal;
+      if (newQ && prevQFocus) { newQ.focus(); try { newQ.setSelectionRange(prevQVal.length, prevQVal.length); } catch (_e) {} }
       if (fullStocks.length) { ensureLive(fullStocks, refreshLive); fetchHistory(fullStocks, refreshLive); }
       // 라이트(비편성) 종목은 개별 비동기 조회 후 해당 노드만 교체(폼 포커스 유지). 펼친 상세도 함께 갱신.
       var wlRepaint = isTbl

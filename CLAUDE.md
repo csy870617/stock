@@ -34,7 +34,7 @@
 5. **AI 적정가 전량 시도**: `aiTarget` 미산출·`aiAsOf` 경과 종목 **전부** 입력값 검증 재시도(검증 실패분은 생략하되 몇 종목을 왜 못 채웠는지 보고).
 6. **신규 후보 탐색**: 10개 (주제×국가) 그룹 전부, 그룹당 최소 2각도.
 7. **관심종목 차트 스크리닝**(D절): 이탈 제외·졸업 태그 전환·빈자리 충원(국가별·태그별 5종목).
-8. **시황·유동성**: `marketNote`·`marketNoteUS`·`marketNoteKR`, `liquidity.js`(게이지·`drivers`·`headline`·`headlineUS`·`headlineKR`).
+8. **시황·유동성**: `marketNote`·`marketNoteUS`·`marketNoteKR`(+시황을 실제로 다시 쓴 날짜 `marketNoteAsOf`=오늘 — `generatedAt`은 daily-maintenance 가 매일 올려 신선도를 못 가리므로 `coverage.js` 가 이 필드를 게이트한다), `liquidity.js`(게이지·`drivers`·`headline`·`headlineUS`·`headlineKR`).
 9. **지수 대응**: `index-notes.js` 4개 지수 `value`·`short`·`long`·`sigShort`·`sigLong`.
 10. **오늘의 Top Pick**: 한국·미국 각 3종목 재선정.
 11. **기록·배포**: `snapshot.js`·`WATCHLIST.md` 갱신 → `validate-reco.js` 오류 0 → 커밋·push.

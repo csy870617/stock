@@ -68,6 +68,17 @@ const snap = {
   stocks: Object.values(seen)
 };
 
+// 가드: 스냅샷 날짜는 generatedAt 인데 가격은 '오늘' quotes.js 값이다.
+// generatedAt 이 과거인 채 실행하면 과거 날짜 스냅샷을 오늘 가격으로 덮어써
+// 성과 기준선이 오염되므로, 날짜가 어긋나면 기록을 건너뛴다(--force 로 강행 가능).
+const TODAY = new Date().toISOString().slice(0, 10);
+const FORCE = process.argv.includes("--force");
+if (snap.date !== TODAY && !FORCE) {
+  console.warn("스냅샷 건너뜀: generatedAt(" + snap.date + ") ≠ 오늘(" + TODAY + ") — " +
+    "과거 날짜 스냅샷을 오늘 시세로 덮어쓰지 않습니다. 강행하려면 --force.");
+  process.exit(0);
+}
+
 // 같은 날짜가 있으면 교체하되, 기존에 지수값이 있고 새 값이 null이면 기존 값 보존
 const idx = history.findIndex((h) => h.date === snap.date);
 if (idx >= 0) {

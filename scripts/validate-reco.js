@@ -81,6 +81,13 @@ function matchDomain(host, list) {
   return !!host && list.some((d) => host === d || host.endsWith("." + d));
 }
 function isTrustedSource(u) { return matchDomain(sourceHost(u), TRUSTED_SOURCES); }
+// 매칭된 '신뢰 도메인 등록명'을 돌려준다 — comp.fnguide.com·asp01.fnguide.com 이 모두
+// "fnguide.com" 으로 귀결되므로, 같은 제공자의 서브도메인 2개가 '독립 출처 2개'로 세어지는 것을 막는다.
+function trustedDomainOf(u) {
+  const h = sourceHost(u);
+  if (!h) return null;
+  return TRUSTED_SOURCES.find((d) => h === d || h.endsWith("." + d)) || null;
+}
 function isBlockedSource(u) { return matchDomain(sourceHost(u), BLOCKED_SOURCES); }
 
 
@@ -339,4 +346,4 @@ if (require.main === module) {
   console.log("✓ 검증 통과: " + total + "종목, 오류 0건, 경고 " + warnings.length + "건 (" + path.relative(ROOT, file) + ")");
 }
 
-module.exports = { validate, isTrustedSource, isBlockedSource, sourceHost };
+module.exports = { validate, isTrustedSource, isBlockedSource, sourceHost, trustedDomainOf };

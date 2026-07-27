@@ -49,7 +49,13 @@ const LQ = load("data/liquidity.js", "LIQUIDITY_DATA");
 if (!D) { console.error("recommendations.js 를 읽을 수 없습니다."); process.exit(2); }
 
 const today = argVal("date") || new Date().toISOString().slice(0, 10);
-const T = (TA && TA.asOf) || today;          // 최신 거래일
+// 최신 거래일 T 는 stock-ta.js 가 유일한 출처다. 로드 실패 시 today 로 폴백하면
+// 전 종목 techNote 가 '오늘'과 비교돼 커버리지가 통째로 오판되므로 실패로 멈춘다.
+if (!TA || !TA.asOf) {
+  console.error("stock-ta.js 를 읽을 수 없거나 asOf 가 없습니다 — 먼저 node scripts/update-stock-ta.js 를 실행하세요.");
+  process.exit(2);
+}
+const T = TA.asOf;                            // 최신 거래일
 
 const all = [].concat(D.korea || [], D.us || []);
 const label = (s) => s.ticker + "(" + s.name + ")";
@@ -99,6 +105,9 @@ else {
 
 const missMarket = ["marketNote", "marketNoteUS", "marketNoteKR"].filter((f) => !D[f] || !String(D[f]).trim());
 if (D.generatedAt !== today) missMarket.push("generatedAt " + D.generatedAt + " ≠ 오늘 " + today);
+// generatedAt 은 daily-maintenance 가 매일 올려 시황 신선도를 가리므로,
+// 시황 문구를 실제로 다시 쓴 날(marketNoteAsOf)을 별도로 게이트한다.
+if (D.marketNoteAsOf !== today) missMarket.push("marketNoteAsOf " + (D.marketNoteAsOf || "없음") + " ≠ 오늘 " + today);
 
 // ── --remaining: 남은 티커만 출력(배치 재시도 입력용) ──
 const REMAIN = {
