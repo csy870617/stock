@@ -29,7 +29,19 @@ function argVal(name) {
 }
 
 // ── Yahoo 3개월 일봉(종가 배열) ──
+const sleepMs = (ms) => new Promise((res) => setTimeout(res, ms));
+
+// 야후 간헐 429/5xx 대비 — screen-watch.js 와 동일한 지수 백오프 3회 재시도
 async function series(sym) {
+  for (let i = 0; i < 3; i++) {
+    const a = await seriesOnce(sym);
+    if (a) return a;
+    if (i < 2) await sleepMs(400 * Math.pow(2, i));
+  }
+  return null;
+}
+
+async function seriesOnce(sym) {
   if (typeof fetch !== "function") return null;
   const ctrl = new AbortController();
   const to = setTimeout(() => ctrl.abort(), 10000);
@@ -42,7 +54,10 @@ async function series(sym) {
   if (!r.ok) return null;
   let j; try { j = await r.json(); } catch (_e) { return null; }
   const res = j && j.chart && j.chart.result && j.chart.result[0];
-  const c = res && res.indicators && res.indicators.quote[0].close;
+  // quote[0] 까지 가드 — 야후가 indicators:{} 또는 quote:[] 를 돌려주면 TypeError 로
+  // 프로세스가 죽고, refresh-quotes 워크플로우의 후속 스텝(screen-watch·commit)까지 전멸한다.
+  const c = res && res.indicators && res.indicators.quote &&
+            res.indicators.quote[0] && res.indicators.quote[0].close;
   if (!c) return null;
   const arr = c.filter((x) => x != null);
   if (arr.length < 25) return null;

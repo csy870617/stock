@@ -47,7 +47,19 @@ const INDICES = [
 
 
 // ── Yahoo 일봉 조회 (종가·고가·저가·타임스탬프) ──
+const sleepMs = (ms) => new Promise((res) => setTimeout(res, ms));
+
+// 야후 간헐 429/5xx 대비 3회 재시도(update-stock-ta.js 와 동일한 이유)
 async function fetchSeries(symbol) {
+  for (let i = 0; i < 3; i++) {
+    const rows = await fetchSeriesOnce(symbol);
+    if (rows) return rows;
+    if (i < 2) await sleepMs(400 * Math.pow(2, i));
+  }
+  return null;
+}
+
+async function fetchSeriesOnce(symbol) {
   if (typeof fetch !== "function") return null;
   const url = "https://query1.finance.yahoo.com/v8/finance/chart/" +
     encodeURIComponent(symbol) + "?interval=1d&range=2y";

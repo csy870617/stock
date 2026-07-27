@@ -62,7 +62,20 @@ function loadPrevAsOf() {
   } catch (_e) { return null; }
 }
 
+const sleepMs = (ms) => new Promise((res) => setTimeout(res, ms));
+
+// 야후 간헐 429/5xx 대비 3회 재시도 — 실패 시 이전 파일 폴백인데, 폴백된 종목은
+// 구식 지표가 최신 asOf 아래 표시되므로(종목별 asOf 없음) 실패율을 최대한 낮춘다.
 async function fetchRows(symbol) {
+  for (let i = 0; i < 3; i++) {
+    const rows = await fetchRowsOnce(symbol);
+    if (rows) return rows;
+    if (i < 2) await sleepMs(400 * Math.pow(2, i));
+  }
+  return null;
+}
+
+async function fetchRowsOnce(symbol) {
   if (typeof fetch !== "function") return null;
   const ctrl = new AbortController();
   const to = setTimeout(() => ctrl.abort(), 10000);

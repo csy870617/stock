@@ -129,10 +129,18 @@ async function mapLimit(items, limit, fn) {
   const canFetch = !SEED_ONLY && typeof fetch === "function";
   const results = await mapLimit(targets, 8, async (t) => {
     if (canFetch) {
-      try {
-        const q = await oneQuote(t.symbol);
-        if (q && q.price != null) return { t, q, ok: true };
-      } catch (_e) { /* 폴백으로 진행 */ }
+      // 야후 간헐 429/5xx 대비 지수 백오프 3회 재시도(screen-watch.js 와 동일).
+      // 'stale quote'(거래정지 심볼)는 재시도해도 같은 결과라 즉시 폴백한다.
+      for (let att = 0; att < 3; att++) {
+        try {
+          const q = await oneQuote(t.symbol);
+          if (q && q.price != null) return { t, q, ok: true };
+          break;
+        } catch (e) {
+          if (String(e && e.message).indexOf("stale quote") === 0) break;
+          if (att < 2) await new Promise((r) => setTimeout(r, 400 * Math.pow(2, att)));
+        }
+      }
     }
     return { t, q: null, ok: false };
   });
@@ -142,7 +150,9 @@ async function mapLimit(items, limit, fn) {
       quotes[t.ticker] = { price: q.price, date: q.date, changePct: q.changePct };
       live++;
     } else if (prev[t.ticker] && prev[t.ticker].price != null) {
-      quotes[t.ticker] = prev[t.ticker];   // 이전 시세 유지
+      // 이전 시세 유지 — 단 changePct 는 '그날' 등락률이라 구식 값을 넘기면
+      // 앱 배지가 이틀 전 등락률을 오늘 것처럼 표시하므로 null 로 지운다(앱은 null 이면 숨김).
+      quotes[t.ticker] = { price: prev[t.ticker].price, date: prev[t.ticker].date || null, changePct: null };
       fellBack++;
     } else if (t.baked.price != null) {
       quotes[t.ticker] = { price: t.baked.price, date: t.baked.date || null };  // 종가 seed
