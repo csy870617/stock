@@ -591,16 +591,6 @@ a.idx-tile:hover { background: color-mix(in srgb, var(--ink) 5%, var(--inset)); 
 .tech-note.stale { box-shadow: inset 3px 0 0 var(--down); }
 .idx-tile.stale { box-shadow: inset 3px 0 0 var(--down); }
 .idx-tile .it-top .tn-stale { margin-left: auto; }
-/* 단·장기 기술신호 — 라벨(무채색) + 신호(색상 텍스트) 세그먼트. 카드·표·관심종목 공용 */
-.ta-strip { display: inline-flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; }
-.ta-seg { display: inline-flex; align-items: baseline; gap: 5px; cursor: help; white-space: nowrap; }
-.ta-seg .ta-k { color: var(--muted); font-size: 0.72rem; font-weight: 600; }
-.ta-seg .ta-v { font-size: 0.86rem; font-weight: 750; letter-spacing: -0.01em; }
-.ta-seg .ta-v.ta-na { color: var(--muted); font-weight: 600; }
-.ta-strip.ta-mini { gap: 3px 11px; }
-.ta-strip.ta-mini .ta-seg { cursor: inherit; }
-.ta-strip.ta-mini .ta-k { font-size: 0.7rem; }
-.ta-strip.ta-mini .ta-v { font-size: 0.78rem; font-weight: 700; }
 
 /* 관심종목 검색 추가 + 라이트 카드 */
 .wl-add { margin: 0 0 8px; }
@@ -1188,31 +1178,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
 
   // 개별 종목 단기/장기 기술적 분석 줄 — data/stock-ta.js(자동 계산, 단기/장기 분리)를 읽어 컴팩트 표시.
   var TA_SIG_COL = { "적극매수": "var(--up)", "매수": "var(--tier2)", "중립": "var(--tier3)", "매도": "#eb6834", "적극매도": "var(--down)" };
-  var TA_TREND_MK = { "상승": "▲", "횡보": "▬", "하락": "▼" };
-  var TA_RANK = { "적극매수": 2, "매수": 1, "중립": 0, "매도": -1, "적극매도": -2 };
   function stTa(ticker) { var T = window.STOCK_TA; return (T && T.ta && T.ta[ticker]) || null; }
-  function stTaShortSig(s) { var t = stTa(s.ticker); return t && t.short ? t.short.signal : null; }
-  // 표시 신호 그룹(필터용) — 단기 신호 기준(가장 실행 가능한 타이밍 신호)
-  function taGroup(s) {
-    var sig = stTaShortSig(s);
-    if (sig == null) return "na";
-    var r = TA_RANK[sig];
-    if (r >= 1) return "buy"; if (r <= -1) return "sell"; return "hold";
-  }
-  // 단·장기 기술신호를 깔끔한 라벨+색상 세그먼트로 — 카드·표·관심종목에서 공용.
-  //   [단기] 매수   [장기] 중립   (라벨은 작은 무채색, 신호는 색상 텍스트, hover 로 근거)
-  function taSeg(lbl, d) {
-    if (!d) return '<span class="ta-seg"><span class="ta-k">' + lbl + '</span><span class="ta-v ta-na">–</span></span>';
-    var c = TA_SIG_COL[d.signal] || "var(--muted)";
-    var tip = (d.read || "") + ((d.metrics && d.metrics.length)
-      ? " | " + d.metrics.map(function (m) { return m[0] + " " + m[1]; }).join(" · ") : "");
-    return '<span class="ta-seg" title="' + esc(tip) + '" data-basis="' + esc(tip) + '">' +
-      '<span class="ta-k">' + lbl + '</span><span class="ta-v" style="color:' + c + '">' + esc(d.signal || "–") + "</span></span>";
-  }
-  function taStrip(short, long, cls) {
-    if (!short && !long) return "";
-    return '<span class="ta-strip' + (cls ? " " + cls : "") + '">' + taSeg("단기", short) + taSeg("장기", long) + "</span>";
-  }
 
   // 네이버 차트 URL — 한국은 국내 차트, 미국은 네이버 월드스톡(추천 데이터의 정확한 심볼 우선),
   //   추천 편성에 없는 미국 종목은 네이버 통합검색(주가 카드)으로 — 관심종목도 모두 네이버로 연결.
@@ -1227,13 +1193,6 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     if (country === "korea") return "https://finance.naver.com/item/main.naver?code=" + encodeURIComponent(ticker);
     if (NAVER_US_MAP[ticker]) return NAVER_US_MAP[ticker];
     return "https://search.naver.com/search.naver?query=" + encodeURIComponent(ticker + " 주가");
-  }
-
-  // 기술 신호 — 통합 신호 박스(sig-box)의 한 행(라벨 셀 + 본문 셀)을 반환. 없으면 "".
-  function stockTaCells(ticker) {
-    var T = window.STOCK_TA, t = T && T.ta && T.ta[ticker];
-    if (!t || (!t.short && !t.long)) return "";
-    return '<span class="sig-k">기술</span><div class="sig-body">' + taStrip(t.short, t.long) + "</div>";
   }
 
   // 밸류(컨센서스 상승여력·장기 펀더멘털) × 타이밍(기술 추세·단기) 종합 해석 —

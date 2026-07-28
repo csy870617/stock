@@ -74,8 +74,8 @@ const missTech  = all.filter((s) => !s.techNote || !s.techNote.short || !s.techN
 const missValue = all.filter((s) => !s.valueNote || !String(s.valueNote).trim());
 // ── 목표가 재검증은 '회전(rotation)' 이다 ──
 // WebSearch 예산은 세션 전체 공유 ~200회라 전 종목(110) 재검증은 한 회차에 물리적으로
-// 불가능하다(종목당 25~35회 → 2,750회+ 필요). 그래서 회차마다 verifiedAt 이 가장 오래된
-// QUOTA 종목만 재검증하고, 전 종목은 약 QUOTA/N 주기로 돌아가며 신선해진다.
+// 불가능하다(종목당 25~35회 → 2,750회+ 필요). 게이트는 '전 종목이 CYCLE_DAYS 이내인가'로 보고,
+// 세션이 받아 가는 큐는 verifiedAt 이 오래된 순 QUOTA 종목으로 자른다.
 const VERIF_CYCLE_DAYS = 7;                          // ★ 목표: 전 종목이 7일 이내에 한 번은 재검증된다
 const VERIF_QUOTA = Number(argVal("quota") || 20);   // 한 세션이 감당할 큐 크기(예산 상한에서 온 값)
 const daysAgo = (d) => {
@@ -172,7 +172,7 @@ const which = argVal("remaining");
 if (which) {
   const list = REMAIN[which];
   if (!list) {
-    console.error("--remaining 값은 " + Object.keys(REMAIN).join("|") + " 중 하나여야 합니다.");
+    console.error("--remaining 값은 " + Object.keys(REMAIN).join("|") + "|discovery 중 하나여야 합니다.");
     process.exit(2);
   }
   list.forEach((s) => console.log(s.country || (D.korea.includes(s) ? "korea" : "us"), s.ticker, s.name));
