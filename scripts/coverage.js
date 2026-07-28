@@ -13,13 +13,17 @@
 // 판정 기준(항목별):
 //   techNote   : techNote.asOf == T (최신 거래일 = stock-ta.js asOf)
 //   valueNote  : 비어 있지 않음
-//   verified   : 회전 — verifiedAt 이 가장 오래된 QUOTA(기본 15)종목을 오늘 재검증(--quota 로 조정)
-//   discovery  : discoveryAsOf == 오늘 (신규 후보 탐색 10그룹 — 재검증에 밀려 굶지 않도록 게이트)
+//   verified   : 7일 회전 — 전 종목의 verifiedAt 이 7일 이내(큐는 --quota 만큼만 준다)
+//   discovery  : 7일 회전 — 10개 (주제×국가) 그룹의 D.discovery["<country>|<theme>"] 가 7일 이내
+//   aiTarget   : 7일 회전 — 전 종목의 aiCheckedAt(재시도한 날)이 7일 이내. 값 자체가 없는 건
+//                정상이지만(입력값 검증 실패) 재시도조차 안 하는 건 갱신 누락이라 게이트다.
 //   tier       : tierAsOf == 오늘 (watch 는 tier 구조 면제라 제외)
 //   indexNotes : INDEX_NOTES.asOf == indices.js asOf + 4개 지수 5개 필드
 //   topPicks   : topPicks.asOf == 오늘 + korea/us 각 3종목
 //   liquidity  : liquidity.js asOf == 오늘 + 통합·미국·한국 headline
-//   aiTarget   : 참고 지표(검증 실패 시 생략이 정상이라 게이트에 포함하지 않음)
+//
+// 매일 전량인 항목(techNote·valueNote·tier·indexNotes·topPicks·liquidity·시황)과
+// 7일 회전 항목(verified·discovery·aiTarget)이 합쳐져, 앱 데이터 전체가 최소 주 1회 갱신된다.
 
 const fs = require("fs");
 const path = require("path");
@@ -128,10 +132,26 @@ else {
   });
 }
 
-// 신규 후보 탐색 — 예산이 남으면 하는 게 아니라 매 회차 필수다(재검증에 밀려 굶는 걸 막는다).
-// 10개 (주제×국가) 그룹을 전부 탐색한 날을 discoveryAsOf 에 기록한다.
-const missDisc = [];
-if (D.discoveryAsOf !== today) missDisc.push("discoveryAsOf " + (D.discoveryAsOf || "없음") + " ≠ 오늘 " + today);
+// 신규 후보 탐색 — 재검증과 같은 7일 회전이다. 10개 (주제×국가) 그룹 각각을 마지막으로
+// 탐색한 날을 D.discovery["<country>|<theme>"] 에 기록하고, 전 그룹이 7일 이내이면 통과한다.
+// (전 그룹을 매일 도는 건 예산상 불가능하고, 굶게 두면 발굴이 영영 안 된다 — 그 사이가 회전이다.)
+const DISC_GROUPS = [];
+["korea", "us"].forEach((c) => {
+  const seen = new Set((D[c] || []).filter((s) => s.theme !== "watch").map((s) => s.theme));
+  [...seen].sort().forEach((t) => DISC_GROUPS.push(c + "|" + t));
+});
+const discMap = D.discovery || {};
+const staleDisc = DISC_GROUPS.filter((g) => daysAgo(discMap[g]) > VERIF_CYCLE_DAYS)
+  .sort((a, b) => daysAgo(discMap[b]) - daysAgo(discMap[a]));
+const missDisc = staleDisc.map((g) => g + "(" + (discMap[g] || "기록 없음") + ")");
+const discQueue = staleDisc.slice(0, Number(argVal("discQuota") || 4));
+
+// aiTarget — '산출됐는가'가 아니라 '최근에 재시도했는가'를 본다. 입력값 검증 실패로 값이
+// 없는 건 정상이지만, 몇 주째 재시도조차 안 하는 건 갱신 누락이다. 그래서 시도한 날을
+// aiCheckedAt 에 남기고(산출 성공 시 aiAsOf 도 함께), 전 종목 7일 회전으로 게이트한다.
+const staleAi = all.filter((s) => daysAgo(s.aiCheckedAt) > VERIF_CYCLE_DAYS).sort(
+  (a, b) => daysAgo(b.aiCheckedAt) - daysAgo(a.aiCheckedAt));
+const aiQueue = staleAi.slice(0, Number(argVal("aiQuota") || 20));
 
 const missMarket = ["marketNote", "marketNoteUS", "marketNoteKR"].filter((f) => !D[f] || !String(D[f]).trim());
 if (D.generatedAt !== today) missMarket.push("generatedAt " + D.generatedAt + " ≠ 오늘 " + today);
@@ -141,8 +161,13 @@ if (D.marketNoteAsOf !== today) missMarket.push("marketNoteAsOf " + (D.marketNot
 
 // ── --remaining: 남은 티커만 출력(배치 재시도 입력용) ──
 const REMAIN = {
-  techNote: missTech, valueNote: missValue, verified: verifQueue, tier: missTier,
+  techNote: missTech, valueNote: missValue, verified: verifQueue, tier: missTier, aiTarget: aiQueue,
 };
+// discovery 는 종목이 아니라 그룹 목록이라 따로 처리한다.
+if (argVal("remaining") === "discovery") {
+  discQueue.forEach((g) => console.log(g.replace("|", " "), discMap[g] || "기록없음"));
+  process.exit(discQueue.length ? 1 : 0);
+}
 const which = argVal("remaining");
 if (which) {
   const list = REMAIN[which];
@@ -172,16 +197,20 @@ rows.forEach(([name, done, total, miss]) => {
 });
 
 [["index-notes", missIdx], ["topPicks", missTop], ["liquidity", missLiq],
- ["신규 후보 탐색 10그룹", missDisc], ["시황·generatedAt", missMarket]]
+ ["신규 후보 탐색 (전 " + DISC_GROUPS.length + "그룹 " + VERIF_CYCLE_DAYS + "일 이내)", missDisc],
+ ["aiTarget 재시도 (전 종목 " + VERIF_CYCLE_DAYS + "일 이내)",
+   staleAi.length ? [staleAi.length + "종목 경과: " + staleAi.slice(0, 6).map(label).join(", ") +
+     (staleAi.length > 6 ? " 외 " + (staleAi.length - 6) : "")] : []],
+ ["시황·generatedAt", missMarket]]
   .forEach(([name, miss]) => {
     console.log((miss.length ? "  ❌ " : "  ✅ ") + name + (miss.length ? ": " + miss.join(", ") : ""));
   });
 
-// aiTarget 은 참고(입력값 검증 실패 시 생략이 정상 — 게이트 아님)
+// aiTarget 보유율은 참고 지표다(값이 없는 것 자체는 정상 — 게이트는 위의 '재시도 7일 회전').
 const hasAi = all.filter((s) => s.aiTarget != null);
 const freshAi = hasAi.filter((s) => s.aiAsOf === today);
-console.log("  ℹ️  aiTarget(참고·게이트 아님): 보유 " + hasAi.length + "/" + N + " · 오늘 산출 " + freshAi.length +
-  " · 미보유 " + (N - hasAi.length));
+console.log("  ℹ️  aiTarget 보유(참고): " + hasAi.length + "/" + N + " · 오늘 산출 " + freshAi.length +
+  " · 미보유 " + (N - hasAi.length) + (aiQueue.length ? " → 이번 세션 재시도 큐 " + aiQueue.length + "종목" : ""));
 
 // 회전 진척(참고) — 오늘 처리량과 이번 세션이 받아 갈 큐 크기
 console.log("  ℹ️  재검증 회전(참고): 오늘 " + verifiedToday.length + "종목 · 7일 초과 " +
@@ -190,7 +219,7 @@ console.log("  ℹ️  재검증 회전(참고): 오늘 " + verifiedToday.length
   (verifQueue.length > 5 ? " 외 " + (verifQueue.length - 5) : "") : " (전 종목 주기 내)"));
 
 const blockers = missTech.length + missValue.length + missVerif.length + missTier.length +
-  missIdx.length + missTop.length + missLiq.length + missDisc.length + missMarket.length;
+  missIdx.length + missTop.length + missLiq.length + missDisc.length + staleAi.length + missMarket.length;
 
 console.log("");
 if (blockers === 0) {
@@ -198,5 +227,5 @@ if (blockers === 0) {
   process.exit(0);
 }
 console.log("✗ 미완료 " + blockers + "건 — 남은 종목만 재배치해 100% 까지 반복할 것");
-console.log("  (남은 티커 목록: node scripts/coverage.js --remaining techNote|valueNote|verified|tier)");
+console.log("  (남은 티커 목록: node scripts/coverage.js --remaining techNote|valueNote|verified|tier|aiTarget|discovery)");
 process.exit(1);
