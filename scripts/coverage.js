@@ -72,8 +72,8 @@ const missValue = all.filter((s) => !s.valueNote || !String(s.valueNote).trim())
 // WebSearch 예산은 세션 전체 공유 ~200회라 전 종목(110) 재검증은 한 회차에 물리적으로
 // 불가능하다(종목당 25~35회 → 2,750회+ 필요). 그래서 회차마다 verifiedAt 이 가장 오래된
 // QUOTA 종목만 재검증하고, 전 종목은 약 QUOTA/N 주기로 돌아가며 신선해진다.
-const VERIF_QUOTA = Number(argVal("quota") || 15);   // 회차당 재검증 목표 종목 수
-const VERIF_STALE_DAYS = 21;                          // 이 일수를 넘긴 종목은 경고(게이트 아님)
+const VERIF_CYCLE_DAYS = 7;                          // ★ 목표: 전 종목이 7일 이내에 한 번은 재검증된다
+const VERIF_QUOTA = Number(argVal("quota") || 20);   // 한 세션이 감당할 큐 크기(예산 상한에서 온 값)
 const daysAgo = (d) => {
   if (!d) return Infinity;
   const t = Date.parse(d + "T00:00:00Z");
@@ -81,12 +81,14 @@ const daysAgo = (d) => {
 };
 // 오래된 순 정렬 — verifiedAt 없는 종목이 가장 먼저다.
 const byOldest = (a, b) => daysAgo(b.verifiedAt) - daysAgo(a.verifiedAt);
+// 게이트는 '오늘 몇 종목 했나'가 아니라 **전 종목이 7일 이내인가**로 본다. 그래야 하루
+// 몇 번을 발화하든(현재 2회) 밀린 만큼만 자동으로 소화되고, 한 세션이 실패해도 다음
+// 세션이 그 몫까지 이어받는다.
+const staleVerif = all.filter((s) => daysAgo(s.verifiedAt) > VERIF_CYCLE_DAYS).sort(byOldest);
+const missVerif = staleVerif;
+// 세션에 한 번에 던질 수 있는 양은 예산이 정한다 — 큐는 오래된 순으로 QUOTA 만큼만 준다.
+const verifQueue = staleVerif.slice(0, VERIF_QUOTA);
 const verifiedToday = all.filter((s) => s.verifiedAt === today);
-const notVerifToday = all.filter((s) => s.verifiedAt !== today).sort(byOldest);
-// 이번 회차에 남은 할당량만큼만 큐에 올린다(전량이 아니라).
-const verifQueue = notVerifToday.slice(0, Math.max(0, VERIF_QUOTA - verifiedToday.length));
-const missVerif = verifQueue;                         // 게이트: 큐가 비면 이번 회차 완료
-const staleVerif = all.filter((s) => daysAgo(s.verifiedAt) > VERIF_STALE_DAYS);
 
 const tierable  = all.filter((s) => s.theme !== "watch");
 const missTier  = tierable.filter((s) => s.tierAsOf !== today);
@@ -139,7 +141,7 @@ if (D.marketNoteAsOf !== today) missMarket.push("marketNoteAsOf " + (D.marketNot
 
 // ── --remaining: 남은 티커만 출력(배치 재시도 입력용) ──
 const REMAIN = {
-  techNote: missTech, valueNote: missValue, verified: missVerif, tier: missTier,
+  techNote: missTech, valueNote: missValue, verified: verifQueue, tier: missTier,
 };
 const which = argVal("remaining");
 if (which) {
@@ -157,7 +159,7 @@ const N = all.length;
 const rows = [
   ["techNote  (asOf==" + T + ")", N - missTech.length, N, missTech],
   ["valueNote", N - missValue.length, N, missValue],
-  ["목표가 재검증 (회전 " + VERIF_QUOTA + "종목/회차)", Math.min(verifiedToday.length, VERIF_QUOTA), VERIF_QUOTA, missVerif],
+  ["목표가 재검증 (전 종목 " + VERIF_CYCLE_DAYS + "일 이내)", N - staleVerif.length, N, missVerif],
   ["tier 재평가 (tierAsOf==" + today + ")", tierable.length - missTier.length, tierable.length, missTier],
 ];
 
@@ -181,11 +183,11 @@ const freshAi = hasAi.filter((s) => s.aiAsOf === today);
 console.log("  ℹ️  aiTarget(참고·게이트 아님): 보유 " + hasAi.length + "/" + N + " · 오늘 산출 " + freshAi.length +
   " · 미보유 " + (N - hasAi.length));
 
-// 회전 진척 — 전 종목이 실제로 돌고 있는지 보여주는 참고 지표(게이트 아님)
-const cycleFresh = all.filter((s) => daysAgo(s.verifiedAt) <= VERIF_STALE_DAYS).length;
-console.log("  ℹ️  재검증 회전(참고): 전 종목 " + cycleFresh + "/" + N + " 이 " + VERIF_STALE_DAYS +
-  "일 이내" + (staleVerif.length ? " · ⚠ " + VERIF_STALE_DAYS + "일 초과 " + staleVerif.length + "종목: " +
-  staleVerif.sort(byOldest).slice(0, 5).map(label).join(", ") + (staleVerif.length > 5 ? " 외 " + (staleVerif.length - 5) : "") : ""));
+// 회전 진척(참고) — 오늘 처리량과 이번 세션이 받아 갈 큐 크기
+console.log("  ℹ️  재검증 회전(참고): 오늘 " + verifiedToday.length + "종목 · 7일 초과 " +
+  staleVerif.length + "종목" + (staleVerif.length ? " → 이번 세션 큐 " + verifQueue.length +
+  "종목(--remaining verified): " + verifQueue.slice(0, 5).map(label).join(", ") +
+  (verifQueue.length > 5 ? " 외 " + (verifQueue.length - 5) : "") : " (전 종목 주기 내)"));
 
 const blockers = missTech.length + missValue.length + missVerif.length + missTier.length +
   missIdx.length + missTop.length + missLiq.length + missDisc.length + missMarket.length;
