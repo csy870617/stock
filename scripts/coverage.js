@@ -179,8 +179,50 @@ if (which) {
   process.exit(list.length ? 1 : 0);
 }
 
-// ── 리포트 ──
 const N = all.length;
+
+// ── --emit: 앱이 읽을 신선도 상태 파일 생성(refresh-quotes Action 이 매일 호출) ──
+// 게이트(exit 1)와 달리 이건 '보고'라 항상 exit 0 으로 끝난다 — 미완료여도 워크플로우를 깨지 않는다.
+if (process.argv.includes("--emit")) {
+  const oldest = (arr, pick) => arr.reduce((m, x) => Math.max(m, daysAgo(pick(x))), 0);
+  const finite = (v) => (Number.isFinite(v) ? v : null);
+  const status = {
+    asOf: today,
+    T: T,
+    total: N,
+    cycleDays: VERIF_CYCLE_DAYS,
+    daily: [
+      { key: "techNote",  label: "기술 대응",   done: N - missTech.length,  total: N },
+      { key: "valueNote", label: "밸류 설명",   done: N - missValue.length, total: N },
+      { key: "tier",      label: "tier 재평가", done: tierable.length - missTier.length, total: tierable.length },
+      { key: "indexNotes", label: "지수 대응",  done: missIdx.length ? 0 : 4, total: 4 },
+      { key: "topPicks",  label: "Top Pick",   done: missTop.length ? 0 : 6, total: 6 },
+      { key: "liquidity", label: "유동성 판단", done: missLiq.length ? 0 : 1, total: 1 },
+      { key: "market",    label: "시황",        done: missMarket.length ? 0 : 1, total: 1 },
+    ],
+    rotation: [
+      { key: "verified", label: "목표가 재검증", fresh: N - staleVerif.length, total: N,
+        oldestDays: finite(oldest(all, (s) => s.verifiedAt)) },
+      { key: "discovery", label: "신규 후보 탐색", fresh: DISC_GROUPS.length - staleDisc.length,
+        total: DISC_GROUPS.length, unit: "그룹",
+        oldestDays: finite(oldest(DISC_GROUPS, (g) => discMap[g])) },
+      { key: "aiTarget", label: "AI 적정가 재시도", fresh: N - staleAi.length, total: N,
+        oldestDays: finite(oldest(all, (s) => s.aiCheckedAt)) },
+    ],
+  };
+  status.daily.forEach((r) => (r.ok = r.done === r.total));
+  status.rotation.forEach((r) => (r.ok = r.fresh === r.total));
+  status.ok = status.daily.every((r) => r.ok) && status.rotation.every((r) => r.ok);
+  const out = path.join(ROOT, "data/coverage-status.js");
+  fs.writeFileSync(out, "// 자동 생성 — scripts/coverage.js --emit (refresh-quotes Action, 토큰 0)\n" +
+    "// 앱 상단 '데이터 신선도' 패널이 읽는다. 직접 수정하지 말 것.\n" +
+    "window.COVERAGE_STATUS = " + JSON.stringify(status, null, 1) + ";\n");
+  console.log("data/coverage-status.js 갱신 — 매일 " + status.daily.filter((r) => r.ok).length + "/" +
+    status.daily.length + " · 회전 " + status.rotation.filter((r) => r.ok).length + "/" + status.rotation.length);
+  process.exit(0);
+}
+
+// ── 리포트 ──
 const rows = [
   ["techNote  (asOf==" + T + ")", N - missTech.length, N, missTech],
   ["valueNote", N - missValue.length, N, missValue],

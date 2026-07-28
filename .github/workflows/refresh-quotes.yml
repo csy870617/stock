@@ -76,6 +76,12 @@ jobs:
         run: node scripts/daily-maintenance.js
         continue-on-error: true
 
+      # 앱 상단 '데이터 신선도' 패널이 읽는 상태 파일 — 매일·회전 항목의 커버리지를 기록한다.
+      # coverage.js 는 미완료 시 exit 1 이지만 --emit 은 '게이트'가 아니라 '보고'라 항상 exit 0 이다.
+      - name: Emit coverage status (→ data/coverage-status.js, token-free)
+        run: node scripts/coverage.js --emit
+        continue-on-error: true
+
       # 신뢰도 게이트 — 구조·형식·계산 정합성이 깨진 데이터는 커밋하지 않는다
       - name: Validate data (guardrail)
         run: node scripts/validate-reco.js
@@ -83,14 +89,14 @@ jobs:
       - name: Commit & push if changed
         id: commit
         run: |
-          if git diff --quiet -- data/quotes.js data/recommendations.js data/history.js data/indices.js data/stock-ta.js data/liquidity-auto.js data/watch-candidates.js; then
+          if git diff --quiet -- data/quotes.js data/recommendations.js data/history.js data/indices.js data/stock-ta.js data/liquidity-auto.js data/watch-candidates.js data/coverage-status.js; then
             echo "변화 없음 — 커밋 생략"
             echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/quotes.js data/recommendations.js data/history.js data/indices.js data/stock-ta.js data/liquidity-auto.js data/watch-candidates.js
+          git add data/quotes.js data/recommendations.js data/history.js data/indices.js data/stock-ta.js data/liquidity-auto.js data/watch-candidates.js data/coverage-status.js
           git commit -m "매일 데이터 갱신 (자동) — 시세·기준일·스냅샷 (update-quotes + daily-maintenance)"
           # 다른 자동 커밋(LLM 재평가 Routine 등)과 경합해 push 가 거부될 수 있으므로,
           # 거부되면 원격 변경을 rebase 로 얹어 1회 재시도한다(그날 갱신이 조용히 유실되지 않도록).

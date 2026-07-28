@@ -157,6 +157,28 @@ a { color: inherit; }
 .market-note .mn-p:last-child { margin-bottom: 0; }
 .upd-status { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; font-size: 0.76rem; color: var(--muted); margin: 2px 0 16px; }
 .upd-status a { color: var(--ink-2); }
+/* 데이터 신선도 패널 — coverage.js --emit 이 매일 만드는 data/coverage-status.js 를 읽어
+   '매일 갱신 항목'과 '7일 회전 항목'이 실제로 돌고 있는지 접이식으로 보여준다. */
+.fresh { margin: -8px 0 16px; font-size: 0.76rem; color: var(--muted); }
+.fresh > summary {
+  cursor: pointer; list-style: none; display: flex; align-items: center; gap: 7px;
+  padding: 5px 0; user-select: none;
+}
+.fresh > summary::-webkit-details-marker { display: none; }
+.fresh > summary::after { content: "▾"; font-size: 0.7rem; opacity: 0.6; transition: transform 0.15s; }
+.fresh[open] > summary::after { transform: rotate(180deg); }
+.fresh-body {
+  border: 1px solid var(--line); border-radius: 10px; background: var(--inset);
+  padding: 10px 12px; margin-top: 2px;
+}
+.fresh-sec { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.03em; color: var(--ink-2); margin: 6px 0 5px; }
+.fresh-sec:first-child { margin-top: 0; }
+.fresh-row { display: flex; align-items: center; gap: 8px; padding: 2.5px 0; }
+.fresh-row .fr-l { flex: 1 1 auto; color: var(--ink-2); }
+.fresh-row .fr-n { flex: 0 0 auto; font-variant-numeric: tabular-nums; color: var(--ink); }
+.fresh-row .fr-d { flex: 0 0 auto; font-size: 0.7rem; color: var(--muted); min-width: 62px; text-align: right; }
+.fresh-row.bad .fr-n { color: var(--tier3); font-weight: 700; }
+.fresh-note { margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line); font-size: 0.7rem; line-height: 1.5; }
 .us-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: 0 0 auto; }
 .us-gray { background: var(--muted); }
 .us-yellow { background: #e0a020; }
@@ -637,6 +659,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
 
 <div class="wrap">
   <div class="upd-status" id="updStatus" hidden></div>
+  <details class="fresh" id="freshPanel" hidden></details>
 
   <div class="country-bar">
     <div class="seg seg-country" id="countrySeg">
@@ -716,6 +739,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
 <script src="data/index-notes.js"></script>
 <script src="data/stock-ta.js"></script>
 <script src="data/recommendations.js"></script>
+<script src="data/coverage-status.js"></script>
 <script src="data/quotes.js"></script>
 <script src="data/history.js"></script>
 <!-- 티커 사전(~360KB)은 관심종목 '검색' 입력 때만 쓰이므로 defer 로 빼 초기 렌더를 막지 않는다
@@ -836,6 +860,48 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
         }
       })
       .catch(function () { show("us-gray", "최근 업데이트"); });
+  })();
+
+  // 데이터 신선도 패널 — 매일 갱신 항목과 7일 회전 항목이 실제로 돌고 있는지 보여준다.
+  // 출처는 data/coverage-status.js (refresh-quotes Action 이 coverage.js --emit 으로 매일 생성).
+  // 상태칩이 '오늘 업데이트가 끝났나'를 보여준다면, 이 패널은 '지난 한 주가 다 채워졌나'를 본다.
+  (function () {
+    var el = document.getElementById("freshPanel");
+    var CS = window.COVERAGE_STATUS;
+    if (!el || !CS || !CS.daily || !CS.rotation) return;
+
+    var dailyOk = CS.daily.filter(function (r) { return r.ok; }).length;
+    var rotOk = CS.rotation.filter(function (r) { return r.ok; }).length;
+    // 가장 심각한 상태를 요약 점 색으로 — 매일 항목이 빠지면 그날 세션 실패, 회전만 빠지면 진행 중.
+    var dot = (dailyOk === CS.daily.length && rotOk === CS.rotation.length) ? "us-green"
+            : (dailyOk < CS.daily.length ? "us-amber" : "us-yellow");
+
+    function age(d) {
+      if (d === null || d === undefined) return "기록 없음";
+      return d === 0 ? "오늘" : d + "일 전";
+    }
+    function row(label, n, total, unit, oldest, ok) {
+      return '<div class="fresh-row' + (ok ? "" : " bad") + '">' +
+        '<span class="fr-l">' + esc(label) + "</span>" +
+        '<span class="fr-n">' + n + "/" + total + (unit ? " " + esc(unit) : "") + "</span>" +
+        (oldest === undefined ? "" : '<span class="fr-d">' + esc(age(oldest)) + "</span>") +
+        "</div>";
+    }
+
+    var h = '<summary><span class="us-dot ' + dot + '"></span><span>데이터 신선도 · 매일 ' +
+      dailyOk + "/" + CS.daily.length + " · 회전 " + rotOk + "/" + CS.rotation.length + "</span></summary>";
+    h += '<div class="fresh-body">';
+    h += '<div class="fresh-sec">매일 갱신 (기준일 ' + esc(CS.asOf) + ")</div>";
+    CS.daily.forEach(function (r) { h += row(r.label, r.done, r.total, "", undefined, r.ok); });
+    h += '<div class="fresh-sec">' + CS.cycleDays + "일 회전 — 가장 오래된 항목 기준</div>";
+    CS.rotation.forEach(function (r) { h += row(r.label, r.fresh, r.total, r.unit || "", r.oldestDays, r.ok); });
+    h += '<div class="fresh-note">' + (CS.ok
+      ? "전 항목이 주기 안에 있습니다 — 앱의 모든 데이터가 최근 " + CS.cycleDays + "일 이내에 갱신됐습니다."
+      : "회전 항목은 " + CS.cycleDays + "일에 걸쳐 나눠 갱신됩니다. 숫자가 채워지는 중이면 정상이고, " +
+        "며칠째 그대로면 자동 업데이트가 멈춘 것입니다.") + "</div>";
+    h += "</div>";
+    el.innerHTML = h;
+    el.hidden = false;
   })();
 
   // 시황: 선택된 국가의 시황을 headline 처럼 자연스럽게 이어지는 산문으로 표시(국가 전환 시 갱신).
