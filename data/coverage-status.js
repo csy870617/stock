@@ -77,7 +77,7 @@ window.COVERAGE_STATUS = {
   {
    "key": "aiTarget",
    "label": "AI 적정가 재시도",
-   "fresh": 61,
+   "fresh": 90,
    "total": 110,
    "oldestDays": 11,
    "ok": false
