@@ -10,11 +10,6 @@ window.STOCK_QUOTES = {
    "date": "2026-07-29",
    "changePct": -3.1
   },
-  "138040": {
-   "price": 117600,
-   "date": "2026-07-29",
-   "changePct": -0.4
-  },
   "139130": {
    "price": 15720,
    "date": "2026-07-29",
@@ -24,6 +19,11 @@ window.STOCK_QUOTES = {
    "price": 26250,
    "date": "2026-07-29",
    "changePct": -3.8
+  },
+  "192820": {
+   "price": 184700,
+   "date": "2026-07-29",
+   "changePct": 0.1
   },
   "207940": {
    "price": 1479000,
@@ -39,6 +39,11 @@ window.STOCK_QUOTES = {
    "price": 40050,
    "date": "2026-07-29",
    "changePct": -7.3
+  },
+  "257720": {
+   "price": 34600,
+   "date": "2026-07-29",
+   "changePct": -5.2
   },
   "259960": {
    "price": 244000,
@@ -244,11 +249,6 @@ window.STOCK_QUOTES = {
    "price": 121900,
    "date": "2026-07-29",
    "changePct": 2.6
-  },
-  "021240": {
-   "price": 90600,
-   "date": "2026-07-29",
-   "changePct": -0.7
   },
   "033780": {
    "price": 182600,
