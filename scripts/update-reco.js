@@ -80,9 +80,14 @@ const warnings = [];
 let merged = 0, added = 0, removed = 0;
 
 // ── 상단 필드 ──
-["generatedAt", "marketNote", "marketNoteUS", "marketNoteKR", "marketNoteAsOf", "discovery", "disclaimer", "topPicks"].forEach((k) => {
+["generatedAt", "generatedAtTs", "marketNote", "marketNoteUS", "marketNoteKR", "marketNoteAsOf", "discovery", "disclaimer", "topPicks"].forEach((k) => {
   if (patch[k] !== undefined) D[k] = patch[k];
 });
+// generatedAt 만 패치하고 정확한 시각을 안 준 경우 지금 시각으로 채운다 —
+// 앱의 '기준일 (한국 …)' 병기가 이 타임스탬프로 KST 달력일을 계산한다.
+if (patch.generatedAt !== undefined && patch.generatedAtTs === undefined) {
+  D.generatedAtTs = new Date().toISOString().slice(0, 19) + "Z";
+}
 if (patch.themes !== undefined) D.themes = patch.themes;
 
 // ── 종목 필드 merge (국가+티커[+주제]) ──
@@ -218,7 +223,7 @@ function serialize(D) {
   L.push("//  5. 근거가 약하면 그날은 바꾸지 않는다(변경 0건이 정상). 하루 최대 10교체.");
   L.push("//  6. 판단 전 scripts/performance-report.js 와 scripts/validate-reco.js 실행 — 목표가 소진·성과 부진·'신뢰 출처 0개' 경고 종목이 재평가 우선 대상.");
   L.push("window.STOCK_DATA = {");
-  ["generatedAt", "marketNote", "marketNoteUS", "marketNoteKR", "marketNoteAsOf", "discovery", "disclaimer"].forEach((k) => {
+  ["generatedAt", "generatedAtTs", "marketNote", "marketNoteUS", "marketNoteKR", "marketNoteAsOf", "discovery", "disclaimer"].forEach((k) => {
     if (D[k] !== undefined) L.push("  " + k + ": " + JSON.stringify(D[k]) + ",");
   });
   if (D.topPicks !== undefined) {
@@ -246,7 +251,7 @@ function serialize(D) {
     D[c].forEach((s) => L.push("    " + JSON.stringify(s) + ","));
     L.push("  ],");
   });
-  const known = ["generatedAt", "marketNote", "marketNoteUS", "marketNoteKR", "marketNoteAsOf", "discovery", "disclaimer", "topPicks", "themes", "korea", "us"];
+  const known = ["generatedAt", "generatedAtTs", "marketNote", "marketNoteUS", "marketNoteKR", "marketNoteAsOf", "discovery", "disclaimer", "topPicks", "themes", "korea", "us"];
   Object.keys(D).forEach((k) => {
     if (known.includes(k)) return;
     L.push("  " + k + ": " + JSON.stringify(D[k]) + ",");

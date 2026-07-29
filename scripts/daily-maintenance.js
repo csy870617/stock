@@ -21,9 +21,17 @@ function argVal(name) {
 const TODAY = argVal("date") || new Date().toISOString().slice(0, 10);
 
 // 1) generatedAt 을 오늘로 갱신 (상단 top-level 필드 1개만 치환)
+//    generatedAtTs(정확한 갱신 시각, ISO)도 함께 기록 — 날짜만으로는 한국(KST) 달력일을
+//    알 수 없어(21:00 UTC 실행이면 한국은 이미 다음날) 앱의 '기준일 (한국 …)' 병기가 이를 쓴다.
+const NOW_TS = new Date().toISOString().slice(0, 19) + "Z";
 let src = fs.readFileSync(RECO, "utf8");
 const before = src;
 src = src.replace(/generatedAt:\s*"[^"]*"/, 'generatedAt: "' + TODAY + '"');
+if (/generatedAtTs:\s*"[^"]*"/.test(src)) {
+  src = src.replace(/generatedAtTs:\s*"[^"]*"/, 'generatedAtTs: "' + NOW_TS + '"');
+} else {
+  src = src.replace(/(generatedAt:\s*"[^"]*",)/, '$1\n  generatedAtTs: "' + NOW_TS + '",');
+}
 if (src !== before) fs.writeFileSync(RECO, src);
 
 // 2) 지수(KOSPI ^KS11, S&P500 ^GSPC) 조회 — 실패 시 생략(스냅샷이 기존 지수값 보존)

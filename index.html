@@ -812,7 +812,19 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     });
   })();
 
-  document.getElementById("genDate").textContent = "기준일 " + D.generatedAt;
+  // 기준일은 UTC 달력일 — 한국(KST) 달력일이 다르면 병기한다(예: 21:00 UTC 갱신이면 한국은 다음날).
+  // 정확한 갱신 시각(generatedAtTs)이 있어야만 판정 가능하므로 없으면 병기 생략.
+  function kstDateOf(iso) {
+    var d = new Date(iso); if (isNaN(d.getTime())) return null;
+    var k = new Date(d.getTime() + 9 * 3600000);
+    var p = function (n) { return (n < 10 ? "0" : "") + n; };
+    return k.getUTCFullYear() + "-" + p(k.getUTCMonth() + 1) + "-" + p(k.getUTCDate());
+  }
+  (function () {
+    var kst = D.generatedAtTs ? kstDateOf(D.generatedAtTs) : null;
+    var extra = (kst && kst !== D.generatedAt) ? " (한국 " + kst.slice(5) + ")" : "";
+    document.getElementById("genDate").textContent = "기준일 " + D.generatedAt + extra;
+  })();
 
   // 업데이트 진행 상태 칩 — GitHub 공개 API로 최근 '업데이트 요청' 이슈 상태를 읽어 표시(토큰 불필요).
   // 실패(오프라인·요청 제한)하면 데이터 기준일만 조용히 표시한다.
@@ -828,7 +840,10 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       if (!iso) return "";
       var d = new Date(iso); if (isNaN(d.getTime())) return "";
       var p = function (n) { return (n < 10 ? "0" : "") + n; };
-      return d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) + " " + p(d.getHours()) + ":" + p(d.getMinutes());
+      var local = d.getFullYear() + "-" + p(d.getMonth() + 1) + "-" + p(d.getDate()) + " " + p(d.getHours()) + ":" + p(d.getMinutes());
+      // 보는 사람의 달력일과 한국(KST) 달력일이 다르면 병기 — 같으면 생략.
+      var kst = kstDateOf(iso);
+      return local + (kst && kst !== local.slice(0, 10) ? " (한국 " + kst.slice(5) + ")" : "");
     }
     show("us-gray", "상태 확인 중…");   // 기본(조회 전/실패 시 유지)
     fetch("https://api.github.com/repos/csy870617/stock/issues?state=all&per_page=50&sort=created&direction=desc",
