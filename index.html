@@ -718,7 +718,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
 
   <footer class="site">
     <p id="disclaimer"></p>
-    <p style="margin-top:6px;">매일 오전 2시(LA) 자동 갱신 · 현재가에 '실시간' 표기가 있으면 장중 시세, 없으면 종가</p>
+    <p style="margin-top:6px;">매일 오전 1시(LA) 자동 갱신 · 현재가에 '실시간' 표기가 있으면 장중 시세, 없으면 종가</p>
   </footer>
 </div>
 
@@ -1814,7 +1814,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     var next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 8, 0, 0));
     if (next.getTime() <= now.getTime()) next = new Date(next.getTime() + 86400000);
     var hrs = Math.max(1, Math.round((next.getTime() - now.getTime()) / 3600000));
-    return "매일 오전 2시(LA) 정기 분석에 반영 · 약 " + hrs + "시간 뒤";
+    return "매일 오전 1시(LA) 정기 분석에 반영 · 약 " + hrs + "시간 뒤";
   }
 
   // ── 정밀분석 요청 상태 — GitHub 이슈('관심종목 정밀분석 요청:')를 읽어 티커별 진행상태 표시 ──
@@ -1915,7 +1915,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
         (ta && ta.change ? '<div class="c-hcell c-r"><div class="c-hv ' + chDir + '">' + esc(ta.change) + '</div><div class="c-hk">전일대비</div></div>' : "") +
       "</div>" +
       reqTag +
-      (req ? "" : '<div class="wl-note">실시간 시세만 보여주는 라이트 카드입니다. 단기/장기 기술 대응·목표가·논거 등 분석은 아래 <b>정밀분석 요청</b>으로 신청하면 풀카드로 승격됩니다. <b>요청 시 매일 오전 2시(LA) 정기 분석에 반영</b>됩니다.</div>') +
+      (req ? "" : '<div class="wl-note">실시간 시세만 보여주는 라이트 카드입니다. 단기/장기 기술 대응·목표가·논거 등 분석은 아래 <b>정밀분석 요청</b>으로 신청하면 풀카드로 승격됩니다. <b>요청 시 매일 오전 1시(LA) 정기 분석에 반영</b>됩니다.</div>') +
       '<div class="links"><a href="' + chartUrl + '" target="_blank" rel="noopener">차트 보기</a>' +
       (req ? '<a class="wl-req" href="' + esc(safeUrl(req.url)) + '" target="_blank" rel="noopener">요청 이슈 보기 →</a>'
            : '<a class="wl-req" href="' + reqUrl + '" target="_blank" rel="noopener">정밀분석 요청 →</a>') + "</div>" +
