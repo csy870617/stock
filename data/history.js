@@ -18251,7 +18251,7 @@ window.STOCK_HISTORY = [
  {
   "date": "2026-07-29",
   "kospi": null,
-  "sp500": null,
+  "sp500": 7428.78,
   "stocks": [
    {
     "t": "005930",

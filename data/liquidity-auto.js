@@ -5,18 +5,18 @@ window.LIQUIDITY_AUTO = {
  "asOf": "2026-07-29",
  "note": "Yahoo 시장지표 기반 자동 baseline(금리·일드커브·VIX·HY신용·달러·원달러·코스피). 거시 이벤트·내러티브는 미반영 — 온디맨드 유동성이 보정.",
  "inputs": {
-  "us10y": "4.60",
+  "us10y": "4.64",
   "curve": "0.84",
   "vix": "18.3",
-  "hyg20": "-0.7",
+  "hyg20": "-0.8",
   "dxy": "101.3",
-  "usdkrw": "1450"
+  "usdkrw": "1451"
  },
  "us": {
   "shortTerm": "신중",
   "midTerm": "신중",
   "shortScore": -0.33,
-  "midScore": -0.31,
+  "midScore": -0.14,
   "drivers": [
    "10Y 추세 (−2)",
    "일드커브 (+2)",
@@ -28,7 +28,7 @@ window.LIQUIDITY_AUTO = {
   "shortTerm": "매우 부정",
   "midTerm": "부정",
   "shortScore": -0.18,
-  "midScore": -0.83,
+  "midScore": -0.63,
   "drivers": [
    "⚠ 코스피 급락 floor 발동 (20일 -33%)",
    "원/달러 추세 (+2)",
