@@ -40,11 +40,6 @@ window.STOCK_QUOTES = {
    "date": "2026-07-30",
    "changePct": -6.2
   },
-  "257720": {
-   "price": 33050,
-   "date": "2026-07-30",
-   "changePct": -4.5
-  },
   "259960": {
    "price": 259000,
    "date": "2026-07-30",
@@ -259,6 +254,16 @@ window.STOCK_QUOTES = {
    "price": 86500,
    "date": "2026-07-30",
    "changePct": 2.9
+  },
+  "030000": {
+   "price": 19170,
+   "date": "2026-07-30",
+   "changePct": 2
+  },
+  "051900": {
+   "price": 292000,
+   "date": "2026-07-30",
+   "changePct": 11
   },
   "MSFT": {
    "price": 390.54,
@@ -534,6 +539,11 @@ window.STOCK_QUOTES = {
    "price": 29.31,
    "date": "2026-07-29",
    "changePct": -13.6
+  },
+  "BLK": {
+   "price": 1079.19,
+   "date": "2026-07-29",
+   "changePct": -1.7
   }
  }
 };
