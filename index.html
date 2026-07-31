@@ -180,8 +180,14 @@ a { color: inherit; }
 .past-note { font-size: 0.83rem; line-height: 1.6; color: var(--ink-2); }
 .past-picks { display: flex; flex-wrap: wrap; gap: 6px; }
 .past-pick { font-size: 0.75rem; background: var(--surface); border: 1px solid var(--line); border-radius: 7px; padding: 3px 9px; }
+.past-cseg { margin: 4px 0 12px; }
+.past-theme { margin-bottom: 16px; }
+.past-th { display: flex; align-items: baseline; gap: 8px; margin-bottom: 5px; }
+.past-th-nm { font-size: 0.88rem; font-weight: 750; color: var(--ink); letter-spacing: -0.015em; }
+.past-th-n { font-size: 0.7rem; color: var(--muted); }
+.pv-tier { font-size: 0.7rem; font-weight: 750; }
 .past-tblwrap { overflow-x: auto; margin-top: 4px; }
-.past-tbl { width: 100%; border-collapse: collapse; font-size: 0.79rem; min-width: 460px; }
+.past-tbl { width: 100%; border-collapse: collapse; font-size: 0.79rem; min-width: 400px; }
 .past-tbl th, .past-tbl td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
 .past-tbl th { color: var(--muted); font-weight: 600; font-size: 0.72rem; text-align: right; }
 .past-tbl th:first-child, .past-tbl td:first-child { text-align: left; }
@@ -854,6 +860,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     if (!sel || !panel || !H.length) return;
 
     var wrap = panel.parentNode;
+    var pastCountry = null;   // 과거 패널 전용 국가 선택(메인 state 와 분리)
     // 과거 보기로 전환할 때 숨길 대상 — .wrap 의 형제 중 과거 패널 자신만 남긴다.
     var siblings = [].slice.call(wrap.children).filter(function (el) { return el !== panel; });
 
@@ -873,12 +880,24 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       var h = null;
       for (var i = 0; i < H.length; i++) { if (H[i].date === date) { h = H[i]; break; } }
       if (!h) return;
+      if (!pastCountry) pastCountry = state.country;   // 첫 진입만 메인 선택을 이어받는다
       siblings.forEach(function (el) { el.style.display = "none"; });
       panel.innerHTML = pastHtml(h);
       panel.hidden = false;
       panel.querySelector(".past-back").addEventListener("click", function () {
         sel.value = ""; show("");
         window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+      // 국가 전환 — 메인과 동일하게 한 국가씩 보여준다. 선택은 이 패널 안에서만 유지하고
+      // 메인 state.country 는 건드리지 않는다(과거 보기에서 바꾼 국가가 오늘 화면으로
+      // 새어 나가 국가 버튼과 실제 렌더가 어긋나는 것을 막는다).
+      panel.querySelectorAll(".past-cseg button").forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          var cc = btn.dataset.pc;
+          pastCountry = cc;
+          panel.querySelectorAll(".past-cseg button").forEach(function (b) { b.classList.toggle("on", b === btn); });
+          panel.querySelectorAll(".past-country").forEach(function (secEl) { secEl.hidden = secEl.dataset.c !== cc; });
+        });
       });
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
@@ -904,26 +923,47 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       }
       var picks = h.picks ? (pickRow(h.picks.korea, "🇰🇷") + pickRow(h.picks.us, "🇺🇸")) : "";
 
-      // 편성표 — 국가·주제·tier 순으로 정렬해 그날의 구성을 그대로 재현
-      var rows = h.stocks.slice().sort(function (a, b) {
-        return (a.c || "").localeCompare(b.c || "") || (a.th || "").localeCompare(b.th || "") ||
-               (a.tier || 9) - (b.tier || 9) || (a.n || "").localeCompare(b.n || "");
-      }).map(function (s) {
+      // 편성 — 메인 화면과 같은 구조(국가 → 주제별 섹션 → tier 순)로 나눠 보여준다.
+      // themes 순서를 따르고, themes 에 없는 주제(구 스냅샷)는 뒤에 붙인다.
+      var order = (D.themes || []).map(function (t) { return t.key; });
+      function themeRank(k) { var i = order.indexOf(k); return i < 0 ? 99 : i; }
+
+      function stockRow(s) {
         var up = (s.tp != null && s.p != null && s.p > 0) ? (s.tp / s.p - 1) * 100 : null;
-        var tm = themeMeta(s.th);
         var sig = [s.ss, s.sl].filter(Boolean).join(" · ");
-        // 좁은 화면에서 가로 스크롤 없이도 핵심이 보이도록 상승여력·신호를 가격보다 앞에 둔다.
+        var tmeta = tierMeta(s.tier);
         return "<tr>" +
-          "<td>" + (s.c === "us" ? "🇺🇸 " : "🇰🇷 ") + esc(s.n) +
-            ' <span style="color:var(--muted);font-size:0.72rem">' + esc((tm && tm.label) || s.th || "") + "</span></td>" +
-          "<td>" + (s.tier ? "T" + s.tier : "–") + "</td>" +
+          "<td>" + esc(s.n) +
+            (s.tier ? ' <span class="pv-tier" style="color:' + tmeta.color + '">T' + s.tier + "</span>" : "") + "</td>" +
           '<td class="pv-num" style="color:' + (up == null ? "var(--muted)" : (up >= 0 ? "var(--up)" : "var(--down)")) + '">' +
             fmtPct(up) + "</td>" +
           "<td>" + (sig ? esc(sig) : "–") + "</td>" +
           '<td class="pv-num">' + fmtPrice(s.p, s.c) + "</td>" +
           '<td class="pv-num">' + fmtPrice(s.tp, s.c) + "</td>" +
         "</tr>";
-      }).join("");
+      }
+
+      function countryBlock(cc) {
+        var mine = h.stocks.filter(function (s) { return s.c === cc; });
+        if (!mine.length) return "";
+        var groups = {};
+        mine.forEach(function (s) { (groups[s.th] = groups[s.th] || []).push(s); });
+        var keys = Object.keys(groups).sort(function (a, b) { return themeRank(a) - themeRank(b) || a.localeCompare(b); });
+        var body = keys.map(function (k) {
+          var tm = themeMeta(k);
+          var rows = groups[k].slice().sort(function (a, b) {
+            return (a.tier || 9) - (b.tier || 9) || (a.n || "").localeCompare(b.n || "");
+          }).map(stockRow).join("");
+          return '<div class="past-theme">' +
+              '<div class="past-th"><span class="past-th-nm">' + esc((tm.emoji ? tm.emoji + " " : "") + (tm.label || k)) + "</span>" +
+                '<span class="past-th-n">' + groups[k].length + "종목</span></div>" +
+              '<div class="past-tblwrap"><table class="past-tbl">' +
+                "<thead><tr><th>종목</th><th>상승여력</th><th>신호(단기·장기)</th><th>그날 가격</th><th>목표가</th></tr></thead>" +
+                "<tbody>" + rows + "</tbody></table></div>" +
+            "</div>";
+        }).join("");
+        return '<section class="past-country" data-c="' + cc + '"' + (cc === pastCountry ? "" : " hidden") + ">" + body + "</section>";
+      }
 
       var note = h.note || h.noteKR || h.noteUS;
       return '<div class="past-top"><span class="past-badge">과거 보기</span>' +
@@ -934,9 +974,11 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
         (h.liq && h.liq.headline ? '<div class="past-sec">유동성</div><div class="past-note">' + esc(h.liq.headline) + "</div>" : "") +
         (picks ? '<div class="past-sec">오늘의 Top Pick</div><div class="past-picks">' + picks + "</div>" : "") +
         '<div class="past-sec">편성 ' + h.stocks.length + "종목</div>" +
-        '<div class="past-tblwrap"><table class="past-tbl">' +
-          "<thead><tr><th>종목</th><th>tier</th><th>상승여력</th><th>신호(단기·장기)</th><th>그날 가격</th><th>목표가</th></tr></thead>" +
-          "<tbody>" + rows + "</tbody></table></div>" +
+        '<div class="seg seg-country past-cseg">' +
+          '<button type="button" data-pc="korea"' + (pastCountry === "korea" ? ' class="on"' : "") + ">🇰🇷 한국</button>" +
+          '<button type="button" data-pc="us"' + (pastCountry === "us" ? ' class="on"' : "") + ">🇺🇸 미국</button>" +
+        "</div>" +
+        countryBlock("korea") + countryBlock("us") +
         '<div class="past-miss">스냅샷에는 편성·tier·가격·목표가와 신호 등급, 그날의 시황·유동성·Top Pick 만 보관됩니다. ' +
           '기술 대응·밸류 설명·논거 본문은 용량 문제로 저장하지 않아 과거 날짜에서는 볼 수 없습니다' +
           (note ? "" : ' (요약 분석은 2026-07-31 스냅샷부터 쌓입니다)') + ".</div>";
