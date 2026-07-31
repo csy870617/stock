@@ -187,8 +187,10 @@ a { color: inherit; }
 .past-th-n { font-size: 0.7rem; color: var(--muted); }
 .pv-tier { font-size: 0.7rem; font-weight: 750; }
 .past-tblwrap { overflow-x: auto; margin-top: 4px; }
-.past-tbl { width: 100%; border-collapse: collapse; font-size: 0.79rem; min-width: 400px; }
-.past-tbl th, .past-tbl td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+.past-tbl { width: 100%; border-collapse: collapse; font-size: 0.79rem; min-width: 288px; }
+.past-tbl td:first-child { white-space: normal; }
+.pv-sig { font-size: 0.7rem; color: var(--muted); margin-top: 1px; }
+.past-tbl th, .past-tbl td { padding: 6px 6px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
 .past-tbl th { color: var(--muted); font-weight: 600; font-size: 0.72rem; text-align: right; }
 .past-tbl th:first-child, .past-tbl td:first-child { text-align: left; }
 .past-tbl td.pv-num { font-variant-numeric: tabular-nums; }
@@ -861,6 +863,63 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
 
     var wrap = panel.parentNode;
     var pastCountry = null;   // 과거 패널 전용 국가 선택(메인 state 와 분리)
+
+    // 과거 표의 '현재가' — 오늘 시세를 보여준다(그날 가격과 나란히 두어 이후 흐름을 본다).
+    // 우선순위: 실시간(liveCache, 신선할 때) > quotes.js 스냅샷 > 별도 조회분 > 없음.
+    // 편성에서 빠진 종목은 quotes.js 에 없으므로(예: 07-03 스냅샷 67종목 중 13종목) 아래에서 따로 조회한다.
+    var pastLive = {};        // ticker → price | null(조회했으나 없음)
+    function pastNowPrice(t) {
+      var lv = liveCache[t];
+      if (lv && lv.price != null && liveFresh(lv.date)) return lv.price;
+      var Q = (window.STOCK_QUOTES && window.STOCK_QUOTES.quotes) || null;
+      var q = Q && Q[t];
+      if (q && typeof q.price === "number" && isFinite(q.price)) return q.price;
+      return pastLive[t] != null ? pastLive[t] : null;
+    }
+
+    // 현재 편성(D)에 있는 종목은 정확한 심볼(.KS/.KQ)을 알 수 있다. 편출된 한국 종목은
+    // 시장 구분이 스냅샷에 없어 .KS·.KQ 두 후보를 함께 물어보고 먼저 응답한 쪽을 쓴다.
+    var mktByTicker = {};
+    ["korea", "us"].forEach(function (c) {
+      (D[c] || []).forEach(function (s) { if (s && s.ticker) mktByTicker[s.ticker] = s.market; });
+    });
+    function candidates(t) {
+      if (mktByTicker[t]) return [symbolFor({ ticker: t, market: mktByTicker[t] })];
+      if (/^\d{6}$/.test(t)) return [t + ".KS", t + ".KQ"];
+      return [t === "BRK.B" ? "BRK-B" : t];
+    }
+    // 스냅샷에만 있는 종목의 현재가를 한 번의 배치 요청으로 채운 뒤 표의 해당 칸만 갱신한다.
+    function fillPastPrices(h, onDone) {
+      if (!liveSupported) return;
+      var Q = (window.STOCK_QUOTES && window.STOCK_QUOTES.quotes) || {};
+      var todo = h.stocks.filter(function (s) {
+        return !Q[s.t] && liveCache[s.t] === undefined && pastLive[s.t] === undefined;
+      });
+      if (!todo.length) return;
+      var symbols = [], owner = {};
+      todo.forEach(function (s) {
+        candidates(s.t).forEach(function (sym) { symbols.push(sym); owner[sym] = s.t; });
+      });
+      var url = QUOTES_API + (QUOTES_API.indexOf("?") >= 0 ? "&" : "?") + "symbols=" + encodeURIComponent(symbols.join(","));
+      var ctrl = new AbortController();
+      var to = setTimeout(function () { ctrl.abort(); }, 9000);
+      fetch(url, { signal: ctrl.signal, cache: "no-store" })
+        .then(function (r) { if (!r.ok) throw new Error("http " + r.status); return r.json(); })
+        .then(function (map) {
+          clearTimeout(to);
+          todo.forEach(function (s) { pastLive[s.t] = null; });   // 기본값: 조회했으나 없음
+          symbols.forEach(function (sym) {
+            var v = map && map[sym], t = owner[sym];
+            if (pastLive[t] != null) return;                     // 먼저 응답한 후보 채택
+            if (v && typeof v.price === "number" && isFinite(v.price) && liveFresh(v.date)) pastLive[t] = v.price;
+          });
+          if (onDone) onDone();
+        })
+        .catch(function () {
+          clearTimeout(to);
+          todo.forEach(function (s) { delete pastLive[s.t]; });   // 다음 진입에서 재시도
+        });
+    }
     // 과거 보기로 전환할 때 숨길 대상 — .wrap 의 형제 중 과거 패널 자신만 남긴다.
     var siblings = [].slice.call(wrap.children).filter(function (el) { return el !== panel; });
 
@@ -884,6 +943,15 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       siblings.forEach(function (el) { el.style.display = "none"; });
       panel.innerHTML = pastHtml(h);
       panel.hidden = false;
+      // 편출 종목 현재가는 비동기로 채운다 — 응답이 오면 해당 칸만 바꿔 스크롤을 흔들지 않는다.
+      fillPastPrices(h, function () {
+        h.stocks.forEach(function (s) {
+          var td = panel.querySelector('tr[data-pt="' + s.t.replace(/"/g, '\\"') + '"] .pv-now');
+          if (!td) return;
+          var v = pastNowPrice(s.t);
+          td.textContent = v == null ? "–" : fmtPrice(v, s.c);
+        });
+      });
       panel.querySelector(".past-back").addEventListener("click", function () {
         sel.value = ""; show("");
         window.scrollTo({ top: 0, behavior: "smooth" });
@@ -929,17 +997,17 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       function themeRank(k) { var i = order.indexOf(k); return i < 0 ? 99 : i; }
 
       function stockRow(s) {
-        var up = (s.tp != null && s.p != null && s.p > 0) ? (s.tp / s.p - 1) * 100 : null;
         var sig = [s.ss, s.sl].filter(Boolean).join(" · ");
         var tmeta = tierMeta(s.tier);
-        return "<tr>" +
+        var now = pastNowPrice(s.t);
+        // 신호는 별도 열로 두면 좁은 화면에서 '현재가'가 가로 스크롤 뒤로 밀린다 —
+        // 종목명 아래 보조 줄로 내려 3열(종목·그날 가격·현재가)이 한 화면에 들어오게 한다.
+        return '<tr data-pt="' + esc(s.t) + '">' +
           "<td>" + esc(s.n) +
-            (s.tier ? ' <span class="pv-tier" style="color:' + tmeta.color + '">T' + s.tier + "</span>" : "") + "</td>" +
-          '<td class="pv-num" style="color:' + (up == null ? "var(--muted)" : (up >= 0 ? "var(--up)" : "var(--down)")) + '">' +
-            fmtPct(up) + "</td>" +
-          "<td>" + (sig ? esc(sig) : "–") + "</td>" +
+            (s.tier ? ' <span class="pv-tier" style="color:' + tmeta.color + '">T' + s.tier + "</span>" : "") +
+            (sig ? '<div class="pv-sig">' + esc(sig) + "</div>" : "") + "</td>" +
           '<td class="pv-num">' + fmtPrice(s.p, s.c) + "</td>" +
-          '<td class="pv-num">' + fmtPrice(s.tp, s.c) + "</td>" +
+          '<td class="pv-num pv-now">' + (now == null ? "–" : fmtPrice(now, s.c)) + "</td>" +
         "</tr>";
       }
 
@@ -958,7 +1026,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
               '<div class="past-th"><span class="past-th-nm">' + esc((tm.emoji ? tm.emoji + " " : "") + (tm.label || k)) + "</span>" +
                 '<span class="past-th-n">' + groups[k].length + "종목</span></div>" +
               '<div class="past-tblwrap"><table class="past-tbl">' +
-                "<thead><tr><th>종목</th><th>상승여력</th><th>신호(단기·장기)</th><th>그날 가격</th><th>목표가</th></tr></thead>" +
+                "<thead><tr><th>종목 <span style=\"font-weight:400\">· 신호(단기·장기)</span></th><th>그날 가격</th><th>현재가</th></tr></thead>" +
                 "<tbody>" + rows + "</tbody></table></div>" +
             "</div>";
         }).join("");
