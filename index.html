@@ -190,6 +190,7 @@ a { color: inherit; }
 .past-tbl { width: 100%; border-collapse: collapse; font-size: 0.79rem; min-width: 288px; }
 .past-tbl td:first-child { white-space: normal; }
 .pv-sig { font-size: 0.7rem; color: var(--muted); margin-top: 1px; }
+.pv-chg { font-size: 0.71rem; font-weight: 700; margin-top: 1px; }
 .past-tbl th, .past-tbl td { padding: 6px 6px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
 .past-tbl th { color: var(--muted); font-weight: 600; font-size: 0.72rem; text-align: right; }
 .past-tbl th:first-child, .past-tbl td:first-child { text-align: left; }
@@ -868,6 +869,19 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     // 우선순위: 실시간(liveCache, 신선할 때) > quotes.js 스냅샷 > 별도 조회분 > 없음.
     // 편성에서 빠진 종목은 quotes.js 에 없으므로(예: 07-03 스냅샷 67종목 중 13종목) 아래에서 따로 조회한다.
     var pastLive = {};        // ticker → price | null(조회했으나 없음)
+    // 현재가 칸 — 가격 + 그날 대비 등락률. 등락률은 별도 열로 두면 좁은 화면에서 표가
+    // 밀리므로 가격 아래 보조 줄로 붙인다. 색은 앱 전역의 --up/--down 을 그대로 쓴다.
+    function nowCell(s, now) {
+      if (now == null) return "–";
+      var html = fmtPrice(now, s.c);
+      if (s.p != null && s.p > 0) {
+        var d = (now - s.p) / s.p * 100;
+        html += '<div class="pv-chg" title="그날 가격 대비 등락률" style="color:' +
+          (d >= 0 ? "var(--up)" : "var(--down)") + '">' + esc(fmtPct(d)) + "</div>";
+      }
+      return html;
+    }
+
     function pastNowPrice(t) {
       var lv = liveCache[t];
       if (lv && lv.price != null && liveFresh(lv.date)) return lv.price;
@@ -949,7 +963,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
           var td = panel.querySelector('tr[data-pt="' + s.t.replace(/"/g, '\\"') + '"] .pv-now');
           if (!td) return;
           var v = pastNowPrice(s.t);
-          td.textContent = v == null ? "–" : fmtPrice(v, s.c);
+          td.innerHTML = nowCell(s, v);
         });
       });
       panel.querySelector(".past-back").addEventListener("click", function () {
@@ -1007,7 +1021,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
             (s.tier ? ' <span class="pv-tier" style="color:' + tmeta.color + '">T' + s.tier + "</span>" : "") +
             (sig ? '<div class="pv-sig">' + esc(sig) + "</div>" : "") + "</td>" +
           '<td class="pv-num">' + fmtPrice(s.p, s.c) + "</td>" +
-          '<td class="pv-num pv-now">' + (now == null ? "–" : fmtPrice(now, s.c)) + "</td>" +
+          '<td class="pv-num pv-now">' + nowCell(s, now) + "</td>" +
         "</tr>";
       }
 
