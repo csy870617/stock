@@ -157,6 +157,36 @@ a { color: inherit; }
 .market-note .mn-p:last-child { margin-bottom: 0; }
 .upd-status { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; font-size: 0.76rem; color: var(--muted); margin: 2px 0 16px; }
 .upd-status a { color: var(--ink-2); }
+/* 기준일 선택 — 헤더 드롭다운. 과거 날짜를 고르면 아래 .past 패널이 그날 스냅샷을 읽기 전용으로 보여준다. */
+.brand { white-space: nowrap; }
+.asof-sel {
+  font: inherit; font-size: 0.74rem; color: var(--ink-2); background: var(--surface-2);
+  border: 1px solid var(--line); border-radius: 7px; padding: 3px 6px; max-width: 148px; cursor: pointer;
+}
+.past { border: 1px solid var(--line); border-radius: 12px; background: var(--inset); padding: 14px 15px; margin: 2px 0 18px; }
+.past-top { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+.past-badge {
+  font-size: 0.68rem; font-weight: 700; letter-spacing: 0.03em; color: #fff;
+  background: var(--tier3); padding: 3px 9px; border-radius: 999px;
+}
+.past-d { font-size: 1.02rem; font-weight: 750; color: var(--ink); letter-spacing: -0.015em; }
+.past-back {
+  margin-left: auto; font-size: 0.74rem; font-weight: 650; color: var(--accent);
+  background: none; border: 1px solid var(--accent); border-radius: 7px; padding: 4px 11px; cursor: pointer;
+}
+.past-idx { font-size: 0.76rem; color: var(--muted); margin-bottom: 10px; }
+.past-idx b { color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.past-sec { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.03em; color: var(--ink-2); margin: 12px 0 6px; }
+.past-note { font-size: 0.83rem; line-height: 1.6; color: var(--ink-2); }
+.past-picks { display: flex; flex-wrap: wrap; gap: 6px; }
+.past-pick { font-size: 0.75rem; background: var(--surface); border: 1px solid var(--line); border-radius: 7px; padding: 3px 9px; }
+.past-tblwrap { overflow-x: auto; margin-top: 4px; }
+.past-tbl { width: 100%; border-collapse: collapse; font-size: 0.79rem; min-width: 460px; }
+.past-tbl th, .past-tbl td { padding: 6px 8px; border-bottom: 1px solid var(--line); text-align: right; white-space: nowrap; }
+.past-tbl th { color: var(--muted); font-weight: 600; font-size: 0.72rem; text-align: right; }
+.past-tbl th:first-child, .past-tbl td:first-child { text-align: left; }
+.past-tbl td.pv-num { font-variant-numeric: tabular-nums; }
+.past-miss { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); font-size: 0.72rem; color: var(--muted); line-height: 1.5; }
 /* 데이터 신선도 패널 — coverage.js --emit 이 매일 만드는 data/coverage-status.js 를 읽어
    '매일 갱신 항목'과 '7일 회전 항목'이 실제로 돌고 있는지 접이식으로 보여준다. */
 .fresh { margin: -8px 0 16px; font-size: 0.76rem; color: var(--muted); }
@@ -639,6 +669,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     <div class="brand">주식 추천</div>
     <div class="top-actions">
       <span class="gen-date" id="genDate"></span>
+      <select class="asof-sel" id="asofSel" title="기준일 선택 — 과거 편성 보기" hidden></select>
       <button class="icon-btn" id="themeBtn" type="button" title="라이트·다크 전환" aria-label="테마 전환">🌓</button>
       <a class="sim-link" href="https://csy870617.github.io/TradingSimulator/" target="_blank" rel="noopener" title="트레이딩 시뮬레이터 열기">
         <img src="icon2.png" alt="트레이딩 시뮬레이터">
@@ -648,6 +679,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
 </header>
 
 <div class="wrap">
+  <section class="past" id="pastView" hidden></section>
   <div class="upd-status" id="updStatus" hidden></div>
   <details class="fresh" id="freshPanel" hidden></details>
 
@@ -812,6 +844,107 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     });
   })();
 
+  // ── 기준일 선택 — 과거 스냅샷(history.js) 읽기 전용 보기 ──────────────────────────
+  // 히스토리에는 그날의 편성·tier·가격·목표가·신호등급과 문서 단위 요약(시황·유동성·Top Pick)만
+  // 있다. 분석 문구(techNote·valueNote·thesis 본문)는 용량 때문에 저장하지 않으므로,
+  // 과거 보기는 '그날의 편성표'를 보여주고 무엇이 보관되지 않는지 명시한다.
+  (function () {
+    var sel = document.getElementById("asofSel");
+    var panel = document.getElementById("pastView");
+    if (!sel || !panel || !H.length) return;
+
+    var wrap = panel.parentNode;
+    // 과거 보기로 전환할 때 숨길 대상 — .wrap 의 형제 중 과거 패널 자신만 남긴다.
+    var siblings = [].slice.call(wrap.children).filter(function (el) { return el !== panel; });
+
+    var opts = H.slice().reverse();   // 최신 → 과거
+    // 셀렉트가 기준일 표시를 겸한다 — 첫 항목이 현재(라이브) 기준일이라 헤더에 날짜를 중복 표기하지 않는다.
+    sel.innerHTML = '<option value="">' + esc(D.generatedAt) + " (오늘)</option>" +
+      opts.map(function (h) { return '<option value="' + esc(h.date) + '">' + esc(h.date) + "</option>"; }).join("");
+    sel.hidden = false;
+    document.body.classList.add("has-asof");
+
+    function show(date) {
+      if (!date) {                       // 오늘(라이브)로 복귀
+        panel.hidden = true;
+        siblings.forEach(function (el) { el.style.display = ""; });
+        return;
+      }
+      var h = null;
+      for (var i = 0; i < H.length; i++) { if (H[i].date === date) { h = H[i]; break; } }
+      if (!h) return;
+      siblings.forEach(function (el) { el.style.display = "none"; });
+      panel.innerHTML = pastHtml(h);
+      panel.hidden = false;
+      panel.querySelector(".past-back").addEventListener("click", function () {
+        sel.value = ""; show("");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+
+    function pastHtml(h) {
+      var kst = null;   // 스냅샷 날짜는 UTC 달력일 — 여기선 원본 그대로 보여준다(시각 정보 없음)
+      var idx = [];
+      if (h.kospi != null) idx.push("코스피 <b>" + Number(h.kospi).toLocaleString("ko-KR") + "</b>");
+      if (h.sp500 != null) idx.push("S&P500 <b>" + Number(h.sp500).toLocaleString("en-US") + "</b>");
+      if (h.liq && (h.liq.us || h.liq.korea)) {
+        idx.push("유동성 " + (h.liq.korea ? "🇰🇷 <b>" + esc(h.liq.korea) + "</b> " : "") +
+                 (h.liq.us ? "🇺🇸 <b>" + esc(h.liq.us) + "</b>" : ""));
+      }
+
+      var byT = {};
+      h.stocks.forEach(function (s) { byT[s.t] = s; });
+      function pickRow(list, flag) {
+        if (!list || !list.length) return "";
+        return list.map(function (t) {
+          var s = byT[t];
+          return '<span class="past-pick">' + flag + " " + esc(s ? s.n : t) + "</span>";
+        }).join("");
+      }
+      var picks = h.picks ? (pickRow(h.picks.korea, "🇰🇷") + pickRow(h.picks.us, "🇺🇸")) : "";
+
+      // 편성표 — 국가·주제·tier 순으로 정렬해 그날의 구성을 그대로 재현
+      var rows = h.stocks.slice().sort(function (a, b) {
+        return (a.c || "").localeCompare(b.c || "") || (a.th || "").localeCompare(b.th || "") ||
+               (a.tier || 9) - (b.tier || 9) || (a.n || "").localeCompare(b.n || "");
+      }).map(function (s) {
+        var up = (s.tp != null && s.p != null && s.p > 0) ? (s.tp / s.p - 1) * 100 : null;
+        var tm = themeMeta(s.th);
+        var sig = [s.ss, s.sl].filter(Boolean).join(" · ");
+        // 좁은 화면에서 가로 스크롤 없이도 핵심이 보이도록 상승여력·신호를 가격보다 앞에 둔다.
+        return "<tr>" +
+          "<td>" + (s.c === "us" ? "🇺🇸 " : "🇰🇷 ") + esc(s.n) +
+            ' <span style="color:var(--muted);font-size:0.72rem">' + esc((tm && tm.label) || s.th || "") + "</span></td>" +
+          "<td>" + (s.tier ? "T" + s.tier : "–") + "</td>" +
+          '<td class="pv-num" style="color:' + (up == null ? "var(--muted)" : (up >= 0 ? "var(--up)" : "var(--down)")) + '">' +
+            fmtPct(up) + "</td>" +
+          "<td>" + (sig ? esc(sig) : "–") + "</td>" +
+          '<td class="pv-num">' + fmtPrice(s.p, s.c) + "</td>" +
+          '<td class="pv-num">' + fmtPrice(s.tp, s.c) + "</td>" +
+        "</tr>";
+      }).join("");
+
+      var note = h.note || h.noteKR || h.noteUS;
+      return '<div class="past-top"><span class="past-badge">과거 보기</span>' +
+          '<span class="past-d">' + esc(h.date) + " 기준</span>" +
+          '<button class="past-back" type="button">오늘로 돌아가기</button></div>' +
+        (idx.length ? '<div class="past-idx">' + idx.join(" · ") + "</div>" : "") +
+        (note ? '<div class="past-sec">그날의 시황</div><div class="past-note">' + esc(note) + "</div>" : "") +
+        (h.liq && h.liq.headline ? '<div class="past-sec">유동성</div><div class="past-note">' + esc(h.liq.headline) + "</div>" : "") +
+        (picks ? '<div class="past-sec">오늘의 Top Pick</div><div class="past-picks">' + picks + "</div>" : "") +
+        '<div class="past-sec">편성 ' + h.stocks.length + "종목</div>" +
+        '<div class="past-tblwrap"><table class="past-tbl">' +
+          "<thead><tr><th>종목</th><th>tier</th><th>상승여력</th><th>신호(단기·장기)</th><th>그날 가격</th><th>목표가</th></tr></thead>" +
+          "<tbody>" + rows + "</tbody></table></div>" +
+        '<div class="past-miss">스냅샷에는 편성·tier·가격·목표가와 신호 등급, 그날의 시황·유동성·Top Pick 만 보관됩니다. ' +
+          '기술 대응·밸류 설명·논거 본문은 용량 문제로 저장하지 않아 과거 날짜에서는 볼 수 없습니다' +
+          (note ? "" : ' (요약 분석은 2026-07-31 스냅샷부터 쌓입니다)') + ".</div>";
+    }
+
+    sel.addEventListener("change", function () { show(sel.value); });
+  })();
+
   // 기준일은 UTC 달력일 — 한국(KST) 달력일이 다르면 병기한다(예: 21:00 UTC 갱신이면 한국은 다음날).
   // 정확한 갱신 시각(generatedAtTs)이 있어야만 판정 가능하므로 없으면 병기 생략.
   function kstDateOf(iso) {
@@ -823,7 +956,9 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   (function () {
     var kst = D.generatedAtTs ? kstDateOf(D.generatedAtTs) : null;
     var extra = (kst && kst !== D.generatedAt) ? " (한국 " + kst.slice(5) + ")" : "";
-    document.getElementById("genDate").textContent = "기준일 " + D.generatedAt + extra;
+    // 기준일 셀렉트가 있으면 날짜는 거기서 보이므로 헤더엔 한국 날짜 차이만 남긴다(중복·줄바꿈 방지).
+    document.getElementById("genDate").textContent =
+      document.body.classList.contains("has-asof") ? extra.trim() : ("기준일 " + D.generatedAt + extra);
   })();
 
   // 업데이트 진행 상태 칩 — GitHub 공개 API로 최근 '업데이트 요청' 이슈 상태를 읽어 표시(토큰 불필요).

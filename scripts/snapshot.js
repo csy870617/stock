@@ -56,15 +56,37 @@ const seen = {};
     const key = c + ":" + s.ticker;
     if (!seen[key] || s.tier < seen[key].tier) {
       seen[key] = { t: s.ticker, n: s.name, c, th: s.theme, tier: s.tier,
-                    p: priceOf(s), pd: priceDateOf(s), tp: s.targetPrice };
+                    p: priceOf(s), pd: priceDateOf(s), tp: s.targetPrice,
+                    // 그날의 단기·장기 신호 등급 — 앱의 '기준일 선택'이 과거 편성을 보여줄 때 쓴다.
+                    // 문구(techNote.short/long)는 용량이 커 저장하지 않고 등급만 남긴다.
+                    ss: (s.techNote && s.techNote.sigShort) || null,
+                    sl: (s.techNote && s.techNote.sigLong) || null };
     }
   });
 });
+
+// 그날의 요약 분석 — 앱 '기준일 선택'이 과거를 되짚을 때 최소한의 맥락을 준다.
+// 분석 문구 전량(techNote·valueNote·thesis)은 하루 15KB+ 라 저장하지 않는다(파일 비대화).
+// 여기 담는 것은 문서 단위 소량 필드뿐이다(하루 약 1KB).
+let LQ = null;
+try {
+  global.window = {};
+  require(path.join(ROOT, "data/liquidity.js"));
+  LQ = global.window.LIQUIDITY_DATA || null;
+} catch (_e) { LQ = null; }
+
+const pickTickers = (arr) => (Array.isArray(arr) ? arr.map((x) => x.ticker).filter(Boolean) : []);
 
 const snap = {
   date: D.generatedAt,
   kospi: arg("kospi"),
   sp500: arg("sp500"),
+  note: D.marketNote || null,
+  noteUS: D.marketNoteUS || null,
+  noteKR: D.marketNoteKR || null,
+  liq: LQ ? { us: (LQ.us && LQ.us.shortTerm) || null, korea: (LQ.korea && LQ.korea.shortTerm) || null,
+             headline: LQ.headline || null } : null,
+  picks: D.topPicks ? { korea: pickTickers(D.topPicks.korea), us: pickTickers(D.topPicks.us) } : null,
   stocks: Object.values(seen)
 };
 
@@ -102,7 +124,8 @@ if (history.length) {
 }
 
 const out = "// 일별 추천 스냅샷 히스토리 — scripts/snapshot.js 가 자동 생성/추가\n" +
-  "// 각 항목: {date, kospi, sp500, stocks:[{t 티커, n 이름, c 국가, th 주제, tier, p 가격, pd 가격기준일, tp 목표가}]}\n" +
+  "// 각 항목: {date, kospi, sp500, note·noteUS·noteKR 시황, liq 유동성{us,korea,headline}, picks Top Pick{korea[],us[]},\n" +
+  "//           stocks:[{t 티커, n 이름, c 국가, th 주제, tier, p 가격, pd 가격기준일, tp 목표가, ss 단기신호, sl 장기신호}]}\n" +
   "window.STOCK_HISTORY = " + JSON.stringify(history, null, 1) + ";\n";
 fs.writeFileSync(HIST, out);
 console.log("스냅샷 저장: " + snap.date + " (" + snap.stocks.length + "종목, KOSPI " +
