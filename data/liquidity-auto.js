@@ -5,36 +5,36 @@ window.LIQUIDITY_AUTO = {
  "asOf": "2026-07-31",
  "note": "Yahoo 시장지표 기반 자동 baseline(금리·일드커브·VIX·HY신용·달러·원달러·코스피). 거시 이벤트·내러티브는 미반영 — 온디맨드 유동성이 보정.",
  "inputs": {
-  "us10y": "4.66",
-  "curve": "0.99",
-  "vix": "16.7",
-  "hyg20": "-0.2",
-  "dxy": "100.1",
-  "usdkrw": "1431"
+  "us10y": "4.74",
+  "curve": "1.06",
+  "vix": "16.0",
+  "hyg20": "-0.3",
+  "dxy": "99.8",
+  "usdkrw": "1442"
  },
  "us": {
   "shortTerm": "신중",
   "midTerm": "신중",
-  "shortScore": -0.08,
-  "midScore": 0.06,
+  "shortScore": 0.29,
+  "midScore": -0.29,
   "drivers": [
    "10Y 추세 (−2)",
    "일드커브 (+2)",
-   "VIX 16.7 (·0)",
-   "HY 신용(20d) (·0)"
+   "VIX 16.0 (+1)",
+   "달러 추세 (+1)"
   ]
  },
  "korea": {
-  "shortTerm": "부정",
+  "shortTerm": "매우 부정",
   "midTerm": "부정",
-  "shortScore": 0,
-  "midScore": -0.43,
+  "shortScore": 0.34,
+  "midScore": -0.5,
   "drivers": [
-   "⚠ 코스피 급락 floor 발동 (20일 -14%)",
+   "⚠ 코스피 급락 floor 발동 (20일 -33%)",
    "원/달러 추세 (+2)",
    "코스피 모멘텀(20d) (−2)",
-   "글로벌 변동성 VIX (·0)",
-   "글로벌 신용(20d) (·0)"
+   "글로벌 변동성 VIX (+1)",
+   "달러 추세 (+1)"
   ]
  }
 };
