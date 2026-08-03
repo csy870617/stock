@@ -2,54 +2,49 @@
 // 갱신 방법: README.md 참고 (스킬 재실행 → 이 파일 갱신 → git push)
 // 게이지 단계: "매우 우호" / "우호" / "신중" / "부정" / "매우 부정"
 window.LIQUIDITY_DATA = {
-  asOf: "2026-08-02",
-  headline: "한국은 07/31 코스피가 +17.91%(6,595.45) 역대 최대 폭으로 반등하며 외국인이 역대 최대 규모(약 7.5조원, 기존 집계 5.7조원에서 상향 정정)를 순매수해 저점 통과 신호가 강화됐으나, 7월 CPI가 3.2%로 가속해 8/27 금통위 추가 인상 관측이 짙어져 단기 '부정'·중기 '신중'을 유지합니다. 미국은 FOMC 매파적 동결과 이란-호르무즈 갈등發 브렌트유 $100 돌파로 9월 추가 인상 확률이 82%까지 치솟았으나, 빅테크 실적 호조·안정적 신용스프레드(약 280bp)·사실상 종료된 QT가 상쇄해 '신중'을 유지합니다(2026-08-02, 일요일 휴장 — 07/31 마감 데이터 기준 재확인).",
-  headlineUS: "미국 증시는 FOMC 매파적 동결(3.50~3.75%, 3인 인상 소수의견) 이후 마이크로소프트·아마존의 어닝 서프라이즈에 힘입어 7/31 3대 지수가 동반 상승 마감(다우 52,485.03·S&P 7,489.72·나스닥 25,373.85)했으나, 이란-호르무즈 해협 전운으로 브렌트유가 $100를 돌파하며 9월 추가 금리인상 확률이 CME FedWatch 기준 82%까지 치솟아 인플레이션 재점화 우려가 유동성 환경의 핵심 리스크로 부상했습니다. 연준 대차대조표는 QT 사실상 종료(6.75조 달러 동결)·M2는 완만한 증가로 유동성 위축 압력은 진정됐고 하이일드 스프레드(약 280bp)도 안정적이라 신용시장 경보는 없지만, 주말 사이 트럼프 대통령이 호르무즈 해협 추가 군사조치를 시사해 월요일 개장 전까지 지정학 리스크가 남아 있어 게이지는 '신중'을 유지합니다.",
-  headlineKR: "코스피가 07/31 외국인 역대 최대 순매수(약 7.5조원)와 최태원 SK그룹 회장·노태문 삼성전자 사장 등 경영진의 책임매수에 힘입어 +17.91%(6,595.45) 역대 최대 폭으로 반등, 단기 저점 통과 신호를 재확인했습니다. 다만 7월 CPI가 3.2%로 가속(전월 3.1%)하며 8/27 금통위 추가 인상 관측이 짙어졌고 34조원 규모 레버리지 미청산 물량이 남아 있어 단기는 '부정', 중기는 '신중'을 유지합니다. 원/달러는 1,424.0원대로 안정됐고 7/31부터 단일종목 레버리지 ETF 규제가 조기 시행돼 변동성 재발 위험을 일부 억제하고 있습니다.",
+  asOf: "2026-08-03",
+  headline: "한국은 08/03 코스피가 -5.12%(6,257.45)로 전일 역대급 폭등(+17.91%)의 되돌림 성격 조정을 보였으나 외국인 순매도(약 1.1조원)는 크지 않고 코스닥은 +2.44% 반등해 순환매 양상이라 단기 '부정'을 유지합니다(8/27 금통위 추가 인상 우려는 지속). 미국은 월요일 프리마켓에서 트럼프 대통령의 '이란과 생산적 대화' 발언에 유가가 브렌트 $113대에서 $100 아래로 급락하며 선물이 강세를 보였으나 이란 정부가 협상을 부인해 지정학 리스크는 미해소 상태로, 9월 인상 확률(82%)도 그대로라 '신중'을 유지합니다.",
+  headlineUS: "미국 증시는 월요일(8/3) 개장을 앞두고 트럼프 대통령의 '이란과 생산적 대화 중' 발언에 유가가 브렌트 장중 $113대 고점에서 $100 아래로 급락하며 선물이 강세(다우선물 기준 +1.3%대)를 보였으나, 이란 정부가 협상 사실을 부인하면서 호르무즈 해협 리스크는 완전히 해소되지 않았습니다. CME FedWatch 9월 금리인상 확률은 81~82%로 baseline과 일치하며 고착 상태이고, 10년물 국채금리 4.70~4.75%·VIX 약 16·하이일드 스프레드 284bp로 baseline 지표와 대체로 부합합니다. 이번 주 팔란티어(8/3 장마감 후)·AMD(8/4) 실적과 8/7 고용보고서(NFP)가 변동성 분기점이 될 전망이라 '신중'을 유지합니다.",
+  headlineKR: "코스피가 08/03 전일 역대 최대 폭등(+17.91%, 6,595.45)의 차익실현 물량으로 -5.12%(-338.00p, 6,257.45) 조정받았고 반도체 대장주(삼성전자·SK하이닉스 각각 -8%대)가 급락을 주도했습니다. 다만 외국인 순매도는 약 1.1조원으로 전일 외국인 역대급 순매수(7.5조원) 대비 되돌림 폭이 크지 않고, 코스닥은 개인·기관 매수 유입으로 +2.44% 반등해 순환매 성격이 강해 신규 위기 신호로 보기는 이릅니다. 원/달러 환율은 1,429.8~1,432원(전일 대비 +5.8원)으로 소폭 약세이며, 한은 8/27 금통위는 예상 상회 성장률과 7월 CPI 가속(3.2%)으로 추가 인상 가능성이 부각돼 단기 '부정', 중기 '신중'을 유지합니다.",
   us: {
     shortTerm: "신중",
     midTerm: "신중",
     drivers: [
-      "FOMC(7/28~29) 정책금리 3.50~3.75% 동결(9-3 표결) 유지, 다음 회의 9/15~16 — CME FedWatch 9월 인상 확률 82%로 급등(1주 전 53%대). 매파적 소수의견보다 이란-호르무즈 갈등發 브렌트유 $100 돌파가 더 근본적인 원인으로 확인됨.",
-      "연준 대차대조표 $6.75조(7/22 기준)로 QT가 2025-12-1부로 사실상 종료돼 2026년 잔고 동결 상태, M2 $23.2조(6월)로 완만한 증가 — 유동성 위축 압력은 진정.",
-      "하이일드 신용스프레드(OAS) 약 280~285bp로 10년 평균(~450bp) 대비 크게 낮은 역사적 하위권 — 신용시장 스트레스 신호 없음(다만 역사적 저점권 컴플레이시는 유의).",
-      "10년물 국채금리 4.74%(FOMC 후 고점권 유지), 2s10s 스프레드 +35~46bp로 정상(비역전) 유지 — 경기침체 신호는 아님.",
-      "07/31 다우 +0.53%(52,485.03)·S&P +0.7%(7,489.72)·나스닥 +1%(25,373.85) 동반 상승 마감(주간 S&P +1%), 마이크로소프트(+8%)·아마존(+8~10%)이 주도한 반면 메타(EPS 미스 -10%대)·애플(중국 매출 부진 -4%)은 약세 — 빅테크 내 온도차 뚜렷.",
-      "주말(8/1~2) 이란-미국 갈등 격화 — 트럼프 대통령이 8/1 호르무즈 해협 추가 군사조치 가능성을 시사해 월요일 개장 전까지 지정학 리스크 잔존. 금주 팔란티어(8/3)·AMD(8/4) 실적과 8월 고용보고서(NFP, 8/7) 예정.",
-      "[baseline 대비] liquidity-auto(스크립트)와 유사하게 '신중'으로 수렴 — 이란發 오일쇼크·9월 인상 확률 급등은 하방 요인이나 QT 사실상 종료·안정적 신용스프레드·빅테크 실적발 위험선호 회복이 상쇄해 상향 조정하지 않았다."
+      "월요일(8/3) 프리마켓 — 트럼프 대통령의 '이란과 생산적 대화 중' 발언에 브렌트유가 장중 $113대 고점에서 $100 아래로 급락, 선물시장이 강세(다우선물 기준 +1.3%대)로 반응했으나 이란 정부는 협상 사실을 부인해 헤드라인 리스크가 완전히 해소되지 않음.",
+      "CME FedWatch 9월 금리인상 확률 81~82%로 baseline(어제 82%)과 일치·고착 — 유가발 인플레 우려가 매파 기대를 계속 지지.",
+      "10년물 국채금리 4.70~4.75%로 고점권 유지, VIX는 7/29 한때 20.66까지 튄 뒤 8/3 기준 약 16(일중 15.8~18.7)으로 baseline(16.0)과 부합하게 재하락.",
+      "하이일드 신용스프레드(OAS) 284bp(7/30 기준, baseline 약 280bp와 부합) — 금리 상승·에너지 비중 영향으로 소폭 확대됐을 뿐 신용 펀더멘털 자체는 안정적.",
+      "이번 주 실적 변동성 촉매: 팔란티어(8/3 장마감 후, 컨센서스 매출 $18.12억·EPS $0.34) · AMD(8/4, EPS $1.34e·매출 $112억e +46%YoY) — 두 종목 모두 고밸류 부담 속 서프라이즈 여부가 관건.",
+      "8/7 7월 고용보고서(NFP) 컨센서스 +9.1만 명, 실업률 4.2%→4.3% 예상 — 10만 미만 시 9월 금리인하 기대 재부상, 15만 초과 시 금리 재상승 압력으로 유동성 국면의 분기점이 될 전망.",
+      "[baseline 대비] liquidity-auto(스크립트)와 동일하게 '신중'으로 수렴 — 이란 리스크 미해소·9월 인상 확률 고착은 하방 요인이나 유가 급락·안정적 신용스프레드가 상쇄해 상향 조정하지 않음."
     ]
   },
   korea: {
     shortTerm: "부정",
     midTerm: "신중",
     drivers: [
-      "코스피가 07/28(-10.84%)·07/29(-5.98%)·07/30(-1.23%, 5,593.56) 3거래일 연속 하락 후, 07/31 +17.91%(1,001.89p↑)로 역대 최대 상승률·상승폭을 기록하며 6,595.45로 마감. 코스닥도 +11.63%(719.76) 동반 급등.",
-      "외국인이 유가증권시장에서 약 7.5조원(역대 최대, 기존 집계 5.7조원에서 상향 정정) 순매수, SK하이닉스 한 종목에 5조원 이상 집중 — 저점 통과 신호 강화. 개인은 약 5.2조원 순매도(차익실현).",
-      "최태원 SK그룹 회장이 7/30 SK하이닉스 보통주 3,620주(약 47.9억원), 노태문 삼성전자 사장도 자사주 3,045주(약 7억원) 매입 — 다음날 SK하이닉스 +29.95%(상한가)·삼성전자 +26.81% 사상 최대 상승률 기록에 일부 기여한 경영진 책임매수 신호.",
-      "7월 CPI +3.2%(전월 3.1%에서 가속)로 한은 8/27 금통위 25bp 추가 인상 관측(씨티 등) 강화 — 긴축 기조 유지 리스크.",
-      "원/달러 환율 1,424.0원(07/31, -13.4원, 5개월래 최저권 근접) — 환율 리스크는 완화 지속. 단일종목 레버리지 ETF 규제가 당초 8/5·8/19 예정에서 7/31로 조기 시행(기본예탁금 1,000만→3,000만원, 현금 전액)돼 34조원 규모 마진론 미청산 잔재의 추가 청산발 변동성을 억제하려는 조치.",
-      "다만 7월 전체 코스피는 -22.19%로 1997년 이후 최악의 월간 성적 — 하루 반등만으로 추세 전환을 단정하기엔 변동성이 여전히 극심하다.",
-      "[baseline 대비] 신규 거래일 없음(일요일 휴장) — 07/31 데이터 정합성 재확인(외국인 순매수 5.7조→7.5조원, 환율 1,428~1,430원→1,424.0원 상향 정정) 외 등급 변경 없음, 단기 '부정'·중기 '신중' 유지."
+      "코스피 08/03 -5.12%(-338.00p, 6,595.45→6,257.45) — 전일 역대 최대 폭등(+17.91%) 이후 차익실현 물량 출회, 신규 위기 신호는 아닌 것으로 판단.",
+      "코스닥 +2.44%(+17.59p, 737.35) — 개인·기관 매수 유입으로 코스피와 디커플링, 순환매성 자금 이동 시사.",
+      "외국인 코스피 순매도 약 1조1229억원·기관 순매도 약 3929억원, 개인 순매수 약 1조5685억원 — 전일 외국인 역대급 순매수(7.5조원) 대비 되돌림 폭은 제한적.",
+      "삼성전자·SK하이닉스 각각 -8%대(삼성전자 장중 245,500원까지) — 반도체 '고점론' 부각 속 단기 급등 차익실현, 펀더멘털 훼손 신호는 뚜렷하지 않음.",
+      "원/달러 환율 1,429.8~1,432원(전일 대비 +5.8원) — 외국인 순매도·달러 강세 영향이나 안정권 유지.",
+      "한은 8/27 금통위 — 예상 상회 성장률과 7월 CPI 가속(3.2%)으로 8월 추가(연속) 인상 가능성이 부각돼 10월 전망에서 앞당겨짐, 긴축 리스크 잔존.",
+      "[baseline 대비] baseline의 '매우 부정'(20일 -23% 급락 floor)은 7/28~30 크래시 구간을 20일 윈도우에 여전히 포함한 후행 판정으로 판단 — 오늘 -5.12%는 전일 사상 최대 반등의 자연스러운 되돌림이며 외국인 순매도 규모·코스닥 반등을 볼 때 신규 위기가 아니므로 '부정'이 실측에 더 부합, 중기는 BOK 긴축 전망을 반영해 '신중' 유지."
     ]
   },
-  nextCheck: "미 8월 고용보고서(NFP, 8/7), 팔란티어(8/3)·AMD(8/4) 실적 발표, 이란-호르무즈 해협 정세 및 유가 추이, 미 FOMC 9/15~16, 한국 금통위 2026-08-27(7월 CPI 3.2% 가속에 따른 추가 인상 여부), 코스피 외국인 순매수 지속성.",
+  nextCheck: "미 8월 고용보고서(NFP, 8/7), 팔란티어(8/3)·AMD(8/4) 실적 발표, 이란-호르무즈 해협 정세 및 유가 추이(협상 성사 여부), 미 FOMC 9/15~16, 한국 금통위 2026-08-27(7월 CPI 3.2% 가속에 따른 추가 인상 여부), 코스피 반도체주 조정 지속 여부.",
   sources: [
-    "https://www.hankyung.com/article/2026073181606",
-    "https://www.newspim.com/news/view/20260731001224",
-    "https://www.cnbc.com/2026/07/31/south-korea-kospi-samsung-sk-hynix-meltdown-record-rebound.html",
-    "https://www.tradingkey.com/analysis/stocks/more/262066425-south-korea-markets-kospi-surges-18-historic-sk-hynix-tradingkey",
-    "https://www.businesskorea.co.kr/news/articleView.html?idxno=273920",
-    "https://www.techtimes.com/articles/322145/20260729/three-fed-dissenters-signal-september-hike-live-after-most-hawkish-fomc-vote-nearly-ten-years.htm",
-    "https://www.cnbc.com/2026/07/29/fed-meeting-today-live-updates.html",
-    "https://www.advisorperspectives.com/dshort/updates/2026/07/30/core-pce-inflation-at-3-3-in-june-edging-down-from-may",
-    "https://www.cnbc.com/2026/07/14/consumer-price-index-inflation-report-june-2026.html",
-    "https://www.fxstreet.com/news/united-states-dollar-index-slumps-as-suspected-japanese-intervention-rattles-markets-202607301554",
-    "https://finance.yahoo.com/markets/live/stock-market-today-thursday-july-30-dow-sp-500-nasdaq-treasury-yields-microsoft-082255995.html",
-    "https://finance.yahoo.com/markets/stocks/articles/stock-market-news-july-31-134200801.html",
-    "https://finance.yahoo.com/markets/live/stock-market-today-friday-july-31-dow-sp-500-nasdaq-081227738.html",
-    "https://www.bloomberg.com/news/articles/2026-07-25/fed-bank-of-england-bank-of-japan-face-100-oil-inflation-test",
-    "https://www.cnn.com/2026/08/01/politics/trump-iran-war-oil-prices-strait-of-hormuz",
-    "https://www.tradingkey.com/analysis/stocks/us-stocks/262067315-big-tech-earnings-scorecard-microsoft-amazon-apple-july-31-2026-tradingkey",
-    "https://www.tradingkey.com/analysis/stocks/us-stocks/262067492-august-3-7-2026-preview-palantir-amd-sandisk-earnings-nfarm-payrolls-tradingkey"
+    "https://www.fxstreet.com/news/dow-jones-futures-advance-as-oil-prices-fall-on-us-iran-diplomatic-signals-202608030816",
+    "https://www.bloomberg.com/news/articles/2026-08-02/oil-slumps-us-futures-rise-on-iran-talks-optimism-markets-wrap",
+    "https://www.cnbc.com/2026/08/02/stock-market-today-live-updates.html",
+    "https://www.thenationalnews.com/business/energy/2026/08/03/oil-prices-slump-on-potential-us-iran-deal-to-open-strait-of-hormuz/",
+    "https://southeastagnet.com/2026/07/30/cme-fedwatch-signals-high-odds-september-rate-hike/",
+    "https://www.tradingkey.com/analysis/stocks/us-stocks/262068882-palantir-pltr-earnings-preview-august-3-2026-options-swing-triangle-tradingkey",
+    "https://www.tradingkey.com/analysis/stocks/us-stocks/262067492-august-3-7-2026-preview-palantir-amd-sandisk-earnings-nfarm-payrolls-tradingkey",
+    "https://core.asiae.co.kr/article/2026080310175597984",
+    "https://www.etoday.co.kr/news/view/2610256",
+    "https://www.businesskorea.co.kr/news/articleView.html?idxno=274005",
+    "https://www.newspim.com/news/view/20260803000332",
+    "https://www.sisajournal-e.com/news/articleView.html?idxno=422698"
   ]
 };
