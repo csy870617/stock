@@ -5,6 +5,39 @@ CLAUDE.md '신규 후보 탐색 프로토콜'이 참조하는 작업 메모. 매
 
 ---
 
+## 2026-08-04 B모드 회전 세션 (자동 발화 "재검증 돌려줘")
+
+techNote·valueNote·tier·index-notes·topPicks·liquidity·시황 등 매일 항목은 건드리지 않음(A모드 몫). 세션 시작 시 `coverage.js --remaining verified/aiTarget/discovery` 큐를 그대로 받아 처리.
+
+### 목표가 재검증 (20/20 큐 완료)
+LG생활건강(051900)·JNJ·RDDT·AEIS·STRL·NXT·HALO·TCOM·LLY·ALGN·NOW·LITE·TSLA·GILD·PG·MDLZ·HWM·RTX·PH·SCHW 재검증.
+- **LG생활건강(051900) 목표가 소진 해소**: 2Q26 영업이익 컨센서스 +36.8% 서프라이즈 후 DB·LS·신한투자·KB 등 증권사가 목표주가를 일제히 상향(25~31만원 → 33~38만원) — 270,600원→**348,750원**(4개 증권사 평균)으로 갱신, hankyung.com·sedaily.com 확인.
+- **TSLA**: 컨센서스 소폭 하향 반영 420→399달러(가드레일 내 -5%).
+- **PG**: FY2026 4분기(7/29 발표) 실적 반영 — 매출 예상치 하회·core EPS -3%로 소비 둔화 확인, thesis/risks/earnings 갱신. 목표가는 컨센서스 범위 내 유지.
+- **RDDT·AEIS**: 각각 7/30·8/3 발표 2분기 실적을 earnings에 반영(둘 다 어닝비트). 목표가는 컨센서스 범위 내 유지.
+- 나머지 14종목(JNJ·STRL·NXT·HALO·TCOM·LLY·ALGN·NOW·LITE·GILD·MDLZ·HWM·RTX·PH·SCHW)은 재확인 결과 기존 목표가가 최신 컨센서스 범위 내라 변경 없음(verifiedAt만 갱신).
+- 다음 회차 큐(신규 stale 5종목): AAPL·ABT·MU·MDT·MSI.
+
+### aiTarget 재시도 (22/22 큐 완료 — 051900 포함 원 큐 전량 + 후속 보완 1건)
+AEIS(268.8)·PG(152.6)·MDLZ(61.6)·HWM(265)·RTX(183.5)·PH(998.4)·BRK.B(478.8 재확인)·CVX(182.6, 신규 산출)·CI(335)·VZ(theme value 42.7 / theme dividend 46.8, 두 카드 모두 갱신) 산출 완료. GOOGL·AMZN·PLTR·AXON·HALO·ALGN·LITE·GILD는 EPS/PER 입력값이 출처 간 크게 혼재해 재산출 보류(aiCheckedAt만 갱신) — GOOGL은 특히 2Q26 GAAP EPS가 비마켓 지분 평가이익으로 왜곡된 것으로 판단됨. 051900은 EPS 컨센서스를 신뢰 도메인 단일 출처로 확인 못 해 보류. 다음 회차 큐: SCHW·AAPL.
+
+### 신규 후보 탐색 4/4 그룹 완료 — 교체 0건(정상)
+- **korea|value**: HMM(011200, 영업이익 역성장 -30~38%)·인탑스(049070, 2025 적자→2026 갓 흑자전환 턴어라운드 초입) 기각. **하나금융지주(086790)** 보류 — PER 5.1배·배당 3.9%·상반기 순이익 사상 최대로 조건은 충족하나 출처 간 현재가·목표가 정보가 크게 엇갈려(85,500원~130,600원) 상승여력 신뢰 산정 불가, 최신 데이터 기준 상승여력 1~2%대에 그쳐 기존 로스터(29~82%) 대비 우위 불명확 — 다음 회차 최우선 재검증.
+- **us|core**: JPM(상승여력 -4%대)·AAPL(0.3%) 기각, AVGO는 이미 growth 테마 편성으로 중복 제외. **WMT** 보류 — 안정 성장이나 출처 간 상승여력 10~30% 편차로 신뢰 확인 불가, 배당수익률도 미확인 — 다음 회차 재검증.
+- **us|dividend**: Clorox(오가닉 매출 -9%)·Amcor(배당성향 등 수치 극심한 출처 불일치) 기각. **Kimberly-Clark(KMB)** 보류 — Kenvue 인수(2026H2 종결 예정)로 레버리지 불확실성 미해소. **Hormel(HRL)** 보류 — 수년 실적 부진 끝 초기 턴어라운드로 판단, 추가 분기 확인 필요.
+- **us|growth**: AMAT 기각(반도체 5종목째로 섹터 과집중). **Vertiv(VRT)** 보류 — AI 데이터센터 인프라로 매출+24%YoY·Strong Buy이나 실적 후 주요 기관 목표가 하향+ 가격 데이터 출처 간 편차 커 확정 보류, 반도체 4종목(NVDA·AVGO·TSM·MU, 44%) 집중 완화용으로 다음 회차 최우선 재검증 권고. **Astera Labs(ALAB)** 보류 — 고성장이나 상장 이력 짧아 변동성 큼 + 섹터 중복. UBER는 8/5 실적 발표 앞두고 있어 이번 회차 교체 검토 보류.
+- discovery 날짜 갱신: korea|value·us|core·us|dividend·us|growth → 2026-08-04. 미탐색 잔존: **us|rising·us|value**(다음 회차).
+
+### 신규 경고 발견 (다음 회차 우선 처리)
+- **GS**: 목표가 소진(현재가 96,900 ≥ 목표가 91,500).
+- **Bristol-Myers Squibb**: 목표가 소진(현재가 65.47 ≥ 목표가 63.08).
+- 기존 경고 유지: 비츠로셀 aiTarget 괴리, 팔란티어 aiTarget 괴리(EPS 회계기준 혼재로 재산출 보류 지속), 다수 종목 priceDate 노후화(quotes.js 자동 갱신 대상), 저신뢰 출처 백로그(현대차·아모레퍼시픽 계열·덕산네오룩스·비츠로셀·Amazon).
+
+### 완료 게이트
+`coverage.js`: 매일 항목(techNote·valueNote·tier·index-notes·topPicks·liquidity·시황) 전부 ✅ 100% 유지(B모드는 건드리지 않음, A모드가 이미 완료해둔 상태). 회전 3종은 세션 큐 전량 처리 후 게이트 red로 정상 종료 — 목표가 재검증 111/116(신규 stale 5종목: AAPL·ABT·MU·MDT·MSI, 다음 회차), aiTarget 재시도 114/116(SCHW·AAPL 다음 회차), 신규 후보 탐색 8/10그룹(us|rising·us|value 다음 회차). `validate-reco.js` 오류 0·경고 25건(신규 2건 GS·BMY 목표가 소진 + 기존 백로그).
+
+---
+
 ## 2026-08-04 온디맨드 풀 업데이트 (자동 발화, 이슈 #52)
 
 ### 배경 — 코스피 전일 급락의 되돌림 반등, 미국은 이란 협상설 급등 후 숨고르기
