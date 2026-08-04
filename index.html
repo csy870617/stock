@@ -595,6 +595,7 @@ a.idx-tile:hover { background: color-mix(in srgb, var(--ink) 5%, var(--inset)); 
 .idx-tile .it-ch { font-size: 0.86rem; font-weight: 700; }
 .idx-tile .it-ch.up { color: var(--up); }
 .idx-tile .it-ch.down { color: var(--down); }
+.idx-tile .it-ch.na { color: var(--muted); font-weight: 600; }
 .idx-tile .it-note { border-top: 1px solid var(--grid); padding-top: 9px; }
 .idx-tile .it-note .tn-line { display: grid; grid-template-columns: auto 1fr; gap: 9px; align-items: baseline; padding: 3px 0; }
 .idx-tile .it-note .tn-line + .tn-line { border-top: 1px solid var(--grid); padding-top: 7px; margin-top: 3px; }
@@ -2698,7 +2699,10 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       return v ? '<div class="tn-line"><span class="tn-k">' + k + '</span><span class="tn-v">' + (lead || "") + esc(v) + "</span></div>" : "";
     }
     function tile(x) {
-      var chDir = x.changeDir === "up" ? "up" : "down";
+      // 등락률이 '–' 인 경우(시리즈에 구멍이 나 update-indices 가 값을 감춘 상태)는
+      // 상승·하락 색을 칠하지 않는다 — 빨간 '–' 가 하락으로 오독된다.
+      var chNA = !x.change || x.change === "–";
+      var chDir = chNA ? "na" : (x.changeDir === "up" ? "up" : "down");
       var n = NT[x.key];
       var g = idxLiqGrade(x.key);
       var liqChip = g ? '<span class="it-liq" style="color:' + (LIQ_COL[g] || "var(--muted)") + '">유동성 ' + esc(g) + "</span>" : "";

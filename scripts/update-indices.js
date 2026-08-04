@@ -49,20 +49,35 @@ const INDICES = [
 // ── Yahoo 일봉 조회 (종가·고가·저가·타임스탬프) ──
 const sleepMs = (ms) => new Promise((res) => setTimeout(res, ms));
 
-// 야후 간헐 429/5xx 대비 3회 재시도(update-stock-ta.js 와 동일한 이유)
+// 마지막 두 봉 사이가 이 일수를 넘으면 시리즈에 구멍이 있다고 본다.
+// 금→월(3일)까지가 정상이고, 그보다 벌어지면 중간 거래일 봉이 빠진 것이다.
+// (2026-08-04 실측: 08-03 봉이 누락된 응답이 와서 코스피 등락률이 07-31 대비로 계산돼
+//  +1.62% 가 -3.59% 로, 코스닥은 +5.88% 가 +8.47% 로 찍혔다 — 사흘치가 하루치로.)
+const MAX_GAP_DAYS = 3;
+
+// 야후 간헐 429/5xx 대비 3회 재시도(update-stock-ta.js 와 동일한 이유).
+// 응답이 오더라도 최신 구간에 구멍이 있으면 캐시 우회로 한 번 더 받아 본다 —
+// 등락률은 마지막 두 봉의 차이라 구멍이 곧바로 틀린 숫자가 된다.
 async function fetchSeries(symbol) {
+  let best = null;
   for (let i = 0; i < 3; i++) {
-    const rows = await fetchSeriesOnce(symbol);
-    if (rows) return rows;
+    const rows = await fetchSeriesOnce(symbol, i > 0);
+    if (rows) {
+      if (!best || rows.lastGapDays < best.lastGapDays) best = rows;
+      if (best.lastGapDays <= MAX_GAP_DAYS) return best;
+      console.warn("  ⚠ " + symbol + ": 최근 봉 간격 " + rows.lastGapDays +
+        "일(" + rows.prevDate + " → " + rows.lastDate + ") — 중간 거래일 누락 의심, 재조회");
+    }
     if (i < 2) await sleepMs(400 * Math.pow(2, i));
   }
-  return null;
+  return best;   // 끝내 못 메우면 가장 나은 응답을 쓰되, analyze 가 등락률을 감춘다
 }
 
-async function fetchSeriesOnce(symbol) {
+async function fetchSeriesOnce(symbol, bustCache) {
   if (typeof fetch !== "function") return null;
   const url = "https://query1.finance.yahoo.com/v8/finance/chart/" +
-    encodeURIComponent(symbol) + "?interval=1d&range=2y";
+    encodeURIComponent(symbol) + "?interval=1d&range=2y" +
+    (bustCache ? "&_=" + Date.now() : "");
   const ctrl = new AbortController();
   const to = setTimeout(() => ctrl.abort(), 10000);
   let j;
@@ -89,8 +104,12 @@ async function fetchSeriesOnce(symbol) {
   // 마지막 봉의 거래소 현지 날짜 = 실제 최신 거래일. 주말·휴장일에 돌려도 실행일이 아닌
   // 이 날짜가 asOf 가 돼야 INDEX_NOTES.asOf 비교에서 '구식'으로 오판되지 않는다.
   const off = ((res.meta && res.meta.gmtoffset) || 0) * 1000;
-  const lastT = rows[rows.length - 1].t;
-  rows.lastDate = lastT ? new Date(lastT * 1000 + off).toISOString().slice(0, 10) : null;
+  const lastT = rows[rows.length - 1].t, prevT = rows[rows.length - 2].t;
+  const day = (t) => (t ? new Date(t * 1000 + off).toISOString().slice(0, 10) : null);
+  rows.lastDate = day(lastT);
+  rows.prevDate = day(prevT);
+  // 등락률 신뢰도 판단용 — 마지막 두 봉의 달력일 간격(정상: 1일, 주말 낀 금→월: 3일)
+  rows.lastGapDays = (lastT && prevT) ? Math.round((lastT - prevT) / 86400) : 99;
   return rows;
 }
 
@@ -98,10 +117,17 @@ async function fetchSeriesOnce(symbol) {
 function analyze(cfg, rows) {
   const a = TA.analyzeTimeframes(rows, { dp: 2, srDp: 0 });
   if (!a) return null;
+  // 시리즈에 구멍이 있으면(중간 거래일 누락) 등락률이 여러 날치를 하루로 뭉뚱그린 값이 된다.
+  // 틀린 숫자를 보여주느니 감춘다 — 지표(RSI·이동평균)는 1봉 누락에 둔감해 그대로 쓴다.
+  const gapOk = !rows.lastGapDays || rows.lastGapDays <= MAX_GAP_DAYS;
+  if (!gapOk) {
+    console.warn("  ⚠ " + cfg.key + ": 등락률 생략 — 최근 봉 간격 " + rows.lastGapDays +
+      "일(" + rows.prevDate + " → " + rows.lastDate + ")");
+  }
   return {
     key: cfg.key, name: cfg.name, flag: cfg.flag, chartUrl: cfg.chartUrl,
-    level: a.level, change: a.change, changeDir: a.changeDir, period: a.period,
-    short: a.short, long: a.long
+    level: a.level, change: gapOk ? a.change : "–", changeDir: gapOk ? a.changeDir : "down",
+    period: a.period, short: a.short, long: a.long
   };
 }
 
