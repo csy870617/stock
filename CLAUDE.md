@@ -68,7 +68,7 @@
 2. 예산 배분: 발굴 큐(그룹당 6회) → 목표가 재검증(종목당 9회) → aiTarget(종목당 4회) 순으로 집행한다. 큐 종목만 ★★ 3·5·6번 기준으로 처리하고 `verifiedAt`·`aiCheckedAt`·`discovery[<그룹>]` 을 오늘로 merge 한다. 4~5종목 배치 × 4~5 에이전트.
 3. **하지 않는 것**: techNote·valueNote·tier·시황·유동성·지수·Top Pick·관심종목 스크리닝·backbone 스크립트. 이들은 A(풀 업데이트)의 몫이다.
 4. 이슈: 새 이슈를 만들지 않는다. 열린 `업데이트 요청` 이슈가 있으면 결과를 코멘트로만 남기고 **닫지 않는다**(상태칩은 풀 업데이트 기준으로 흐른다).
-5. `validate-reco.js` 오류 0 확인 → 배포 브랜치 커밋·push. 완료 보고에 **재검증 N종목 · aiTarget 재시도 M종목 · 탐색 K그룹 · 남은 7일 초과 건수**를 밝힌다.
+5. `validate-reco.js` 오류 0 확인 → **`node scripts/coverage.js --emit`**(빠뜨리면 앱 신선도 패널이 이번 회차 처리분을 반영하지 못한다 — A 11번의 ★ 참조) → 배포 브랜치 커밋·push. 완료 보고에 **재검증 N종목 · aiTarget 재시도 M종목 · 탐색 K그룹 · 남은 7일 초과 건수**를 밝힌다.
 
 **풀 업데이트 범위(전 항목 필수)**
 1. **backbone 최신화(스크립트, LLM 0)**: `update-quotes.js`·`update-stock-ta.js`·`update-indices.js`·`update-liquidity-gauge.js`·`screen-watch.js` 를 먼저 실행해 시세·기술지표·유동성 baseline·관심 후보를 그 시점 최신으로 만든다(최신 거래일 T 확정).
@@ -81,7 +81,8 @@
 8. **시황·유동성**: `marketNote`·`marketNoteUS`·`marketNoteKR`(+시황을 실제로 다시 쓴 날짜 `marketNoteAsOf`=오늘 — `generatedAt`은 daily-maintenance 가 매일 올려 신선도를 못 가리므로 `coverage.js` 가 이 필드를 게이트한다), `liquidity.js`(게이지·`drivers`·`headline`·`headlineUS`·`headlineKR`).
 9. **지수 대응**: `index-notes.js` 4개 지수 `value`·`short`·`long`·`sigShort`·`sigLong`.
 10. **오늘의 Top Pick**: 한국·미국 각 3종목 재선정.
-11. **기록·배포**: `snapshot.js`·`WATCHLIST.md` 갱신 → `validate-reco.js` 오류 0 → 커밋·push.
+11. **기록·배포**: `snapshot.js`·`WATCHLIST.md` 갱신 → `validate-reco.js` 오류 0 → **`node scripts/coverage.js --emit`** → 커밋·push.
+    - ★ `--emit` 을 빠뜨리면 앱 상단 '데이터 신선도' 패널이 이번 회차 이전 상태로 남는다. 패널 파일(`data/coverage-status.js`)은 `refresh-quotes` Action 도 만들지만 그 Action 은 분석 루틴보다 **먼저** 도는 날이 많아, 루틴이 직접 다시 찍지 않으면 하루 대부분을 실제보다 나쁜 수치로 보여준다(2026-08-04 실측: 09:34 emit → 10:20 B 루틴 처리분이 21:00 까지 미반영).
 
 **실행 전략 — 병렬 서브에이전트를 적극 활용한다(필수)**: 독립 조사는 `Task` 로 한 메시지에 동시 fan-out 하고 결과만 구조화 반환받는다(서브에이전트는 파일을 고치지 않는다). 파일 반영은 메인이 **단일 작성자**로 순차 수행해 동시편집 충돌을 막는다. **★★ WebSearch 예산은 세션 전체 공유 ~200회다(2026-07-28 실측·정정)**: 이전 지침은 "서브에이전트 1개당 200회"로 적었으나 **틀렸다**. 예산은 **서브에이전트별이 아니라 세션 하나에 총 ~200회**이며, fan-out 한 모든 에이전트가 이 풀을 나눠 쓴다 — **에이전트를 늘려도 총 검색량은 늘지 않는다.** (2026-07-28 루틴 실행 실측: 104종목을 5~6종목 배치 18개로 나눴더니 먼저 돈 배치가 예산을 다 써 뒤쪽 배치는 검색을 **1회도** 못 했고, 잔여 0/200 을 직접 프로브로 확인. 결과 목표가 재검증 67/110, 신규 후보 탐색 0/10 그룹.)
 - **따라서 전 종목(110) 목표가 재검증은 한 세션에 물리적으로 불가능하다** — 종목당 25~35회면 2,750~3,850회가 필요한데 상한이 200회다. 배치 크기·에이전트 수를 조정해 해결되는 문제가 아니다.

@@ -309,3 +309,14 @@ console.log("recommendations.js 갱신 → " + OUT);
 console.log("  merge " + merged + "종목 · add " + added + " · remove " + removed +
   " · 총 " + (D.korea.length + D.us.length) + "종목");
 if (warnings.length) { console.log("  ⚠ 경고:"); warnings.forEach((w) => console.log("   - " + w)); }
+
+// 앱 상단 '데이터 신선도' 패널 파일을 함께 다시 찍는다(토큰 0, 순수 계산).
+// recommendations.js 가 바뀌면 커버리지도 바뀌므로, 세션이 --emit 을 잊어도 패널이
+// 이전 회차 상태로 남지 않게 여기서 보장한다. 실패해도 본 작업은 성공으로 둔다
+// (stock-ta.js 미존재 등으로 coverage 가 exit 2 를 낼 수 있다 — 패널은 부가 산출물).
+if (OUT === RECO) {
+  const r = require("child_process").spawnSync(process.execPath,
+    [path.join(__dirname, "coverage.js"), "--emit"], { encoding: "utf8" });
+  if (r.status === 0) console.log("  " + String(r.stdout || "").trim());
+  else console.log("  ⚠ coverage --emit 생략(신선도 패널은 다음 실행에서 갱신됨)");
+}
