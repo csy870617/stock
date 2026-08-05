@@ -37,23 +37,23 @@ window.COVERAGE_STATUS = {
   {
    "key": "topPicks",
    "label": "Top Pick",
-   "done": 0,
+   "done": 6,
    "total": 6,
-   "ok": false
+   "ok": true
   },
   {
    "key": "liquidity",
    "label": "유동성 판단",
-   "done": 0,
+   "done": 1,
    "total": 1,
-   "ok": false
+   "ok": true
   },
   {
    "key": "market",
    "label": "시황",
-   "done": 0,
+   "done": 1,
    "total": 1,
-   "ok": false
+   "ok": true
   }
  ],
  "rotation": [
@@ -68,11 +68,11 @@ window.COVERAGE_STATUS = {
   {
    "key": "discovery",
    "label": "신규 후보 탐색",
-   "fresh": 8,
+   "fresh": 10,
    "total": 10,
    "unit": "그룹",
-   "oldestDays": 9,
-   "ok": false
+   "oldestDays": 1,
+   "ok": true
   },
   {
    "key": "aiTarget",
