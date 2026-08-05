@@ -72,6 +72,7 @@
 
 **풀 업데이트 범위(전 항목 필수)**
 1. **backbone 최신화(스크립트, LLM 0)**: `update-quotes.js`·`update-stock-ta.js`·`update-indices.js`·`update-liquidity-gauge.js`·`screen-watch.js` 를 먼저 실행해 시세·기술지표·유동성 baseline·관심 후보를 그 시점 최신으로 만든다(최신 거래일 T 확정).
+   - **★건너뛰면 그날 작업이 통째로 무효가 된다**: techNote 는 `asOf == T` 로 판정되고 T 는 `stock-ta.js` 가 정한다. 어제자 T 로 techNote 를 쓰면 그 순간엔 100% 로 보이지만, 뒤이어 `refresh-quotes` Action 이 T 를 올리는 순간 전 종목이 구식이 된다(2026-08-05 실측: A 루틴이 08:43 에 '매일 항목 7/7 100%' 로 끝냈으나 09:30 Action 이 T 를 08-04→08-05 로 올리자 techNote 116종목이 0/116 이 됐다). `coverage.js` 가 `builtAt`(재생성 시각)으로 이 단계를 실제로 돌렸는지 검사하므로, 건너뛰면 게이트가 통과되지 않는다.
 2. **전 종목 분석(전량)**: `techNote`(단기·장기 대응+sig) · `valueNote` — 예외 없이 전 종목.
 3. **목표가 재검증(회전 — 전 종목 7일 주기)**: 대상은 **`node scripts/coverage.js --remaining verified` 가 주는 큐**다 — `verifiedAt` 이 7일을 넘긴 종목이 오래된 순으로, 한 세션이 감당할 만큼(최대 20종목) 나온다. 직접 고르지 말고 이 목록을 그대로 쓴다. 각 종목의 `targetPrice` 컨센서스(신뢰 출처 2개 교차확인)·`thesis`·`risks`·`dividendYield`·`earnings` 를 재확인하고, 마친 종목마다 **`verifiedAt`(YYYY-MM-DD, 오늘)을 반드시 함께 merge** 한다 — 이 필드가 있어야 `coverage.js` 가 회전을 셀 수 있다. **종목당 검색을 10회 이내로 억제**한다(15종목 × 10회 ≈ 150회). 컨센서스를 확인 못 한 종목은 기존 목표가를 유지하되 `verifiedAt` 은 갱신하고(=재확인은 했음), 못 채운 필드를 보고에 남긴다.
 4. **전 그룹 tier 재평가(전량·그룹 분할)**: 10개 (주제×국가) 그룹 **전부** 품질 축으로 재랭킹 → `tier`·`tierAsOf`(오늘) 갱신(1개 그룹 회전 아님). tier 는 그룹 내 상대순위라 **그룹당 1 서브에이전트가 9종목을 한꺼번에** 보고 3/3/3 배분을 반환한다(종목 단위로 쪼개지 말 것). 10그룹을 동시 fan-out 하고, 반환된 그룹부터 순차 merge 한다.

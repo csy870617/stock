@@ -186,6 +186,8 @@ function loadPrevAsOf() {
 
   const T = {
     asOf: asOf,
+    // builtAt = 이 파일을 실제로 다시 만든 시각(asOf 는 마지막 봉의 거래일이라 다르다).
+    builtAt: new Date().toISOString().slice(0, 19) + "Z",
     note: "기술적 지표는 Yahoo 일봉에서 매일 자동 계산(LLM 토큰 0). 이동평균(SMA·EMA)과 오실레이터(RSI·MACD·스토캐스틱·CCI·Williams %R·ADX·모멘텀)를 종합 투표한 5단계 신호 — 단기(1–3M)는 일봉, 장기(6–12M+)는 주봉 기준.",
     indices: indices
   };

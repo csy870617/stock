@@ -21,6 +21,8 @@
 //   indexNotes : INDEX_NOTES.asOf == indices.js asOf + 4개 지수 5개 필드
 //   topPicks   : topPicks.asOf == 오늘 + korea/us 각 3종목
 //   liquidity  : liquidity.js asOf == 오늘 + 통합·미국·한국 headline
+//   backbone   : stock-ta.js·indices.js 의 builtAt(재생성 시각)이 오늘 — 이 단계를 건너뛰면
+//                어제자 T 로 techNote 를 써 놓고 100% 로 오판하게 된다(2026-08-05 실측).
 //
 // 매일 전량인 항목(techNote·valueNote·tier·indexNotes·topPicks·liquidity·시황)과
 // 7일 회전 항목(verified·discovery·aiTarget)이 합쳐져, 앱 데이터 전체가 최소 주 1회 갱신된다.
@@ -153,6 +155,21 @@ const staleAi = all.filter((s) => daysAgo(s.aiCheckedAt) > VERIF_CYCLE_DAYS).sor
   (a, b) => daysAgo(b.aiCheckedAt) - daysAgo(a.aiCheckedAt));
 const aiQueue = staleAi.slice(0, Number(argVal("aiQuota") || 20));
 
+// ── backbone 최신화 게이트 ──────────────────────────────────────────────
+// techNote 는 'asOf == T(최신 거래일)' 로 판정하는데, T 는 stock-ta.js 가 정한다.
+// 세션이 ★★ 1번(backbone 최신화)을 건너뛰고 어제자 T 로 techNote 를 쓰면 그 순간엔
+// 100% 로 보이지만, 뒤이어 refresh-quotes Action 이 T 를 올리는 순간 전 종목이 구식이 된다.
+// (2026-08-05 실측: A 루틴이 08:43 에 '매일 항목 7/7 100%' 로 끝냈으나 09:30 Action 이
+//  T 를 08-04→08-05 로 올리자 techNote 116종목이 통째로 0/116 이 됐다.)
+// 그래서 '오늘 backbone 을 실제로 돌렸는가'를 builtAt 로 따로 검사한다.
+const missBackbone = [];
+const builtDay = (v) => (v && typeof v === "string" ? v.slice(0, 10) : null);
+[["stock-ta.js", TA], ["indices.js", IX]].forEach(([name, obj]) => {
+  const b = builtDay(obj && obj.builtAt);
+  if (!b) missBackbone.push(name + " builtAt 없음(스크립트 재실행 필요)");
+  else if (b !== today) missBackbone.push(name + " 마지막 생성 " + b + " ≠ 오늘 " + today);
+});
+
 const missMarket = ["marketNote", "marketNoteUS", "marketNoteKR"].filter((f) => !D[f] || !String(D[f]).trim());
 if (D.generatedAt !== today) missMarket.push("generatedAt " + D.generatedAt + " ≠ 오늘 " + today);
 // generatedAt 은 daily-maintenance 가 매일 올려 시황 신선도를 가리므로,
@@ -239,6 +256,7 @@ rows.forEach(([name, done, total, miss]) => {
 });
 
 [["index-notes", missIdx], ["topPicks", missTop], ["liquidity", missLiq],
+ ["backbone 최신화 (오늘 재실행)", missBackbone],
  ["신규 후보 탐색 (전 " + DISC_GROUPS.length + "그룹 " + VERIF_CYCLE_DAYS + "일 이내)", missDisc],
  ["aiTarget 재시도 (전 종목 " + VERIF_CYCLE_DAYS + "일 이내)",
    staleAi.length ? [staleAi.length + "종목 경과: " + staleAi.slice(0, 6).map(label).join(", ") +
@@ -261,7 +279,8 @@ console.log("  ℹ️  재검증 회전(참고): 오늘 " + verifiedToday.length
   (verifQueue.length > 5 ? " 외 " + (verifQueue.length - 5) : "") : " (전 종목 주기 내)"));
 
 const blockers = missTech.length + missValue.length + missVerif.length + missTier.length +
-  missIdx.length + missTop.length + missLiq.length + missDisc.length + staleAi.length + missMarket.length;
+  missIdx.length + missTop.length + missLiq.length + missDisc.length + staleAi.length +
+  missBackbone.length + missMarket.length;
 
 console.log("");
 if (blockers === 0) {

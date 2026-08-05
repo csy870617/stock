@@ -136,6 +136,10 @@ async function mapLimit(items, limit, fn) {
 
   const T = {
     asOf: asOf,
+    // builtAt = 이 파일을 실제로 다시 만든 시각(asOf 는 마지막 봉의 거래일이라 다르다).
+    // coverage.js 가 '이번 회차에 backbone 을 돌렸는가'를 이 값으로 판정한다 — 건너뛰면
+    // 뒤늦게 backbone 이 T 를 올리면서 방금 쓴 techNote 가 통째로 구식이 된다.
+    builtAt: new Date().toISOString().slice(0, 19) + "Z",
     note: "개별 종목 기술적 분석 — 이동평균(SMA·EMA)+오실레이터(RSI·MACD·스토캐스틱·CCI·Williams %R·ADX·모멘텀) 종합 투표. 단기(1–3M)는 일봉, 장기(6–12M+)는 주봉 기준. Yahoo 2년 일봉에서 매일 자동 계산(LLM 토큰 0).",
     ta: ta
   };
