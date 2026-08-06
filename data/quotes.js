@@ -20,11 +20,6 @@ window.STOCK_QUOTES = {
    "date": "2026-08-06",
    "changePct": 2.8
   },
-  "192820": {
-   "price": 202000,
-   "date": "2026-08-06",
-   "changePct": 3.6
-  },
   "207940": {
    "price": 1514000,
    "date": "2026-08-06",
