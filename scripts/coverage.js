@@ -85,12 +85,28 @@ const daysAgo = (d) => {
   const t = Date.parse(d + "T00:00:00Z");
   return Number.isNaN(t) ? Infinity : Math.round((Date.parse(today + "T00:00:00Z") - t) / 86400000);
 };
-// 오래된 순 정렬 — verifiedAt 없는 종목이 가장 먼저다.
-const byOldest = (a, b) => daysAgo(b.verifiedAt) - daysAgo(a.verifiedAt);
+// ── 회전 큐 정렬 — 오래된 순, 동률이면 국가를 번갈아 ──────────────────────────
+// all 은 korea 다음 us 라 단순 안정 정렬만 하면 '경과일이 같을 때 항상 한국이 먼저'가 된다.
+// 큐가 QUOTA(20)에서 잘리므로 동률 종목이 많으면 미국이 매 회차 밀려 굶는다.
+// (2026-08-05 실측: aiCheckedAt 7일 초과가 한국 0 · 미국 24 로 벌어졌다. 한국은 전량
+//  처리되고 미국 24종목만 8일째 방치된 상태였다.)
+// 그래서 같은 경과일 안에서는 각 국가의 순번(0,1,2…)을 2차 키로 삼아 한·미를 번갈아 낸다.
+function fairQueue(list, dateOf) {
+  const rank = new Map();
+  ["korea", "us"].forEach((c) => {
+    list.filter((s) => (D.korea || []).includes(s) === (c === "korea"))
+      .sort((a, b) => daysAgo(dateOf(b)) - daysAgo(dateOf(a)))
+      .forEach((s, i) => rank.set(s, i));
+  });
+  return list.slice().sort((a, b) =>
+    daysAgo(dateOf(b)) - daysAgo(dateOf(a)) ||          // 오래된 순
+    (rank.get(a) - rank.get(b)) ||                       // 동률이면 국가별 순번으로 교대
+    ((D.korea || []).includes(a) ? -1 : 1));             // 그래도 같으면 한국 먼저(결정적)
+}
 // 게이트는 '오늘 몇 종목 했나'가 아니라 **전 종목이 7일 이내인가**로 본다. 그래야 하루
 // 몇 번을 발화하든(현재 2회) 밀린 만큼만 자동으로 소화되고, 한 세션이 실패해도 다음
 // 세션이 그 몫까지 이어받는다.
-const staleVerif = all.filter((s) => daysAgo(s.verifiedAt) > VERIF_CYCLE_DAYS).sort(byOldest);
+const staleVerif = fairQueue(all.filter((s) => daysAgo(s.verifiedAt) > VERIF_CYCLE_DAYS), (s) => s.verifiedAt);
 const missVerif = staleVerif;
 // 세션에 한 번에 던질 수 있는 양은 예산이 정한다 — 큐는 오래된 순으로 QUOTA 만큼만 준다.
 const verifQueue = staleVerif.slice(0, VERIF_QUOTA);
@@ -151,8 +167,7 @@ const discQueue = staleDisc.slice(0, Number(argVal("discQuota") || 4));
 // aiTarget — '산출됐는가'가 아니라 '최근에 재시도했는가'를 본다. 입력값 검증 실패로 값이
 // 없는 건 정상이지만, 몇 주째 재시도조차 안 하는 건 갱신 누락이다. 그래서 시도한 날을
 // aiCheckedAt 에 남기고(산출 성공 시 aiAsOf 도 함께), 전 종목 7일 회전으로 게이트한다.
-const staleAi = all.filter((s) => daysAgo(s.aiCheckedAt) > VERIF_CYCLE_DAYS).sort(
-  (a, b) => daysAgo(b.aiCheckedAt) - daysAgo(a.aiCheckedAt));
+const staleAi = fairQueue(all.filter((s) => daysAgo(s.aiCheckedAt) > VERIF_CYCLE_DAYS), (s) => s.aiCheckedAt);
 const aiQueue = staleAi.slice(0, Number(argVal("aiQuota") || 20));
 
 // ── backbone 최신화 게이트 ──────────────────────────────────────────────
