@@ -30,30 +30,30 @@ window.COVERAGE_STATUS = {
   {
    "key": "indexNotes",
    "label": "지수 대응",
-   "done": 0,
+   "done": 4,
    "total": 4,
-   "ok": false
+   "ok": true
   },
   {
    "key": "topPicks",
    "label": "Top Pick",
-   "done": 0,
+   "done": 6,
    "total": 6,
-   "ok": false
+   "ok": true
   },
   {
    "key": "liquidity",
    "label": "유동성 판단",
-   "done": 0,
+   "done": 1,
    "total": 1,
-   "ok": false
+   "ok": true
   },
   {
    "key": "market",
    "label": "시황",
-   "done": 0,
+   "done": 1,
    "total": 1,
-   "ok": false
+   "ok": true
   }
  ],
  "rotation": [
@@ -83,5 +83,5 @@ window.COVERAGE_STATUS = {
    "ok": true
   }
  ],
- "ok": false
+ "ok": true
 };

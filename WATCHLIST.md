@@ -5,6 +5,40 @@ CLAUDE.md '신규 후보 탐색 프로토콜'이 참조하는 작업 메모. 매
 
 ---
 
+## 2026-08-07 온디맨드 풀 업데이트 (자동 발화, 이슈 #55)
+
+### 매일 항목 전량 완료
+backbone(quotes/stock-ta/indices/liquidity-auto/screen-watch) 재실행 후 techNote 115/115·valueNote 115/115·tier 재평가 10그룹 90/90·index-notes·topPicks·liquidity·시황을 전량 갱신했다(techNote·tier는 무검색 8배치+10그룹 병렬 서브에이전트, 목표가 재검증·aiTarget은 검색 예산을 사용).
+
+### tier 재평가 변경 내역
+- **korea|core**: 삼성화재(000810) T3→T2, 하나금융지주(086790) T1→T3 (지급여력·주주환원 대 ROE 미달·밸류 괴리 재평가).
+- **korea|growth**: SK하이닉스(000660) T1→T2(CXMT 공급과잉 우려로 목표가 하향·편차 확대), 삼성바이오로직스(207940) T2→T1(역대 최대 실적).
+- **korea|rising**: ISC(095340) T3→T2, 클래시스(214150) T2→T3(블록딜·마진 희석).
+- **us|dividend**: PepsiCo(PEP) T3→T2, Duke Energy(DUK) T2→T3.
+- **us|rising**: Advanced Energy(AEIS) T2→T3, Nextracker(NXT) T3→T2.
+- **us|value**: GM T3→T2(어닝서프라이즈·자사주), Verizon(VZ, value 카드) T2→T3(매출 역성장).
+- 나머지 그룹·종목은 품질 재확인 후 유지(변경 없음).
+
+### 목표가 재검증(회전, 2종목 — 큐 전량 완료)
+- 제일기획(030000): 목표가 26,000원 유지(컨센서스 재확인), 2Q26 영업이익 927억원(+0.63%YoY) 반영, aiBasis(DPS÷요구수익률)로 자체 적정가 22,360원 병기.
+- BlackRock(BLK): 목표가 1,304→1,314달러(소폭 상향, 17개 기관 평균), 2Q26 매출 +31%YoY·영업마진 45.9%(5년 최고) 반영, 자체 적정가(EPS×선행PER) 1,090달러 병기.
+- 7일 초과 잔존 0종목 — 회전 백로그 없음.
+
+### 오늘의 Top Pick 재선정
+- 한국: HD한국조선해양(009540)·KB금융(105560)·대한항공(003490) — 전부 Tier1·단기 적극매수, 반도체 급락(코스피 -4.58%, 8/6)과 상관도 낮은 업종으로 우선.
+- 미국: NVIDIA(NVDA)·Broadcom(AVGO)·Microsoft(MSFT) — 전부 Tier1·단기·장기 적극매수, 미국 단기 유동성 '우호' 국면과 정합.
+
+### 관심종목(D절) — 이탈 0건, KR 신고가 3/5 미달(정상)
+screen-watch.js 재스크리닝 결과 기존 태그 종목 전원 '유지'(이탈 없음). 한국 신고가 태그는 GS·KT&G·LG생활건강 3종목으로 정원 5에 2자리 미달이나, 오늘 스크리닝에서 신규 신고가 후보 0건(근접 후보: 현대해상·한국타이어앤테크놀로지·HMM·메리츠금융지주·아모레퍼시픽 — 베이스 폭·고점 대비 조건 중 1개씩 미달)이라 채우지 못했다. 억지 편입하지 않고 다음 회차로 이월.
+
+### 신규 후보 탐색·discovery
+전 10그룹 `discovery[]` 날짜가 7일 이내로 이미 게이트 통과 상태라 이번 회차는 탐색을 건너뜀(정상 — 회전 주기 내).
+
+### 완료 게이트
+`coverage.js`: 매일 항목(techNote·valueNote·tier·index-notes·topPicks) 전부 ✅, liquidity·시황(marketNoteAsOf)은 병렬 리서치 완료 후 반영. 회전 3종(재검증 2/2·aiTarget 재시도 2/2·탐색 0/0 큐)은 세션 큐 전량 소진, 7일 초과 잔존 0건. `validate-reco.js` 오류 0.
+
+---
+
 ## 2026-08-04 B모드 회전 세션 (자동 발화 "재검증 돌려줘")
 
 techNote·valueNote·tier·index-notes·topPicks·liquidity·시황 등 매일 항목은 건드리지 않음(A모드 몫). 세션 시작 시 `coverage.js --remaining verified/aiTarget/discovery` 큐를 그대로 받아 처리.

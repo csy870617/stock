@@ -2,40 +2,44 @@
 // 갱신 방법: README.md 참고 (스킬 재실행 → 이 파일 갱신 → git push)
 // 게이지 단계: "매우 우호" / "우호" / "신중" / "부정" / "매우 부정"
 window.LIQUIDITY_DATA = {
-  asOf: "2026-08-06",
-  headline: "미국 증시는 다우 사상최고 랠리와 호르무즈 지정학 리스크 완화(유가 급락)라는 우호적 재료와, 스페이스X·반도체주 급락 및 9월 FOMC 금리인상 가능성 부각이라는 매파적 재료가 공존한다. 이 반도체 약세가 간밤 그대로 한국 증시로 전이돼 8/6 코스피는 삼성전자·SK하이닉스 급락에 4.58% 재급락(6,296.38)했고 외국인은 코스피·코스닥에서 동반 순매도했다. 8/7 미국 고용보고서와 8/27 한국 금통위가 각각 미국 금리 경로와 한국 추가 긴축 여부를 가를 다음 변곡점이다.",
-  headlineUS: "다우존스는 8/2~8/5 사흘 연속 사상최고치를 경신하며 54,349까지 올랐고, 미-이란-오만의 호르무즈 해협 재개방 60일 잠정합의 근접 소식에 국제유가가 배럴당 76달러 아래로 급락하며 지정학 리스크가 완화됐다. 다만 8/5 스페이스X 상장 첫 실적에서 AI 설비투자 부담이 부각돼 13% 이상 폭락하고 AMD·알파벳의 3분기 전망 부진이 겹치며 나스닥·반도체주는 조정받았다. VIX는 16선 안정권을 유지 중이나, 7월 29일 FOMC 동결(3.50~3.75%) 이후 CME FedWatch 기준 9월 16일 회의에서 오히려 금리 인상 가능성이 60%대로 부각되는 매파적 전환이 나타나 8/7 발표될 7월 고용보고서(예상 +80~120K, 실업률 4.2~4.3%)가 다음 분수령이다.",
-  headlineKR: "코스피는 8/3 -5.12% 급락 이후 8/4~8/5 이틀간 반등하며 낙폭을 되돌렸으나, 8/6 간밤 미국 반도체(마이크론·AMD 등) 급락 여파로 삼성전자·SK하이닉스가 각각 6%·10%대 폭락하며 코스피가 다시 4.58% 급락한 6,296.38로 마감했다. 외국인은 이날 코스피에서 3조 3,285억원, 코스닥에서 2,480억원을 순매도했고, 코스닥은 개인·기관 순매수에 힘입어 홀로 상승 마감했다. 골드만삭스는 이런 변동성 속에서도 코스피 12,000 목표를 유지해 중장기 눈높이는 낮아지지 않았다. 원/달러 환율은 1,420원대의 비교적 안정적 흐름을 이어가고 있으나, 8/27 금통위에서는 7월 예상외 강한 성장세를 근거로 2회 연속 기준금리 인상 가능성이 거론돼 통화정책 불확실성이 잔존한다.",
+  asOf: "2026-08-07",
+  headline: "미국은 NFP 결과 미확인 속 ADP 부진·9월 금리인상 확률 61.9%·호르무즈 재긴장이 겹치며 단기 우호·중기 신중을, 한국은 반도체 수급발 매도가 이어지되 낙폭이 축소되고 7월 수출(+62.8% YoY)이 견조해 단기 부정·중기 신중을 유지한다 — 양국 모두 美 NFP 확정치와 BOK 8/27 회의가 다음 유동성 국면 분기점이다.",
+  headlineUS: "미국은 7월 고용보고서(NFP, 8/7 08:30 ET 발표 예정)의 실제 결과가 검색 시점까지 확인되지 않아 시장 컨센서스(+80~85천 명, 실업률 4.2%)만 반영됐다. 선행지표인 ADP 민간고용이 7월 +4.4만 명으로 예상을 하회했고(8/5 발표), 9월 FOMC 금리 인상 확률이 CME FedWatch 기준 61.9%(8/4 집계)로 높게 유지되는 가운데, 호르무즈 해협에서 이란이 표적을 재타격했다는 보도로 유가가 WTI 78달러·브렌트 82달러대로 재상승하며 전일의 지정학 완화 흐름이 반전됐다. VIX는 15~16선의 안정권을 유지하고 10년물 금리는 4.61%(8/6)로 주중 하락세를 보여, 단기는 '우호', 금리 인상 리스크와 지정학 불확실성을 반영해 중기는 '신중'을 유지한다.",
+  headlineKR: "코스피는 8/7 6,258.77(-0.60%)로 2거래일 연속 하락했으나 전일(-4.58% 급락) 대비 낙폭은 축소됐고, 외국인 순매도도 약 8,580억원으로 전일(3.33조원)보다 완화됐다. 코스닥은 798.81(-0.36%) 마감으로 장중 반도체(SK하이닉스 등) 약세와 외국인 매도 전환에 상승분을 반납했다. 다만 7월 수출은 988.9억달러(+62.8% YoY), 반도체 수출은 410.1억달러(+178.8% YoY)로 2개월 연속 400억달러를 넘어서며 펀더멘털은 견조함을 재확인했다. BOK 8/27 금통위의 추가 인상 가능성이 여전히 부담 요인으로 남아 단기는 '부정', 중기는 '신중'을 유지한다.",
   us: {
     shortTerm: "우호",
     midTerm: "신중",
     drivers: [
-      "다우존스 8/2~8/5 3거래일 연속 사상최고(54,349), VIX 16선 안정권 유지",
-      "미-이란-오만 호르무즈 재개방 60일 잠정합의 근접, 국제유가 $76 아래로 급락 — 지정학 리스크 완화",
-      "⚠ 9월 FOMC 금리인상 확률 CME FedWatch 61.9%로 부각 — 인하 기대가 후퇴하는 매파적 전환, 8/7 NFP가 분수령",
-      "스페이스X 상장 첫 실적 -13%, AMD·알파벳 실적 전망 부진에 나스닥·반도체주 조정",
+      "미국 7월 고용보고서(NFP)는 8/7 08:30 ET 발표 예정이었으나 검색 시점 기준 실제 발표치가 확인되지 않음 — 시장 컨센서스는 +80~85천 명, 실업률 4.2% 유지",
+      "선행지표인 ADP 민간고용은 7월 +4.4만 명으로 시장 예상을 하회(8/5 발표)해 노동시장 둔화 신호가 이어짐",
+      "CME FedWatch 기준 9월 FOMC 금리 인상 확률이 61.9%(8/4 집계)로 높게 유지돼 긴축 리스크가 상존",
+      "호르무즈 해협에서 이란이 '적대 세력' 표적을 재타격했다는 보도로 유가가 WTI 78달러·브렌트 82달러대로 재상승, 전일의 지정학 완화 흐름이 반전됨",
+      "VIX는 15~16선에서 안정적 유지, 10년물 국채금리는 8/6 기준 4.61%로 주 중 하락세",
     ]
   },
   korea: {
     shortTerm: "부정",
     midTerm: "신중",
     drivers: [
-      "8/6 코스피 -4.58% 재급락(6,296.38) — 간밤 미 반도체(마이크론·AMD) 급락 전이, 삼성전자·SK하이닉스 각각 6%·10%대 폭락",
-      "외국인 코스피 3조 3,285억원·코스닥 2,480억원 순매도, 코스닥은 개인·기관 순매수로 나홀로 상승",
-      "골드만삭스 코스피 12,000 목표 유지 — 중장기 눈높이는 유지",
-      "8/27 금통위, 7월 예상외 강한 성장세로 2회 연속 기준금리 인상 가능성 거론 — 통화정책 불확실성",
+      "코스피 8/7 종가 6,258.77(-0.60%)로 2거래일 연속 하락, 전일(-4.58% 급락) 대비 낙폭은 축소",
+      "외국인은 8/7에도 KOSPI 순매도(약 8,580억원)를 이어갔으나 전일(3.33조원)보다 매도 강도 완화, 개인·기관은 순매수로 대응",
+      "코스닥은 798.81(-0.36%) 마감 — 장중 반도체(SK하이닉스 등) 약세와 외국인 매도 전환으로 상승분 반납",
+      "7월 수출 988.9억달러(+62.8% YoY), 반도체 수출 410.1억달러(+178.8% YoY)로 2개월 연속 400억달러 돌파 — 펀더멘털은 견조하나 단기 수급은 위축된 상태",
+      "BOK 8/27 금통위에서 강한 7월 성장세를 근거로 한 추가(연속) 금리 인상 가능성이 여전히 거론되며 단기 수급에 부담",
     ]
   },
-  nextCheck: "8/7(금) 미국 7월 고용보고서(NFP) 발표, 8/27 한국은행 금통위 기준금리 결정",
+  nextCheck: "美 7월 고용보고서(NFP) 확정치 확인, 9/16 FOMC, 한국 BOK 8/27 금통위",
   sources: [
-    "https://www.cnn.com/2026/08/04/investing/us-stock-market",
-    "https://www.cnbc.com/2026/08/03/stock-market-today-live-updates.html",
-    "https://www.vegastooza.com/post/us-stock-market-wrap-2026-08-05",
-    "https://www.thenationalnews.com/business/energy/2026/08/03/oil-prices-slump-on-potential-us-iran-deal-to-open-strait-of-hormuz/",
-    "https://en.macromicro.me/series/78111/probability-fed-rate-375-400-2026",
-    "https://www.financecalendar.com/event/us-employment-situation-non-farm-payrolls-august-2026/",
-    "https://www.fnnews.com/news/202608061630040587",
-    "https://www.newspim.com/news/view/20260806001081",
-    "https://www.etoday.co.kr/news/view/2611854",
+    "https://www.cnbc.com/2026/08/06/the-july-jobs-numbers-are-due-out-friday-heres-what-to-expect.html",
+    "https://www.cnbc.com/2026/08/05/private-companies-added-just-44000-workers-in-july-below-expectations-adp-reports.html",
+    "https://www.cnbc.com/2026/08/06/what-fridays-jobs-report-could-mean-for-investors.html",
+    "https://insight.factset.com/total-nonfarm-payrolls-for-july-2026-are-projected-to-rise-by-97500",
+    "https://continuumeconomics.com/a/6815e0e3/preview-due-august-7-us-july-employment-non-farm-payrolls-stronger-than-june-but-with-a-rise-in-unemployment",
+    "https://www.bloomberg.com/news/articles/2026-08-06/latest-oil-market-news-and-analysis-for-aug-7",
+    "https://www.koreajoongangdaily.com/business/kospi-falls-for-second-straight-day-on-foreign-selling/12814413",
+    "https://www.asiae.co.kr/en/article/2026080709423090130",
+    "https://segye.com/newsView/20260807509867",
+    "https://www.fnnews.com/news/202608070058206931",
+    "https://biz.heraldcorp.com/article/10827691",
   ]
 };
