@@ -134,6 +134,18 @@ function toWeekly(rows) {
   return order.map((k) => map[k]);
 }
 
+// 월봉 집계 — 달력 월(UTC) 단위로 묶는다. 장기(6~12M+) 판단의 기준 시계열.
+function toMonthly(rows) {
+  const map = {}, order = [];
+  rows.forEach((r) => {
+    const d = new Date(r.t * 1000);
+    const k = d.getUTCFullYear() * 12 + d.getUTCMonth();
+    if (!map[k]) { map[k] = { t: r.t, close: r.close, high: r.high, low: r.low }; order.push(k); }
+    else { const w = map[k]; w.high = Math.max(w.high, r.high); w.low = Math.min(w.low, r.low); w.close = r.close; w.t = r.t; }
+  });
+  return order.map((k) => map[k]);
+}
+
 // 현재가 기준 가장 가까운 아래/위 레벨(이평선·최근 저·고점 후보 중)
 function levels(level, cands, lo, hi) {
   const below = cands.filter((v) => v != null && v < level);
@@ -149,18 +161,35 @@ function computeSuite(bars) {
   const level = c[n - 1];
   let buy = 0, sell = 0, neu = 0;
 
-  // 이동평균 투표 (SMA + EMA, 다기간)
+  // 이동평균 투표 (SMA + EMA, 다기간) — ±MA_NEUTRAL_PCT 밴드 안이면 '중립'.
+  // 밴드 없이 level>ma 만 보면 12표가 전부 매수/매도로 갈려 종합 점수가 한쪽으로 쏠린다
+  // (2026-08-07 실측: 단기 '적극매수' 49종목 vs '적극매도' 11종목). 이평선에 딱 붙어 있는
+  // 상태는 방향이 아직 정해지지 않은 것이므로 기권시키는 편이 실제 차트 판단에 가깝다.
+  const MA_NEUTRAL_PCT = 0.5;
+  const voteVsMa = (ref) => {
+    if (ref == null || !isFinite(ref) || ref === 0) return;
+    const gap = (level - ref) / ref * 100;
+    if (Math.abs(gap) < MA_NEUTRAL_PCT) neu++;
+    else if (gap > 0) buy++;
+    else sell++;
+  };
   const maP = [5, 10, 20, 50, 100, 200], sm = {};
   maP.forEach((p) => {
-    const s = sma(c, p); if (s != null) { sm[p] = s; if (level > s) buy++; else sell++; }
-    const e = ema(c, p); if (e != null) { if (level > e) buy++; else sell++; }
+    const s = sma(c, p); if (s != null) { sm[p] = s; voteVsMa(s); }
+    const e = ema(c, p); if (e != null) voteVsMa(e);
   });
 
   // 오실레이터 투표 (+1 매수 / -1 매도 / 0 중립)
   const rNow = rsi(c, 14);
   const oRsi = rNow == null ? 0 : (rNow < 30 ? 1 : rNow > 70 ? -1 : 0);
   const m = macd(c);
-  const oMacd = m ? (m.macd > m.signal ? 1 : m.macd < m.signal ? -1 : 0) : 0;
+  // MACD 도 시그널선과의 격차가 가격 대비 미미하면 중립 — 부호만 보면 교차 직전의
+  // 사실상 붙어 있는 상태까지 매수/매도로 단정하게 된다(실측 매수 86 : 매도 23, 중립 0).
+  const oMacd = (function () {
+    if (!m || !level) return 0;
+    const gap = (m.macd - m.signal) / level * 100;
+    return Math.abs(gap) < 0.05 ? 0 : (gap > 0 ? 1 : -1);
+  })();
   const st = stochastic(h, l, c, 14, 3, 3);
   const oStoch = st ? (st.k < 20 && st.k > st.d ? 1 : st.k > 80 && st.k < st.d ? -1 : 0) : 0;
   const cNow = cci(h, l, c, 20), cPrev = cci(h.slice(0, -1), l.slice(0, -1), c.slice(0, -1), 20);
@@ -189,9 +218,12 @@ function trendFromSignal(sig) {
   if (sig === "적극매도" || sig === "매도") return "하락";
   return "횡보";
 }
-function macdText(m) {
+function macdText(m, level) {
   if (!m) return "–";
-  return (m.macd > m.signal ? "매수(시그널 상회)" : "매도(시그널 하회)") + (m.hist >= 0 ? " · 히스토그램+" : " · 히스토그램−");
+  const gap = level ? (m.macd - m.signal) / level * 100 : (m.macd - m.signal);
+  const dir = Math.abs(gap) < 0.05 ? "중립(시그널 근접)"
+    : (m.macd > m.signal ? "매수(시그널 상회)" : "매도(시그널 하회)");
+  return dir + (m.hist >= 0 ? " · 히스토그램+" : " · 히스토그램−");
 }
 function adxText(ax) {
   if (!ax || !isFinite(ax.adx)) return "–";
@@ -211,19 +243,28 @@ function analyzeTimeframes(rows, opts) {
   const lastT = rows[rows.length - 1].t;
   const period = lastT ? (new Date(lastT * 1000).toISOString().slice(5, 10).replace("-", "/") + " 종가") : "";
 
+  // 3구간 — 단기(일봉) · 중기(주봉) · 장기(월봉).
+  // 각 시계열이 짧아 지표를 못 만들면 한 단계 짧은 봉으로 폴백하고 라벨도 그에 맞춰 정직하게 쓴다
+  // ('월간 지표'라고 적어 놓고 실제로는 주봉인 상황을 만들지 않는다).
   const S = computeSuite(rows);
   if (!S) return null;
-  const weekly = toWeekly(rows);
-  const Lw = computeSuite(weekly);
-  const L = Lw || S;                     // 주봉이 짧으면 일봉으로 폴백
-  const wkName = Lw ? "주간" : "일봉";   // 폴백 시 라벨도 정직하게 — '주간 지표'로 오표기하지 않는다
+  const weekly = toWeekly(rows), monthly = toMonthly(rows);
+  const Mw = computeSuite(weekly);
+  const M = Mw || S;                     // 중기: 주봉, 짧으면 일봉
+  const mdName = Mw ? "주간" : "일봉";
+  const Lm = computeSuite(monthly);
+  const L = Lm || M;                     // 장기: 월봉, 짧으면 중기로 폴백
+  const lgName = Lm ? "월간" : mdName;
 
   // 지지/저항
   const winS = rows.slice(-20);
   const loS = Math.min.apply(null, winS.map((x) => x.low)), hiS = Math.max.apply(null, winS.map((x) => x.high));
   const srS = levels(level, [S.sma5, S.sma20, S.sma60, loS, hiS], loS, hiS);
-  const wl = weekly.slice(-13);   // 최근 ~3개월(주봉)
-  const loL = wl.length ? Math.min.apply(null, wl.map((x) => x.low)) : loS, hiL = wl.length ? Math.max.apply(null, wl.map((x) => x.high)) : hiS;
+  const wl = weekly.slice(-13);   // 중기: 최근 ~3개월(주봉)
+  const loM = wl.length ? Math.min.apply(null, wl.map((x) => x.low)) : loS, hiM = wl.length ? Math.max.apply(null, wl.map((x) => x.high)) : hiS;
+  const srM = levels(level, [S.sma20, S.sma60, S.sma120, loM, hiM], loM, hiM);
+  const ml = monthly.slice(-24);  // 장기: 최근 ~2년(월봉)
+  const loL = ml.length ? Math.min.apply(null, ml.map((x) => x.low)) : loM, hiL = ml.length ? Math.max.apply(null, ml.map((x) => x.high)) : hiM;
   const srL = levels(level, [S.sma60, S.sma120, S.sma200, loL, hiL], loL, hiL);
 
   // 골든/데드크로스(일봉 50/200)
@@ -232,30 +273,41 @@ function analyzeTimeframes(rows, opts) {
   else if (S.sma60 != null && S.sma120 != null) cross = S.sma60 > S.sma120 ? "정배열(60>120)" : "역배열(60<120)";
   const vs200 = S.sma200 != null ? (level - S.sma200) / S.sma200 * 100 : null;
 
-  const rsS = rsiState(S.rsi), rsL = rsiState(L.rsi);
+  const rsS = rsiState(S.rsi), rsM = rsiState(M.rsi), rsL = rsiState(L.rsi);
+  const tally = (X, label) => "지표 " + X.total + "개 중 매수 " + X.buy + "·매도 " + X.sell +
+    (X.neu ? "·중립 " + X.neu : "") + " → " + label + " '" + X.signal + "'. ";
+
   const short = {
     trend: trendFromSignal(S.signal),
     signal: S.signal,
     metrics: [
       ["RSI(14)", (S.rsi == null ? "–" : S.rsi.toFixed(1)) + (rsS ? " · " + rsS : "")],
-      ["MACD", macdText(S.macd)],
+      ["MACD", macdText(S.macd, S.level)],
       ["지지 / 저항", fmtNum(srS.support, srDp) + " / " + fmtNum(srS.resistance, srDp)]
     ],
-    read: "지표 " + S.total + "개 중 매수 " + S.buy + "·매도 " + S.sell + (S.neu ? "·중립 " + S.neu : "") +
-      " → 단기 '" + S.signal + "'. " + adxText(S.adx) +
+    read: tally(S, "단기") + adxText(S.adx) +
       (S.stoch ? ", 스토캐스틱 " + S.stoch.k.toFixed(0) : "") + "."
+  };
+  const mid = {
+    trend: trendFromSignal(M.signal),
+    signal: M.signal,
+    metrics: [
+      [mdName + " RSI(14)", (M.rsi == null ? "–" : M.rsi.toFixed(1)) + (rsM ? " · " + rsM : "")],
+      [mdName + " MACD", macdText(M.macd, M.level)],
+      ["지지 / 저항", fmtNum(srM.support, srDp) + " / " + fmtNum(srM.resistance, srDp)]
+    ],
+    read: tally(M, "중기") + mdName + " 기준 " +
+      (M.macd ? "MACD " + macdText(M.macd, M.level).split(" ·")[0] : "") + "."
   };
   const long = {
     trend: trendFromSignal(L.signal),
     signal: L.signal,
     metrics: [
-      [wkName + " RSI(14)", (L.rsi == null ? "–" : L.rsi.toFixed(1)) + (rsL ? " · " + rsL : "")],
+      [lgName + " RSI(14)", (L.rsi == null ? "–" : L.rsi.toFixed(1)) + (rsL ? " · " + rsL : "")],
       ["50/200 배열", cross + (vs200 != null ? " · 200일선 " + (vs200 >= 0 ? "+" : "") + vs200.toFixed(1) + "%" : "")],
       ["지지 / 저항", fmtNum(srL.support, srDp) + " / " + fmtNum(srL.resistance, srDp)]
     ],
-    read: wkName + " 지표 매수 " + L.buy + "·매도 " + L.sell + (L.neu ? "·중립 " + L.neu : "") +
-      " → 장기 '" + L.signal + "'. " + (L.macd ? wkName + " MACD " + (L.macd.macd > L.macd.signal ? "매수" : "매도") : "") +
-      ", " + cross + "."
+    read: tally(L, "장기") + lgName + " 기준, " + cross + "."
   };
 
   return {
@@ -263,10 +315,10 @@ function analyzeTimeframes(rows, opts) {
     change: (changePct >= 0 ? "+" : "") + changePct.toFixed(2) + "%",
     changeDir: changePct >= 0 ? "up" : "down",
     period: period,
-    short: short, long: long
+    short: short, mid: mid, long: long
   };
 }
 
-var _LIB_TA = { sma, ema, rsi, rsiState, macd, stochastic, cci, williamsR, adx, momentum, chgN, fmtNum, levels, toWeekly, computeSuite, analyzeTimeframes };
+var _LIB_TA = { sma, ema, rsi, rsiState, macd, stochastic, cci, williamsR, adx, momentum, chgN, fmtNum, levels, toWeekly, toMonthly, computeSuite, analyzeTimeframes };
 if (typeof module !== "undefined" && module.exports) module.exports = _LIB_TA;   // Node (update 스크립트)
 if (typeof window !== "undefined") window.LIB_TA = _LIB_TA;                       // 브라우저(관심종목 라이트 분석)

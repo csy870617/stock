@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 // 지수 기술적 분석 자동 갱신 — LLM 토큰 0 (순수 스크립트, refresh-quotes Action에서 실행)
 //
-// 역할: 나스닥 종합(^IXIC)·다우존스(^DJI)·코스피(^KS11)·코스닥(^KQ11)의 2년치 일봉을
-//       Yahoo Finance 에서 받아, 공유 scripts/lib-ta.js 로 단기(1–3M)·장기(6–12M+)
+// 역할: 나스닥 종합(^IXIC)·다우존스(^DJI)·코스피(^KS11)·코스닥(^KQ11)의 5년치 일봉을
+//       Yahoo Finance 에서 받아, 공유 scripts/lib-ta.js 로 단기(일봉)·중기(주봉)·장기(월봉)
 //       기술적 분석(이동평균·RSI·추세·지지/저항·골든크로스·매매신호)을 "결정론적으로 계산"해
 //       data/indices.js(window.INDEX_TA)로 저장한다.
 //
@@ -20,7 +20,7 @@
 const fs = require("fs");
 const path = require("path");
 
-const TA = require("./lib-ta.js");   // 공유 기술적 분석 라이브러리(단기/장기)
+const TA = require("./lib-ta.js");   // 공유 기술적 분석 라이브러리(단기/중기/장기)
 
 const ROOT = path.join(__dirname, "..");
 const OUT = path.join(ROOT, "data", "indices.js");
@@ -76,7 +76,7 @@ async function fetchSeries(symbol) {
 async function fetchSeriesOnce(symbol, bustCache) {
   if (typeof fetch !== "function") return null;
   const url = "https://query1.finance.yahoo.com/v8/finance/chart/" +
-    encodeURIComponent(symbol) + "?interval=1d&range=2y" +
+    encodeURIComponent(symbol) + "?interval=1d&range=5y" +
     (bustCache ? "&_=" + Date.now() : "");
   const ctrl = new AbortController();
   const to = setTimeout(() => ctrl.abort(), 10000);
@@ -113,7 +113,7 @@ async function fetchSeriesOnce(symbol, bustCache) {
   return rows;
 }
 
-// 지수 1종목 분석 — 공유 lib-ta로 단기/장기 기술적 분석을 계산해 카드 필드와 합친다.
+// 지수 1종목 분석 — 공유 lib-ta로 단기/중기/장기 기술적 분석을 계산해 카드 필드와 합친다.
 function analyze(cfg, rows) {
   const a = TA.analyzeTimeframes(rows, { dp: 2, srDp: 0 });
   if (!a) return null;
@@ -127,7 +127,7 @@ function analyze(cfg, rows) {
   return {
     key: cfg.key, name: cfg.name, flag: cfg.flag, chartUrl: cfg.chartUrl,
     level: a.level, change: gapOk ? a.change : "–", changeDir: gapOk ? a.changeDir : "down",
-    period: a.period, short: a.short, long: a.long
+    period: a.period, short: a.short, mid: a.mid, long: a.long
   };
 }
 
@@ -175,7 +175,7 @@ function loadPrevAsOf() {
       const skel = { trend: "횡보", signal: "중립", metrics: [["상태", "조회 실패 · 다음 갱신 대기"]], read: "데이터 조회 실패." };
       indices.push({
         key: cfg.key, name: cfg.name, flag: cfg.flag, chartUrl: cfg.chartUrl,
-        level: "–", change: "–", changeDir: "down", period: "", short: skel, long: skel
+        level: "–", change: "–", changeDir: "down", period: "", short: skel, mid: skel, long: skel
       });
       fellBack++;
     }
@@ -188,7 +188,7 @@ function loadPrevAsOf() {
     asOf: asOf,
     // builtAt = 이 파일을 실제로 다시 만든 시각(asOf 는 마지막 봉의 거래일이라 다르다).
     builtAt: new Date().toISOString().slice(0, 19) + "Z",
-    note: "기술적 지표는 Yahoo 일봉에서 매일 자동 계산(LLM 토큰 0). 이동평균(SMA·EMA)과 오실레이터(RSI·MACD·스토캐스틱·CCI·Williams %R·ADX·모멘텀)를 종합 투표한 5단계 신호 — 단기(1–3M)는 일봉, 장기(6–12M+)는 주봉 기준.",
+    note: "기술적 지표는 Yahoo 일봉에서 매일 자동 계산(LLM 토큰 0). 이동평균(SMA·EMA)과 오실레이터(RSI·MACD·스토캐스틱·CCI·Williams %R·ADX·모멘텀)를 종합 투표한 5단계 신호 — 단기=일봉, 중기=주봉, 장기=월봉 3기간.",
     indices: indices
   };
 

@@ -11,7 +11,7 @@
 // 미완료가 하나라도 있으면 exit 1 → 루틴이 이 코드를 보고 남은 종목만 재배치해 100% 까지 반복한다.
 //
 // 판정 기준(항목별):
-//   techNote   : techNote.asOf == T (최신 거래일 = stock-ta.js asOf)
+//   techNote   : 단기·중기·장기 3기간 대응+신호 + techNote.asOf == T (최신 거래일 = stock-ta.js asOf)
 //   valueNote  : 비어 있지 않음
 //   verified   : 7일 회전 — 전 종목의 verifiedAt 이 7일 이내(큐는 --quota 만큼만 준다)
 //   discovery  : 7일 회전 — 10개 (주제×국가) 그룹의 D.discovery["<country>|<theme>"] 가 7일 이내
@@ -71,8 +71,11 @@ const all = [].concat(D.korea || [], D.us || []);
 const label = (s) => s.ticker + "(" + s.name + ")";
 
 // ── 종목 단위 항목 ──
-const missTech  = all.filter((s) => !s.techNote || !s.techNote.short || !s.techNote.long ||
-                                    !s.techNote.sigShort || !s.techNote.sigLong || s.techNote.asOf !== T);
+// 기술 대응은 단기(일봉)·중기(주봉)·장기(월봉) 3기간 전부 + 각 신호 등급이 있어야 완료다.
+const missTech  = all.filter((s) => !s.techNote ||
+                                    !s.techNote.short || !s.techNote.mid || !s.techNote.long ||
+                                    !s.techNote.sigShort || !s.techNote.sigMid || !s.techNote.sigLong ||
+                                    s.techNote.asOf !== T);
 const missValue = all.filter((s) => !s.valueNote || !String(s.valueNote).trim());
 // ── 목표가 재검증은 '회전(rotation)' 이다 ──
 // WebSearch 예산은 세션 전체 공유 ~200회라 전 종목(110) 재검증은 한 회차에 물리적으로
@@ -125,7 +128,7 @@ else {
   idxKeys.forEach((k) => {
     const it = IN.items && IN.items[k];
     if (!it) return missIdx.push(k + " 없음");
-    ["value", "short", "long", "sigShort", "sigLong"].forEach((f) => {
+    ["value", "short", "mid", "long", "sigShort", "sigMid", "sigLong"].forEach((f) => {
       if (!it[f] || !String(it[f]).trim()) missIdx.push(k + "." + f);
     });
   });

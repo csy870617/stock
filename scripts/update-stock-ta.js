@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // 개별 종목 기술적 분석 자동 갱신 — LLM 토큰 0 (순수 스크립트, refresh-quotes Action에서 실행)
 //
-// 역할: recommendations.js의 전 종목에 대해 Yahoo 2년 일봉을 받아 단기(1–3M)·장기(6–12M+)
+// 역할: recommendations.js의 전 종목에 대해 Yahoo 5년 일봉을 받아 단기(일봉)·중기(주봉)·장기(월봉)
 //       기술적 분석(RSI·이동평균·추세·지지/저항·신호)을 공유 lib-ta로 계산해 data/stock-ta.js로 저장.
 //       가격·지표 모두 결정론적 계산이므로 시세(quotes.js)·지수(indices.js)와 함께 매일 자동 갱신된다.
 //
@@ -82,7 +82,7 @@ async function fetchRowsOnce(symbol) {
   let j;
   try {
     const r = await fetch("https://query1.finance.yahoo.com/v8/finance/chart/" + encodeURIComponent(symbol) +
-      "?interval=1d&range=2y", { signal: ctrl.signal, headers: { "User-Agent": "Mozilla/5.0", "Accept": "application/json" } });
+      "?interval=1d&range=5y", { signal: ctrl.signal, headers: { "User-Agent": "Mozilla/5.0", "Accept": "application/json" } });
     if (!r.ok) return null;
     j = await r.json();   // 본문 수신도 타임아웃 범위 안에서(스톨 방지)
   } catch (_e) { return null; }
@@ -124,7 +124,7 @@ async function mapLimit(items, limit, fn) {
     const dp = s.market === "KOSPI" || s.market === "KOSDAQ" ? 0 : 2;   // 한국주=정수, 미국주=소수 2
     const a = rows ? TA.analyzeTimeframes(rows, { dp: dp, srDp: dp }) : null;
     if (a) {
-      ta[s.ticker] = { short: a.short, long: a.long }; live++;
+      ta[s.ticker] = { short: a.short, mid: a.mid, long: a.long }; live++;
       if (rows.lastDate && (!lastBar || rows.lastDate > lastBar)) lastBar = rows.lastDate;
     }
     else if (prev[s.ticker]) { ta[s.ticker] = prev[s.ticker]; fellBack++; }
@@ -140,12 +140,12 @@ async function mapLimit(items, limit, fn) {
     // coverage.js 가 '이번 회차에 backbone 을 돌렸는가'를 이 값으로 판정한다 — 건너뛰면
     // 뒤늦게 backbone 이 T 를 올리면서 방금 쓴 techNote 가 통째로 구식이 된다.
     builtAt: new Date().toISOString().slice(0, 19) + "Z",
-    note: "개별 종목 기술적 분석 — 이동평균(SMA·EMA)+오실레이터(RSI·MACD·스토캐스틱·CCI·Williams %R·ADX·모멘텀) 종합 투표. 단기(1–3M)는 일봉, 장기(6–12M+)는 주봉 기준. Yahoo 2년 일봉에서 매일 자동 계산(LLM 토큰 0).",
+    note: "개별 종목 기술적 분석 — 이동평균(SMA·EMA)+오실레이터(RSI·MACD·스토캐스틱·CCI·Williams %R·ADX·모멘텀) 종합 투표. 단기=일봉, 중기=주봉, 장기=월봉 3기간. Yahoo 5년 일봉에서 매일 자동 계산(LLM 토큰 0).",
     ta: ta
   };
   const body =
     "// 개별 종목 기술적 분석 스냅샷 — scripts/update-stock-ta.js 가 자동 생성 (LLM 토큰 0, 순수 스크립트)\n" +
-    "// ticker → { short:{trend,signal,metrics,read}, long:{...} }. 단기/장기 분리.\n" +
+    "// ticker → { short:{trend,signal,metrics,read}, mid:{...}, long:{...} }. 단기(일봉)/중기(주봉)/장기(월봉) 분리.\n" +
     "window.STOCK_TA = " + JSON.stringify(T) + ";\n";
   fs.writeFileSync(OUT, body);
 

@@ -57,9 +57,10 @@ const seen = {};
     if (!seen[key] || s.tier < seen[key].tier) {
       seen[key] = { t: s.ticker, n: s.name, c, th: s.theme, tier: s.tier,
                     p: priceOf(s), pd: priceDateOf(s), tp: s.targetPrice,
-                    // 그날의 단기·장기 신호 등급 — 앱의 '기준일 선택'이 과거 편성을 보여줄 때 쓴다.
-                    // 문구(techNote.short/long)는 용량이 커 저장하지 않고 등급만 남긴다.
+                    // 그날의 단기·중기·장기 신호 등급 — 앱의 '기준일 선택'이 과거 편성을 보여줄 때 쓴다.
+                    // 문구(techNote.short/mid/long)는 용량이 커 저장하지 않고 등급만 남긴다.
                     ss: (s.techNote && s.techNote.sigShort) || null,
+                    sm: (s.techNote && s.techNote.sigMid) || null,
                     sl: (s.techNote && s.techNote.sigLong) || null };
     }
   });

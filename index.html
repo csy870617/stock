@@ -582,7 +582,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 0.86rem; min-widt
 .idx .idx-head h2 { font-size: 1.18rem; font-weight: 700; letter-spacing: -0.024em; }
 .idx .idx-as { color: var(--muted); font-size: 0.78rem; }
 .idx .idx-note { color: var(--muted); font-size: 0.8rem; line-height: 1.55; margin-bottom: 16px; }
-/* 지수: 단기/장기 대응 카드 — 모바일 1열, 넓은 화면 2열 */
+/* 지수: 단기/중기/장기 대응 카드 — 모바일 1열, 넓은 화면 2열 */
 .idx-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
 @media (min-width: 640px) { .idx-grid { grid-template-columns: 1fr 1fr; } }
 .idx-tile { display: block; background: var(--inset); border-radius: var(--r-sm); padding: 14px 16px; text-decoration: none; color: inherit; transition: background .15s; }
@@ -618,7 +618,7 @@ a.idx-tile:hover { background: color-mix(in srgb, var(--ink) 5%, var(--inset)); 
 .vt-dot.vt-warn { background: var(--down); }
 .vt-dot.vt-mix { background: var(--tier3); }
 .vt-dot.vt-neutral { background: var(--muted); }
-/* 기술 대응(techNote) — 단기/장기 대응만 간결히 */
+/* 기술 대응(techNote) — 단기(일봉)/중기(주봉)/장기(월봉) 대응만 간결히 */
 .tech-note { margin: 2px 0 4px; background: var(--inset); border-radius: var(--r-sm); padding: 11px 13px; }
 .tn-head { display: flex; align-items: baseline; gap: 8px; font-size: 0.76rem; font-weight: 700; color: var(--muted); margin-bottom: 7px; }
 .tn-as { color: var(--muted); font-size: 0.7rem; font-weight: 400; }
@@ -1012,7 +1012,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       function themeRank(k) { var i = order.indexOf(k); return i < 0 ? 99 : i; }
 
       function stockRow(s) {
-        var sig = [s.ss, s.sl].filter(Boolean).join(" · ");
+        var sig = [s.ss, s.sm, s.sl].filter(Boolean).join(" · ");
         var tmeta = tierMeta(s.tier);
         var now = pastNowPrice(s.t);
         // 신호는 별도 열로 두면 좁은 화면에서 '현재가'가 가로 스크롤 뒤로 밀린다 —
@@ -1041,7 +1041,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
               '<div class="past-th"><span class="past-th-nm">' + esc((tm.emoji ? tm.emoji + " " : "") + (tm.label || k)) + "</span>" +
                 '<span class="past-th-n">' + groups[k].length + "종목</span></div>" +
               '<div class="past-tblwrap"><table class="past-tbl">' +
-                "<thead><tr><th>종목 <span style=\"font-weight:400\">· 신호(단기·장기)</span></th><th>그날 가격</th><th>현재가</th></tr></thead>" +
+                "<thead><tr><th>종목 <span style=\"font-weight:400\">· 신호(단기·중기·장기)</span></th><th>그날 가격</th><th>현재가</th></tr></thead>" +
                 "<tbody>" + rows + "</tbody></table></div>" +
             "</div>";
         }).join("");
@@ -1451,7 +1451,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     return { cl: cl, source: source, n: cl.length };
   }
 
-  // 개별 종목 단기/장기 기술적 분석 줄 — data/stock-ta.js(자동 계산, 단기/장기 분리)를 읽어 컴팩트 표시.
+  // 개별 종목 기술적 분석 — data/stock-ta.js(자동 계산, 단기=일봉·중기=주봉·장기=월봉 분리)를 읽는다.
   var TA_SIG_COL = { "적극매수": "var(--up)", "매수": "var(--tier2)", "중립": "var(--tier3)", "매도": "#eb6834", "적극매도": "var(--down)" };
   function stTa(ticker) { var T = window.STOCK_TA; return (T && T.ta && T.ta[ticker]) || null; }
 
@@ -1509,11 +1509,11 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       '<div class="sig-body sig-txt"><span class="vt-dot ' + cls + '"></span>' + esc(text) + "</div>";
   }
 
-  // 기술 대응(techNote) — 매일 LLM 루틴이 생성한 단기/장기 대응 + 신호 등급(적극매도~적극매수).
-  //   오늘자(stock-ta.js asOf) 로 갱신되지 않았으면 '미갱신' 표시.
+  // 기술 대응(techNote) — 매일 LLM 루틴이 생성한 단기(일봉)/중기(주봉)/장기(월봉) 대응 +
+  //   신호 등급(적극매도~적극매수). 오늘자(stock-ta.js asOf) 로 갱신되지 않았으면 '미갱신' 표시.
   function techNoteBlock(s) {
     var n = s.techNote;
-    if (!n || (!n.short && !n.long)) return "";
+    if (!n || (!n.short && !n.mid && !n.long)) return "";
     var T = window.STOCK_TA, taAsOf = T && T.asOf;
     var stale = n.asOf && taAsOf && n.asOf < taAsOf;
     function sigBadge(g) {
@@ -1527,7 +1527,8 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       ? '<span class="tn-stale" title="오늘 데이터(' + esc(taAsOf) + ')로 아직 갱신되지 않았습니다. 표시는 ' + esc(n.asOf) + ' 기준입니다.">⚠ 미갱신</span>' : "";
     return '<div class="tech-note' + (stale ? " stale" : "") + '">' +
       '<div class="tn-head">기술 대응' + (n.asOf ? '<span class="tn-as">' + esc(n.asOf) + "</span>" : "") + staleBadge + "</div>" +
-      line("단기", n.short, n.sigShort) + line("장기", n.long, n.sigLong) + "</div>";
+      line("단기", n.short, n.sigShort) + line("중기", n.mid, n.sigMid) +
+      line("장기", n.long, n.sigLong) + "</div>";
   }
 
   function card(s, country, showTheme, watchDel) {
@@ -1645,7 +1646,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   var THEME_QUALITY = { core: 1, value: 0.6, dividend: 0.1, growth: -0.6, rising: -0.9 };
   function idxSignal(key) {
     var T = window.INDEX_TA, x = T && (T.indices || []).filter(function (i) { return i.key === key; })[0];
-    // 지수 스키마는 단기/장기 분리(short.signal/long.signal) — 방어 로테이션은 단기 신호 기준
+    // 지수 스키마는 단기/중기/장기 분리(short/mid/long.signal) — 방어 로테이션은 단기 신호 기준
     var sig = x && x.short && x.short.signal;
     return sig ? (IDX_SIG[sig] || 0) : 0;
   }
@@ -1728,14 +1729,14 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       '<div class="roster-empty">이 날짜에는 편입·제외 변경이 없습니다.</div>';
   }
 
-  // Top Pick 신호 배지 (단기/장기 5단계) — techNote sig 기준
+  // Top Pick 신호 배지 (단기/중기/장기 5단계) — techNote sig 기준
   function pickSigBadges(s) {
     var n = s.techNote || {};
-    if (!n.sigShort && !n.sigLong) return "";
+    if (!n.sigShort && !n.sigMid && !n.sigLong) return "";
     function one(k, g) {
       return g ? '<span class="psig" style="background:' + (TA_SIG_COL[g] || "var(--muted)") + '"><span class="psig-k">' + k + "</span>" + esc(g) + "</span>" : "";
     }
-    return '<div class="psigs">' + one("단기", n.sigShort) + one("장기", n.sigLong) + "</div>";
+    return '<div class="psigs">' + one("단기", n.sigShort) + one("중기", n.sigMid) + one("장기", n.sigLong) + "</div>";
   }
   // 한 종목 → Top Pick 카드 HTML (cc=국가, rankNum=순위, reason=선정 이유·선택)
   function pickCard(s, cc, rankNum, reason) {
@@ -1874,7 +1875,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     return open +
       '<div class="tl-main">' + nameLine +
         '<div class="tl-sub"><span class="tl-tier"><span class="dot" style="background:var(--muted)"></span>관심</span>' +
-          ' <span class="tl-na">· 정밀분석 요청 시 단기/장기 대응 제공</span></div>' +
+          ' <span class="tl-na">· 정밀분석 요청 시 단기/중기/장기 대응 제공</span></div>' +
       "</div>" +
       '<div class="tl-r"><div class="tl-px">' + fmtPrice(d.price, item.c) + (chgNum(ta && ta.change) != null ? " " + chgBadge(chgNum(ta.change), "sm") : "") + "</div>" +
         '<div class="tl-updel">' + delBtn + "</div></div>" + caret +
@@ -2190,7 +2191,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
         (ta && ta.change ? '<div class="c-hcell c-r"><div class="c-hv ' + chDir + '">' + esc(ta.change) + '</div><div class="c-hk">전일대비</div></div>' : "") +
       "</div>" +
       reqTag +
-      (req ? "" : '<div class="wl-note">실시간 시세만 보여주는 라이트 카드입니다. 단기/장기 기술 대응·목표가·논거 등 분석은 아래 <b>정밀분석 요청</b>으로 신청하면 풀카드로 승격됩니다. <b>요청 시 매일 오전 1시(LA·한국시간 오후 5시) 정기 분석에 반영</b>됩니다.</div>') +
+      (req ? "" : '<div class="wl-note">실시간 시세만 보여주는 라이트 카드입니다. 단기/중기/장기 기술 대응·목표가·논거 등 분석은 아래 <b>정밀분석 요청</b>으로 신청하면 풀카드로 승격됩니다. <b>요청 시 매일 오전 1시(LA·한국시간 오후 5시) 정기 분석에 반영</b>됩니다.</div>') +
       '<div class="links"><a href="' + chartUrl + '" target="_blank" rel="noopener">차트 보기</a>' +
       (req ? '<a class="wl-req" href="' + esc(safeUrl(req.url)) + '" target="_blank" rel="noopener">요청 이슈 보기 →</a>'
            : '<a class="wl-req" href="' + reqUrl + '" target="_blank" rel="noopener">정밀분석 요청 →</a>') + "</div>" +
@@ -2205,7 +2206,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
         '<div class="wl-sug" id="wlSug" hidden></div>' +
       "</div>" +
       "</form>" +
-      '<div class="wl-hint">종목명·코드로 검색해 추가하세요. 이 기기 브라우저에만 저장되며, 실시간 시세가 표시됩니다(단기/장기 기술 대응·목표가·논거 등 분석은 카드의 ‘정밀분석 요청’으로).</div>';
+      '<div class="wl-hint">종목명·코드로 검색해 추가하세요. 이 기기 브라우저에만 저장되며, 실시간 시세가 표시됩니다(단기/중기/장기 기술 대응·목표가·논거 등 분석은 카드의 ‘정밀분석 요청’으로).</div>';
   }
 
   // 사전(TICKER_DICT)에서 이름/코드로 후보 검색 (+ 미등록 코드는 직접추가 후보)
@@ -2694,7 +2695,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       var L = window.LIQUIDITY_DATA, A = window.LIQUIDITY_AUTO, c = (L && L[r]) || (A && A[r]);
       return (c && c.shortTerm) || "";
     }
-    // 지수 카드 — 이름·기준일 / 지수값·등락 / 밸류(유동성 포함) + 단·장기 대응. 탭 시 네이버 차트.
+    // 지수 카드 — 이름·기준일 / 지수값·등락 / 밸류(유동성 포함) + 단·중·장기 대응. 탭 시 네이버 차트.
     function noteLine(k, v, lead) {
       return v ? '<div class="tn-line"><span class="tn-k">' + k + '</span><span class="tn-v">' + (lead || "") + esc(v) + "</span></div>" : "";
     }
@@ -2710,8 +2711,11 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       var nnAsOf = window.INDEX_NOTES && window.INDEX_NOTES.asOf;
       var stale = nnAsOf && T.asOf && nnAsOf < T.asOf;
       var staleBadge = stale ? '<span class="tn-stale" title="오늘 데이터(' + esc(T.asOf) + ')로 아직 갱신되지 않았습니다. 표시는 ' + esc(nnAsOf) + ' 기준입니다.">⚠ 미갱신</span>' : "";
-      var body = (n && (n.value || n.short || n.long))
-        ? '<div class="it-note">' + noteLine("밸류", n.value, liqChip) + noteLine("단기", n.short, sigBadge(n.sigShort)) + noteLine("장기", n.long, sigBadge(n.sigLong)) + "</div>" : "";
+      var body = (n && (n.value || n.short || n.mid || n.long))
+        ? '<div class="it-note">' + noteLine("밸류", n.value, liqChip) +
+          noteLine("단기", n.short, sigBadge(n.sigShort)) +
+          noteLine("중기", n.mid, sigBadge(n.sigMid)) +
+          noteLine("장기", n.long, sigBadge(n.sigLong)) + "</div>" : "";
       var inner =
         '<div class="it-top"><span class="it-nm">' + esc(x.name) + "</span>" +
           (x.period ? '<span class="it-pd">' + esc(x.period) + "</span>" : "") + staleBadge + "</div>" +
