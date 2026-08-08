@@ -3,7 +3,7 @@
 // 페이지 가격 우선순위: 실시간 API(config.js) > 이 스냅샷 > recommendations.js 종가(폴백)
 // 각 항목: ticker → { price, date }
 window.STOCK_QUOTES = {
- "generatedAt": "2026-08-07",
+ "generatedAt": "2026-08-08",
  "quotes": {
   "105560": {
    "price": 175800,
@@ -525,11 +525,6 @@ window.STOCK_QUOTES = {
    "date": "2026-08-07",
    "changePct": 1.4
   },
-  "MSI": {
-   "price": 467.55,
-   "date": "2026-08-07",
-   "changePct": -1.4
-  },
   "IREN": {
    "price": 41.23,
    "date": "2026-08-07",
@@ -549,6 +544,11 @@ window.STOCK_QUOTES = {
    "price": 64.72,
    "date": "2026-08-07",
    "changePct": 0.9
+  },
+  "NOC": {
+   "price": 571.58,
+   "date": "2026-08-07",
+   "changePct": 0.7
   }
  }
 };

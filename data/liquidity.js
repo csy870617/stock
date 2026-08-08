@@ -2,44 +2,40 @@
 // 갱신 방법: README.md 참고 (스킬 재실행 → 이 파일 갱신 → git push)
 // 게이지 단계: "매우 우호" / "우호" / "신중" / "부정" / "매우 부정"
 window.LIQUIDITY_DATA = {
-  asOf: "2026-08-07",
-  headline: "미국은 NFP 결과 미확인 속 ADP 부진·9월 금리인상 확률 61.9%·호르무즈 재긴장이 겹치며 단기 우호·중기 신중을, 한국은 반도체 수급발 매도가 이어지되 낙폭이 축소되고 7월 수출(+62.8% YoY)이 견조해 단기 부정·중기 신중을 유지한다 — 양국 모두 美 NFP 확정치와 BOK 8/27 회의가 다음 유동성 국면 분기점이다.",
-  headlineUS: "미국은 7월 고용보고서(NFP, 8/7 08:30 ET 발표 예정)의 실제 결과가 검색 시점까지 확인되지 않아 시장 컨센서스(+80~85천 명, 실업률 4.2%)만 반영됐다. 선행지표인 ADP 민간고용이 7월 +4.4만 명으로 예상을 하회했고(8/5 발표), 9월 FOMC 금리 인상 확률이 CME FedWatch 기준 61.9%(8/4 집계)로 높게 유지되는 가운데, 호르무즈 해협에서 이란이 표적을 재타격했다는 보도로 유가가 WTI 78달러·브렌트 82달러대로 재상승하며 전일의 지정학 완화 흐름이 반전됐다. VIX는 15~16선의 안정권을 유지하고 10년물 금리는 4.61%(8/6)로 주중 하락세를 보여, 단기는 '우호', 금리 인상 리스크와 지정학 불확실성을 반영해 중기는 '신중'을 유지한다.",
-  headlineKR: "코스피는 8/7 6,258.77(-0.60%)로 2거래일 연속 하락했으나 전일(-4.58% 급락) 대비 낙폭은 축소됐고, 외국인 순매도도 약 8,580억원으로 전일(3.33조원)보다 완화됐다. 코스닥은 798.81(-0.36%) 마감으로 장중 반도체(SK하이닉스 등) 약세와 외국인 매도 전환에 상승분을 반납했다. 다만 7월 수출은 988.9억달러(+62.8% YoY), 반도체 수출은 410.1억달러(+178.8% YoY)로 2개월 연속 400억달러를 넘어서며 펀더멘털은 견조함을 재확인했다. BOK 8/27 금통위의 추가 인상 가능성이 여전히 부담 요인으로 남아 단기는 '부정', 중기는 '신중'을 유지한다.",
+  asOf: "2026-08-08",
+  headline: "미국은 고용 둔화에 따른 9월 인하 기대와 낮은 신용 스프레드로 단기 유동성 환경이 우호적인 반면, 한국은 한은의 금리 인상 재개와 환율·수급 변동성으로 여전히 부정적이다 — 국가별 온도차가 뚜렷한 하이브리드 국면이 이어지고 있다.",
+  headlineUS: "7월 고용보고서 충격(비농업고용 -2.3만명, 컨센서스 +8.5만 대폭 하회, 5·6월 합계 -10.3만 하향)으로 9월 FOMC 금리 인하 기대가 급등했고 나스닥이 사상 최고치권까지 랠리했다. HY 크레디트 스프레드는 약 280bp대 역사적 저점권을 유지해 신용시장 스트레스가 없고, QT는 지난해 12월 종료·M2는 +5.5~6%YoY로 재확장 중이라 유동성 환경은 완만히 우호적이나, Core PCE가 6월 +3.3%YoY로 여전히 목표를 크게 웃돌아 중기 인플레 부담은 남아있어 단기 '우호', 중기 '신중'을 유지한다.",
+  headlineKR: "한은이 7/16 기준금리를 2.50%→2.75%로 인상(2023년 이후 첫 인상)하며 긴축을 재개했고 8월 추가 인상 가능성도 열어둔 상태다. 7월 CPI는 +2.8%로 낮아졌지만 한은은 통신비 기저효과로 8월 물가 반등을 예상한다. 원/달러는 1420~1430원대이고, 코스피는 7월 두 차례 서킷브레이커급 급락 이후 변동성이 큰 흐름 속에 6200~6400선을 오가며 8/7엔 외국인이 반도체주 중심으로 순매수 전환했으나 수급이 여전히 불안정해 단기 '부정', 중기 '신중'을 유지한다.",
   us: {
     shortTerm: "우호",
     midTerm: "신중",
     drivers: [
-      "미국 7월 고용보고서(NFP)는 8/7 08:30 ET 발표 예정이었으나 검색 시점 기준 실제 발표치가 확인되지 않음 — 시장 컨센서스는 +80~85천 명, 실업률 4.2% 유지",
-      "선행지표인 ADP 민간고용은 7월 +4.4만 명으로 시장 예상을 하회(8/5 발표)해 노동시장 둔화 신호가 이어짐",
-      "CME FedWatch 기준 9월 FOMC 금리 인상 확률이 61.9%(8/4 집계)로 높게 유지돼 긴축 리스크가 상존",
-      "호르무즈 해협에서 이란이 '적대 세력' 표적을 재타격했다는 보도로 유가가 WTI 78달러·브렌트 82달러대로 재상승, 전일의 지정학 완화 흐름이 반전됨",
-      "VIX는 15~16선에서 안정적 유지, 10년물 국채금리는 8/6 기준 4.61%로 주 중 하락세",
+      "美 7/29 FOMC 3.50~3.75% 동결(9-3, 매파 3인 반대) 후 8/7 발표된 7월 고용보고서가 비농업 -2.3만명·실업률 4.1%로 예상을 크게 밑돌며 9월 인하 기대 급등, 나스닥 사상 최고치권 랠리",
+      "5·6월 비농업고용 합계 -10.3만명 하향 조정 — 노동시장 둔화가 일회성이 아니라 추세적임을 시사",
+      "Core PCE 6월 +3.3%YoY로 목표 상회 지속, Fed는 작년 12월 QT 종료 후 대차대조표 정체·M2는 +5.5~6%YoY 재확장",
+      "HY 크레디트 스프레드 약 280bp대 역사적 저점권으로 신용시장 리스크온 유지",
     ]
   },
   korea: {
     shortTerm: "부정",
     midTerm: "신중",
     drivers: [
-      "코스피 8/7 종가 6,258.77(-0.60%)로 2거래일 연속 하락, 전일(-4.58% 급락) 대비 낙폭은 축소",
-      "외국인은 8/7에도 KOSPI 순매도(약 8,580억원)를 이어갔으나 전일(3.33조원)보다 매도 강도 완화, 개인·기관은 순매수로 대응",
-      "코스닥은 798.81(-0.36%) 마감 — 장중 반도체(SK하이닉스 등) 약세와 외국인 매도 전환으로 상승분 반납",
-      "7월 수출 988.9억달러(+62.8% YoY), 반도체 수출 410.1억달러(+178.8% YoY)로 2개월 연속 400억달러 돌파 — 펀더멘털은 견조하나 단기 수급은 위축된 상태",
-      "BOK 8/27 금통위에서 강한 7월 성장세를 근거로 한 추가(연속) 금리 인상 가능성이 여전히 거론되며 단기 수급에 부담",
+      "한은 7/16 기준금리 25bp 인상(2.50%→2.75%, 2023년 이후 첫 인상)으로 긴축 재개, 8월 추가 인상 가능성 시사",
+      "7월 CPI +2.8%로 낮아졌으나 한은은 통신비 기저효과로 8월 물가 반등 전망 — 인하 전환은 아직 이르다는 신호",
+      "원/달러 1420~1430원대, 코스피는 7월 두 차례 급락(서킷브레이커 포함) 이후 변동성 장세로 6200~6400선 등락",
+      "8/7 외국인이 삼성전자·SK하이닉스 등 반도체주를 순매수하며 반등 주도했으나 수급 방향성은 아직 불안정",
     ]
   },
-  nextCheck: "美 7월 고용보고서(NFP) 확정치 확인, 9/16 FOMC, 한국 BOK 8/27 금통위",
+  nextCheck: "9/16~17 FOMC(9월 인하 여부), 한국 BOK 8/27 금통위, 8월 미국 CPI/PCE",
   sources: [
-    "https://www.cnbc.com/2026/08/06/the-july-jobs-numbers-are-due-out-friday-heres-what-to-expect.html",
-    "https://www.cnbc.com/2026/08/05/private-companies-added-just-44000-workers-in-july-below-expectations-adp-reports.html",
-    "https://www.cnbc.com/2026/08/06/what-fridays-jobs-report-could-mean-for-investors.html",
-    "https://insight.factset.com/total-nonfarm-payrolls-for-july-2026-are-projected-to-rise-by-97500",
-    "https://continuumeconomics.com/a/6815e0e3/preview-due-august-7-us-july-employment-non-farm-payrolls-stronger-than-june-but-with-a-rise-in-unemployment",
-    "https://www.bloomberg.com/news/articles/2026-08-06/latest-oil-market-news-and-analysis-for-aug-7",
-    "https://www.koreajoongangdaily.com/business/kospi-falls-for-second-straight-day-on-foreign-selling/12814413",
-    "https://www.asiae.co.kr/en/article/2026080709423090130",
-    "https://segye.com/newsView/20260807509867",
-    "https://www.fnnews.com/news/202608070058206931",
-    "https://biz.heraldcorp.com/article/10827691",
+    "https://www.cnbc.com/2026/08/07/july-jobs-report.html",
+    "https://www.bloomberg.com/news/articles/2026-08-07/us-employers-unexpectedly-shed-jobs-unemployment-rate-falls",
+    "https://247wallst.com/investing/2026/08/07/live-nasdaq-composite-tech-broader-markets-rise-as-payrolls-miss-signals-fed-patience/",
+    "https://www.advisorperspectives.com/dshort/updates/2026/07/30/core-pce-inflation-at-3-3-in-june-edging-down-from-may",
+    "https://www.svb.com/market-insights/us-treasuries/the-federal-reserve-ends-qt-key-market-liquidity-insights/",
+    "https://www.khan.co.kr/en/article/202607161738037/",
+    "https://en.sedaily.com/finance/2026/08/04/bank-of-korea-sees-august-inflation-rebounding-on-telecom",
+    "https://www.hankyung.com/article/2026080700756",
+    "https://www.mt.co.kr/stock/2026/08/07/2026080715205549201",
   ]
 };
