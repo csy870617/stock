@@ -17,7 +17,7 @@
 //   discovery  : 7일 회전 — 10개 (주제×국가) 그룹의 D.discovery["<country>|<theme>"] 가 7일 이내
 //   aiTarget   : 7일 회전 — 전 종목의 aiCheckedAt(재시도한 날)이 7일 이내. 값 자체가 없는 건
 //                정상이지만(입력값 검증 실패) 재시도조차 안 하는 건 갱신 누락이라 게이트다.
-//   tier       : tierAsOf == 오늘 (watch 는 tier 구조 면제라 제외)
+//   tier       : tierAsOf == 오늘 (관심·보유는 tier 구조 면제라 제외)
 //   indexNotes : INDEX_NOTES.asOf == indices.js asOf + 4개 지수 5개 필드
 //   topPicks   : topPicks.asOf == 오늘 + korea/us 각 3종목
 //   liquidity  : liquidity.js asOf == 오늘 + 통합·미국·한국 headline
@@ -30,6 +30,8 @@
 const fs = require("fs");
 const path = require("path");
 const ROOT = path.join(__dirname, "..");
+// 관심(watch)·보유(hold)는 사용자 개인 목록이라 tier 구조·주제 커버리지에서 제외한다.
+const { isPersonalTheme } = require("./validate-reco.js");
 
 function argVal(name) {
   const i = process.argv.indexOf("--" + name);
@@ -115,7 +117,7 @@ const missVerif = staleVerif;
 const verifQueue = staleVerif.slice(0, VERIF_QUOTA);
 const verifiedToday = all.filter((s) => s.verifiedAt === today);
 
-const tierable  = all.filter((s) => s.theme !== "watch");
+const tierable  = all.filter((s) => !isPersonalTheme(s.theme));
 const missTier  = tierable.filter((s) => s.tierAsOf !== today);
 
 // ── 문서 단위 항목 ──
@@ -158,7 +160,7 @@ else {
 // (전 그룹을 매일 도는 건 예산상 불가능하고, 굶게 두면 발굴이 영영 안 된다 — 그 사이가 회전이다.)
 const DISC_GROUPS = [];
 ["korea", "us"].forEach((c) => {
-  const seen = new Set((D[c] || []).filter((s) => s.theme !== "watch").map((s) => s.theme));
+  const seen = new Set((D[c] || []).filter((s) => !isPersonalTheme(s.theme)).map((s) => s.theme));
   [...seen].sort().forEach((t) => DISC_GROUPS.push(c + "|" + t));
 });
 const discMap = D.discovery || {};

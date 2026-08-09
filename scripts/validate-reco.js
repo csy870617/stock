@@ -92,6 +92,11 @@ function isBlockedSource(u) { return matchDomain(sourceHost(u), BLOCKED_SOURCES)
 
 
 const MARKETS = { korea: ["KOSPI", "KOSDAQ"], us: ["NASDAQ", "NYSE", "AMEX"] };   // AMEX 우량주(예: 일부 ETF·중형주) 편입 허용
+// 개인 목록 주제 — 사용자가 앱에서 직접 담는 '관심'·'보유' 탭. 추천 편성이 아니라
+// 모니터링·보유 현황이므로 (주제×국가) 9종목·tier 3/3/3 구조와 tier 자체가 면제된다.
+// (종목별 필드 검증·신뢰 출처·목표가 가드레일은 추천 종목과 똑같이 적용된다.)
+const PERSONAL_THEMES = ["watch", "hold"];
+const isPersonalTheme = (t) => PERSONAL_THEMES.includes(t);
 const PER_GROUP = 9;              // (주제×국가)당 종목 수
 const PER_TIER = 3;               // 티어당 종목 수
 const UPSIDE_TOL = 1.5;           // upside 필드 vs (target-price)/price*100 허용 오차(%p)
@@ -132,8 +137,8 @@ function validate(D, opts) {
 
       if (!s || typeof s !== "object") { errors.push(tag + ": 항목이 객체가 아님"); return; }
       if (!themeKeys.includes(s.theme)) errors.push(tag + ": 미정의 theme '" + s.theme + "'");
-      // 관심종목(watch)은 tier 구조 면제 대상이라 tier 자체도 선택 — 있으면 형식만 검사
-      if (s.theme === "watch") {
+      // 관심·보유는 tier 구조 면제 대상이라 tier 자체도 선택 — 있으면 형식만 검사
+      if (isPersonalTheme(s.theme)) {
         if (s.tier != null && ![1, 2, 3].includes(s.tier)) errors.push(tag + ": tier 는 1|2|3 이어야 함 (" + s.tier + ")");
       } else if (![1, 2, 3].includes(s.tier)) errors.push(tag + ": tier 는 1|2|3 이어야 함 (" + s.tier + ")");
       if (!s.name || typeof s.name !== "string") errors.push(tag + ": name 누락");
@@ -249,8 +254,8 @@ function validate(D, opts) {
         const age = (new Date(today) - new Date(s.priceDate)) / 86400000;
         if (age > STALE_PRICE_DAYS) warnings.push(tag + ": priceDate 가 " + Math.round(age) + "일 경과 (" + s.priceDate + ")");
       }
-      // 티어 신선도 — 티어는 항상 최신 펀더멘털로 유지(watch 는 tier 구조 면제라 제외)
-      if (s.theme !== "watch") {
+      // 티어 신선도 — 티어는 항상 최신 펀더멘털로 유지(관심·보유는 tier 구조 면제라 제외)
+      if (!isPersonalTheme(s.theme)) {
         if (!RE_DATE.test(s.tierAsOf || "")) {
           warnings.push(tag + ": tierAsOf(티어 품질 평가일) 없음 — 최신 데이터로 티어 재평가 필요");
         } else {
@@ -268,9 +273,9 @@ function validate(D, opts) {
       if (dupCheck[k] > 1) errors.push(c + ": (" + k + ") 이 같은 주제에 " + dupCheck[k] + "번 등장");
     });
 
-    // 주제별 9종목 · Tier 3×3 구조 (관심종목 'watch' 은 사용자 편성이라 구조 규칙 면제)
+    // 주제별 9종목 · Tier 3×3 구조 (관심 'watch'·보유 'hold' 는 사용자 편성이라 구조 규칙 면제)
     themeKeys.forEach((tk) => {
-      if (tk === "watch") return;
+      if (isPersonalTheme(tk)) return;
       const g = groups[tk] || [];
       if (g.length !== PER_GROUP) {
         errors.push(c + "/" + tk + ": 종목 수 " + g.length + " ≠ " + PER_GROUP);
@@ -282,7 +287,7 @@ function validate(D, opts) {
     });
   });
 
-  // ── 오늘의 Top Pick (선택) — 국가별(korea·us) 정식 추천(비-watch) 3종목씩 ──
+  // ── 오늘의 Top Pick (선택) — 국가별(korea·us) 정식 추천(관심·보유 제외) 3종목씩 ──
   if (D.topPicks != null) {
     const tp = D.topPicks;
     if (typeof tp !== "object" || Array.isArray(tp)) {
@@ -290,11 +295,11 @@ function validate(D, opts) {
     } else {
       if (!RE_DATE.test(tp.asOf || "")) errors.push("topPicks.asOf 형식 오류: " + tp.asOf);
       else if (tp.asOf > today) errors.push("topPicks.asOf 가 미래 날짜: " + tp.asOf);
-      // 국가별 정식 추천(비-watch) 티커 집합
+      // 국가별 정식 추천(관심·보유 제외) 티커 집합
       function pickableOf(cc) {
         const set = new Set();
         const src = cc === "items" ? ["korea", "us"] : [cc];
-        src.forEach((c) => (D[c] || []).forEach((s) => { if (s.theme !== "watch") set.add(s.ticker); }));
+        src.forEach((c) => (D[c] || []).forEach((s) => { if (!isPersonalTheme(s.theme)) set.add(s.ticker); }));
         return set;
       }
       const groups = ["korea", "us", "items"].filter((g) => tp[g] !== undefined);
@@ -312,7 +317,7 @@ function validate(D, opts) {
           if (!it || typeof it !== "object") { errors.push(tag + ": 객체 아님"); return; }
           if (!it.ticker) errors.push(tag + ": ticker 누락");
           else {
-            if (!pickable.has(it.ticker)) errors.push(tag + ": '" + it.ticker + "' 는 " + (g === "us" ? "미국" : g === "korea" ? "한국" : "") + " 정식 추천 종목이 아님 (watch·타국·미편성 불가)");
+            if (!pickable.has(it.ticker)) errors.push(tag + ": '" + it.ticker + "' 는 " + (g === "us" ? "미국" : g === "korea" ? "한국" : "") + " 정식 추천 종목이 아님 (관심·보유·타국·미편성 불가)");
             seen[it.ticker] = (seen[it.ticker] || 0) + 1;
           }
           if (!it.reason || !RE_HANGUL.test(it.reason)) errors.push(tag + ": reason(선정 이유) 누락 또는 한국어 아님");
@@ -355,4 +360,4 @@ if (require.main === module) {
   console.log("✓ 검증 통과: " + total + "종목, 오류 0건, 경고 " + warnings.length + "건 (" + path.relative(ROOT, file) + ")");
 }
 
-module.exports = { validate, isTrustedSource, isBlockedSource, sourceHost, trustedDomainOf };
+module.exports = { validate, isTrustedSource, isBlockedSource, sourceHost, trustedDomainOf, PERSONAL_THEMES, isPersonalTheme };
