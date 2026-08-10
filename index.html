@@ -699,11 +699,6 @@ a.idx-tile:hover { background: color-mix(in srgb, var(--ink) 5%, var(--inset)); 
 .links .fav-btn + .fav-btn { margin-left: -5px; }
 .hold-badge { background: color-mix(in srgb, var(--hold) 16%, transparent); color: var(--hold); }
 /* 개인 목록(관심·보유) 드래그 재정렬 */
-.pl-tip { color: var(--muted); font-size: 0.76rem; line-height: 1.5; margin: 0 0 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.pl-tip b { color: var(--ink-2); font-weight: 700; }
-.pl-reset { background: transparent; border: 1px solid var(--line); color: var(--muted); font-size: 0.74rem;
-  padding: 2px 9px; border-radius: 999px; cursor: pointer; }
-.pl-reset:hover { color: var(--ink-2); border-color: var(--ink-2); }
 /* 드래그 중에는 목록 위 제스처를 스크롤이 아닌 재정렬로 해석하고, 텍스트 선택도 막는다 */
 .pl-list.pl-reorder { touch-action: none; user-select: none; -webkit-user-select: none; cursor: grabbing; }
 .pl-list.pl-reorder [data-pkey] { cursor: grabbing; }
@@ -2169,11 +2164,6 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   };
   function isPersonal(theme) { return !!PLIST[theme]; }
   function plist(k) { return PLIST[k] || PLIST.watch; }
-  // 재정렬 안내 문구를 기기에 맞게 — 터치 기기는 '길게 눌러', 그 외는 '마우스로 끌어'
-  var isTouch = (function () {
-    try { return window.matchMedia("(hover: none) and (pointer: coarse)").matches; }
-    catch (_e) { return "ontouchstart" in window; }
-  })();
   var wlCache = {};   // "country:ticker" → undefined(미조회) | "loading" | null(실패) | {price,date,ta,sym}
   //  두 목록은 같은 wlCache 를 공유한다 — 같은 종목이면 시세·기술분석도 같기 때문이다.
   function readList(key) { try { var v = JSON.parse(localStorage.getItem(key)); return Array.isArray(v) ? v : []; } catch (_e) { return []; } }
@@ -2191,9 +2181,6 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   //  기본 순서(상승여력 내림차순 → 라이트 카드)를 유지한 채 뒤에 붙는다.
   function getPlOrder(k) { return readList(plist(k).order); }
   function savePlOrder(k, keys) { writeList(plist(k).order, keys); }
-  function hasPlOrder(k, country) {
-    return getPlOrder(k).some(function (key) { return key.indexOf(country + "|") === 0; });
-  }
   function applyPlOrder(k, items) {
     var ord = getPlOrder(k);
     if (!ord.length) return items;
@@ -2502,11 +2489,6 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       var emptyMsg = '<div class="empty">아직 ' + esc(pmeta.badge) + '이 없습니다. 위에서 검색해 추가하거나, 추천 카드의 ‘+ ' +
         esc(pmeta.label) + '’으로 등록하세요.</div>';
       var wparts = watchAddForm(lk);
-      if (items.length) {
-        wparts += '<div class="pl-tip">' + (isTouch ? "카드를 <b>길게 눌러</b>" : "카드를 <b>마우스로 끌어</b>") + " 순서를 바꿀 수 있습니다." +
-          (hasPlOrder(lk, country) ? ' <button type="button" class="pl-reset" id="plReset" data-list="' + esc(lk) + '">기본 순서로</button>' : "") +
-          "</div>";
-      }
       if (isTbl) {
         // 표 뷰 — 편성 풀카드는 tlRow, 라이트 종목은 wlLightRow. 탭 → 그 행만 상세 펼침. ✕ 로 삭제.
         wparts += items.length
@@ -2678,7 +2660,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     var host = document.getElementById("cards");
     var dragging = null, listEl = null, startX = 0, startY = 0, pid = null, lpTimer = null, ptype = "", raf = 0, edge = 0, lastX = 0, lastY = 0;
     // 목록 위에서 손잡이가 아닌 것들(제거 ✕·담기 토글·링크·검색창)은 드래그를 시작하지 않는다.
-    function isControl(t) { return !!(t.closest("[data-wl]") || t.closest("[data-fav]") || t.closest("a") || t.closest(".wl-search") || t.closest(".pl-reset")); }
+    function isControl(t) { return !!(t.closest("[data-wl]") || t.closest("[data-fav]") || t.closest("a") || t.closest(".wl-search")); }
     function siblings() {
       return Array.prototype.filter.call(listEl.children, function (n) {
         return n.nodeType === 1 && n.hasAttribute("data-pkey") && n !== dragging;
@@ -2811,13 +2793,6 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   // #cards 위임 — 성과 기간 칩 + 관심/보유 담기 토글 + 목록에서 제거(✕) + 검색 후보 선택(추가)
   document.getElementById("cards").addEventListener("click", function (e) {
     if (plDragMoved) { plDragMoved = false; return; }      // 방금 드래그로 순서를 바꿨으면 이 클릭은 무시
-    var reset = e.target.closest("#plReset");              // 사용자 지정 순서 초기화
-    if (reset) {
-      var rl = reset.getAttribute("data-list") || state.theme;
-      savePlOrderFromDom(rl, state.country, []);           // 이 국가 항목만 지우고 다른 국가 순서는 보존
-      render();
-      return;
-    }
     var restore = e.target.closest("#wlRestore");          // 숨긴 편성 종목 복원
     if (restore) {
       var rk = restore.getAttribute("data-list") || state.theme;
