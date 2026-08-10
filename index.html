@@ -496,9 +496,13 @@ a { color: inherit; }
 .tl-r { text-align: right; flex: 0 0 auto; }
 .tl-px { font-size: 0.98rem; font-weight: 750; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
 .tl-px .live-tag { font-size: 0.66rem; }
-.tl-up { font-size: 0.84rem; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 2px; }
-.tl-up.up { color: var(--up); }
-.tl-up.down { color: var(--down); }
+/* 표 행의 오른쪽 둘째 줄 — 상승여력 대신 단/중/장 기술 신호를 기호로 압축해 보여준다.
+   (상승여력·목표가는 행을 탭해 펼친 상세 카드에 그대로 있다) */
+.tl-sig { display: flex; gap: 7px; justify-content: flex-end; margin-top: 3px; }
+.tl-sig .ts-g { display: inline-flex; align-items: baseline; gap: 2px; font-size: 0.72rem; line-height: 1; white-space: nowrap; }
+.tl-sig .ts-g i { color: var(--muted); font-style: normal; font-weight: 600; }
+.tl-sig .ts-g b { font-weight: 800; letter-spacing: -0.08em; font-size: 0.78rem; }
+.tl-sig.tl-sig-na { color: var(--muted); font-size: 0.72rem; }
 /* 라이트 관심종목 행(표 뷰) */
 .wl-lrow { cursor: pointer; }
 .wl-lrow .tl-px .up { color: var(--up); font-size: 0.8rem; font-weight: 700; margin-left: 3px; }
@@ -1847,9 +1851,20 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   // 표 뷰 — 모바일 한 화면에 들어오는 종목당 2줄 컴팩트 리스트(가로 스크롤 없음). 탭 → 그 행만 상세 펼침.
   var tblExpanded = {};   // ticker → true (표에서 인라인으로 펼친 상세)
   // 표 뷰의 한 행(추천/편성 종목) — 2줄 컴팩트 리스트. delKey 가 있으면 그 개인 목록의 제거(✕) 표시.
+  // 5단계 신호를 표 행에 넣을 기호로 — 좁은 화면에서 글자로 쓰면 세 기간이 들어가지 않는다.
+  var SIG_MARK = { "적극매수": "▲▲", "매수": "▲", "중립": "―", "매도": "▼", "적극매도": "▼▼" };
+  function tlSigStrip(s) {
+    var n = s.techNote || {};
+    var parts = [["단", n.sigShort], ["중", n.sigMid], ["장", n.sigLong]];
+    if (!parts.some(function (p) { return p[1]; })) return '<div class="tl-sig tl-sig-na">기술 대응 –</div>';
+    return '<div class="tl-sig">' + parts.map(function (p) {
+      var g = p[1];
+      return '<span class="ts-g" title="' + esc(p[0] + "기 " + (g || "대응 없음")) + '"><i>' + p[0] + "</i>" +
+        '<b style="color:' + (g ? (TA_SIG_COL[g] || "var(--muted)") : "var(--muted)") + '">' + (g ? (SIG_MARK[g] || "–") : "–") + "</b></span>";
+    }).join("") + "</div>";
+  }
   function tlRow(s, delKey) {
     var e = effective(s);
-    var upCls = e.upside == null ? "" : e.upside >= 0 ? "up" : "down";
     var tm = tierMeta(s.tier);
     var live = e.live ? ' <span class="live-tag">실시간</span>' : "";
     var exp = tblExpanded[s.ticker] ? " on" : "";
@@ -1873,7 +1888,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
           })() + "</div>" +
       "</div>" +
       '<div class="tl-r"><div class="tl-px">' + fmtPrice(e.price, state.country) + live + (s.changePct != null ? " " + chgBadge(s.changePct, "sm") : "") + "</div>" +
-        '<div class="tl-up ' + upCls + '">' + fmtPct(e.upside) + "</div></div>" + del +
+        tlSigStrip(s) + "</div>" + del +
       '<span class="tl-caret" aria-hidden="true"></span>' +
       "</button>";
   }
