@@ -35,11 +35,6 @@ window.STOCK_QUOTES = {
    "date": "2026-08-10",
    "changePct": 0.9
   },
-  "259960": {
-   "price": 242000,
-   "date": "2026-08-10",
-   "changePct": 0.2
-  },
   "271560": {
    "price": 137500,
    "date": "2026-08-10",
@@ -50,10 +45,20 @@ window.STOCK_QUOTES = {
    "date": "2026-08-10",
    "changePct": -4.2
   },
+  "323410": {
+   "price": 22150,
+   "date": "2026-08-10",
+   "changePct": 0.7
+  },
   "329180": {
    "price": 532000,
    "date": "2026-08-10",
    "changePct": 5.1
+  },
+  "361610": {
+   "price": 15450,
+   "date": "2026-08-10",
+   "changePct": 3.1
   },
   "403870": {
    "price": 36950,
@@ -230,11 +235,6 @@ window.STOCK_QUOTES = {
    "date": "2026-08-10",
    "changePct": -3.5
   },
-  "012750": {
-   "price": 75800,
-   "date": "2026-08-10",
-   "changePct": -1
-  },
   "035900": {
    "price": 47350,
    "date": "2026-08-10",
@@ -269,6 +269,21 @@ window.STOCK_QUOTES = {
    "price": 320000,
    "date": "2026-08-10",
    "changePct": -4
+  },
+  "036570": {
+   "price": 243500,
+   "date": "2026-08-10",
+   "changePct": -2
+  },
+  "035720": {
+   "price": 39550,
+   "date": "2026-08-10",
+   "changePct": -0.9
+  },
+  "001040": {
+   "price": 145700,
+   "date": "2026-08-10",
+   "changePct": 0
   },
   "MSFT": {
    "price": 499.99,
