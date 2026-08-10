@@ -657,7 +657,7 @@ a.idx-tile:hover { background: color-mix(in srgb, var(--ink) 5%, var(--inset)); 
 .idx-tile .it-top .tn-stale { margin-left: auto; }
 
 /* 관심종목 검색 추가 + 라이트 카드 */
-.wl-add { margin: 0 0 8px; }
+.wl-add { margin: 0 0 16px; }
 .wl-search { position: relative; max-width: 460px; }
 .wl-in { width: 100%; font-size: 0.92rem; padding: 11px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); box-shadow: var(--shadow-sm); }
 .wl-in:focus { outline: none; border-color: var(--accent); }
@@ -670,7 +670,6 @@ a.idx-tile:hover { background: color-mix(in srgb, var(--ink) 5%, var(--inset)); 
 .wl-sug-n { font-weight: 600; }
 .wl-sug-n b { color: var(--accent); }
 .wl-sug-t { color: var(--muted); font-size: 0.78rem; white-space: nowrap; font-variant-numeric: tabular-nums; }
-.wl-hint { color: var(--muted); font-size: 0.78rem; line-height: 1.5; margin: 10px 0 18px; }
 .wl-grid { margin-top: 4px; }
 .card .wl-del { border: 0; background: var(--surface-2); color: var(--muted); width: 24px; height: 24px; border-radius: 50%; cursor: pointer; font-size: 0.78rem; line-height: 1; display: grid; place-items: center; padding: 0; }
 .card .wl-del:hover { background: var(--down); color: #fff; }
@@ -2377,8 +2376,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
         '<input class="wl-in wl-q" id="wlQ" placeholder="' + esc(pm.label + " 목록에 추가 — 종목명 또는 코드로 검색 (예: 삼성전자 · 005930 · Apple)") + '" autocomplete="off" maxlength="30">' +
         '<div class="wl-sug" id="wlSug" hidden></div>' +
       "</div>" +
-      "</form>" +
-      '<div class="wl-hint">종목명·코드로 검색해 ' + esc(pm.label) + ' 목록에 추가하세요. 이 기기 브라우저에만 저장되며, 실시간 시세가 표시됩니다(단기/중기/장기 기술 대응·목표가·논거 등 분석은 카드의 ‘정밀분석 요청’으로).</div>';
+      "</form>";
   }
 
   // 사전(TICKER_DICT)에서 이름/코드로 후보 검색 (+ 미등록 코드는 직접추가 후보)
