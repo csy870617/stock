@@ -106,6 +106,18 @@ const TIER_STALE_DAYS = 14;       // tierAsOf(티어 품질 평가일)가 이보
 function validate(D, opts) {
   opts = opts || {};
   const quotes = opts.quotes || {};
+  // 내러티브(선정 이유·valueNote)에 하드코딩된 '상승여력 X%' 가 실계산과 어긋나면 경고.
+  // 2026-08-11 감사 실측: Top Pick 6종목 전원이 작성 시점 upside 를 문구에 박아 두어
+  // 같은 화면의 카드 수치와 최대 3.5배 괴리 — 문구 수치는 최신가 기준으로 다시 쓰거나 빼야 한다.
+  function narrativeUpsideGap(text, s) {
+    if (!text || !s) return null;
+    const m = String(text).match(/상승여력[도은이]?\s*([\d.]+)\s*%/);
+    if (!m) return null;
+    const price = (quotes[s.ticker] && quotes[s.ticker].price) || s.price;
+    if (typeof s.targetPrice !== "number" || typeof price !== "number" || price <= 0) return null;
+    const real = (s.targetPrice - price) / price * 100;
+    return { said: parseFloat(m[1]), real: Math.round(real * 10) / 10, gap: Math.abs(parseFloat(m[1]) - real) };
+  }
   const today = opts.today || new Date().toISOString().slice(0, 10);
   const errors = [];
   const warnings = [];
@@ -220,6 +232,9 @@ function validate(D, opts) {
       if (s.valueNote != null) {
         if (typeof s.valueNote !== "string" || !RE_HANGUL.test(s.valueNote)) errors.push(tag + ": valueNote 는 한국어 문자열이어야 함");
         else if (s.valueNote.length > 220) warnings.push(tag + ": valueNote 가 너무 김(" + s.valueNote.length + "자) — 1~2문장으로 압축 권장");
+        // valueNote 는 회전 재작성이라 topPicks(매일)보다 관대한 15%p 로만 경고한다
+        const vg = narrativeUpsideGap(s.valueNote, s);
+        if (vg && vg.gap > 15) warnings.push(tag + ": valueNote 속 상승여력 " + vg.said + "% 가 실계산 " + vg.real + "% 와 " + vg.gap.toFixed(1) + "%p 괴리 — 다음 회전에서 수치 갱신 필요");
       }
 
       // 출처 — 신규 편입·논거 변경의 증거 사슬
@@ -302,6 +317,8 @@ function validate(D, opts) {
         src.forEach((c) => (D[c] || []).forEach((s) => { if (!isPersonalTheme(s.theme)) set.add(s.ticker); }));
         return set;
       }
+      const tpByTicker = {};
+      ["korea", "us"].forEach((c) => (D[c] || []).forEach((s) => { if (!tpByTicker[s.ticker]) tpByTicker[s.ticker] = s; }));
       const groups = ["korea", "us", "items"].filter((g) => tp[g] !== undefined);
       if (!groups.length) errors.push("topPicks 에 korea·us 그룹이 없음 (각 국가 3종목 필요)");
       groups.forEach((g) => {
@@ -321,6 +338,10 @@ function validate(D, opts) {
             seen[it.ticker] = (seen[it.ticker] || 0) + 1;
           }
           if (!it.reason || !RE_HANGUL.test(it.reason)) errors.push(tag + ": reason(선정 이유) 누락 또는 한국어 아님");
+          // 이유 문구에 박힌 상승여력 수치가 실계산과 10%p 넘게 어긋나면 경고 — 작성 시점
+          // 수치를 하드코딩하면 가격이 움직인 뒤 카드 표시값과 모순돼 사용자를 오도한다.
+          const ng = narrativeUpsideGap(it.reason, tpByTicker[it.ticker]);
+          if (ng && ng.gap > 10) warnings.push(tag + ": 이유 속 상승여력 " + ng.said + "% 가 실계산 " + ng.real + "% 와 " + ng.gap.toFixed(1) + "%p 괴리 — 최신가 기준으로 다시 쓸 것");
         });
         Object.keys(seen).forEach((t) => { if (seen[t] > 1) errors.push("topPicks." + g + ": '" + t + "' 중복 선정"); });
       });

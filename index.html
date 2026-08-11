@@ -697,6 +697,10 @@ a.idx-tile:hover { background: color-mix(in srgb, var(--ink) 5%, var(--inset)); 
 /* 두 토글은 짝으로 붙여 읽히게 — 링크(차트 보기)와 간격을 벌린다 */
 .links .fav-btn + .fav-btn { margin-left: -5px; }
 .hold-badge { background: color-mix(in srgb, var(--hold) 16%, transparent); color: var(--hold); }
+/* 가치함정(낙폭발 상승여력) 경고 — 카드 배지 + 표 행 컴팩트 플래그 */
+.warn-badge.vt-trap { background: color-mix(in srgb, #f59e0b 18%, transparent); color: #b45309; }
+.vt-flag { display: inline-flex; align-items: center; margin-left: 6px; font-size: 0.66rem; font-weight: 800;
+  color: #b45309; background: color-mix(in srgb, #f59e0b 16%, transparent); border-radius: 999px; padding: 1px 7px; vertical-align: 1px; white-space: nowrap; }
 /* 개인 목록(관심·보유) 드래그 재정렬 */
 /* 드래그 중에는 목록 위 제스처를 스크롤이 아닌 재정렬로 해석하고, 텍스트 선택도 막는다 */
 .pl-list.pl-reorder { touch-action: none; user-select: none; -webkit-user-select: none; cursor: grabbing; }
@@ -1522,6 +1526,16 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   // 밸류(컨센서스 상승여력·장기 펀더멘털) × 타이밍(기술 추세·단기) 종합 해석 —
   // Tier(펀더멘털 확신)와 기술신호(모멘텀)가 어긋날 때 어떻게 읽는지 안내한다(급락 우량주=분할매수·눌림목 등).
   // 밸류×타이밍 종합 해석(템플릿) — 종목별 valueNote 가 없을 때의 폴백. {text, cls} 반환.
+  // 가치함정(낙폭발 상승여력) 판정 — 상승여력이 큰데 장기(월봉) 신호가 매도 이하인 조합.
+  // 상승여력은 목표가가 아직 안 내려온 급락 종목에서 기계적으로 커지므로, 이 조합은
+  // '기회'가 아니라 '많이 떨어졌고 추세도 꺾였다'는 경고로 읽어야 한다(2026-08-11 감사:
+  // upside≥30% 49종목 중 16종목이 이 조합인데 기본 정렬이 이들을 상단에 띄우고 있었다).
+  function isValueTrap(s, upside) {
+    var n = s.techNote || {};
+    return upside != null && upside >= 30 && (n.sigLong === "매도" || n.sigLong === "적극매도");
+  }
+  var VT_TIP = "상승여력이 커 보이지만 장기(월봉) 신호가 매도 이하입니다. 급락으로 커진 상승여력(목표가 미조정)일 수 있어 주의가 필요합니다.";
+
   function vtRead(upside, ticker) {
     var t = stTa(ticker);
     if (upside == null || !t || !t.short) return null;
@@ -1598,6 +1612,8 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     }
     var warnBadge = (e.upside != null && e.upside <= 0)
       ? '<span class="warn-badge">목표가 도달</span>' : "";
+    var trapBadge = isValueTrap(s, e.upside)
+      ? '<span class="warn-badge vt-trap" title="' + esc(VT_TIP) + '">⚠ 낙폭발 상승여력</span>' : "";
     var unvBadge = (s.priceUnverified && !e.live)
       ? '<span class="warn-badge" title="최근 시세를 확인하지 못해 옛 가격 기준입니다. 표시된 상승여력이 실제와 다를 수 있습니다.">⚠ 현재가 확인 필요</span>' : "";
     var newBadge = NEW_TICKERS[s.ticker] ? '<span class="new-badge">NEW</span>' : "";
@@ -1630,7 +1646,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       : '<span class="badge"><span class="dot" style="background:' + tm.color + '"></span>' + tm.label + "</span>";
     return '<article class="card" data-ticker="' + esc(s.ticker) + '">' +
       '<div class="head"><h3>' + esc(s.name) + '<span class="tk">' + esc(s.ticker) + " · " + esc(s.market) + "</span></h3>" +
-      '<span class="badges">' + newBadge + themeBadge + warnBadge + unvBadge + tierBadge + delBtn + "</span></div>" +
+      '<span class="badges">' + newBadge + themeBadge + warnBadge + trapBadge + unvBadge + tierBadge + delBtn + "</span></div>" +
       '<div class="c-hero">' +
         '<div class="c-hcell"><div class="c-hv">' + fmtPrice(e.price, country) + '</div><div class="c-hk">' + (s.changePct != null ? chgBadge(s.changePct, "sm") + " " : "") + priceSub + "</div></div>" +
         '<div class="c-hcell c-r"><div class="c-hv ' + upCls + '">' + fmtPct(e.upside) + '</div><div class="c-hk">' + upLabel + "</div></div>" +
@@ -1742,7 +1758,9 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     var base = wUp * upScore + wRisk * riskScore + wDiv * divScore + wSrc * srcScore;
     var defense = Math.max(Math.max(0, g), rot);
     var tilt = 0.08 + 0.12 * defense;   // 상시 품질 선호 + 국면 증폭
-    return base + tilt * (THEME_QUALITY[s.theme] || 0);
+    // 가치함정 감점 — 낙폭으로 커진 upside 가 upScore 50% 가중을 타고 상위로 올라오는 것을 상쇄
+    var trap = isValueTrap(s, numOr(s.upside, null)) ? 0.15 : 0;
+    return base + tilt * (THEME_QUALITY[s.theme] || 0) - trap;
   }
 
   // 종목 업데이트(편입·제외) 섹션 — 날짜 드롭다운으로 과거 변경도 조회. 스냅샷쌍이 없으면 숨김.
@@ -1898,7 +1916,8 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       ? '<span class="tl-del" role="button" tabindex="0" data-wl="' + esc(delKey + "|" + state.country + "|" + s.ticker) + '" title="' + esc(plist(delKey).label + " 목록에서 제거") + '" aria-label="제거">✕</span>' : "";
     return '<button class="tl-row' + exp + '" type="button" data-ticker="' + esc(s.ticker) + '" aria-expanded="' + (exp ? "true" : "false") + '">' +
       '<div class="tl-main">' +
-        '<div class="tl-nm">' + esc(s.name) + '<span class="tl-tk">' + esc(s.ticker) + "</span></div>" +
+        '<div class="tl-nm">' + esc(s.name) + '<span class="tl-tk">' + esc(s.ticker) + "</span>" +
+          (isValueTrap(s, e.upside) ? '<span class="vt-flag" title="' + esc(VT_TIP) + '">⚠ 함정주의</span>' : "") + "</div>" +
         '<div class="tl-sub">' +
           (isPersonal(s.theme)   // 관심·보유: tier 대신 관심은 편입 유형(턴어라운드/신고가), 보유는 보유 배지
             ? (s.theme === "watch"

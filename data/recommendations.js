@@ -26,14 +26,14 @@ window.STOCK_DATA = {
     asOf: "2026-08-11",
     note: "정식 추천(watch 제외) 중 상승여력과 단기·중기·장기 기술 신호 정합, 유동성 국면을 종합해 선정. 매일 업데이트마다 처음부터 재선정된다.",
     korea: [
-      {"rank":1,"ticker":"009540","market":"KOSPI","name":"HD한국조선해양","reason":"조선 슈퍼사이클 수주잔고에 힘입어 Tier1 품질과 단·중·장기 매수 신호가 모두 정렬되고 상승여력도 53.5%로 두텁다."},
-      {"rank":2,"ticker":"096770","market":"KOSPI","name":"SK이노베이션","reason":"정유·윤활유 핵심사업 흑자 기조에 단기·중기 적극매수 신호가 겹치며 상승여력 54.2%로 밸류 매력도 살아 있다."},
-      {"rank":3,"ticker":"012450","market":"KOSPI","name":"한화에어로스페이스","reason":"방산 수주 모멘텀에 단·중·장기 신호가 전부 매수로 정렬되고 상승여력 70%로 밸류·기술이 동시에 우호적이다."},
+      {"rank":1,"ticker":"009540","market":"KOSPI","name":"HD한국조선해양","reason":"조선 슈퍼사이클 수주잔고에 힘입어 Tier1 품질과 단·중·장기 매수 신호가 모두 정렬되고 상승여력도 40.6%로 두텁다."},
+      {"rank":2,"ticker":"096770","market":"KOSPI","name":"SK이노베이션","reason":"정유·윤활유 핵심사업 흑자 기조에 단기·중기 적극매수 신호가 겹치며 상승여력 31.3%로 밸류 매력도 살아 있다."},
+      {"rank":3,"ticker":"012450","market":"KOSPI","name":"한화에어로스페이스","reason":"방산 수주 모멘텀에 단·중·장기 신호가 전부 매수로 정렬되고 상승여력 58.4%로 밸류·기술이 동시에 우호적이다."},
     ],
     us: [
-      {"rank":1,"ticker":"NVDA","market":"NASDAQ","name":"NVIDIA","reason":"AI 가속기 시장 지배력에 단·중·장기 신호가 모두 적극매수로 정렬되고 상승여력도 51.9%로 두텁다."},
-      {"rank":2,"ticker":"AVGO","market":"NASDAQ","name":"Broadcom","reason":"AI 커스텀 반도체·네트워킹 수요 확대에 단·중·장기 전 구간 적극매수 신호가 겹치며 상승여력 45.3%를 확보했다."},
-      {"rank":3,"ticker":"AMZN","market":"NASDAQ","name":"Amazon","reason":"AWS·광고 사업 고성장에 단·중·장기 신호가 전부 적극매수로 정렬되고 상승여력 33.1%의 밸류 매력도 있다."},
+      {"rank":1,"ticker":"NVDA","market":"NASDAQ","name":"NVIDIA","reason":"AI 가속기 시장 지배력에 단·중·장기 신호가 모두 적극매수로 정렬되고 상승여력도 38.7%로 두텁다."},
+      {"rank":2,"ticker":"AVGO","market":"NASDAQ","name":"Broadcom","reason":"AI 커스텀 반도체·네트워킹 수요 확대에 단·중·장기 전 구간 적극매수 신호가 겹치며 상승여력 25.9%를 확보했다."},
+      {"rank":3,"ticker":"AMZN","market":"NASDAQ","name":"Amazon","reason":"AWS·광고 사업 고성장에 단·중·장기 신호가 전부 적극매수로 정렬되고 상승여력 18.6%의 밸류 매력도 있다."},
     ],
   },
   themes: [
