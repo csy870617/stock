@@ -1749,12 +1749,25 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   //   안전 = 저리스크(가중 큼) + 우량/저평가 테마.  수익성 = 상승여력(가중 큼).  배당은 부수 요소(가중 최소).
   //   테마 선호는 상시 적용(기본 0.08)하되, 위험회피(gauge)·방어 로테이션(성장지수<가치지수)일수록 증폭 →
   //   반도체 셀오프 같은 국면에서 고베타(성장) 회피가 강해진다. 데이터 없으면 국면항이 0이 되어 안전 폴백.
+  // 국가별 upside 중앙값 — pickScore 의 상대화 기준. 절대 upside 레벨은 국면에 오염된다는
+  // 것이 2026-08-11 upside 백테스트로 확인됐다(pooled IC raw -0.104 vs 중앙값 차감 -0.004).
+  var upMedCache = {};
+  function upsideMedian(country) {
+    if (upMedCache[country] != null) return upMedCache[country];
+    var v = (D[country] || []).filter(function (s) { return !isPersonal(s.theme) && typeof s.upside === "number"; })
+      .map(function (s) { return s.upside; }).sort(function (a, b) { return a - b; });
+    upMedCache[country] = v.length ? v[Math.floor(v.length / 2)] : 0;
+    return upMedCache[country];
+  }
   function pickScore(s) {
     var g = gaugeTilt(state.country), rot = rotationTilt(state.country);
     var wUp = 0.50 - 0.06 * Math.max(0, g), wRisk = 0.30 + 0.06 * Math.max(0, g), wDiv = 0.08, wSrc = 0.12;
     if (g < 0) { wUp += 0.06 * (-g); }
     var sum = wUp + wRisk + wDiv + wSrc; wUp /= sum; wRisk /= sum; wDiv /= sum; wSrc /= sum;
-    var upScore   = Math.max(0, Math.min(numOr(s.upside, 0), 60)) / 60;
+    // upside 는 절대값이 아니라 '같은 국가 편성 대비 상대' 로 본다. 종전의 min(upside,60)/60 은
+    // 급락장에서 전 종목이 상한에 몰려 동점(구분력 0)이 됐고, 백테스트에서 상한 포화가 top3 를
+    // 최대 13%p 악화시켰다(한국 +21일 raw -1.95% vs capped -15.60%). 중앙값 ±30%p 를 0~1 로.
+    var upScore   = Math.max(0, Math.min(0.5 + (numOr(s.upside, 0) - upsideMedian(state.country)) / 60, 1));
     var divScore  = Math.max(0, Math.min(numOr(s.dividendYield, 0), 6)) / 6;
     var riskScore = 1 - Math.max(0, Math.min(((s.risks || []).length) - 2, 3)) * 0.15;
     var srcScore  = Math.max(0, Math.min((s.sources || []).length, 3)) / 3;
