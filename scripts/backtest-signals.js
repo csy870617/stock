@@ -103,9 +103,12 @@ async function mapLimit(items, limit, fn) {
 // 집계 버킷: horizon(기간) → grade(등급) → 수익률 배열
 function makeBuckets() {
   const b = {};
-  ["short", "mid", "long"].forEach((tf) => {
-    b[tf] = {};
-    HORIZONS.forEach((h) => { b[tf][h] = {}; GRADES.forEach((g) => { b[tf][h][g] = []; }); });
+  ["legacy", "block"].forEach((eng) => {
+    b[eng] = {};
+    ["short", "mid", "long"].forEach((tf) => {
+      b[eng][tf] = {};
+      HORIZONS.forEach((h) => { b[eng][tf][h] = {}; GRADES.forEach((g) => { b[eng][tf][h][g] = []; }); });
+    });
   });
   return b;
 }
@@ -140,7 +143,9 @@ function stats(arr) {
       HORIZONS.forEach((h) => {
         const fwd = (rows[t + h].close - px) / px * 100;
         [["short", a.short], ["mid", a.mid], ["long", a.long]].forEach(([tf, sig]) => {
-          if (sig && buckets[tf][h][sig.signal]) buckets[tf][h][sig.signal].push(fwd);
+          if (!sig) return;
+          if (buckets.legacy[tf][h][sig.sigLegacy]) buckets.legacy[tf][h][sig.sigLegacy].push(fwd);
+          if (buckets.block[tf][h][sig.sigBlock]) buckets.block[tf][h][sig.sigBlock].push(fwd);
         });
       });
     }
@@ -150,30 +155,35 @@ function stats(arr) {
 
   // 집계
   const report = { step: STEP, horizons: HORIZONS, stocks: done, failed, evaluations: evals, note:
-    "현재 편성 종목의 5년 일봉에 신호 엔진을 룩어헤드 없이 롤링 적용한 등급별 사후 수익률(%). 생존편향·거래비용 미반영 — 등급 간 상대 비교용.", timeframes: {} };
-  ["short", "mid", "long"].forEach((tf) => {
-    report.timeframes[tf] = {};
-    HORIZONS.forEach((h) => {
-      const byGrade = {};
-      GRADES.forEach((g) => { byGrade[g] = stats(buckets[tf][h][g]); });
-      const top = byGrade["적극매수"], bot = byGrade["적극매도"];
-      byGrade.spread = (top.mean != null && bot.mean != null) ? +(top.mean - bot.mean).toFixed(3) : null;
-      // 단조성: 등급 순서대로 평균이 (허용오차 없이) 증가하는가
-      const means = GRADES.map((g) => byGrade[g].mean).filter((m) => m != null);
-      byGrade.monotonic = means.length === GRADES.length && means.every((m, i) => i === 0 || m >= means[i - 1]);
-      report.timeframes[tf][h + "d"] = byGrade;
+    "현재 편성 종목의 5년 일봉에 신호 엔진을 룩어헤드 없이 롤링 적용한 등급별 사후 수익률(%). legacy=19표 동등가중, block=추세·모멘텀·과열 3블록 균형. 생존편향·거래비용 미반영 — 등급 간 상대 비교용.", engines: {} };
+  ["legacy", "block"].forEach((eng) => {
+    report.engines[eng] = {};
+    ["short", "mid", "long"].forEach((tf) => {
+      report.engines[eng][tf] = {};
+      HORIZONS.forEach((h) => {
+        const byGrade = {};
+        GRADES.forEach((g) => { byGrade[g] = stats(buckets[eng][tf][h][g]); });
+        const top = byGrade["적극매수"], bot = byGrade["적극매도"];
+        byGrade.spread = (top.mean != null && bot.mean != null) ? +(top.mean - bot.mean).toFixed(3) : null;
+        const means = GRADES.map((g) => byGrade[g].mean).filter((m) => m != null);
+        byGrade.monotonic = means.length === GRADES.length && means.every((m, i) => i === 0 || m >= means[i - 1]);
+        report.engines[eng][tf][h + "d"] = byGrade;
+      });
     });
   });
 
   fs.writeFileSync(OUT, JSON.stringify(report, null, 1) + "\n");
   console.log("\n종목 " + done + " (실패 " + failed + ") · 신호 평가 " + evals + "회 → " + OUT);
-  ["short", "mid", "long"].forEach((tf) => {
-    console.log("\n[" + tf + "]");
-    HORIZONS.forEach((h) => {
-      const r = report.timeframes[tf][h + "d"];
-      const row = GRADES.map((g) => g + " " + (r[g].mean == null ? "–" : r[g].mean + "%") + "(n=" + r[g].n + ")").join(" · ");
-      console.log("  +" + h + "일: " + row);
-      console.log("        스프레드(적극매수−적극매도) " + (r.spread == null ? "–" : r.spread + "%p") + " · 단조성 " + (r.monotonic ? "O" : "X"));
+  ["legacy", "block"].forEach((eng) => {
+    console.log("\n══ 엔진: " + eng + " ══");
+    ["short", "mid", "long"].forEach((tf) => {
+      console.log("[" + tf + "]");
+      HORIZONS.forEach((h) => {
+        const r = report.engines[eng][tf][h + "d"];
+        const row = GRADES.map((g) => g + " " + (r[g].mean == null ? "–" : r[g].mean + "%") + "(n=" + r[g].n + ")").join(" · ");
+        console.log("  +" + h + "일: " + row);
+        console.log("        스프레드 " + (r.spread == null ? "–" : r.spread + "%p") + " · 단조성 " + (r.monotonic ? "O" : "X"));
+      });
     });
   });
 })();

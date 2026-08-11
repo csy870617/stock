@@ -124,7 +124,9 @@ async function mapLimit(items, limit, fn) {
     const dp = s.market === "KOSPI" || s.market === "KOSDAQ" ? 0 : 2;   // 한국주=정수, 미국주=소수 2
     const a = rows ? TA.analyzeTimeframes(rows, { dp: dp, srDp: dp }) : null;
     if (a) {
-      ta[s.ticker] = { short: a.short, mid: a.mid, long: a.long }; live++;
+      // sigLegacy/sigBlock/blocks 는 엔진 비교(backtest)용 — 앱이 안 쓰는 필드라 저장 전 뗀다(파일 크기)
+      const slim = (x) => { const o = Object.assign({}, x); delete o.sigLegacy; delete o.sigBlock; delete o.blocks; return o; };
+      ta[s.ticker] = { short: slim(a.short), mid: slim(a.mid), long: slim(a.long) }; live++;
       if (rows.lastDate && (!lastBar || rows.lastDate > lastBar)) lastBar = rows.lastDate;
     }
     else if (prev[s.ticker]) { ta[s.ticker] = prev[s.ticker]; fellBack++; }

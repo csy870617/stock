@@ -124,10 +124,11 @@ function analyze(cfg, rows, gapOkOverride) {
     console.warn("  ⚠ " + cfg.key + ": 등락률 생략 — 최근 봉 간격 " + rows.lastGapDays +
       "일(" + rows.prevDate + " → " + rows.lastDate + ")");
   }
+  const slim = (x) => { const o = Object.assign({}, x); delete o.sigLegacy; delete o.sigBlock; delete o.blocks; return o; };   // 비교용 필드 제거(페이로드)
   return {
     key: cfg.key, name: cfg.name, flag: cfg.flag, chartUrl: cfg.chartUrl,
     level: a.level, change: gapOk ? a.change : "–", changeDir: gapOk ? a.changeDir : "down",
-    period: a.period, short: a.short, mid: a.mid, long: a.long
+    period: a.period, short: slim(a.short), mid: slim(a.mid), long: slim(a.long)
   };
 }
 

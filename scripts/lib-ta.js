@@ -167,12 +167,13 @@ function computeSuite(bars) {
   // (2026-08-07 실측: 단기 '적극매수' 49종목 vs '적극매도' 11종목). 이평선에 딱 붙어 있는
   // 상태는 방향이 아직 정해지지 않은 것이므로 기권시키는 편이 실제 차트 판단에 가깝다.
   const MA_NEUTRAL_PCT = 0.5;
+  let maBuy = 0, maSell = 0, maNeu = 0;   // 블록 방식이 MA 12표를 부분점수 하나로 압축할 때 쓴다
   const voteVsMa = (ref) => {
     if (ref == null || !isFinite(ref) || ref === 0) return;
     const gap = (level - ref) / ref * 100;
-    if (Math.abs(gap) < MA_NEUTRAL_PCT) neu++;
-    else if (gap > 0) buy++;
-    else sell++;
+    if (Math.abs(gap) < MA_NEUTRAL_PCT) { neu++; maNeu++; }
+    else if (gap > 0) { buy++; maBuy++; }
+    else { sell++; maSell++; }
   };
   const maP = [5, 10, 20, 50, 100, 200], sm = {};
   maP.forEach((p) => {
@@ -204,11 +205,31 @@ function computeSuite(bars) {
 
   [oRsi, oMacd, oStoch, oCci, oWr, oAdx, oMom].forEach((v) => { if (v > 0) buy++; else if (v < 0) sell++; else neu++; });
 
+  // ── 구(legacy) 방식: 19표 동등가중 ──
+  // 문제(2026-08-11 감사·백테스트로 확인): MA 12표는 상관이 극도로 높은 '추세' 하나의
+  // 반복 측정이라 표의 63% 를 지배하고, W%R 은 스토캐스틱 %K 의 선형변환(중복)이다.
+  // 정배열 상승장에선 오실레이터가 전부 중립이어도 자동 '적극매수'가 된다.
   const total = buy + sell + neu;
   const score = total ? (buy - sell) / total : 0;
   const signal = score >= 0.5 ? "적극매수" : score >= 0.15 ? "매수" : score > -0.15 ? "중립" : score > -0.5 ? "매도" : "적극매도";
 
+  // ── 신(block) 방식: 성격이 같은 지표를 묶어 블록당 1표 — 추세·모멘텀·과열 1/3 씩 ──
+  //  · 추세: MA 12표를 하나의 부분점수 (매수−매도)/전체 ∈ [-1,1] 로 압축
+  //  · 모멘텀: MACD·10일 모멘텀·ADX 방향의 평균 (추세 '확인' 계열)
+  //  · 과열/평균회귀: RSI·스토캐스틱·CCI 의 평균 (역추세 계열 — W%R 은 스토캐스틱과 중복이라 투표 제외)
+  //  블록 입력이 전부 결측이면 그 블록은 가중에서 제외한다(0점 취급 금지).
+  const maTot = maBuy + maSell + maNeu;
+  const bTrend = maTot ? (maBuy - maSell) / maTot : null;
+  const avg = (arr) => { const v = arr.filter((x) => x != null); return v.length ? v.reduce((a, x) => a + x, 0) / v.length : null; };
+  const bMom = avg([m ? oMacd : null, moNow == null ? null : oMom, ax ? oAdx : null]);
+  const bOsc = avg([rNow == null ? null : oRsi, st ? oStoch : null, cNow == null ? null : oCci]);
+  let bs = 0, bw = 0;
+  [bTrend, bMom, bOsc].forEach((b) => { if (b != null) { bs += b; bw++; } });
+  const scoreBlock = bw ? bs / bw : 0;
+  const signalBlock = scoreBlock >= 0.5 ? "적극매수" : scoreBlock >= 0.15 ? "매수" : scoreBlock > -0.15 ? "중립" : scoreBlock > -0.5 ? "매도" : "적극매도";
+
   return { level, buy, sell, neu, total, score, signal, rsi: rNow, macd: m, stoch: st, adx: ax,
+    blocks: { trend: bTrend, momentum: bMom, osc: bOsc }, scoreBlock, signalBlock,
     cci: cNow, willr: wNow, mom: moNow, sma: sm, sma5: sma(c, 5), sma20: sma(c, 20), sma50: sma(c, 50),
     sma60: sma(c, 60), sma120: sma(c, 120), sma200: sma(c, 200) };
 }
@@ -236,6 +257,7 @@ function adxText(ax) {
 // ── 공개: 단기(일봉)/장기(주봉) 기술적 분석 ──
 function analyzeTimeframes(rows, opts) {
   opts = opts || {};
+  const engine = opts.engine || DEFAULT_ENGINE;   // "block"(기본) | "legacy" — 백테스트 비교용으로 둘 다 병기 반환
   const dp = opts.dp != null ? opts.dp : 2, srDp = opts.srDp != null ? opts.srDp : 0;
   if (!rows || rows.length < 35) return null;
   const closes = rows.map((r) => r.close), level = closes[closes.length - 1];
@@ -275,12 +297,17 @@ function analyzeTimeframes(rows, opts) {
   const vs200 = S.sma200 != null ? (level - S.sma200) / S.sma200 * 100 : null;
 
   const rsS = rsiState(S.rsi), rsM = rsiState(M.rsi), rsL = rsiState(L.rsi);
-  const tally = (X, label) => "지표 " + X.total + "개 중 매수 " + X.buy + "·매도 " + X.sell +
-    (X.neu ? "·중립 " + X.neu : "") + " → " + label + " '" + X.signal + "'. ";
+  const pick = (X) => (engine === "legacy" ? X.signal : X.signalBlock);
+  // read 요약 — 블록 엔진은 세 블록 부분점수(추세·모멘텀·과열, 각 -1~+1)로 결론 근거를 보여준다
+  const fb = (v) => (v == null ? "–" : (v > 0 ? "+" : "") + v.toFixed(2));
+  const tally = (X, label) => engine === "legacy"
+    ? "지표 " + X.total + "개 중 매수 " + X.buy + "·매도 " + X.sell + (X.neu ? "·중립 " + X.neu : "") + " → " + label + " '" + X.signal + "'. "
+    : "추세 " + fb(X.blocks.trend) + " · 모멘텀 " + fb(X.blocks.momentum) + " · 과열 " + fb(X.blocks.osc) +
+      " → " + label + " '" + X.signalBlock + "'(3블록 균형 투표). ";
 
   const short = {
-    trend: trendFromSignal(S.signal),
-    signal: S.signal,
+    trend: trendFromSignal(pick(S)),
+    signal: pick(S), sigLegacy: S.signal, sigBlock: S.signalBlock, blocks: S.blocks,
     metrics: [
       ["RSI(14)", (S.rsi == null ? "–" : S.rsi.toFixed(1)) + (rsS ? " · " + rsS : "")],
       ["MACD", macdText(S.macd, S.level)],
@@ -290,8 +317,8 @@ function analyzeTimeframes(rows, opts) {
       (S.stoch ? ", 스토캐스틱 " + S.stoch.k.toFixed(0) : "") + "."
   };
   const mid = {
-    trend: trendFromSignal(M.signal),
-    signal: M.signal,
+    trend: trendFromSignal(pick(M)),
+    signal: pick(M), sigLegacy: M.signal, sigBlock: M.signalBlock, blocks: M.blocks,
     metrics: [
       [mdName + " RSI(14)", (M.rsi == null ? "–" : M.rsi.toFixed(1)) + (rsM ? " · " + rsM : "")],
       [mdName + " MACD", macdText(M.macd, M.level)],
@@ -301,8 +328,8 @@ function analyzeTimeframes(rows, opts) {
       (M.macd ? "MACD " + macdText(M.macd, M.level).split(" ·")[0] : "") + "."
   };
   const long = {
-    trend: trendFromSignal(L.signal),
-    signal: L.signal,
+    trend: trendFromSignal(pick(L)),
+    signal: pick(L), sigLegacy: L.signal, sigBlock: L.signalBlock, blocks: L.blocks,
     metrics: [
       [lgName + " RSI(14)", (L.rsi == null ? "–" : L.rsi.toFixed(1)) + (rsL ? " · " + rsL : "")],
       ["50/200 배열", cross + (vs200 != null ? " · 200일선 " + (vs200 >= 0 ? "+" : "") + vs200.toFixed(1) + "%" : "")],
@@ -320,6 +347,13 @@ function analyzeTimeframes(rows, opts) {
   };
 }
 
+// ── 엔진 선택 (2026-08-11 백테스트로 결정) ──
+// block(추세·모멘텀·과열 3블록 균형)은 MA 12표의 이중계산을 없애는 이론상 타당한 재설계였으나,
+// 동일 표본 20,435회 정면 비교에서 예측력을 개선하지 못했다:
+//   63일 스프레드(적극매수−적극매도) — 단기 legacy -0.31 vs block -0.57 / 중기 +1.47 vs +1.46 / 장기 +2.24 vs +1.87 (%p)
+// 극단 등급 쏠림은 완화되지만(극단 표본 52%→26%) 등급의 사후 수익률 구분력은 동률~소폭 열위라
+// 채택하지 않는다. 두 엔진 병산은 유지 — scripts/backtest-signals.js 가 항상 나란히 검증한다.
+var DEFAULT_ENGINE = "legacy";
 var MIN_BARS = 35;   // computeSuite 최소 봉수(MACD 26+9) — 호출부 게이트도 이 상수를 쓸 것
 var _LIB_TA = { MIN_BARS, sma, ema, rsi, rsiState, macd, stochastic, cci, williamsR, adx, momentum, chgN, fmtNum, levels, toWeekly, toMonthly, computeSuite, analyzeTimeframes };
 if (typeof module !== "undefined" && module.exports) module.exports = _LIB_TA;   // Node (update 스크립트)
