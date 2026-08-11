@@ -105,6 +105,28 @@ async function fetchRowsOnce(symbol) {
   return rows;
 }
 
+// 실측 리스크 — 최근 60일 실현변동성(연율화 %)·최근 120일 최대낙폭(%).
+// pickScore 의 riskScore 가 종전엔 '리스크 불릿 개수'(내생 변수 — 성실한 공시를 벌점화)였는데,
+// 이미 받는 일봉으로 토큰 0 에 계산되는 실측치로 대체하기 위한 입력이다.
+function riskOf(rows) {
+  const closes = rows.map((r) => r.close);
+  const rets = [];
+  const from = Math.max(1, closes.length - 60);
+  for (let i = from; i < closes.length; i++) {
+    if (closes[i] > 0 && closes[i - 1] > 0) rets.push(Math.log(closes[i] / closes[i - 1]));
+  }
+  if (rets.length < 20) return null;   // 표본 부족이면 저장하지 않음(앱이 불릿 폴백 사용)
+  const mean = rets.reduce((a, b) => a + b, 0) / rets.length;
+  const sd = Math.sqrt(rets.reduce((a, b) => a + (b - mean) * (b - mean), 0) / (rets.length - 1));
+  const vol = sd * Math.sqrt(252) * 100;
+  let peak = -Infinity, mdd = 0;
+  for (const c of closes.slice(-120)) {
+    if (c > peak) peak = c;
+    else if (peak > 0) mdd = Math.max(mdd, (peak - c) / peak * 100);
+  }
+  return { vol: Math.round(vol * 10) / 10, mdd: Math.round(mdd * 10) / 10 };
+}
+
 // 동시성 제한 실행
 async function mapLimit(items, limit, fn) {
   const out = new Array(items.length); let i = 0;
@@ -126,7 +148,10 @@ async function mapLimit(items, limit, fn) {
     if (a) {
       // sigLegacy/sigBlock/blocks 는 엔진 비교(backtest)용 — 앱이 안 쓰는 필드라 저장 전 뗀다(파일 크기)
       const slim = (x) => { const o = Object.assign({}, x); delete o.sigLegacy; delete o.sigBlock; delete o.blocks; return o; };
-      ta[s.ticker] = { short: slim(a.short), mid: slim(a.mid), long: slim(a.long) }; live++;
+      ta[s.ticker] = { short: slim(a.short), mid: slim(a.mid), long: slim(a.long) };
+      const risk = riskOf(rows) || (prev[s.ticker] && prev[s.ticker].risk) || null;
+      if (risk) ta[s.ticker].risk = risk;
+      live++;
       if (rows.lastDate && (!lastBar || rows.lastDate > lastBar)) lastBar = rows.lastDate;
     }
     else if (prev[s.ticker]) { ta[s.ticker] = prev[s.ticker]; fellBack++; }
@@ -147,7 +172,7 @@ async function mapLimit(items, limit, fn) {
   };
   const body =
     "// 개별 종목 기술적 분석 스냅샷 — scripts/update-stock-ta.js 가 자동 생성 (LLM 토큰 0, 순수 스크립트)\n" +
-    "// ticker → { short:{trend,signal,metrics,read}, mid:{...}, long:{...} }. 단기(일봉)/중기(주봉)/장기(월봉) 분리.\n" +
+    "// ticker → { short:{trend,signal,metrics,read}, mid:{...}, long:{...}, risk:{vol 60일 실현변동성(연율화%), mdd 120일 최대낙폭%} }. 단기(일봉)/중기(주봉)/장기(월봉) 분리.\n" +
     "window.STOCK_TA = " + JSON.stringify(T) + ";\n";
   fs.writeFileSync(OUT, body);
 

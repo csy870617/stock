@@ -1769,7 +1769,19 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     // 최대 13%p 악화시켰다(한국 +21일 raw -1.95% vs capped -15.60%). 중앙값 ±30%p 를 0~1 로.
     var upScore   = Math.max(0, Math.min(0.5 + (numOr(s.upside, 0) - upsideMedian(state.country)) / 60, 1));
     var divScore  = Math.max(0, Math.min(numOr(s.dividendYield, 0), 6)) / 6;
-    var riskScore = 1 - Math.max(0, Math.min(((s.risks || []).length) - 2, 3)) * 0.15;
+    // riskScore 는 실측(stock-ta.js 의 60일 실현변동성·120일 최대낙폭)으로 계산한다.
+    // 종전의 '리스크 불릿 개수' 감점은 내생 변수라 성실한 리스크 공시를 벌점화하는
+    // 역인센티브가 있었다(2026-08 감사 지적). 밴드는 휴리스틱: vol 20~70%(연율화),
+    // mdd 10~50% 를 0~1 로 정규화하고 vol 0.6 : mdd 0.4 가중. 실측치가 없으면 종전 공식 폴백.
+    var riskScore;
+    var taR = stTa(s.ticker); taR = taR && taR.risk;
+    if (taR && typeof taR.vol === "number" && typeof taR.mdd === "number") {
+      var volN = Math.max(0, Math.min((taR.vol - 20) / 50, 1));
+      var mddN = Math.max(0, Math.min((taR.mdd - 10) / 40, 1));
+      riskScore = 1 - Math.max(0, Math.min(0.6 * volN + 0.4 * mddN, 1));
+    } else {
+      riskScore = 1 - Math.max(0, Math.min(((s.risks || []).length) - 2, 3)) * 0.15;
+    }
     var srcScore  = Math.max(0, Math.min((s.sources || []).length, 3)) / 3;
     var base = wUp * upScore + wRisk * riskScore + wDiv * divScore + wSrc * srcScore;
     var defense = Math.max(Math.max(0, g), rot);

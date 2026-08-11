@@ -132,6 +132,41 @@ if (history.length) {
   history = history.filter((h) => h.date >= cutoff);
 }
 
+// ── 목표가 장기 원장(data/tp-history.json) ──────────────────────────────────
+// history.js 는 90일 상한이 있어 upside(목표가 대비 상승여력)의 장기 예측력 백테스트가
+// 불가능하다(2026-08-11 backtest-upside 실행에서 확인 — 표본 1~10일 지평뿐). 그래서
+// 목표가만 따로, 변경된 날에 변경분만 기록해 무기한 보존한다(하루 수백 바이트).
+// 스키마: { start, lastRun, days: { "YYYY-MM-DD": { "<국가>:<티커>": 목표가|null } } }
+//  - 값은 그날 '바뀐' 종목만 담는다(전일까지의 원장을 forward-fill 한 값과 다를 때만).
+//  - 편성에서 빠진 종목은 null 로 기록해 forward-fill 이 잘못 이어지지 않게 한다.
+//  - 같은 날짜 재실행은 그날 항목을 지우고 다시 계산하므로 멱등이다.
+// 앱은 이 파일을 로드하지 않는다(백테스트 전용) — sw.js SHELL 에 넣지 말 것.
+const TPH = path.join(ROOT, "data", "tp-history.json");
+(function recordTpLedger() {
+  let tph = null;
+  if (fs.existsSync(TPH)) {
+    try { tph = JSON.parse(fs.readFileSync(TPH, "utf8")); }
+    catch (e) { console.warn("tp-history.json 파싱 실패 — 원장 기록을 건너뜁니다(덮어쓰지 않음): " + e.message); return; }
+  }
+  if (!tph || typeof tph.days !== "object") tph = { start: snap.date, days: {} };
+  delete tph.days[snap.date];   // 멱등 재계산
+  // 오늘 이전 날짜들을 순서대로 forward-fill 해 '마지막으로 알려진 목표가' 상태를 만든다
+  const known = {};
+  Object.keys(tph.days).filter((d) => d < snap.date).sort().forEach((d) => {
+    Object.entries(tph.days[d]).forEach(([k, v]) => { if (v == null) delete known[k]; else known[k] = v; });
+  });
+  const today = {};
+  snap.stocks.forEach((s) => { if (typeof s.tp === "number") today[s.c + ":" + s.t] = s.tp; });
+  const diff = {};
+  Object.entries(today).forEach(([k, v]) => { if (known[k] !== v) diff[k] = v; });
+  Object.keys(known).forEach((k) => { if (!(k in today)) diff[k] = null; });   // 편출 tombstone
+  if (Object.keys(diff).length) tph.days[snap.date] = diff;
+  tph.lastRun = snap.date;
+  fs.writeFileSync(TPH, JSON.stringify(tph, null, 1) + "\n");
+  console.log("목표가 원장: " + snap.date + " 변경 " + Object.keys(diff).length + "건 / 누적 " +
+    Object.keys(tph.days).length + "일치");
+})();
+
 const out = "// 일별 추천 스냅샷 히스토리 — scripts/snapshot.js 가 자동 생성/추가\n" +
   "// 각 항목: {date, kospi, sp500, note·noteUS·noteKR 시황, liq 유동성{us,korea,headline}, picks Top Pick{korea[],us[]},\n" +
   "//           stocks:[{t 티커, n 이름, c 국가, th 주제, tier, p 가격, pd 가격기준일, tp 목표가, ss 단기신호, sl 장기신호}]}\n" +
