@@ -54,6 +54,13 @@ window.COVERAGE_STATUS = {
    "done": 1,
    "total": 1,
    "ok": true
+  },
+  {
+   "key": "backbone",
+   "label": "지표 재생성",
+   "done": 2,
+   "total": 2,
+   "ok": true
   }
  ],
  "rotation": [

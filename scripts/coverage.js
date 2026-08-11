@@ -84,7 +84,7 @@ const missValue = all.filter((s) => !s.valueNote || !String(s.valueNote).trim())
 // 불가능하다(종목당 25~35회 → 2,750회+ 필요). 게이트는 '전 종목이 CYCLE_DAYS 이내인가'로 보고,
 // 세션이 받아 가는 큐는 verifiedAt 이 오래된 순 QUOTA 종목으로 자른다.
 const VERIF_CYCLE_DAYS = 7;                          // ★ 목표: 전 종목이 7일 이내에 한 번은 재검증된다
-const VERIF_QUOTA = Number(argVal("quota") || 20);   // 한 세션이 감당할 큐 크기(예산 상한에서 온 값)
+const VERIF_QUOTA = Number(argVal("quota") || 15);   // 한 세션이 감당할 큐 크기 — 종목당 검색 ~10회 × 15종목 ≈ 150회(세션 예산 ~200회 안)
 const daysAgo = (d) => {
   if (!d) return Infinity;
   const t = Date.parse(d + "T00:00:00Z");
@@ -236,6 +236,8 @@ if (process.argv.includes("--emit")) {
       { key: "topPicks",  label: "Top Pick",   done: missTop.length ? 0 : 6, total: 6 },
       { key: "liquidity", label: "유동성 판단", done: missLiq.length ? 0 : 1, total: 1 },
       { key: "market",    label: "시황",        done: missMarket.length ? 0 : 1, total: 1 },
+      // backbone(오늘 재실행)이 빠지면 CLI 게이트는 빨강인데 패널만 초록인 불일치가 났다(감사).
+      { key: "backbone",  label: "지표 재생성",  done: missBackbone.length ? 0 : 2, total: 2 },
     ],
     rotation: [
       { key: "verified", label: "목표가 재검증", fresh: N - staleVerif.length, total: N,

@@ -7,10 +7,16 @@ const fs = require("fs"), path = require("path");
 const ROOT = path.join(__dirname, "..");
 
 async function getText(url, enc) {
-  const r = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" }, redirect: "follow" });
-  if (!r.ok) throw new Error("HTTP " + r.status + " " + url);
-  const buf = Buffer.from(await r.arrayBuffer());
-  return new TextDecoder(enc || "utf-8").decode(buf);
+  // 대용량 EUC-KR HTML 다운로드라 스톨 여지가 있다 — 다른 스크립트들과 같은 이유로
+  // 요청·본문 수신 전체에 타임아웃을 건다(없으면 워크플로우 스텝이 무기한 매달린다).
+  const ctrl = new AbortController();
+  const to = setTimeout(() => ctrl.abort(), 20000);
+  try {
+    const r = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0" }, redirect: "follow", signal: ctrl.signal });
+    if (!r.ok) throw new Error("HTTP " + r.status + " " + url);
+    const buf = Buffer.from(await r.arrayBuffer());
+    return new TextDecoder(enc || "utf-8").decode(buf);
+  } finally { clearTimeout(to); }
 }
 
 // KRX corpList: 회사명(0)·시장(1)·종목코드(2) 테이블

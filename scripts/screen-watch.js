@@ -329,6 +329,7 @@ async function mapLimit(items, limit, fn) {
     breakout[c] = breakout[c].slice(0, TOP_N);
     nearHigh[c].sort((x, y) => y.rel - x.rel);
     nearHigh[c] = nearHigh[c].slice(0, 5);
+    nearTurn[c].sort((x, y) => x.ticker < y.ticker ? -1 : 1);   // fetch 완료 순서 의존 제거(매일 무의미한 diff 방지)
     nearTurn[c] = nearTurn[c].slice(0, 5);
   });
 

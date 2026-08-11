@@ -88,6 +88,9 @@ async function oneQuote(symbol) {
     throw new Error("no price");
   }
   let date = null;
+  // regularMarketTime 이 없으면 신선도를 판정할 수 없다 — 가드가 막으려던 바로 그
+  // 대상(폐지·정지 심볼의 옛 시세)이 필드 하나 빠졌다고 통과하지 않도록 거부한다.
+  if (!m.regularMarketTime) throw new Error("no regularMarketTime (신선도 판정 불가)");
   if (m.regularMarketTime) {
     const off = (m.gmtoffset || 0) * 1000;               // 거래소 현지시각 기준 날짜
     date = new Date(m.regularMarketTime * 1000 + off).toISOString().slice(0, 10);

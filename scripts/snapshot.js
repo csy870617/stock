@@ -54,7 +54,8 @@ const seen = {};
 ["korea", "us"].forEach((c) => {
   (D[c] || []).forEach((s) => {
     const key = c + ":" + s.ticker;
-    if (!seen[key] || s.tier < seen[key].tier) {
+    // tier 없는 개인 목록 카드(undefined)가 정식 카드를 밀어내지 않게 정규화(없음=9)
+    if (!seen[key] || (s.tier ?? 9) < (seen[key].tier ?? 9)) {
       seen[key] = { t: s.ticker, n: s.name, c, th: s.theme, tier: s.tier,
                     p: priceOf(s), pd: priceDateOf(s), tp: s.targetPrice,
                     // 그날의 단기·중기·장기 신호 등급 — 앱의 '기준일 선택'이 과거 편성을 보여줄 때 쓴다.

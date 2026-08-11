@@ -100,7 +100,7 @@ async function fetchSeriesOnce(symbol, bustCache) {
       low: q.low && q.low[i] != null ? q.low[i] : q.close[i]
     });
   }
-  if (rows.length < 30) return null;   // 계산이 무의미할 만큼 짧으면 실패 처리(폴백)
+  if (rows.length < TA.MIN_BARS) return null;   // lib 의 최소 봉수와 동일 게이트(불일치 시 조용한 폴백 발생)
   // 마지막 봉의 거래소 현지 날짜 = 실제 최신 거래일. 주말·휴장일에 돌려도 실행일이 아닌
   // 이 날짜가 asOf 가 돼야 INDEX_NOTES.asOf 비교에서 '구식'으로 오판되지 않는다.
   const off = ((res.meta && res.meta.gmtoffset) || 0) * 1000;
@@ -114,12 +114,12 @@ async function fetchSeriesOnce(symbol, bustCache) {
 }
 
 // 지수 1종목 분석 — 공유 lib-ta로 단기/중기/장기 기술적 분석을 계산해 카드 필드와 합친다.
-function analyze(cfg, rows) {
+function analyze(cfg, rows, gapOkOverride) {
   const a = TA.analyzeTimeframes(rows, { dp: 2, srDp: 0 });
   if (!a) return null;
   // 시리즈에 구멍이 있으면(중간 거래일 누락) 등락률이 여러 날치를 하루로 뭉뚱그린 값이 된다.
   // 틀린 숫자를 보여주느니 감춘다 — 지표(RSI·이동평균)는 1봉 누락에 둔감해 그대로 쓴다.
-  const gapOk = !rows.lastGapDays || rows.lastGapDays <= MAX_GAP_DAYS;
+  const gapOk = gapOkOverride != null ? gapOkOverride : (!rows.lastGapDays || rows.lastGapDays <= MAX_GAP_DAYS);
   if (!gapOk) {
     console.warn("  ⚠ " + cfg.key + ": 등락률 생략 — 최근 봉 간격 " + rows.lastGapDays +
       "일(" + rows.prevDate + " → " + rows.lastDate + ")");
@@ -159,16 +159,34 @@ function loadPrevAsOf() {
   const prev = loadPrev();
   let live = 0, fellBack = 0, lastBar = null;
 
+  // 전 지수를 먼저 받아 두면, 같은 나라 짝 지수와 봉 날짜를 대조해 '정상 연휴'와
+  // '중간 봉 누락'을 구분할 수 있다 — 성금요일·설날·추석처럼 달력일 간격이 3일을
+  // 넘는 완전한 시리즈를 봉 누락으로 오판해 정확한 등락률을 숨기던 문제(감사).
+  const fetched = {};
+  for (const cfg of INDICES) fetched[cfg.key] = await fetchSeries(cfg.symbol);
+  const PAIR = { nasdaq: "dow", dow: "nasdaq", kospi: "kosdaq", kosdaq: "kospi" };
+  function gapOkFor(key) {
+    const rows = fetched[key];
+    if (!rows) return null;
+    if (!rows.lastGapDays || rows.lastGapDays <= MAX_GAP_DAYS) return true;
+    const mate = fetched[PAIR[key]];
+    // 같은 나라 두 지수가 동일한 봉 날짜 쌍을 보이면 그 간격은 휴장(연휴)이다 — 등락률 신뢰 가능
+    if (mate && mate.lastDate === rows.lastDate && mate.prevDate === rows.prevDate) return true;
+    return false;
+  }
+
   const indices = [];
   for (const cfg of INDICES) {
-    const rows = await fetchSeries(cfg.symbol);
-    const a = rows ? analyze(cfg, rows) : null;
+    const rows = fetched[cfg.key];
+    const a = rows ? analyze(cfg, rows, gapOkFor(cfg.key)) : null;
     if (a) {
       indices.push(a);
       live++;
       if (rows.lastDate && (!lastBar || rows.lastDate > lastBar)) lastBar = rows.lastDate;
     } else if (prev[cfg.key]) {
-      indices.push(prev[cfg.key]);   // 이전 계산값 유지
+      // 이전 계산값 유지하되 등락률은 감춘다 — 파일 asOf 는 성공한 지수의 최신 거래일로
+      // 올라가므로, 전일 등락률을 그대로 두면 오늘 것처럼 색까지 입혀 표시된다(감사).
+      indices.push(Object.assign({}, prev[cfg.key], { change: "–", changeDir: "down" }));
       fellBack++;
     } else {
       // 최초 생성 시 조회 실패한 지수는 최소 골격만 남긴다(렌더가 깨지지 않도록).

@@ -65,7 +65,8 @@ async function seriesOnce(sym) {
 }
 const last = (a) => a[a.length - 1];
 const ago = (a, n) => a[Math.max(0, a.length - 1 - n)];
-const chg = (a, n) => { const p = ago(a, n); return p ? (last(a) - p) / p : 0; };
+// 요구 길이 미달이면 null — 25봉짜리 시리즈의 '60d 변화율'이 사실상 25일 변화율로 둔갑하지 않게
+const chg = (a, n) => { if (!a || a.length <= n) return null; const p = ago(a, n); return p ? (last(a) - p) / p : null; };
 
 // ── 하위 점수(-2..+2, 양수=유동성 우호) ──
 // 임계값은 과거 1년 시계열 롤링 백테스트로 캘리브레이션(v2). 앵커:
@@ -74,10 +75,10 @@ const chg = (a, n) => { const p = ago(a, n); return p ? (last(a) - p) / p : 0; }
 //  · 커브: 무반전 구간 판별력 위해 양의 밴드 촘촘히. 음수(역전) 밴드는 레짐 전환 대비 유지.
 //  · toRank 중립대는 ±0.35 로 좁혀 게이지가 한 단계에 고착되지 않게 한다.
 function sYieldLevel(y) { if (y < 3.8) return 2; if (y < 4.1) return 1; if (y < 4.4) return 0; if (y < 4.7) return -1; return -2; }
-function sTrend(chRate, favorFall) { const s = favorFall ? -chRate : chRate; if (s > 0.03) return 2; if (s > 0.01) return 1; if (s > -0.01) return 0; if (s > -0.03) return -1; return -2; }
+function sTrend(chRate, favorFall) { if (chRate == null) return null; const s = favorFall ? -chRate : chRate; if (s > 0.03) return 2; if (s > 0.01) return 1; if (s > -0.01) return 0; if (s > -0.03) return -1; return -2; }
 function sVix(v) { if (v < 13) return 2; if (v < 16) return 1; if (v < 21) return 0; if (v < 27) return -1; return -2; }
-function sCredit(ch) { if (ch > 0.015) return 2; if (ch > 0.005) return 1; if (ch > -0.005) return 0; if (ch > -0.02) return -1; return -2; }
-function sCurve(spread) { if (spread > 0.8) return 2; if (spread > 0.4) return 1; if (spread > 0.05) return 0; if (spread > -0.3) return -1; return -2; }
+function sCredit(ch) { if (ch == null) return null; if (ch > 0.015) return 2; if (ch > 0.005) return 1; if (ch > -0.005) return 0; if (ch > -0.02) return -1; return -2; }
+function sCurve(spread) { if (spread == null) return null; if (spread > 0.8) return 2; if (spread > 0.4) return 1; if (spread > 0.05) return 0; if (spread > -0.3) return -1; return -2; }
 function toRank(avg) { if (avg >= 1.2) return 4; if (avg >= 0.35) return 3; if (avg > -0.35) return 2; if (avg > -1.2) return 1; return 0; }
 // 급성 주식 드로다운 floor — 월간(20거래일) 폭락은 리스크오프가 지배하는 국면이라,
 // FX·신용 개선이 등가로 상쇄해 게이지가 관대해지는 것을 막는다(합성 점수보다 등급을 하향 고정).
@@ -91,12 +92,13 @@ function equityFloorRank(rank, mom20) {
 // 가중 평균(항목: [라벨, 점수, 가중치])
 function composite(items) {
   let s = 0, w = 0;
-  items.forEach(([, sc, wt]) => { s += sc * (wt || 1); w += (wt || 1); });
+  // 점수 null = 입력 결측(짧은 시리즈·^IRX 실패 등) — 0점(중립)으로 치지 않고 가중에서 제외한다
+  items.forEach(([, sc, wt]) => { if (sc == null) return; s += sc * (wt || 1); w += (wt || 1); });
   return w ? s / w : 0;
 }
 // 드라이버 문구: 감점/가점 큰 항목순으로 요약
 function drivers(items, extra) {
-  const sorted = items.slice().sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));
+  const sorted = items.filter((x) => x[1] != null).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]));   // 결측 항목은 드라이버 문구에서 제외
   const sign = (n) => (n > 0 ? "+" : n < 0 ? "−" : "·");
   return sorted.slice(0, 4).map(([lbl, sc]) => lbl + " (" + sign(sc) + Math.abs(sc) + ")").concat(extra || []);
 }
@@ -127,7 +129,9 @@ function loadPrev() {
   }
 
   const y10 = last(tnx);
-  const spread = irx ? (y10 - last(irx)) : 0.3;            // 10Y − 3M 커브(없으면 완만 가정)
+  // ^IRX 실패 시 커브를 가정치로 채우지 않는다 — 가정 0.3 이 실측처럼 inputs·drivers 에
+  // 기록돼 실제 역전 국면에서 중기 등급을 한 단계 관대하게 만들 수 있다(감사). 항목 제외로 처리.
+  const spread = irx ? (y10 - last(irx)) : null;
   const vixNow = last(vix);
   const hyg20 = chg(hyg, 20), hyg60 = chg(hyg, 60);
   const dxy20 = chg(dxy, 20), dxy60 = chg(dxy, 60);
@@ -144,7 +148,7 @@ function loadPrev() {
   ];
   const usMidItems = [
     ["10Y 수준 " + y10.toFixed(2) + "%", sYieldLevel(y10), 1.3],
-    ["일드커브 " + spread.toFixed(2) + "%p", sCurve(spread), 1.2],
+    ["일드커브" + (spread == null ? "(결측)" : " " + spread.toFixed(2) + "%p"), sCurve(spread), 1.2],
     ["HY 신용(60d)", sCredit(hyg60), 1],
     ["달러(60d)", sTrend(dxy60, true), 0.8],
     ["VIX", sVix(vixNow), 0.6],
@@ -181,8 +185,8 @@ function loadPrev() {
     asOf: asOf,
     note: "Yahoo 시장지표 기반 자동 baseline(금리·일드커브·VIX·HY신용·달러·원달러·코스피). 거시 이벤트·내러티브는 미반영 — 온디맨드 유동성이 보정.",
     inputs: {
-      us10y: y10.toFixed(2), curve: spread.toFixed(2), vix: vixNow.toFixed(1),
-      hyg20: (hyg20 * 100).toFixed(1), dxy: last(dxy).toFixed(1), usdkrw: last(krw).toFixed(0)
+      us10y: y10.toFixed(2), curve: spread == null ? null : spread.toFixed(2), vix: vixNow.toFixed(1),
+      hyg20: hyg20 == null ? null : (hyg20 * 100).toFixed(1), dxy: last(dxy).toFixed(1), usdkrw: last(krw).toFixed(0)
     },
     us: {
       shortTerm: RANKS[toRank(usShort)], midTerm: RANKS[toRank(usMid)],

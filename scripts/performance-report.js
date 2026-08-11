@@ -74,6 +74,23 @@ const curTier = {};
   const k = c + ":" + s.ticker;
   if (curTier[k] == null || s.tier < curTier[k]) curTier[k] = s.tier;
 }));
+// 액면분할·심볼 데이터 단절 의심 — 인접 스냅샷 가격이 하루 만에 ±45% 넘게 점프한 종목.
+// 분할 미조정 가격으로 수익률을 재면 즉시 -90% 같은 값이 나와 bigLosers·tierReview 를
+// 최장 90일(보존 창) 동안 오염시키므로, 의심 종목은 통계에서 빼고 따로 보고한다(감사).
+const splitSuspect = {};
+{
+  const series = {};   // country:ticker → [{d,p}]
+  H.forEach((snap) => (snap.stocks || []).forEach((s) => {
+    if (typeof s.p === "number" && s.p > 0) (series[s.c + ":" + s.t] = series[s.c + ":" + s.t] || []).push(s.p);
+  }));
+  Object.keys(series).forEach((k) => {
+    const a = series[k];
+    for (let i = 1; i < a.length; i++) {
+      const r = a[i] / a[i - 1];
+      if (r > 1.45 || r < 0.55) { splitSuspect[k] = +((r - 1) * 100).toFixed(1); break; }
+    }
+  });
+}
 const rows = [];
 const seen = {};
 ["korea", "us"].forEach((c) => {
@@ -93,6 +110,7 @@ const seen = {};
     const benchPct = (fromIdx && lastIdx) ? (lastIdx - fromIdx) / fromIdx * 100 : null;
     const excess = benchPct == null ? null : +(ret - benchPct).toFixed(2);
     rows.push({ country: c, ticker: s.ticker, name: s.name, theme: b.theme,
+      suspect: splitSuspect[k] != null ? splitSuspect[k] : null,
       tier: curTier[k] != null ? curTier[k] : b.tier,
       since: b.date, basePrice: b.price, curPrice: cur, retPct: +ret.toFixed(2), excessPct: excess,
       targetPrice: s.targetPrice, liveUpsidePct: liveUpside == null ? null : +liveUpside.toFixed(1) });
@@ -108,13 +126,15 @@ const byCountry = {}, byTheme = {}, byTier = {};
 rows.forEach((r) => {
   (byCountry[r.country] = byCountry[r.country] || []).push(r);
   (byTheme[r.country + "/" + r.theme] = byTheme[r.country + "/" + r.theme] || []).push(r);
-  (byTier[r.country + "/T" + r.tier] = byTier[r.country + "/T" + r.tier] || []).push(r);
+  // 개인 목록(관심·보유) 카드는 tier 가 없다 — 'korea/Tundefined' 같은 무의미한 그룹이
+  // 통계에 섞여 루틴이 티어 성과로 오독하지 않게 tier 있는 행만 집계한다(감사).
+  if (typeof r.tier === "number") (byTier[r.country + "/T" + r.tier] = byTier[r.country + "/T" + r.tier] || []).push(r);
 });
 
 // 재평가 우선 대상
 const targetReached = rows.filter((r) => r.liveUpsidePct != null && r.liveUpsidePct <= 0)
   .sort((a, b) => a.liveUpsidePct - b.liveUpsidePct);
-const bigLosers = rows.filter((r) => r.retPct <= -15).sort((a, b) => a.retPct - b.retPct);
+const bigLosers = rows.filter((r) => r.retPct <= -15 && r.suspect == null).sort((a, b) => a.retPct - b.retPct);
 const winners = [...rows].sort((a, b) => b.retPct - a.retPct).slice(0, 5);
 const losers = [...rows].sort((a, b) => a.retPct - b.retPct).slice(0, 5);
 

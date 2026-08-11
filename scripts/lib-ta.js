@@ -28,6 +28,7 @@ function rsi(c, period) {
     ag = (ag * (period - 1) + (d > 0 ? d : 0)) / period;
     al = (al * (period - 1) + (d < 0 ? -d : 0)) / period;
   }
+  if (ag === 0 && al === 0) return 50;   // 완전 보합(거래정지 등): RS=0/0 은 미정의 — 중립 처리
   if (al === 0) return 100;
   return 100 - 100 / (1 + ag / al);
 }
@@ -319,6 +320,7 @@ function analyzeTimeframes(rows, opts) {
   };
 }
 
-var _LIB_TA = { sma, ema, rsi, rsiState, macd, stochastic, cci, williamsR, adx, momentum, chgN, fmtNum, levels, toWeekly, toMonthly, computeSuite, analyzeTimeframes };
+var MIN_BARS = 35;   // computeSuite 최소 봉수(MACD 26+9) — 호출부 게이트도 이 상수를 쓸 것
+var _LIB_TA = { MIN_BARS, sma, ema, rsi, rsiState, macd, stochastic, cci, williamsR, adx, momentum, chgN, fmtNum, levels, toWeekly, toMonthly, computeSuite, analyzeTimeframes };
 if (typeof module !== "undefined" && module.exports) module.exports = _LIB_TA;   // Node (update 스크립트)
 if (typeof window !== "undefined") window.LIB_TA = _LIB_TA;                       // 브라우저(관심종목 라이트 분석)

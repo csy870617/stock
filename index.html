@@ -800,6 +800,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   <footer class="site">
     <p id="disclaimer"></p>
     <p style="margin-top:6px;">매일 오전 1시(LA·한국시간 오후 5시) 자동 갱신 · 현재가에 '실시간' 표기가 있으면 장중 시세, 없으면 종가</p>
+    <p style="margin-top:6px;">기술 신호 등급(적극매수~적극매도)은 지표 요약이며 백테스트 검증 결과 <b>단기(일봉) 신호는 사후 수익률 예측력이 확인되지 않았습니다</b>(장기·월봉 신호만 3개월 지평에서 약한 상관). 매매 트리거가 아닌 참고 지표로만 활용하세요.</p>
   </footer>
 </div>
 
@@ -1000,6 +1001,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
 
     function show(date) {
       if (!date) {                       // 오늘(라이브)로 복귀
+        window.__pastActive = false;
         panel.hidden = true;
         siblings.forEach(function (el) { el.style.display = ""; });
         return;
@@ -1008,6 +1010,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       for (var i = 0; i < H.length; i++) { if (H[i].date === date) { h = H[i]; break; } }
       if (!h) return;
       if (!pastCountry) pastCountry = state.country;   // 첫 진입만 메인 선택을 이어받는다
+      window.__pastActive = true;        // 진행 중인 비동기 콜백(refreshLive)이 숨긴 섹션을 되살리지 않게
       siblings.forEach(function (el) { el.style.display = "none"; });
       panel.innerHTML = pastHtml(h);
       panel.hidden = false;
@@ -1851,6 +1854,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   }
   function renderTopPicks() {
     var box = document.getElementById("picksBox");
+    if (window.__pastActive) return;   // 과거 보기 중엔 오늘 배너를 그리지 않는다(시세 도착 콜백 경합)
     var crit = document.getElementById("picksCrit");
     var DEFAULT_CRIT = "전 종목(정식 추천) 중 밸류·기술·유동성을 종합한 국가별 최선 3종목";
     var TP = D.topPicks || {};
@@ -1866,28 +1870,36 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       if (Array.isArray(TP[cc]) && TP[cc].length) {
         TP[cc].forEach(function (it) { var s = byT[it.ticker]; if (s) rows.push({ s: s, reason: it.reason }); });
       }
+      var curatedFull = Array.isArray(TP[cc]) && rows.length === TP[cc].length && rows.length > 0;
       if (!rows.length) fallbackPicks(cc).forEach(function (s) { rows.push({ s: s, reason: "" }); });
-      if (!rows.length) { group.style.display = "none"; return 0; }
+      if (!rows.length) { group.style.display = "none"; return { n: 0, curated: false }; }
       group.style.display = "";
       grid.innerHTML = rows.map(function (r, i) { return pickCard(r.s, cc, i + 1, r.reason); }).join("");
       rows.forEach(function (r) { live.push(r.s); });
-      return rows.length;
+      return { n: rows.length, curated: curatedFull };
     }
 
     // 선택된 국가의 Top Pick 만 표시(다른 국가 그룹은 숨김)
     var cc = state.country;
     document.getElementById("picksGroupKR").style.display = "none";
     document.getElementById("picksGroupUS").style.display = "none";
-    var n = cc === "us"
+    var g = cc === "us"
       ? renderGroup("us", "picksGridUS", "picksGroupUS")
       : renderGroup("korea", "picksGridKR", "picksGroupKR");
-    if (!n) { box.style.display = "none"; return; }
+    if (!g.n) { box.style.display = "none"; return; }
     box.style.display = "";
 
+    // 큐레이션 3종목이 온전히 표시될 때만 큐레이션 문구·기준일·미갱신 배지를 붙인다.
+    // 일부가 편성에서 빠져 자동 폴백으로 채워졌다면 그 사실을 그대로 말한다(감사: 자동
+    // 선정 결과에 사람이 고른 것 같은 문구가 붙어 있었다).
     var taAsOf = window.STOCK_TA && window.STOCK_TA.asOf;
-    var stale = TP.asOf && taAsOf && TP.asOf < taAsOf;
-    crit.innerHTML = esc(TP.note || DEFAULT_CRIT) + (TP.asOf ? " · " + esc(TP.asOf) + " 기준" : "") +
-      (stale ? '<span class="pk-stale" title="오늘 데이터(' + esc(taAsOf) + ')로 아직 갱신되지 않았습니다. 표시는 ' + esc(TP.asOf) + ' 기준입니다.">⚠ 미갱신</span>' : "");
+    if (g.curated) {
+      var stale = TP.asOf && taAsOf && TP.asOf < taAsOf;
+      crit.innerHTML = esc(TP.note || DEFAULT_CRIT) + (TP.asOf ? " · " + esc(TP.asOf) + " 기준" : "") +
+        (stale ? '<span class="pk-stale" title="오늘 데이터(' + esc(taAsOf) + ')로 아직 갱신되지 않았습니다. 표시는 ' + esc(TP.asOf) + ' 기준입니다.">⚠ 미갱신</span>' : "");
+    } else {
+      crit.innerHTML = esc(DEFAULT_CRIT) + " · 자동 선정(큐레이션 일부가 편성에서 제외되어 상위 종목으로 대체)";
+    }
     ensureLive(live, refreshLive);
   }
 
@@ -2021,7 +2033,9 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       var days = Math.round((new Date(last.date) - new Date(f.snap.date)) / 86400000);
       var ret = (f.entry.p && e.p) ? (e.p - f.entry.p) / f.entry.p * 100 : null;
       var benchRet = (f.snap[benchKey] && last[benchKey]) ? (last[benchKey] - f.snap[benchKey]) / f.snap[benchKey] * 100 : null;
-      rows.push({ name: e.n, ticker: e.t, theme: e.th, tier: f.entry.tier,
+      // theme·tier 모두 '첫 기록 시점' 값으로 — 마지막 스냅샷 theme 과 섞으면 그 사이 주제가
+      // 바뀐 종목(48/115 실측)이 엉뚱한 주제×Tier 셀에 집계된다(감사).
+      rows.push({ name: e.n, ticker: e.t, theme: f.entry.th, tier: f.entry.tier,
         basePrice: f.entry.p, lastPrice: e.p, ret: days > 0 ? ret : null,
         alpha: (days > 0 && ret != null && benchRet != null) ? ret - benchRet : null });
     });
@@ -2184,7 +2198,14 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   function plist(k) { return PLIST[k] || PLIST.watch; }
   var wlCache = {};   // "country:ticker" → undefined(미조회) | "loading" | null(실패) | {price,date,ta,sym}
   //  두 목록은 같은 wlCache 를 공유한다 — 같은 종목이면 시세·기술분석도 같기 때문이다.
-  function readList(key) { try { var v = JSON.parse(localStorage.getItem(key)); return Array.isArray(v) ? v : []; } catch (_e) { return []; } }
+  function readList(key) {
+    try {
+      var v = JSON.parse(localStorage.getItem(key));
+      if (!Array.isArray(v)) return [];
+      // null/비객체 요소가 하나라도 섞이면 w.c 접근에서 렌더 전체가 죽는다 — 읽을 때 정제
+      return v.filter(function (w) { return w && typeof w === "object"; });
+    } catch (_e) { return []; }
+  }
   function writeList(key, a) { try { localStorage.setItem(key, JSON.stringify(a)); } catch (_e) {} }
   function getMyList(k) { return readList(plist(k).store); }
   function saveMyList(k, a) { writeList(plist(k).store, a); }
@@ -2290,6 +2311,9 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (list) {
         wlReqInflight = false;
+        // 403(비인증 rate limit) 등으로 목록을 못 받았으면 캐시를 확정하지 않는다 —
+        // 빈 맵을 캐시하면 세션 내내 '요청 없음'으로 굳어 중복 이슈 생성을 유도한다(감사).
+        if (!Array.isArray(list)) return;
         var map = {};
         if (Array.isArray(list)) list.forEach(function (it) {
           var ti = (it && it.title) || "";
@@ -2381,7 +2405,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       "</div>" +
       reqTag +
       (req ? "" : '<div class="wl-note">실시간 시세만 보여주는 라이트 카드입니다. 단기/중기/장기 기술 대응·목표가·논거 등 분석은 아래 <b>정밀분석 요청</b>으로 신청하면 풀카드로 승격됩니다. <b>요청 시 매일 오전 1시(LA·한국시간 오후 5시) 정기 분석에 반영</b>됩니다.</div>') +
-      '<div class="links"><a href="' + chartUrl + '" target="_blank" rel="noopener">차트 보기</a>' +
+      '<div class="links"><a href="' + esc(safeUrl(chartUrl)) + '" target="_blank" rel="noopener">차트 보기</a>' +
       (req ? '<a class="wl-req" href="' + esc(safeUrl(req.url)) + '" target="_blank" rel="noopener">요청 이슈 보기 →</a>'
            : '<a class="wl-req" href="' + reqUrl + '" target="_blank" rel="noopener">정밀분석 요청 →</a>') + "</div>" +
       "</article>";
@@ -2549,12 +2573,13 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
         el.outerHTML = html;
         var nel = document.getElementById(id); if (nel && key) nel.setAttribute("data-pkey", key);
       }
-      var wlRepaint = isTbl
-        ? function (w) {
-            repaintNode("wlr-" + w.c + "-" + w.t, wlLightRow(w), w.c + "|" + w.t);
-            if (tblExpanded[w.t]) { var dl = document.getElementById("tld-" + w.t); if (dl) dl.outerHTML = detailWrap(w.t, tblExpanded[w.t], wlLightCard(w)); }
-          }
-        : function (w) { repaintNode("wlc-" + w.c + "-" + w.t, wlLightCard(w), w.c + "|" + w.t); };
+      // 렌더 시점의 뷰(isTbl)를 캡처하지 않고 실행 시점에 두 id 를 모두 시도한다 — 조회 중
+      // 뷰를 전환하면 이전 렌더의 콜백이 없는 id 를 찾다 실패해 '불러오는 중…'이 남았다(감사).
+      var wlRepaint = function (w) {
+        repaintNode("wlr-" + w.c + "-" + w.t, wlLightRow(w), w.c + "|" + w.t);
+        repaintNode("wlc-" + w.c + "-" + w.t, wlLightCard(w), w.c + "|" + w.t);
+        if (tblExpanded[w.t]) { var dl = document.getElementById("tld-" + w.t); if (dl) dl.outerHTML = detailWrap(w.t, tblExpanded[w.t], wlLightCard(w)); }
+      };
       mineLight.forEach(function (w) { fetchWatchOne(w, function () { wlRepaint(w); }); });
       if (mineLight.length) fetchWatchReqs(function () { mineLight.forEach(wlRepaint); });
       return;
@@ -2646,6 +2671,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       dragging = null; active = false; pid = null;
     }
     wrap.addEventListener("pointerdown", function (e) {
+      if (dragging) return;                                  // 드래그 중 두 번째 손가락 가드
       var chip = e.target.closest(".chip"); if (!chip) return;
       dragging = chip; startX = e.clientX; startY = e.clientY; pid = e.pointerId; ptype = e.pointerType;
       active = false; chipDragMoved = false;
@@ -2734,7 +2760,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       dragging = null; listEl = null; pid = null; plDragging = false; edge = 0;
       if (raf) { cancelAnimationFrame(raf); raf = 0; }
       if (wasDragging) {
-        render();   // 저장된 순서로 다시 그려 '기본 순서로' 버튼 노출까지 반영
+        render(); renderTopPicks();   // 드래그 중 도착한 실시간 시세가 Top Pick 배너에도 반영되게
         // 드래그 끝에 따라오는 click 한 번만 무시하고 곧바로 해제한다. 여기서 render() 가
         // DOM 을 갈아끼우면 그 click 이 아예 안 오는 경우가 있어, 플래그를 켜 둔 채로 두면
         // 다음 탭이 통째로 먹힌다(→ '기본 순서로' 버튼이 한 번 눌리지 않던 원인).
@@ -2742,6 +2768,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       } else plDragMoved = false;
     }
     host.addEventListener("pointerdown", function (e) {
+      if (dragging) return;                                  // 드래그 중 두 번째 손가락이 상태를 덮어쓰지 않게
       if (!isPersonal(state.theme) || isControl(e.target)) return;
       var it = e.target.closest("[data-pkey]"); if (!it) return;
       dragging = it; listEl = it.parentNode;
@@ -2794,7 +2821,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       if (tbl) { atL = tbl.scrollLeft <= 1; atR = tbl.scrollLeft + tbl.clientWidth >= tbl.scrollWidth - 1; }
     }, { passive: true });
     el.addEventListener("touchend", function (e) {
-      if (sx == null || plDragging) { sx = null; return; }   // 재정렬 드래그를 주제 스와이프로 오인하지 않는다
+      if (sx == null || plDragging || plDragMoved) { sx = null; return; }   // 재정렬 드래그(진행 중/방금 종료)를 주제 스와이프로 오인하지 않는다
       var dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
       sx = null;
       if (Math.abs(dx) < 55 || Math.abs(dx) < Math.abs(dy) * 1.4) return;      // 가로 스와이프만 인식
@@ -2874,6 +2901,14 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     var b = e.target.closest("[data-perfp]"); if (!b) return;
     state.perfPeriod = b.dataset.perfp;
     render();
+  });
+  // role=button 스팬(표 행 ✕)은 네이티브 버튼과 달리 Enter/Space 가 click 을 만들지 않는다 — 위임으로 보완
+  document.getElementById("cards").addEventListener("keydown", function (e) {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    var el = e.target.closest && e.target.closest('[data-wl][role="button"]');
+    if (!el) return;
+    e.preventDefault();
+    el.click();
   });
   // 검색 입력 → 자동완성 후보 갱신
   document.getElementById("cards").addEventListener("input", function (e) {
@@ -3064,7 +3099,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
           '<span class="it-ch ' + chDir + '">' + esc(x.change) + "</span></div>" + body;
       var cls = "idx-tile" + (stale ? " stale" : "");
       return x.chartUrl
-        ? '<a class="' + cls + '" href="' + esc(x.chartUrl) + '" target="_blank" rel="noopener">' + inner + "</a>"
+        ? '<a class="' + cls + '" href="' + esc(safeUrl(x.chartUrl)) + '" target="_blank" rel="noopener">' + inner + "</a>"
         : '<div class="' + cls + '">' + inner + "</div>";
     }
 
