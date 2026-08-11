@@ -45,7 +45,10 @@ if (!patchPath || patchPath.startsWith("--")) {
   process.exit(1);
 }
 const outIdx = process.argv.indexOf("--out");
-const OUT = outIdx >= 0 ? process.argv[outIdx + 1] : RECO;
+// --out 은 절대경로로 정규화한다 — "--out data/recommendations.js" 처럼 상대경로로 실제
+// 파일을 가리키면 문자열 비교(OUT === RECO)가 어긋나 레저·--emit 이 건너뛰어졌다(감사 확정).
+const OUT = outIdx >= 0 ? path.resolve(process.argv[outIdx + 1]) : RECO;
+const IS_REAL_SAVE = OUT === path.resolve(RECO);
 const FORCE = process.argv.includes("--force");
 
 const patch = JSON.parse(fs.readFileSync(patchPath, "utf8"));
@@ -58,9 +61,15 @@ const MAX_DAILY_OPS = 20;   // add+remove 하루 합계 (교체 1건 = add 1 + r
 const LEDGER = path.join(ROOT, "data", "reco-ops.json");
 const todayUTC = new Date().toISOString().slice(0, 10);
 let ledgerOps = 0;
+// 오늘 처음 목표가를 바꾸기 전의 원본값(기준선). ±50% 급변 검사를 이 기준선에 대해 하면
+// 실행을 나눠 +49%×2 로 체이닝하는 우회가 막힌다(하루 누적 상한과 같은 원리).
+let ledgerTp = {};
 try {
   const lj = JSON.parse(fs.readFileSync(LEDGER, "utf8"));
-  if (lj && lj.date === todayUTC && typeof lj.ops === "number" && lj.ops >= 0) ledgerOps = lj.ops;
+  if (lj && lj.date === todayUTC) {
+    if (typeof lj.ops === "number" && lj.ops >= 0) ledgerOps = lj.ops;
+    if (lj.tp && typeof lj.tp === "object") ledgerTp = lj.tp;
+  }
 } catch (_e) { /* 레저 없음/손상 → 0 부터 */ }
 const ops = (patch.add || []).length + (patch.remove || []).length;
 if (ledgerOps + ops > MAX_DAILY_OPS && !FORCE) {
@@ -92,6 +101,7 @@ if (patch.themes !== undefined) D.themes = patch.themes;
 
 // ── 종목 필드 merge (국가+티커[+주제]) ──
 const guardErrors = [];
+const tpChanged = {};   // 이번 실행으로 목표가가 바뀐 카드의 "변경 전 값" — 레저 기준선 기록용
 // 목표가 급변 검사는 '패치 적용 전 원본값' 기준 — 같은 패치에 동일 티커 entry 를 2개 넣어
 // +49% × 2 = +122% 로 체이닝하는 우회를 막는다.
 const origTp = {};
@@ -140,7 +150,8 @@ const origTp = {};
     let blocked = false;
     for (const m of matches) {
       const ok = country + ":" + ticker + ":" + m.theme;
-      const prevTp = (ok in origTp) ? origTp[ok] : m.targetPrice;
+      // 오늘 이미 바꾼 적이 있으면 그 전의 값이 기준 — 순차 실행 체이닝(+49%×2) 차단
+      const prevTp = (ok in ledgerTp) ? ledgerTp[ok] : ((ok in origTp) ? origTp[ok] : m.targetPrice);
       if (typeof prevTp !== "number" || prevTp <= 0) continue;
       const chg = (fields.targetPrice - prevTp) / prevTp * 100;
       if (Math.abs(chg) > 50 && !FORCE) {
@@ -154,6 +165,14 @@ const origTp = {};
     if (blocked) return;
   }
 
+  if (typeof fields.targetPrice === "number") {
+    matches.forEach((m) => {
+      if (m.targetPrice !== fields.targetPrice) {
+        const ok = country + ":" + ticker + ":" + m.theme;
+        if (!(ok in ledgerTp)) tpChanged[ok] = m.targetPrice;   // 오늘 첫 변경 전 값만 기준선으로
+      }
+    });
+  }
   matches.forEach((s) => Object.assign(s, fields));
   merged += matches.length;
 });
@@ -187,6 +206,30 @@ const origTp = {};
     return;
   }
 
+  // 가드레일: 같은 패치의 remove+add(카드 교체)로 ±50% 급변 검사를 우회하는 경로 차단(감사 확정).
+  // 원본 스냅샷(origTp)·오늘 기준선(ledgerTp)에 같은 (국가,티커) 카드가 있었으면 그 목표가 대비 검사한다.
+  if (typeof obj.targetPrice === "number") {
+    const keys = Object.keys(origTp).concat(Object.keys(ledgerTp))
+      .filter((k) => k.indexOf(country + ":" + obj.ticker + ":") === 0);
+    let baseline = null;
+    // 같은 주제 카드가 있으면 그것을, 없으면 아무 주제의 원본 목표가를 기준으로 삼는다
+    const exact = country + ":" + obj.ticker + ":" + obj.theme;
+    if (typeof ledgerTp[exact] === "number") baseline = ledgerTp[exact];
+    else if (typeof origTp[exact] === "number") baseline = origTp[exact];
+    else for (const k of keys) { const v = (k in ledgerTp) ? ledgerTp[k] : origTp[k]; if (typeof v === "number" && v > 0) { baseline = v; break; } }
+    if (typeof baseline === "number" && baseline > 0) {
+      if (obj.targetPrice !== baseline && !(exact in ledgerTp)) tpChanged[exact] = baseline;
+      const chg = (obj.targetPrice - baseline) / baseline * 100;
+      if (Math.abs(chg) > 50 && !FORCE) {
+        guardErrors.push("add " + country + ":" + obj.ticker + " — 재편입 목표가 " + baseline + " → " + obj.targetPrice +
+          " (" + chg.toFixed(1) + "%) 급변. 컨센서스 재확인 후 --force 로만 허용");
+        return;
+      } else if (Math.abs(chg) > 25) {
+        warnings.push("add " + country + ":" + obj.ticker + " — 재편입 목표가 " + chg.toFixed(1) + "% 변경. 컨센서스인지 확인 요망");
+      }
+    }
+  }
+
   D[country].push(obj);
   added++;
 });
@@ -194,6 +237,13 @@ const origTp = {};
 if (guardErrors.length) {
   console.error("✗ 가드레일 위반 " + guardErrors.length + "건 — 저장 취소:");
   guardErrors.forEach((e) => console.error("  - " + e));
+  process.exit(1);
+}
+
+// 하루 상한 재검사 — 사전 검사(ops)는 패치 항목 수 기준이라, theme 생략 remove 가 여러 카드를
+// 지우면 실제 반영 건수가 더 클 수 있다. 실측치(added+removed)로 한 번 더 막는다.
+if (ledgerOps + added + removed > MAX_DAILY_OPS && !FORCE) {
+  console.error("✗ 가드레일: 오늘 누적 " + ledgerOps + "건 + 이번 실제 반영 " + (added + removed) + "건 > 하루 허용 " + MAX_DAILY_OPS + "건.");
   process.exit(1);
 }
 
@@ -301,8 +351,10 @@ fs.writeFileSync(OUT, out);
 
 // 하루 편입+편출 레저 갱신 — 실제 저장(원본 경로)에 성공했고 소진이 있을 때만 기록.
 // (--out 미리보기는 소진하지 않는다. 레저 파일도 함께 커밋해야 다음 세션에 이어진다.)
-if (OUT === RECO && ops > 0) {
-  fs.writeFileSync(LEDGER, JSON.stringify({ date: todayUTC, ops: ledgerOps + ops }) + "\n");
+const realOps = added + removed;
+if (IS_REAL_SAVE && (realOps > 0 || Object.keys(tpChanged).length)) {
+  const tp = Object.assign({}, ledgerTp, tpChanged);
+  fs.writeFileSync(LEDGER, JSON.stringify({ date: todayUTC, ops: ledgerOps + realOps, tp: tp }) + "\n");
 }
 
 console.log("recommendations.js 갱신 → " + OUT);
@@ -314,7 +366,7 @@ if (warnings.length) { console.log("  ⚠ 경고:"); warnings.forEach((w) => con
 // recommendations.js 가 바뀌면 커버리지도 바뀌므로, 세션이 --emit 을 잊어도 패널이
 // 이전 회차 상태로 남지 않게 여기서 보장한다. 실패해도 본 작업은 성공으로 둔다
 // (stock-ta.js 미존재 등으로 coverage 가 exit 2 를 낼 수 있다 — 패널은 부가 산출물).
-if (OUT === RECO) {
+if (IS_REAL_SAVE) {
   const r = require("child_process").spawnSync(process.execPath,
     [path.join(__dirname, "coverage.js"), "--emit"], { encoding: "utf8" });
   if (r.status === 0) console.log("  " + String(r.stdout || "").trim());
