@@ -126,8 +126,13 @@
    "us:TSM": 543,
    "us:PLTR": 189.9,
    "us:PEP": 155.7,
+   "us:RDDT": 217,
+   "us:NXT": 148,
+   "us:HALO": 100,
+   "us:UNH": 465,
    "korea:009150": null,
-   "korea:095340": null
+   "korea:095340": null,
+   "us:BRK.B": null
   }
  },
  "lastRun": "2026-08-12"
