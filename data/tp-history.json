@@ -133,7 +133,19 @@
    "korea:009150": null,
    "korea:095340": null,
    "us:BRK.B": null
+  },
+  "2026-08-13": {
+   "korea:207940": 2000000,
+   "korea:028260": 660000,
+   "us:TSLA": 397,
+   "us:PG": 163.3,
+   "us:MDLZ": 69,
+   "us:HWM": 325,
+   "us:RTX": 225,
+   "us:PH": 1150,
+   "us:UNH": 475,
+   "us:CSCO": null
   }
  },
- "lastRun": "2026-08-12"
+ "lastRun": "2026-08-13"
 }
