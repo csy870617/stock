@@ -20,6 +20,11 @@ window.STOCK_QUOTES = {
    "date": "2026-08-14",
    "changePct": -4.6
   },
+  "192820": {
+   "price": 247500,
+   "date": "2026-08-14",
+   "changePct": -0.6
+  },
   "207940": {
    "price": 1548000,
    "date": "2026-08-14",
@@ -49,6 +54,11 @@ window.STOCK_QUOTES = {
    "price": 134000,
    "date": "2026-08-14",
    "changePct": 1.7
+  },
+  "280360": {
+   "price": 129300,
+   "date": "2026-08-14",
+   "changePct": 8.5
   },
   "316140": {
    "price": 33700,
