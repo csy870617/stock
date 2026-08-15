@@ -574,6 +574,11 @@ window.STOCK_QUOTES = {
    "price": 401.73,
    "date": "2026-08-14",
    "changePct": 0.7
+  },
+  "RSG": {
+   "price": 214.71,
+   "date": "2026-08-14",
+   "changePct": -0.2
   }
  }
 };
