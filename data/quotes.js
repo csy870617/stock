@@ -15,6 +15,11 @@ window.STOCK_QUOTES = {
    "date": "2026-08-18",
    "changePct": -0.5
   },
+  "161390": {
+   "price": 69100,
+   "date": "2026-08-18",
+   "changePct": -3.5
+  },
   "175330": {
    "price": 27900,
    "date": "2026-08-18",
@@ -54,11 +59,6 @@ window.STOCK_QUOTES = {
    "price": 125100,
    "date": "2026-08-18",
    "changePct": -6.6
-  },
-  "280360": {
-   "price": 123200,
-   "date": "2026-08-18",
-   "changePct": -4.7
   },
   "316140": {
    "price": 33750,
@@ -269,11 +269,6 @@ window.STOCK_QUOTES = {
    "price": 96500,
    "date": "2026-08-18",
    "changePct": -1.7
-  },
-  "004370": {
-   "price": 420000,
-   "date": "2026-08-18",
-   "changePct": -4
   },
   "051900": {
    "price": 300000,
