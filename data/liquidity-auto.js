@@ -2,36 +2,36 @@
 // Yahoo 시장지표(금리·일드커브·VIX·HY신용·달러·원달러·코스피)의 가중 합성 → 5단계.
 // 온디맨드 유동성(data/liquidity.js)이 있으면 그것을 우선 표시하고, 이 baseline 을 함께 보여준다.
 window.LIQUIDITY_AUTO = {
- "asOf": "2026-08-18",
+ "asOf": "2026-08-19",
  "note": "Yahoo 시장지표 기반 자동 baseline(금리·일드커브·VIX·HY신용·달러·원달러·코스피). 거시 이벤트·내러티브는 미반영 — 온디맨드 유동성이 보정.",
  "inputs": {
-  "us10y": "4.71",
-  "curve": null,
-  "vix": "15.8",
-  "hyg20": "-0.2",
-  "dxy": "99.6",
-  "usdkrw": "1412"
+  "us10y": "4.65",
+  "curve": "0.95",
+  "vix": "14.9",
+  "hyg20": "0.2",
+  "dxy": "98.8",
+  "usdkrw": "1386"
  },
  "us": {
-  "shortTerm": "신중",
-  "midTerm": "부정",
-  "shortScore": 0.2,
-  "midScore": -0.54,
+  "shortTerm": "우호",
+  "midTerm": "신중",
+  "shortScore": 0.71,
+  "midScore": 0.35,
   "drivers": [
-   "VIX 15.8 (+1)",
-   "10Y 추세 (−1)",
+   "일드커브 (+2)",
+   "VIX 14.9 (+1)",
    "달러 추세 (+1)",
-   "HY 신용(20d) (·0)"
+   "10Y 추세 (·0)"
   ]
  },
  "korea": {
-  "shortTerm": "우호",
+  "shortTerm": "매우 우호",
   "midTerm": "신중",
-  "shortScore": 1.06,
+  "shortScore": 1.3,
   "midScore": 0.13,
   "drivers": [
    "원/달러 추세 (+2)",
-   "코스피 모멘텀(20d) (+1)",
+   "코스피 모멘텀(20d) (+2)",
    "글로벌 변동성 VIX (+1)",
    "달러 추세 (+1)"
   ]
