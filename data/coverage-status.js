@@ -67,28 +67,28 @@ window.COVERAGE_STATUS = {
   {
    "key": "verified",
    "label": "목표가 재검증",
-   "fresh": 104,
+   "fresh": 120,
    "total": 120,
-   "oldestDays": 8,
-   "ok": false
+   "oldestDays": 7,
+   "ok": true
   },
   {
    "key": "discovery",
    "label": "신규 후보 탐색",
-   "fresh": 6,
+   "fresh": 10,
    "total": 10,
    "unit": "그룹",
-   "oldestDays": 8,
-   "ok": false
+   "oldestDays": 7,
+   "ok": true
   },
   {
    "key": "aiTarget",
    "label": "AI 적정가 재시도",
-   "fresh": 102,
+   "fresh": 120,
    "total": 120,
-   "oldestDays": 8,
-   "ok": false
+   "oldestDays": 7,
+   "ok": true
   }
  ],
- "ok": false
+ "ok": true
 };
