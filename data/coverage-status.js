@@ -44,9 +44,9 @@ window.COVERAGE_STATUS = {
   {
    "key": "liquidity",
    "label": "유동성 판단",
-   "done": 0,
+   "done": 1,
    "total": 1,
-   "ok": false
+   "ok": true
   },
   {
    "key": "market",
@@ -67,9 +67,9 @@ window.COVERAGE_STATUS = {
   {
    "key": "verified",
    "label": "목표가 재검증",
-   "fresh": 89,
+   "fresh": 105,
    "total": 120,
-   "oldestDays": 8,
+   "oldestDays": null,
    "ok": false
   },
   {
@@ -84,9 +84,9 @@ window.COVERAGE_STATUS = {
   {
    "key": "aiTarget",
    "label": "AI 적정가 재시도",
-   "fresh": 78,
+   "fresh": 98,
    "total": 120,
-   "oldestDays": 8,
+   "oldestDays": null,
    "ok": false
   }
  ],

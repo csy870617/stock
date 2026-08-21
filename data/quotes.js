@@ -425,11 +425,6 @@ window.STOCK_QUOTES = {
    "date": "2026-08-20",
    "changePct": -4.6
   },
-  "HALO": {
-   "price": 106.12,
-   "date": "2026-08-20",
-   "changePct": -1.4
-  },
   "FOUR": {
    "price": 47.86,
    "date": "2026-08-20",
@@ -569,6 +564,11 @@ window.STOCK_QUOTES = {
    "price": 219.5,
    "date": "2026-08-20",
    "changePct": -0.7
+  },
+  "CLS": {
+   "price": 302,
+   "date": "2026-08-20",
+   "changePct": 0.2
   }
  }
 };
