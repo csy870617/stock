@@ -540,11 +540,6 @@ window.STOCK_QUOTES = {
    "date": "2026-08-20",
    "changePct": -1.6
   },
-  "TDG": {
-   "price": 1180.4,
-   "date": "2026-08-20",
-   "changePct": -3.5
-  },
   "BMY": {
    "price": 65.47,
    "date": "2026-08-20",
@@ -569,6 +564,11 @@ window.STOCK_QUOTES = {
    "price": 302,
    "date": "2026-08-20",
    "changePct": 0.2
+  },
+  "SPGI": {
+   "price": 432.16,
+   "date": "2026-08-20",
+   "changePct": 1.3
   }
  }
 };

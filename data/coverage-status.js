@@ -37,9 +37,9 @@ window.COVERAGE_STATUS = {
   {
    "key": "topPicks",
    "label": "Top Pick",
-   "done": 0,
+   "done": 6,
    "total": 6,
-   "ok": false
+   "ok": true
   },
   {
    "key": "liquidity",
@@ -51,9 +51,9 @@ window.COVERAGE_STATUS = {
   {
    "key": "market",
    "label": "시황",
-   "done": 0,
+   "done": 1,
    "total": 1,
-   "ok": false
+   "ok": true
   },
   {
    "key": "backbone",
@@ -67,7 +67,7 @@ window.COVERAGE_STATUS = {
   {
    "key": "verified",
    "label": "목표가 재검증",
-   "fresh": 105,
+   "fresh": 104,
    "total": 120,
    "oldestDays": null,
    "ok": false
@@ -84,7 +84,7 @@ window.COVERAGE_STATUS = {
   {
    "key": "aiTarget",
    "label": "AI 적정가 재시도",
-   "fresh": 98,
+   "fresh": 97,
    "total": 120,
    "oldestDays": null,
    "ok": false
