@@ -30,9 +30,9 @@ window.COVERAGE_STATUS = {
   {
    "key": "indexNotes",
    "label": "지수 대응",
-   "done": 0,
+   "done": 4,
    "total": 4,
-   "ok": false
+   "ok": true
   },
   {
    "key": "topPicks",
@@ -75,11 +75,11 @@ window.COVERAGE_STATUS = {
   {
    "key": "discovery",
    "label": "신규 후보 탐색",
-   "fresh": 8,
+   "fresh": 10,
    "total": 10,
    "unit": "그룹",
-   "oldestDays": 8,
-   "ok": false
+   "oldestDays": 1,
+   "ok": true
   },
   {
    "key": "aiTarget",
