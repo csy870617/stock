@@ -9,9 +9,9 @@ window.COVERAGE_STATUS = {
   {
    "key": "techNote",
    "label": "기술 대응",
-   "done": 0,
+   "done": 120,
    "total": 120,
-   "ok": false
+   "ok": true
   },
   {
    "key": "valueNote",
@@ -23,9 +23,9 @@ window.COVERAGE_STATUS = {
   {
    "key": "tier",
    "label": "tier 재평가",
-   "done": 0,
+   "done": 90,
    "total": 90,
-   "ok": false
+   "ok": true
   },
   {
    "key": "indexNotes",
