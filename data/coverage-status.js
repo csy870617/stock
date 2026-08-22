@@ -67,10 +67,10 @@ window.COVERAGE_STATUS = {
   {
    "key": "verified",
    "label": "목표가 재검증",
-   "fresh": 119,
+   "fresh": 120,
    "total": 120,
-   "oldestDays": 8,
-   "ok": false
+   "oldestDays": 7,
+   "ok": true
   },
   {
    "key": "discovery",
@@ -90,5 +90,5 @@ window.COVERAGE_STATUS = {
    "ok": true
   }
  ],
- "ok": false
+ "ok": true
 };
