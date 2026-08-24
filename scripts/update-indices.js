@@ -76,7 +76,7 @@ async function fetchSeries(symbol) {
 async function fetchSeriesOnce(symbol, bustCache) {
   if (typeof fetch !== "function") return null;
   const url = "https://query1.finance.yahoo.com/v8/finance/chart/" +
-    encodeURIComponent(symbol) + "?interval=1d&range=5y" +
+    encodeURIComponent(symbol) + "?interval=1d&range=10y" +
     (bustCache ? "&_=" + Date.now() : "");
   const ctrl = new AbortController();
   const to = setTimeout(() => ctrl.abort(), 10000);
