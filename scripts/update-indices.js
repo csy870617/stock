@@ -97,7 +97,8 @@ async function fetchSeriesOnce(symbol, bustCache) {
     rows.push({
       t: ts[i], close: q.close[i],
       high: q.high && q.high[i] != null ? q.high[i] : q.close[i],
-      low: q.low && q.low[i] != null ? q.low[i] : q.close[i]
+      low: q.low && q.low[i] != null ? q.low[i] : q.close[i],
+      vol: q.volume && q.volume[i] != null ? q.volume[i] : null
     });
   }
   if (rows.length < TA.MIN_BARS) return null;   // lib 의 최소 봉수와 동일 게이트(불일치 시 조용한 폴백 발생)

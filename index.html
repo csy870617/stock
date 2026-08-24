@@ -652,6 +652,8 @@ a.idx-tile:hover { background: color-mix(in srgb, var(--ink) 5%, var(--inset)); 
 .tn-v { font-size: 0.84rem; line-height: 1.5; color: var(--ink); letter-spacing: -0.005em; }
 .tn-sig { display: inline-block; font-size: 0.68rem; font-weight: 700; color: #fff; padding: 1px 8px; border-radius: 999px; margin-right: 6px; white-space: nowrap; vertical-align: 1px; }
 .tn-stale { margin-left: auto; font-size: 0.68rem; font-weight: 700; color: var(--down); background: color-mix(in srgb, var(--down) 14%, transparent); padding: 1px 8px; border-radius: 999px; white-space: nowrap; }
+.tn-ind .tn-v { color: var(--muted); font-size: 0.76rem; line-height: 1.45; }
+.tn-sep { margin: 0 7px; opacity: 0.45; }
 .tech-note.stale { box-shadow: inset 3px 0 0 var(--down); }
 .idx-tile.stale { box-shadow: inset 3px 0 0 var(--down); }
 .idx-tile .it-top .tn-stale { margin-left: auto; }
@@ -800,7 +802,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   <footer class="site">
     <p id="disclaimer"></p>
     <p style="margin-top:6px;">매일 오전 1시(LA·한국시간 오후 5시) 자동 갱신 · 현재가에 '실시간' 표기가 있으면 장중 시세, 없으면 종가</p>
-    <p style="margin-top:6px;">기술 신호 등급(적극매수~적극매도)은 지표 요약이며 백테스트 검증 결과 <b>단기(일봉) 신호는 사후 수익률 예측력이 확인되지 않았습니다</b>(장기·월봉 신호만 3개월 지평에서 약한 상관). 매매 트리거가 아닌 참고 지표로만 활용하세요.</p>
+    <p style="margin-top:6px;">기술 신호 등급(적극매수~적극매도)은 이동평균선·일목균형표·매물대 가중 종합입니다. 백테스트(103종목·10년 일봉·15,776회) 결과 <b>3개월 지평에서 등급이 높을수록 사후 수익률이 높았지만(중기 +3.8%p·장기 +5.3%p), 1주~1개월 지평의 예측력은 여전히 약합니다</b>. 매매 트리거가 아닌 참고 지표로만 활용하세요.</p>
   </footer>
 </div>
 
@@ -1591,10 +1593,23 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     }
     var staleBadge = stale
       ? '<span class="tn-stale" title="오늘 데이터(' + esc(taAsOf) + ')로 아직 갱신되지 않았습니다. 표시는 ' + esc(n.asOf) + ' 기준입니다.">⚠ 미갱신</span>' : "";
+    // 대응 문구(techNote)는 LLM 이 쓰지만, 그 근거가 된 결정론 지표(stock-ta.js)의 두 축 —
+    // 일목균형표·매물대 — 을 일봉 기준으로 함께 보여줘 판단을 검증할 수 있게 한다.
+    var tb = stTa(s.ticker), sh = tb && tb.short, ms = (sh && sh.metrics) || [];
+    function mv(label) {
+      for (var i = 0; i < ms.length; i++) if (ms[i][0] === label && ms[i][1] && ms[i][1] !== "–") return ms[i][1];
+      return null;
+    }
+    var ichi = mv("일목균형표"), vpv = mv("매물대");
+    var indLine = (ichi || vpv)
+      ? '<div class="tn-line tn-ind"><span class="tn-k">지표</span><span class="tn-v">' +
+        (ichi ? "일목 " + esc(ichi) : "") + (ichi && vpv ? '<span class="tn-sep">|</span>' : "") +
+        (vpv ? "매물대 " + esc(vpv) : "") + "</span></div>"
+      : "";
     return '<div class="tech-note' + (stale ? " stale" : "") + '">' +
       '<div class="tn-head">기술 대응' + (n.asOf ? '<span class="tn-as">' + esc(n.asOf) + "</span>" : "") + staleBadge + "</div>" +
       line("단기", n.short, n.sigShort) + line("중기", n.mid, n.sigMid) +
-      line("장기", n.long, n.sigLong) + "</div>";
+      line("장기", n.long, n.sigLong) + indLine + "</div>";
   }
 
   // delKey: 개인 목록 탭에서 렌더할 때 그 목록 키("watch"|"hold") — ✕(제거) 버튼을 붙이고

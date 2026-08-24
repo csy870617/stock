@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 // 개별 종목 기술적 분석 자동 갱신 — LLM 토큰 0 (순수 스크립트, refresh-quotes Action에서 실행)
 //
-// 역할: recommendations.js의 전 종목에 대해 Yahoo 5년 일봉을 받아 단기(일봉)·중기(주봉)·장기(월봉)
-//       기술적 분석(RSI·이동평균·추세·지지/저항·신호)을 공유 lib-ta로 계산해 data/stock-ta.js로 저장.
+// 역할: recommendations.js의 전 종목에 대해 Yahoo 10년 일봉을 받아 단기(일봉)·중기(주봉)·장기(월봉)
+//       기술적 분석(이동평균·일목균형표·매물대·오실레이터·지지/저항·신호)을 공유 lib-ta로 계산해
+//       data/stock-ta.js로 저장. ★10년을 받는 이유: 월봉 일목균형표는 선행스팬B(52)+선행 26 = 78개월치가
+//       필요해 5년(60개월)으로는 장기 구름을 만들 수 없다.
 //       가격·지표 모두 결정론적 계산이므로 시세(quotes.js)·지수(indices.js)와 함께 매일 자동 갱신된다.
 //
 // 사용법: node scripts/update-stock-ta.js  [--date YYYY-MM-DD]
@@ -82,7 +84,7 @@ async function fetchRowsOnce(symbol) {
   let j;
   try {
     const r = await fetch("https://query1.finance.yahoo.com/v8/finance/chart/" + encodeURIComponent(symbol) +
-      "?interval=1d&range=5y", { signal: ctrl.signal, headers: { "User-Agent": "Mozilla/5.0", "Accept": "application/json" } });
+      "?interval=1d&range=10y", { signal: ctrl.signal, headers: { "User-Agent": "Mozilla/5.0", "Accept": "application/json" } });
     if (!r.ok) return null;
     j = await r.json();   // 본문 수신도 타임아웃 범위 안에서(스톨 방지)
   } catch (_e) { return null; }
@@ -94,7 +96,8 @@ async function fetchRowsOnce(symbol) {
     if (q.close[i] == null) continue;
     rows.push({ t: ts[i], close: q.close[i],
       high: q.high && q.high[i] != null ? q.high[i] : q.close[i],
-      low: q.low && q.low[i] != null ? q.low[i] : q.close[i] });
+      low: q.low && q.low[i] != null ? q.low[i] : q.close[i],
+      vol: q.volume && q.volume[i] != null ? q.volume[i] : null });
   }
   if (rows.length < TA.MIN_BARS) return null;   // lib 의 최소 봉수와 동일 게이트(불일치 시 조용한 폴백 발생)
   // 마지막 봉의 거래소 현지 날짜 = 실제 최신 거래일. 주말·휴장일에 돌려도 실행일이 아닌
@@ -146,8 +149,9 @@ async function mapLimit(items, limit, fn) {
     const dp = s.market === "KOSPI" || s.market === "KOSDAQ" ? 0 : 2;   // 한국주=정수, 미국주=소수 2
     const a = rows ? TA.analyzeTimeframes(rows, { dp: dp, srDp: dp }) : null;
     if (a) {
-      // sigLegacy/sigBlock/blocks 는 엔진 비교(backtest)용 — 앱이 안 쓰는 필드라 저장 전 뗀다(파일 크기)
-      const slim = (x) => { const o = Object.assign({}, x); delete o.sigLegacy; delete o.sigBlock; delete o.blocks; return o; };
+      // 앱이 실제로 쓰는 필드만 남긴다(화이트리스트) — sigLegacy/sigBlock/sigFlow·blocks·flow 는
+      // 엔진 비교(backtest)용이라 저장하면 파일만 커진다. 새 필드가 생겨도 자동으로 새지 않는다.
+      const slim = (x) => ({ trend: x.trend, signal: x.signal, metrics: x.metrics, read: x.read });
       ta[s.ticker] = { short: slim(a.short), mid: slim(a.mid), long: slim(a.long) };
       const risk = riskOf(rows) || (prev[s.ticker] && prev[s.ticker].risk) || null;
       if (risk) ta[s.ticker].risk = risk;
@@ -167,7 +171,7 @@ async function mapLimit(items, limit, fn) {
     // coverage.js 가 '이번 회차에 backbone 을 돌렸는가'를 이 값으로 판정한다 — 건너뛰면
     // 뒤늦게 backbone 이 T 를 올리면서 방금 쓴 techNote 가 통째로 구식이 된다.
     builtAt: new Date().toISOString().slice(0, 19) + "Z",
-    note: "개별 종목 기술적 분석 — 이동평균(SMA·EMA)+오실레이터(RSI·MACD·스토캐스틱·CCI·Williams %R·ADX·모멘텀) 종합 투표. 단기=일봉, 중기=주봉, 장기=월봉 3기간. Yahoo 5년 일봉에서 매일 자동 계산(LLM 토큰 0).",
+    note: "개별 종목 기술적 분석 — 이동평균(30%)·일목균형표(30%)·매물대(25%)·오실레이터(15%) 가중 종합. 단기=일봉, 중기=주봉, 장기=월봉 3기간. Yahoo 10년 일봉에서 매일 자동 계산(LLM 토큰 0).",
     ta: ta
   };
   const body =

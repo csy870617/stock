@@ -1,9 +1,12 @@
 // 공유 기술적 분석 라이브러리 (다중 지표 엔진) — 지수(update-indices.js)·종목(update-stock-ta.js) 공용.
-// Yahoo 일봉 rows([{t,close,high,low}])에서 프로 플랫폼(Investing.com·TradingView) 방식으로
-// 이동평균(SMA·EMA 다기간) + 오실레이터(RSI·MACD·스토캐스틱·CCI·Williams %R·ADX·모멘텀)를
-// 종합 투표해 5단계 신호(적극매수~적극매도)를 결정론적으로 산출한다(LLM 토큰 0).
-//   · 단기(1–3M): 일봉 기준
-//   · 장기(6–12M+): 주봉(일봉 리샘플) 기준 — 주간 RSI·MACD·이평 등 진짜 장기 신호
+// Yahoo 일봉 rows([{t,close,high,low,vol}])에서 5단계 신호(적극매수~적극매도)를 결정론적으로
+// 산출한다(LLM 토큰 0). 기본 엔진 flow 는 '힘과 흐름'을 읽는 세 축에 가중을 몰아준다:
+//   · 이동평균선 30% — 위치 / 정배열 순서 / 기울기
+//   · 일목균형표 30% — 구름 대비 위치 · 전환/기준 · 후행스팬 · 구름 방향
+//   · 매물대     25% — 머리 위 매물 비중 · 현재가 주변 국소 지지/저항
+//   · 오실레이터 15% — RSI·스토캐스틱·MACD·ADX (보조)
+// 시계열은 단기=일봉 · 중기=주봉 · 장기=월봉 3기간으로 분리해 각각 계산한다.
+// 비교용으로 구 엔진(legacy 19표 동등가중, block 3블록 균형)도 나란히 계산해 반환한다.
 
 // ── 기본 통계/이동평균 ──
 function sma(a, n) { if (a.length < n) return null; let s = 0; for (let i = a.length - n; i < a.length; i++) s += a[i]; return s / n; }
@@ -129,8 +132,8 @@ function toWeekly(rows) {
   const map = {}, order = [];
   rows.forEach((r) => {
     const k = Math.floor((r.t + 259200) / 604800);
-    if (!map[k]) { map[k] = { t: r.t, close: r.close, high: r.high, low: r.low }; order.push(k); }
-    else { const w = map[k]; w.high = Math.max(w.high, r.high); w.low = Math.min(w.low, r.low); w.close = r.close; w.t = r.t; }
+    if (!map[k]) { map[k] = { t: r.t, close: r.close, high: r.high, low: r.low, vol: r.vol || 0 }; order.push(k); }
+    else { const w = map[k]; w.high = Math.max(w.high, r.high); w.low = Math.min(w.low, r.low); w.close = r.close; w.t = r.t; w.vol += r.vol || 0; }
   });
   return order.map((k) => map[k]);
 }
@@ -141,10 +144,102 @@ function toMonthly(rows) {
   rows.forEach((r) => {
     const d = new Date(r.t * 1000);
     const k = d.getUTCFullYear() * 12 + d.getUTCMonth();
-    if (!map[k]) { map[k] = { t: r.t, close: r.close, high: r.high, low: r.low }; order.push(k); }
-    else { const w = map[k]; w.high = Math.max(w.high, r.high); w.low = Math.min(w.low, r.low); w.close = r.close; w.t = r.t; }
+    if (!map[k]) { map[k] = { t: r.t, close: r.close, high: r.high, low: r.low, vol: r.vol || 0 }; order.push(k); }
+    else { const w = map[k]; w.high = Math.max(w.high, r.high); w.low = Math.min(w.low, r.low); w.close = r.close; w.t = r.t; w.vol += r.vol || 0; }
   });
   return order.map((k) => map[k]);
+}
+
+// ── 일목균형표(9,26,52) ──────────────────────────────────────────────────
+// 전환선=최근 9봉 중간값, 기준선=26봉 중간값, 선행스팬A=(전환+기준)/2, 선행스팬B=52봉 중간값,
+// 후행스팬=현재 종가. ★스팬 2종은 26봉 '앞으로' 그려지므로, **오늘 위치의 구름**은 26봉 전
+// 시점에서 산출된 값이다 — 인덱스를 반드시 26 되짚어야 한다(오늘 값으로 비교하면 구름이
+// 26봉 미래로 밀려 있어 위치 판정이 통째로 틀린다). 마찬가지로 후행스팬은 26봉 전 가격과 비교한다.
+// 필요 봉수 = 52 + 26 = 78. 그보다 짧으면 null(호출부가 가중에서 제외).
+function midPrice(h, l, i, n) {
+  if (i < 0 || i - n + 1 < 0) return null;
+  let hh = -Infinity, ll = Infinity;
+  for (let j = i - n + 1; j <= i; j++) { if (h[j] > hh) hh = h[j]; if (l[j] < ll) ll = l[j]; }
+  return (hh + ll) / 2;
+}
+function ichimoku(h, l, c, conv, base, spanBP, lag) {
+  conv = conv || 9; base = base || 26; spanBP = spanBP || 52; lag = lag || 26;
+  const n = c.length;
+  if (n < spanBP + lag) return null;
+  const i = n - 1, j = i - lag, price = c[i];
+  const tenkan = midPrice(h, l, i, conv), kijun = midPrice(h, l, i, base);
+  const tkPast = midPrice(h, l, j, conv), kjPast = midPrice(h, l, j, base);
+  const spanA = (tkPast != null && kjPast != null) ? (tkPast + kjPast) / 2 : null;
+  const spanB = midPrice(h, l, j, spanBP);
+  if (spanA == null || spanB == null || tenkan == null || kijun == null) return null;
+  const top = Math.max(spanA, spanB), bot = Math.min(spanA, spanB);
+
+  // ① 구름 대비 위치 — 일목의 핵심. 구름 '안'은 방향 미정이라 진짜 중립(0)이다.
+  const posCloud = price > top ? 1 : price < bot ? -1 : 0;
+  // ② 전환/기준 교차 — 딱 붙어 있으면(가격의 0.3% 미만) 교차 직전이라 기권시킨다.
+  const tkGap = price ? (tenkan - kijun) / price * 100 : 0;
+  const tkCross = Math.abs(tkGap) < 0.3 ? 0 : (tkGap > 0 ? 1 : -1);
+  // ③ 후행스팬 — 현재 종가가 26봉 전 종가를 넘었는가(과거 매물을 이겼는가).
+  const ref = c[i - lag];
+  const chGap = ref ? (price - ref) / ref * 100 : 0;
+  const chikou = Math.abs(chGap) < 0.3 ? 0 : (chGap > 0 ? 1 : -1);
+  // ④ 구름 방향(양운/음운) — 앞으로의 지지·저항 두께가 두꺼워지는 쪽.
+  const cloudDir = spanA > spanB ? 1 : spanA < spanB ? -1 : 0;
+
+  const score = 0.40 * posCloud + 0.25 * tkCross + 0.20 * chikou + 0.15 * cloudDir;
+  const where = posCloud > 0 ? "구름 위" : posCloud < 0 ? "구름 아래" : "구름 안";
+  return { tenkan, kijun, spanA, spanB, cloudTop: top, cloudBot: bot,
+    posCloud, tkCross, chikou, cloudDir, score, where,
+    thickPct: price ? (top - bot) / price * 100 : null };
+}
+
+// ── 매물대(Volume Profile) ───────────────────────────────────────────────
+// 최근 lookback 봉의 거래량을 가격 구간(bin)에 배분해 '어느 가격대에 물량이 쌓였나'를 본다.
+// 봉마다 거래량을 저가~고가에 균등 배분한다(종가 한 점에 몰아넣는 것보다 실제 체결 분포에 가깝다).
+// 반환 score = 0.6·(머리 위 매물 부담) + 0.4·(현재가 주변 국소 지지/저항).
+//   · 머리 위 매물: 현재가보다 위에 쌓인 물량 비중 aboveRatio. 0=신고가권(저항 없음) → +1,
+//     1=전 물량이 위(전부 손실 구간, 반등마다 매물) → -1. 흐름을 막는 '저항의 총량'.
+//   · 국소 밀도: 현재가 ±5% 안에서 아래쪽 물량(지지)과 위쪽 물량(저항)의 비.
+//     두 축은 척도가 달라(전역 누적 vs 국소) 중복 계산이 아니다.
+// 거래량이 없으면(지수 등) null — 호출부가 가중에서 제외한다.
+function volumeProfile(bars, lookback, bins) {
+  lookback = lookback || 250; bins = bins || 24;
+  const w = bars.slice(-lookback).filter((b) => b && b.vol != null && isFinite(b.vol) && b.vol > 0);
+  if (w.length < 40) return null;
+  let lo = Infinity, hi = -Infinity;
+  w.forEach((b) => { if (b.low < lo) lo = b.low; if (b.high > hi) hi = b.high; });
+  if (!(hi > lo)) return null;
+  const step = (hi - lo) / bins, vol = new Array(bins).fill(0);
+  w.forEach((b) => {
+    const a = Math.max(0, Math.min(bins - 1, Math.floor((b.low - lo) / step)));
+    const z = Math.max(0, Math.min(bins - 1, Math.floor((b.high - lo) / step)));
+    const share = b.vol / (z - a + 1);
+    for (let k = a; k <= z; k++) vol[k] += share;
+  });
+  const total = vol.reduce((a, b) => a + b, 0);
+  if (!total) return null;
+  let pocIdx = 0; for (let k = 1; k < bins; k++) if (vol[k] > vol[pocIdx]) pocIdx = k;
+  const poc = lo + step * (pocIdx + 0.5);
+  const price = bars[bars.length - 1].close;
+
+  let above = 0;
+  for (let k = 0; k < bins; k++) {
+    const bLo = lo + step * k, bHi = bLo + step;
+    if (bLo >= price) above += vol[k];
+    else if (bHi > price) above += vol[k] * (bHi - price) / step;   // 현재가가 걸친 구간은 비례 배분
+  }
+  const aboveRatio = above / total;
+
+  const band = price * 0.05;
+  let dBelow = 0, dAbove = 0;
+  for (let k = 0; k < bins; k++) {
+    const mid = lo + step * (k + 0.5);
+    if (mid < price && mid >= price - band) dBelow += vol[k];
+    if (mid > price && mid <= price + band) dAbove += vol[k];
+  }
+  const local = (dBelow + dAbove) > 0 ? (dBelow - dAbove) / (dBelow + dAbove) : 0;
+  const score = 0.6 * (1 - 2 * aboveRatio) + 0.4 * local;
+  return { poc, aboveRatio, local, score, lo, hi, pocIdx, bins };
 }
 
 // 현재가 기준 가장 가까운 아래/위 레벨(이평선·최근 저·고점 후보 중)
@@ -154,9 +249,22 @@ function levels(level, cands, lo, hi) {
   return { support: below.length ? Math.max.apply(null, below) : lo, resistance: above.length ? Math.min.apply(null, above) : hi };
 }
 
+// 점수(-1..+1) → 5단계 등급. 세 엔진이 같은 경계를 써야 등급 분포를 정면 비교할 수 있다.
+function grade(s) {
+  return s >= 0.5 ? "적극매수" : s >= 0.15 ? "매수" : s > -0.15 ? "중립" : s > -0.5 ? "매도" : "적극매도";
+}
+// 결측(null) 항목을 가중에서 제외하고 남은 가중치로 재정규화하는 가중평균.
+// 0 으로 채우면 결측이 '중립 한 표'로 작동해 점수를 중앙으로 끌어당긴다 — 그래서 제외한다.
+function wavg(pairs) {
+  let s = 0, w = 0;
+  pairs.forEach((p) => { if (p[0] != null && isFinite(p[0])) { s += p[0] * p[1]; w += p[1]; } });
+  return w ? s / w : null;
+}
+
 // ── 다중 지표 종합(한 시계열) ──
 // 반환: {level, buy, sell, neu, total, score, signal, rsi, macd, stoch, adx, sma20/50/200 ...}
-function computeSuite(bars) {
+function computeSuite(bars, opts) {
+  opts = opts || {};
   const c = bars.map((b) => b.close), h = bars.map((b) => b.high), l = bars.map((b) => b.low), n = c.length;
   if (n < 35) return null;
   const level = c[n - 1];
@@ -211,7 +319,7 @@ function computeSuite(bars) {
   // 정배열 상승장에선 오실레이터가 전부 중립이어도 자동 '적극매수'가 된다.
   const total = buy + sell + neu;
   const score = total ? (buy - sell) / total : 0;
-  const signal = score >= 0.5 ? "적극매수" : score >= 0.15 ? "매수" : score > -0.15 ? "중립" : score > -0.5 ? "매도" : "적극매도";
+  const signal = grade(score);
 
   // ── 신(block) 방식: 성격이 같은 지표를 묶어 블록당 1표 — 추세·모멘텀·과열 1/3 씩 ──
   //  · 추세: MA 12표를 하나의 부분점수 (매수−매도)/전체 ∈ [-1,1] 로 압축
@@ -226,10 +334,47 @@ function computeSuite(bars) {
   let bs = 0, bw = 0;
   [bTrend, bMom, bOsc].forEach((b) => { if (b != null) { bs += b; bw++; } });
   const scoreBlock = bw ? bs / bw : 0;
-  const signalBlock = scoreBlock >= 0.5 ? "적극매수" : scoreBlock >= 0.15 ? "매수" : scoreBlock > -0.15 ? "중립" : scoreBlock > -0.5 ? "매도" : "적극매도";
+  const signalBlock = grade(scoreBlock);
+
+  // ── 흐름(flow) 방식: 이동평균선 · 일목균형표 · 매물대 중심 가중 ──────────────
+  // 사용자가 '힘과 흐름'으로 읽는 세 축에 85% 를 배정하고 오실레이터는 보조(15%)로 낮춘다.
+  // legacy 가 오실레이터 7표(37%)를 쓰고 매물대·일목을 아예 안 보던 것과의 핵심 차이다.
+  //  · 이동평균선 30% — 위치(12표 압축) / 정배열 순서 / 기울기. 셋은 같은 '추세'라도 층위가
+  //    달라(어디에 있나 · 줄이 섰나 · 움직이고 있나) 중복 계산이 아니다.
+  //  · 일목균형표 30% — 구름 대비 위치·전환/기준·후행스팬·구름 방향(ichimoku() 내부 가중).
+  //  · 매물대     25% — 머리 위 매물 비중 + 현재가 주변 국소 지지/저항(volumeProfile()).
+  //  · 오실레이터 15% — RSI·스토캐스틱·MACD·ADX 평균(과열 판단 보조).
+  // 결측 블록은 가중에서 빼고 남은 블록으로 재정규화한다(0점 취급 금지 — 거래량이 없는
+  // 지수나 봉수가 모자란 월봉에서 '중립 쪽으로 끌리는' 편향이 생긴다).
+  const maPos = maTot ? (maBuy - maSell) / maTot : null;
+  const alignSeq = [5, 10, 20, 50, 100, 200].map((p) => sm[p]);
+  let aOk = 0, aBad = 0;
+  for (let i = 1; i < alignSeq.length; i++) {
+    const a = alignSeq[i - 1], b = alignSeq[i];
+    if (a == null || b == null) continue;
+    if (a > b) aOk++; else if (a < b) aBad++;
+  }
+  const maAlign = (aOk + aBad) ? (aOk - aBad) / (aOk + aBad) : null;
+  const slopeOf = (p, back) => {
+    const now = sma(c, p), then = sma(c.slice(0, c.length - back), p);
+    if (now == null || then == null || !then) return null;
+    const g = (now - then) / then * 100;
+    return Math.abs(g) < 0.2 ? 0 : (g > 0 ? 1 : -1);   // 거의 수평이면 기권
+  };
+  const maSlope = avg([slopeOf(20, 10), slopeOf(60, 20)]);
+  const bMa = wavg([[maPos, 0.40], [maAlign, 0.35], [maSlope, 0.25]]);
+
+  const ich = ichimoku(h, l, c);
+  const vp = volumeProfile(bars, opts.vpLookback);
+  const bOscF = avg([rNow == null ? null : oRsi, st ? oStoch : null, m ? oMacd : null, ax ? oAdx : null]);
+  const scoreFlow = wavg([[bMa, 0.30], [ich ? ich.score : null, 0.30],
+    [vp ? vp.score : null, 0.25], [bOscF, 0.15]]) || 0;
+  const signalFlow = grade(scoreFlow);
 
   return { level, buy, sell, neu, total, score, signal, rsi: rNow, macd: m, stoch: st, adx: ax,
     blocks: { trend: bTrend, momentum: bMom, osc: bOsc }, scoreBlock, signalBlock,
+    flow: { ma: bMa, ichimoku: ich ? ich.score : null, volume: vp ? vp.score : null, osc: bOscF },
+    ichi: ich, vprof: vp, scoreFlow, signalFlow,
     cci: cNow, willr: wNow, mom: moNow, sma: sm, sma5: sma(c, 5), sma20: sma(c, 20), sma50: sma(c, 50),
     sma60: sma(c, 60), sma120: sma(c, 120), sma200: sma(c, 200) };
 }
@@ -269,13 +414,14 @@ function analyzeTimeframes(rows, opts) {
   // 3구간 — 단기(일봉) · 중기(주봉) · 장기(월봉).
   // 각 시계열이 짧아 지표를 못 만들면 한 단계 짧은 봉으로 폴백하고 라벨도 그에 맞춰 정직하게 쓴다
   // ('월간 지표'라고 적어 놓고 실제로는 주봉인 상황을 만들지 않는다).
-  const S = computeSuite(rows);
+  // 매물대 조회 구간은 봉 단위마다 다르게 잡는다 — 모두 '대략 최근 1~5년'의 체결 분포.
+  const S = computeSuite(rows, { vpLookback: 250 });        // 일봉 ~1년
   if (!S) return null;
   const weekly = toWeekly(rows), monthly = toMonthly(rows);
-  const Mw = computeSuite(weekly);
+  const Mw = computeSuite(weekly, { vpLookback: 104 });      // 주봉 ~2년
   const M = Mw || S;                     // 중기: 주봉, 짧으면 일봉
   const mdName = Mw ? "주간" : "일봉";
-  const Lm = computeSuite(monthly);
+  const Lm = computeSuite(monthly, { vpLookback: 60 });      // 월봉 ~5년
   const L = Lm || M;                     // 장기: 월봉, 짧으면 중기로 폴백
   const lgName = Lm ? "월간" : mdName;
 
@@ -297,18 +443,41 @@ function analyzeTimeframes(rows, opts) {
   const vs200 = S.sma200 != null ? (level - S.sma200) / S.sma200 * 100 : null;
 
   const rsS = rsiState(S.rsi), rsM = rsiState(M.rsi), rsL = rsiState(L.rsi);
-  const pick = (X) => (engine === "legacy" ? X.signal : X.signalBlock);
-  // read 요약 — 블록 엔진은 세 블록 부분점수(추세·모멘텀·과열, 각 -1~+1)로 결론 근거를 보여준다
+  const pick = (X) => (engine === "legacy" ? X.signal : engine === "block" ? X.signalBlock : X.signalFlow);
+  // read 요약 — 엔진마다 결론의 근거를 그 엔진의 언어로 보여준다.
   const fb = (v) => (v == null ? "–" : (v > 0 ? "+" : "") + v.toFixed(2));
-  const tally = (X, label) => engine === "legacy"
-    ? "지표 " + X.total + "개 중 매수 " + X.buy + "·매도 " + X.sell + (X.neu ? "·중립 " + X.neu : "") + " → " + label + " '" + X.signal + "'. "
-    : "추세 " + fb(X.blocks.trend) + " · 모멘텀 " + fb(X.blocks.momentum) + " · 과열 " + fb(X.blocks.osc) +
-      " → " + label + " '" + X.signalBlock + "'(3블록 균형 투표). ";
+  const tally = (X, label) =>
+    engine === "legacy"
+      ? "지표 " + X.total + "개 중 매수 " + X.buy + "·매도 " + X.sell + (X.neu ? "·중립 " + X.neu : "") + " → " + label + " '" + X.signal + "'. "
+      : engine === "block"
+      ? "추세 " + fb(X.blocks.trend) + " · 모멘텀 " + fb(X.blocks.momentum) + " · 과열 " + fb(X.blocks.osc) +
+        " → " + label + " '" + X.signalBlock + "'(3블록 균형 투표). "
+      : "이평 " + fb(X.flow.ma) + " · 일목 " + fb(X.flow.ichimoku) + " · 매물대 " + fb(X.flow.volume) +
+        " · 보조 " + fb(X.flow.osc) + " → " + label + " '" + X.signalFlow + "'(이평30·일목30·매물대25·보조15). ";
 
+  // 일목·매물대 표시 문구 — 카드에서 '힘과 흐름'을 숫자로 확인할 수 있게 한다.
+  const ichiText = (X) => {
+    const I = X.ichi;
+    if (!I) return "–";
+    return I.where + " · 전환" + (I.tkCross > 0 ? ">" : I.tkCross < 0 ? "<" : "≈") + "기준" +
+      " · 후행 " + (I.chikou > 0 ? "양호" : I.chikou < 0 ? "부진" : "중립") +
+      " · " + (I.cloudDir > 0 ? "양운" : I.cloudDir < 0 ? "음운" : "평운");
+  };
+  const vpText = (X) => {
+    const V = X.vprof;
+    if (!V) return "–";
+    return "POC " + fmtNum(V.poc, srDp) + " · 머리위 매물 " + (V.aboveRatio * 100).toFixed(0) + "%" +
+      " · 주변 " + (V.local > 0.15 ? "지지 우위" : V.local < -0.15 ? "저항 우위" : "균형");
+  };
+
+  // 지표 표시 순서 = 판단 가중 순서(일목·매물대·이평 → 보조). 카드에서 근거가 바로 읽히도록.
   const short = {
     trend: trendFromSignal(pick(S)),
-    signal: pick(S), sigLegacy: S.signal, sigBlock: S.signalBlock, blocks: S.blocks,
+    signal: pick(S), sigLegacy: S.signal, sigBlock: S.signalBlock, sigFlow: S.signalFlow,
+    blocks: S.blocks, flow: S.flow,
     metrics: [
+      ["일목균형표", ichiText(S)],
+      ["매물대", vpText(S)],
       ["RSI(14)", (S.rsi == null ? "–" : S.rsi.toFixed(1)) + (rsS ? " · " + rsS : "")],
       ["MACD", macdText(S.macd, S.level)],
       ["지지 / 저항", fmtNum(srS.support, srDp) + " / " + fmtNum(srS.resistance, srDp)]
@@ -318,8 +487,11 @@ function analyzeTimeframes(rows, opts) {
   };
   const mid = {
     trend: trendFromSignal(pick(M)),
-    signal: pick(M), sigLegacy: M.signal, sigBlock: M.signalBlock, blocks: M.blocks,
+    signal: pick(M), sigLegacy: M.signal, sigBlock: M.signalBlock, sigFlow: M.signalFlow,
+    blocks: M.blocks, flow: M.flow,
     metrics: [
+      [mdName + " 일목균형표", ichiText(M)],
+      [mdName + " 매물대", vpText(M)],
       [mdName + " RSI(14)", (M.rsi == null ? "–" : M.rsi.toFixed(1)) + (rsM ? " · " + rsM : "")],
       [mdName + " MACD", macdText(M.macd, M.level)],
       ["지지 / 저항", fmtNum(srM.support, srDp) + " / " + fmtNum(srM.resistance, srDp)]
@@ -329,10 +501,13 @@ function analyzeTimeframes(rows, opts) {
   };
   const long = {
     trend: trendFromSignal(pick(L)),
-    signal: pick(L), sigLegacy: L.signal, sigBlock: L.signalBlock, blocks: L.blocks,
+    signal: pick(L), sigLegacy: L.signal, sigBlock: L.signalBlock, sigFlow: L.signalFlow,
+    blocks: L.blocks, flow: L.flow,
     metrics: [
-      [lgName + " RSI(14)", (L.rsi == null ? "–" : L.rsi.toFixed(1)) + (rsL ? " · " + rsL : "")],
+      [lgName + " 일목균형표", ichiText(L)],
+      [lgName + " 매물대", vpText(L)],
       ["50/200 배열", cross + (vs200 != null ? " · 200일선 " + (vs200 >= 0 ? "+" : "") + vs200.toFixed(1) + "%" : "")],
+      [lgName + " RSI(14)", (L.rsi == null ? "–" : L.rsi.toFixed(1)) + (rsL ? " · " + rsL : "")],
       ["지지 / 저항", fmtNum(srL.support, srDp) + " / " + fmtNum(srL.resistance, srDp)]
     ],
     read: tally(L, "장기") + lgName + " 기준, " + cross + "."
@@ -347,14 +522,25 @@ function analyzeTimeframes(rows, opts) {
   };
 }
 
-// ── 엔진 선택 (2026-08-11 백테스트로 결정) ──
-// block(추세·모멘텀·과열 3블록 균형)은 MA 12표의 이중계산을 없애는 이론상 타당한 재설계였으나,
-// 동일 표본 20,435회 정면 비교에서 예측력을 개선하지 못했다:
-//   63일 스프레드(적극매수−적극매도) — 단기 legacy -0.31 vs block -0.57 / 중기 +1.47 vs +1.46 / 장기 +2.24 vs +1.87 (%p)
-// 극단 등급 쏠림은 완화되지만(극단 표본 52%→26%) 등급의 사후 수익률 구분력은 동률~소폭 열위라
-// 채택하지 않는다. 두 엔진 병산은 유지 — scripts/backtest-signals.js 가 항상 나란히 검증한다.
-var DEFAULT_ENGINE = "legacy";
+// ── 엔진 선택 (2026-08-15 백테스트로 결정: flow 채택) ──────────────────────
+// 세 엔진을 **동일 표본**(103종목·10년 일봉·15,776회 평가, 룩어헤드 없음)으로 정면 비교했다.
+// 63일 지평 스프레드(적극매수 − 적극매도, %p) — 클수록 등급이 사후 수익률을 잘 가른다:
+//        단기   중기   장기
+//   legacy +0.24  +2.36  +3.62
+//   block  -0.61  +2.57  +2.28
+//   flow   +1.14  +3.81  +5.29   ← 9개 조합(3기간×3지평) 중 8개에서 최고
+// flow 는 중기 63일에서 5등급이 완전 단조 증가(4.67→4.94→6.84→7.00→8.48%)했다 —
+// 이 검증에서 단조성을 만족한 유일한 조합이다. 종전 legacy 로는 예측력이 없다시피 하던
+// 단기(일봉)도 63일 스프레드가 +0.24 → +1.14 로 올라왔다.
+// 왜 좋아졌나(가설): legacy 는 오실레이터 7표(37%)에 끌려다니고 매물대·일목을 아예 보지
+// 않았다. flow 는 ①거래량이라는 **새 정보**(매물대)를 처음 투입했고 ②구름 안=중립처럼
+// 방향이 없을 때 기권하는 일목의 성질이 무의미한 극단 등급을 줄인다.
+// 한계: 단조성은 중기 63일 외엔 미달이고 단기 +21일 스프레드는 여전히 음수(-0.27)다.
+//       생존편향·거래비용 미반영, 10년 미만 상장 종목은 표본에서 빠졌다(WARMUP 1,630봉).
+//       → 앱 푸터의 '매매 트리거가 아닌 참고 지표' 고지는 유지한다.
+// 재도전 규칙은 그대로: 가설을 세우고 backtest-signals.js 로 같은 표본에서 비교할 것.
+var DEFAULT_ENGINE = "flow";
 var MIN_BARS = 35;   // computeSuite 최소 봉수(MACD 26+9) — 호출부 게이트도 이 상수를 쓸 것
-var _LIB_TA = { MIN_BARS, sma, ema, rsi, rsiState, macd, stochastic, cci, williamsR, adx, momentum, chgN, fmtNum, levels, toWeekly, toMonthly, computeSuite, analyzeTimeframes };
+var _LIB_TA = { MIN_BARS, sma, ema, rsi, rsiState, macd, stochastic, cci, williamsR, adx, momentum, chgN, fmtNum, levels, toWeekly, toMonthly, ichimoku, volumeProfile, grade, computeSuite, analyzeTimeframes };
 if (typeof module !== "undefined" && module.exports) module.exports = _LIB_TA;   // Node (update 스크립트)
 if (typeof window !== "undefined") window.LIB_TA = _LIB_TA;                       // 브라우저(관심종목 라이트 분석)

@@ -37,8 +37,12 @@ const OUT = (() => {
   return i >= 0 && process.argv[i + 1] ? path.resolve(process.argv[i + 1]) : path.join(ROOT, "data", "backtest-report.json");
 })();
 const HORIZONS = [5, 21, 63];            // 사후 수익률 구간(거래일): 1주 / 1개월 / 3개월
-const WARMUP = 260;                      // 최소 이력(거래일) — 200일선·주봉/월봉 지표가 안정될 만큼
+// 최소 이력(거래일). 월봉 일목균형표는 78개월(≈1,630거래일)이 있어야 구름이 생기므로,
+// WARMUP 을 그만큼 올려야 세 엔진이 '같은 정보량'으로 겨룬다(짧게 잡으면 flow 만 표본 전반부에서
+// 일목 블록이 빠진 채 평가돼 비교가 불공정해진다). 대신 10년 미만 상장 종목은 표본에서 빠진다.
+const WARMUP = argNum("warmup", 1630);
 const GRADES = ["적극매도", "매도", "중립", "매수", "적극매수"];
+const ENGINES = ["legacy", "block", "flow"];
 
 function symbolFor(s) {
   if (s.market === "KOSPI") return s.ticker + ".KS";
@@ -76,7 +80,7 @@ async function fetchRowsOnce(symbol) {
   let j;
   try {
     const r = await fetch("https://query1.finance.yahoo.com/v8/finance/chart/" + encodeURIComponent(symbol) +
-      "?interval=1d&range=5y", { signal: ctrl.signal, headers: { "User-Agent": "Mozilla/5.0", "Accept": "application/json" } });
+      "?interval=1d&range=10y", { signal: ctrl.signal, headers: { "User-Agent": "Mozilla/5.0", "Accept": "application/json" } });
     if (!r.ok) return null;
     j = await r.json();
   } catch (_e) { return null; }
@@ -88,7 +92,8 @@ async function fetchRowsOnce(symbol) {
     if (q.close[i] == null) continue;
     rows.push({ t: ts[i], close: q.close[i],
       high: q.high && q.high[i] != null ? q.high[i] : q.close[i],
-      low: q.low && q.low[i] != null ? q.low[i] : q.close[i] });
+      low: q.low && q.low[i] != null ? q.low[i] : q.close[i],
+      vol: q.volume && q.volume[i] != null ? q.volume[i] : null });
   }
   return rows.length >= WARMUP + Math.max.apply(null, HORIZONS) ? rows : null;
 }
@@ -103,7 +108,7 @@ async function mapLimit(items, limit, fn) {
 // 집계 버킷: horizon(기간) → grade(등급) → 수익률 배열
 function makeBuckets() {
   const b = {};
-  ["legacy", "block"].forEach((eng) => {
+  ENGINES.forEach((eng) => {
     b[eng] = {};
     ["short", "mid", "long"].forEach((tf) => {
       b[eng][tf] = {};
@@ -144,8 +149,11 @@ function stats(arr) {
         const fwd = (rows[t + h].close - px) / px * 100;
         [["short", a.short], ["mid", a.mid], ["long", a.long]].forEach(([tf, sig]) => {
           if (!sig) return;
-          if (buckets.legacy[tf][h][sig.sigLegacy]) buckets.legacy[tf][h][sig.sigLegacy].push(fwd);
-          if (buckets.block[tf][h][sig.sigBlock]) buckets.block[tf][h][sig.sigBlock].push(fwd);
+          const byEng = { legacy: sig.sigLegacy, block: sig.sigBlock, flow: sig.sigFlow };
+          ENGINES.forEach((eng) => {
+            const g = byEng[eng];
+            if (g && buckets[eng][tf][h][g]) buckets[eng][tf][h][g].push(fwd);
+          });
         });
       });
     }
@@ -155,8 +163,8 @@ function stats(arr) {
 
   // 집계
   const report = { step: STEP, horizons: HORIZONS, stocks: done, failed, evaluations: evals, note:
-    "현재 편성 종목의 5년 일봉에 신호 엔진을 룩어헤드 없이 롤링 적용한 등급별 사후 수익률(%). legacy=19표 동등가중, block=추세·모멘텀·과열 3블록 균형. 생존편향·거래비용 미반영 — 등급 간 상대 비교용.", engines: {} };
-  ["legacy", "block"].forEach((eng) => {
+    "현재 편성 종목의 10년 일봉에 신호 엔진을 룩어헤드 없이 롤링 적용한 등급별 사후 수익률(%). legacy=19표 동등가중, block=추세·모멘텀·과열 3블록 균형, flow=이평30·일목30·매물대25·보조15 가중. 생존편향·거래비용 미반영 — 등급 간 상대 비교용.", warmup: WARMUP, engines: {} };
+  ENGINES.forEach((eng) => {
     report.engines[eng] = {};
     ["short", "mid", "long"].forEach((tf) => {
       report.engines[eng][tf] = {};
@@ -174,7 +182,7 @@ function stats(arr) {
 
   fs.writeFileSync(OUT, JSON.stringify(report, null, 1) + "\n");
   console.log("\n종목 " + done + " (실패 " + failed + ") · 신호 평가 " + evals + "회 → " + OUT);
-  ["legacy", "block"].forEach((eng) => {
+  ENGINES.forEach((eng) => {
     console.log("\n══ 엔진: " + eng + " ══");
     ["short", "mid", "long"].forEach((tf) => {
       console.log("[" + tf + "]");
