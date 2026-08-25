@@ -9,9 +9,9 @@ window.COVERAGE_STATUS = {
   {
    "key": "techNote",
    "label": "기술 대응",
-   "done": 90,
+   "done": 117,
    "total": 117,
-   "ok": false
+   "ok": true
   },
   {
    "key": "valueNote",
@@ -44,16 +44,16 @@ window.COVERAGE_STATUS = {
   {
    "key": "liquidity",
    "label": "유동성 판단",
-   "done": 0,
+   "done": 1,
    "total": 1,
-   "ok": false
+   "ok": true
   },
   {
    "key": "market",
    "label": "시황",
-   "done": 0,
+   "done": 1,
    "total": 1,
-   "ok": false
+   "ok": true
   },
   {
    "key": "backbone",
