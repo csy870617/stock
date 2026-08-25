@@ -23,7 +23,7 @@ window.COVERAGE_STATUS = {
   {
    "key": "tier",
    "label": "tier 재평가",
-   "done": 0,
+   "done": 45,
    "total": 90,
    "ok": false
   },
