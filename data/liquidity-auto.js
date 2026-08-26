@@ -10,7 +10,7 @@ window.LIQUIDITY_AUTO = {
   "vix": "15.7",
   "hyg20": "0.6",
   "dxy": "99.0",
-  "usdkrw": "1385"
+  "usdkrw": "1383"
  },
  "us": {
   "shortTerm": "우호",
