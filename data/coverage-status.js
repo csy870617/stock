@@ -67,19 +67,19 @@ window.COVERAGE_STATUS = {
   {
    "key": "verified",
    "label": "목표가 재검증",
-   "fresh": 106,
+   "fresh": 120,
    "total": 120,
-   "oldestDays": 8,
-   "ok": false
+   "oldestDays": 7,
+   "ok": true
   },
   {
    "key": "discovery",
    "label": "신규 후보 탐색",
-   "fresh": 6,
+   "fresh": 10,
    "total": 10,
    "unit": "그룹",
-   "oldestDays": 8,
-   "ok": false
+   "oldestDays": 7,
+   "ok": true
   },
   {
    "key": "aiTarget",
