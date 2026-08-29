@@ -3,29 +3,29 @@
 window.COVERAGE_STATUS = {
  "asOf": "2026-08-29",
  "T": "2026-08-28",
- "total": 120,
+ "total": 122,
  "cycleDays": 7,
  "daily": [
   {
    "key": "techNote",
    "label": "기술 대응",
-   "done": 120,
-   "total": 120,
+   "done": 122,
+   "total": 122,
    "ok": true
   },
   {
    "key": "valueNote",
    "label": "밸류 설명",
-   "done": 120,
-   "total": 120,
+   "done": 122,
+   "total": 122,
    "ok": true
   },
   {
    "key": "tier",
    "label": "tier 재평가",
-   "done": 0,
+   "done": 90,
    "total": 90,
-   "ok": false
+   "ok": true
   },
   {
    "key": "indexNotes",
@@ -37,23 +37,23 @@ window.COVERAGE_STATUS = {
   {
    "key": "topPicks",
    "label": "Top Pick",
-   "done": 0,
+   "done": 6,
    "total": 6,
-   "ok": false
+   "ok": true
   },
   {
    "key": "liquidity",
    "label": "유동성 판단",
-   "done": 0,
+   "done": 1,
    "total": 1,
-   "ok": false
+   "ok": true
   },
   {
    "key": "market",
    "label": "시황",
-   "done": 0,
+   "done": 1,
    "total": 1,
-   "ok": false
+   "ok": true
   },
   {
    "key": "backbone",
@@ -67,26 +67,26 @@ window.COVERAGE_STATUS = {
   {
    "key": "verified",
    "label": "목표가 재검증",
-   "fresh": 89,
-   "total": 120,
-   "oldestDays": 8,
+   "fresh": 106,
+   "total": 122,
+   "oldestDays": null,
    "ok": false
   },
   {
    "key": "discovery",
    "label": "신규 후보 탐색",
-   "fresh": 8,
+   "fresh": 10,
    "total": 10,
    "unit": "그룹",
-   "oldestDays": 8,
-   "ok": false
+   "oldestDays": 1,
+   "ok": true
   },
   {
    "key": "aiTarget",
    "label": "AI 적정가 재시도",
-   "fresh": 76,
-   "total": 120,
-   "oldestDays": 8,
+   "fresh": 97,
+   "total": 122,
+   "oldestDays": null,
    "ok": false
   }
  ],
