@@ -9,8 +9,8 @@ window.LIQUIDITY_AUTO = {
   "curve": "1.03",
   "vix": "14.9",
   "hyg20": "0.6",
-  "dxy": "99.4",
-  "usdkrw": "1365"
+  "dxy": "99.5",
+  "usdkrw": "1370"
  },
  "us": {
   "shortTerm": "우호",
