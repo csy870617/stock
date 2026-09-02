@@ -7,33 +7,33 @@ window.LIQUIDITY_AUTO = {
  "inputs": {
   "us10y": "4.80",
   "curve": "1.02",
-  "vix": "16.3",
-  "hyg20": "-0.3",
-  "dxy": "99.8",
-  "usdkrw": "1363"
+  "vix": "15.2",
+  "hyg20": "-0.5",
+  "dxy": "99.6",
+  "usdkrw": "1359"
  },
  "us": {
   "shortTerm": "신중",
   "midTerm": "신중",
-  "shortScore": 0.13,
-  "midScore": -0.24,
+  "shortScore": -0.13,
+  "midScore": -0.12,
   "drivers": [
+   "10Y 추세 (−2)",
    "일드커브 (+2)",
-   "10Y 추세 (−1)",
-   "VIX 16.3 (·0)",
-   "HY 신용(20d) (·0)"
+   "VIX 15.2 (+1)",
+   "HY 신용(20d) (−1)"
   ]
  },
  "korea": {
   "shortTerm": "우호",
   "midTerm": "신중",
   "shortScore": 0.96,
-  "midScore": -0.2,
+  "midScore": -0.07,
   "drivers": [
    "원/달러 추세 (+2)",
    "코스피 모멘텀(20d) (+2)",
-   "글로벌 변동성 VIX (·0)",
-   "글로벌 신용(20d) (·0)"
+   "글로벌 변동성 VIX (+1)",
+   "글로벌 신용(20d) (−1)"
   ]
  }
 };
