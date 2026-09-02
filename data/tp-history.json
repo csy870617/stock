@@ -308,7 +308,12 @@
    "us:BMY": 63,
    "us:COP": 143.92,
    "us:PH": null
+  },
+  "2026-09-02": {
+   "us:DE": 657,
+   "korea:051900": null,
+   "us:RTX": null
   }
  },
- "lastRun": "2026-09-01"
+ "lastRun": "2026-09-02"
 }
