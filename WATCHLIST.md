@@ -5,6 +5,25 @@ CLAUDE.md '신규 후보 탐색 프로토콜'이 참조하는 작업 메모. 매
 
 ---
 
+## 2026-09-05 B모드 회전 세션 (자동 발화 "재검증 돌려줘")
+
+techNote·valueNote·tier·index-notes·topPicks·liquidity·시황·backbone 등 매일 항목은 건드리지 않음(A모드 몫, 이미 당일자 100%). 세션 시작 시 `coverage.js --remaining verified/aiTarget/discovery` 큐 확인 결과 **재검증·aiTarget 큐는 이미 0건(직전 A세션(이슈 #92)이 소진)** — discovery 4그룹(korea|value·us|core·us|dividend·us|growth, 마지막 탐색 2026-08-28로 7일 초과)만 처리 대상이라 예산 전액을 발굴에 배분(그룹당 6회 서치, 4개 그룹 병렬 서브에이전트).
+
+### 신규 후보 탐색 4/4 그룹 완료 — 교체 1건
+- **korea|value: 1건 교체 실행** — **롯데케미칼(011170, Tier3) 편출 → 하나금융지주(086790, Tier3) 편입**. 롯데케미칼은 2Q26 영업이익 컨센서스 14% 하회 후 미래에셋(112,000→63,000원)·iM증권(130,000→100,000원)이 나란히 목표가를 대폭 하향(기존 targetPrice 81,500원 자체가 이미 이 하향분 반영, 상승여력 7.2%로 로스터 최약체) + iM증권 2026 전체 연간 영업손실·순손실 지속 전망(단일 분기 흑자는 턴어라운드 미확정) — 가치함정 판정. 하나금융지주는 이미 korea|core(Tier3)·korea|dividend(Tier3)에 편성돼 있던 종목으로 techNote·quotes.js 등 백본 데이터가 이미 최신(asOf 2026-09-04) — PBR 저평가 국면에서 환율 하락에 따른 실적·주주환원 개선으로 신한투자(15만→16만원)·KB증권(16만→17만원) 목표가가 잇달아 상향돼 컨센서스 161,050원(기존 core 카드와 동일, hankyung.com·edaily.co.kr 2도메인 재확인) 대비 상승여력 19.9%로 롯데케미칼 대비 명확히 우월. (동일 종목이 core/dividend/value 세 주제에 걸쳐 편성되는 것은 기존 데이터의 AMZN(us core+growth) 사례와 동일한 기존 관행.)
+- **us|core: 후보 발견(Home Depot, HD) — 이번 회차는 보류, 다음 A모드 최우선 검토**. stockanalysis.com($370.18, 36개사, S&P Global)·marketbeat.com($375.54, 32개사, "Moderate Buy") 2도메인 컨센서스가 근접(1.5%p 차)해 신뢰도 높음, 로스터 최약체 GOOGL(6.7%)보다 상승여력이 훨씬 큼(18~24%). 다만 GOOGL의 낮은 상승여력은 데이터 노후화가 아니라 AI 클라우드 실적 호조로 주가가 실제 상승한 결과이고(사업 펀더멘털은 강함, 결격 없음) 신규 편입 시 techNote·quotes.js 신규 구축이 B모드 범위 밖이라 이번 회차는 교체하지 않음(2026-08-20 GOOGL vs McDonald's 사례와 동일 판단 — 주제 성격을 바꾸는 편성 교체는 A모드 사람 판단으로 승계). UNH(us|core Tier3) 는 DOJ의 메디케어 어드밴티지 청구 관련 민사사기 조사가 진행형(3분기 말 자체 검토 완료 예정)이라 결격 리스크로 계속 플래그, 아직 대체 후보 미확보.
+- **us|dividend: 후보 발견(McCormick, MKC) — 이번 회차는 보류, 다음 A모드 최우선 검토**. stockanalysis.com($60.62, 15개사 S&P Global 컨센서스)·tipranks.com(컨센서스 약 $60, "Buy") 2도메인 일치, 배당수익률 3.77~3.8%(2026-07-21 라운드의 기각 사유였던 "2.6%로 미달"은 이후 주가 하락으로 해소된 것으로 판단), 상승여력 17~19%로 로스터 최약체 PEP(8.5%)보다 우위. 다만 PEP는 2Q26 북미 음료 물량 -4%·식품 물량 보합 등 소비 둔화 신호는 있으나 가이던스 유지(결격 확정 아님)이고, MKC도 신규 편입이라 techNote 구축이 B모드 범위 밖 — 교체하지 않고 승계.
+- **us|growth: 교체 0건**. AMD 상승여력(16~28.5%, MarketBeat $553.72/StockAnalysis $613.84)이 로스터 최약체 TSM(24%)보다도 낮아 우위 미충족. PLTR 밸류에이션 리스크(선행PER ~112~115배)는 기존과 동일 수준(악화 아님) — 플래그 유지, 교체 트리거 아님. ANET·ORCL·Unity 등은 2번째 출처 미확보로 다음 회차 승계.
+- discovery 날짜 갱신: korea|value·us|core·us|dividend·us|growth → 2026-09-05(전부 탐색 완료, 교체 여부와 무관). 미탐색 잔존 없음(전 10그룹 7일 이내).
+
+### 완료 게이트
+`coverage.js`: **전 항목 100%(exit 0)** — 매일 8/8(techNote 120/120·valueNote 120/120·tier 90/90·index-notes·topPicks·liquidity·시황·backbone, 전부 A모드가 당일 이미 완료) + 회전 3/3(재검증 120/120·discovery 10/10그룹·aiTarget 전종목 7일 이내). `validate-reco.js` 오류 0·경고 98건(전량 기존 priceDate 노후화·목표가 소진 3건(NOW·BMY·DE)·aiTarget 괴리 3건(GS·PLTR·레딧)·valueNote 상승여력 괴리 4건 백로그, 전부 다음 회전/A모드 소관). `data/reco-ops.json` 레저 오늘 누적 5건(add 1+remove 1, 하루 상한 20건 이내).
+
+### 다음 회차(A모드 최우선) 처리
+(1) **us|core: Home Depot(HD) vs GOOGL 교체 여부 사람 판단 필요**(2-도메인 컨센서스 확보 완료, techNote 신규 구축만 남음), (2) **us|dividend: McCormick(MKC) vs PepsiCo(PEP) 교체 여부 검토**(2-도메인 컨센서스 확보 완료), (3) UNH(us|core) DOJ 조사 3분기 말 종료 예정 — 결과 확인 후 대체 후보 탐색, (4) priceDate 장기 노후화 백로그(덕산네오룩스 205일·티씨케이 184일·비츠로셀 171일 등, backbone 재실행 대상).
+
+---
+
 ## 2026-09-05 전체 업데이트 (자동 발화 A루틴, 이슈 #92) — coverage 매일 8/8 ✅ · 회전 2/3(discovery 4그룹 세션 예산 소진으로 미완료)
 
 - **배경**: 08:11 UTC backbone 재실행(T=2026-09-04 유지, builtAt만 오늘로 갱신 — Yahoo 최신 봉이 실제로 아직 09-04였음). 코스피 6,687.21(+1.64%)·코스닥 813.50(+2.95%) 반등, 미국은 8월 비농업고용 +16.2만명(예상 5.5만명 상회)으로 9/15~16 FOMC 인상 확률이 코인플립(50%)에서 55~59%로 재상승, S&P500·다우·나스닥은 동반 소폭 하락(신용스프레드·VIX는 안정적).
