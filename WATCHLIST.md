@@ -5,6 +5,22 @@ CLAUDE.md '신규 후보 탐색 프로토콜'이 참조하는 작업 메모. 매
 
 ---
 
+## 2026-09-06 전체 업데이트 (자동 발화 A루틴, 이슈 #92 계속) — coverage 매일 8/8 ✅ · 회전 1/3(discovery만 완료, 재검증·aiTarget 백로그 인계)
+
+- **배경**: 오늘은 일요일(휴장일)이라 `refresh-quotes` Action이 돌지 않아 세션이 backbone(update-quotes·update-stock-ta·update-indices·update-liquidity-gauge·screen-watch)을 직접 재실행(T=2026-09-04 유지, 금요일 종가 기준). 17개 서브에이전트를 병렬 fan-out해 회전 3종(재검증 15종목·aiTarget 19개사·discovery 2그룹)·tier 10그룹 전량·유동성/시황·지수 대응·관심종목 D절을 동시 처리.
+- **tier 10그룹 전량 재평가(90/90) — 8건 교체**: korea|value(대한항공 T2→**T3**, 2분기 순손실 확정 / 금호석유화학 T1→**T2**, 3분기 스프레드 축소 가이던스 / 하나금융지주 T3→**T1**, 상반기 사상 최대 순이익+ROE 12% 목표 상향), korea|dividend(맥쿼리인프라 T3→**T2**, 19년 무중단 반기배당 / 기업은행 T2→**T3**, 정책금융기관 배당성향 상한+부실채권비율 열위), korea|rising(덕산네오룩스 T2→**T1**, OLED 소재 매출+92%·영업이익+72.7% / 티씨케이 T1→**T2**, 상대적 성장 모멘텀 완만), us|value(discovery 교체로 CRM→**MCHP** 신규 T2). 나머지 그룹은 재검토 후 기존 배정 유지.
+- **목표가 재검증(회전, 15종목 큐 처리 — 실제 반영 8건, 7건은 신뢰 출처 부족으로 기존값 유지)**: 삼성물산(637,000원)·현대모비스(696,000원)·Tesla($390, Cybercab NHTSA 조사 반영)·Procter & Gamble($162)·Mondelez($68)·Charles Schwab($116)·Apple($326)·Abbott($122)·Micron($1,530) targetPrice 갱신. 삼성전자·KB금융·삼성바이오로직스·신한지주·삼성화재·SK하이닉스는 신뢰 출처 2개 교차확인에 미달(단일 도메인만 확보)해 **목표가는 기존값 유지, risks/dividendYield만 갱신 후 verifiedAt만 오늘로 기록**(추정 금지 원칙). 전 종목 verifiedAt 100%는 달성 못함 — 다음 회차에 11종목(한화에어로스페이스·메드트로닉·HD한국조선해양·UnitedHealth·HD현대중공업·셀트리온 등) 인계.
+- **aiTarget 재시도(19개사 처리, 12개사 산출 성공)**: 삼성화재(593,000원)·한화에어로스페이스(1,046,000원)·셀트리온(210,800원)·NAVER(246,000원)·기아(189,000원)·삼성증권(119,500원)·MSFT($383)·V($283)·MA($525)·COST($883)·NVDA($205)·META($477)·TSM($312, growth+value 동시)·SCHW($111). 삼성전자·HD한국조선해양·HD현대중공업·두산에너빌리티·Broadcom은 입력값(EPS 등) 신뢰 가능한 신규 수치를 못 찾아 aiCheckedAt만 갱신(정상 — 추정 금지).
+- **신규 후보 탐색 2/2그룹 완료(마감 대상 그룹) — 1건 교체**: **us|value: 세일즈포스(CRM) 편출 → Microchip Technology(MCHP) 편입**. CRM은 자체 valueNote 기준 상승여력 -2.7%로 이미 고평가 진입해 '저평가' 테마 실격. MCHP는 아날로그 반도체 재고조정 사이클 저점 통과 확인(비GAAP 영업이익률 14.0%→30.6%, 매출 +35.1% YoY, book-to-bill>1), 25명 중 19명 Strong Buy, 컨센서스$108~112 대비 상승여력 약 48%, 배당수익률 2.5%로 명확히 우월(stockanalysis.com·marketbeat.com·seekingalpha.com 교차확인). us|rising은 4개 각도로 탐색했으나 기존 9종목(AXON·CRDO·RDDT·AEIS·STRL·NXT·FOUR·LITE·CLS) 대비 우월한 신규 후보 없음 — 교체 0건(정상). 두 그룹 모두 discovery 날짜 2026-09-06으로 갱신, 전 10그룹 7일 이내 충족.
+- **관심종목 D절 — 변경 없음**: `screen-watch.js` 결과 이탈·졸업 0건(19개 유지+5개 태그없음 개인편입 전부 정상). 한국 신고가 여전히 4/5(공석 1) — `breakout.korea` 후보 0건이라 조용히 비워둠(정상, 근접 후보는 메리츠금융지주 -7.3% 등 모두 하한 미달).
+- **유동성 — 미국 중기 신중→부정 하향, 한국 단기 우호→신중 하향(baseline 대비 보정)**: 미국은 9월 FOMC(9/16) 인상 확률이 호르무즈발 유가 충격+근원PCE 3.3%로 약 65%까지 상승, 커브 플래트닝(2s10s 0.40~0.45%p)까지 겹쳐 baseline 신중/신중보다 중기를 한 단계 낮춤(신용스프레드·VIX는 안정적이라 단기는 유지). 한국은 한은 2연속 인상(3.00%)·근원CPI 가속(2.6%→3.4%)·외국인 연간 누적 약 170조원 순매도를 반영해 baseline의 단기 '우호'가 과도하다고 판단, '신중'으로 하향.
+- **시황·지수 대응**: marketNote/US/KR 전량 갱신(위 유동성 배경과 동일 근거), index-notes는 자산가치·유동성 서술만 최신 매크로 반영으로 갱신(기술 신호는 indices.js 변동 없어 유지).
+- **Top Pick 재선정 — 한국 유지, 미국 유지(재검증으로 재확인, 매도 신호 없는 종목만 필터)**: 한국 **SK하이닉스·삼성전자·삼성물산**(실계산 상승여력 95.1%/93.0%/73.6%). 미국 **마이크론·NVIDIA·Amazon**(50.5%/41.5%/23.7%) — 미국 유동성이 중기 '부정'으로 하향된 점을 감안해 STRL·CRDO·AEIS 등 상승여력이 더 크지만 단기 매도 신호가 섞인 종목은 배제하고 3기간 모두 매도 신호 없는 종목만 유지.
+- **완료 게이트**: `coverage.js` 매일 항목 **8/8 ✅**(techNote 120/120·valueNote 120/120·tier 90/90·index-notes·topPicks·liquidity·시황·backbone) · 회전 1/3(discovery ✅ 전 10그룹·재검증 ❌ 109/120·aiTarget ❌ 99/120) → exit 1. `validate-reco.js` 오류 0·경고 99건(대부분 priceDate 경과 — backbone 소관, 목표가 소진 3건 NOW·BMY·DE, valueNote 상승여력 괴리 3건).
+- **다음 회차 우선 처리**: (1) 목표가 재검증 backlog 11종목(한화에어로스페이스·메드트로닉·HD한국조선해양·UnitedHealth·HD현대중공업·셀트리온 등), (2) aiTarget backlog 21건(MCHP 포함), (3) 삼성전자 등 신뢰 출처 부족으로 미확정된 목표가 재확인, (4) 한국 신고가 태그 1자리 공석 지속 채움 시도.
+
+---
+
 ## 2026-09-05 B모드 회전 세션 (자동 발화 "재검증 돌려줘")
 
 techNote·valueNote·tier·index-notes·topPicks·liquidity·시황·backbone 등 매일 항목은 건드리지 않음(A모드 몫, 이미 당일자 100%). 세션 시작 시 `coverage.js --remaining verified/aiTarget/discovery` 큐 확인 결과 **재검증·aiTarget 큐는 이미 0건(직전 A세션(이슈 #92)이 소진)** — discovery 4그룹(korea|value·us|core·us|dividend·us|growth, 마지막 탐색 2026-08-28로 7일 초과)만 처리 대상이라 예산 전액을 발굴에 배분(그룹당 6회 서치, 4개 그룹 병렬 서브에이전트).

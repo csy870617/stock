@@ -495,11 +495,6 @@ window.STOCK_QUOTES = {
    "date": "2026-09-04",
    "changePct": 6.1
   },
-  "CRM": {
-   "price": 259.23,
-   "date": "2026-09-04",
-   "changePct": -2
-  },
   "MDT": {
    "price": 94.17,
    "date": "2026-09-04",
@@ -559,6 +554,11 @@ window.STOCK_QUOTES = {
    "price": 693.53,
    "date": "2026-09-04",
    "changePct": -0.1
+  },
+  "MCHP": {
+   "price": 74.17,
+   "date": "2026-09-04",
+   "changePct": 1.4
   }
  }
 };

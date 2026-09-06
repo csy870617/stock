@@ -350,7 +350,19 @@
    "us:DE": 644,
    "korea:005380": null,
    "us:CL": null
+  },
+  "2026-09-06": {
+   "korea:028260": 637000,
+   "korea:012330": 696000,
+   "us:TSLA": 390,
+   "us:PG": 162,
+   "us:MDLZ": 68,
+   "us:SCHW": 116,
+   "us:MU": 1530,
+   "us:MCHP": 110,
+   "korea:011170": null,
+   "us:CRM": null
   }
  },
- "lastRun": "2026-09-05"
+ "lastRun": "2026-09-06"
 }
