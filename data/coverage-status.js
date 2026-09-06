@@ -67,7 +67,7 @@ window.COVERAGE_STATUS = {
   {
    "key": "verified",
    "label": "목표가 재검증",
-   "fresh": 109,
+   "fresh": 113,
    "total": 120,
    "oldestDays": 8,
    "ok": false
