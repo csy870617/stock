@@ -7,10 +7,10 @@ window.LIQUIDITY_AUTO = {
  "inputs": {
   "us10y": "4.78",
   "curve": "1.03",
-  "vix": "15.2",
+  "vix": "15.3",
   "hyg20": "-0.6",
-  "dxy": "98.9",
-  "usdkrw": "1347"
+  "dxy": "99.2",
+  "usdkrw": "1345"
  },
  "us": {
   "shortTerm": "신중",
@@ -19,7 +19,7 @@ window.LIQUIDITY_AUTO = {
   "midScore": 0.08,
   "drivers": [
    "일드커브 (+2)",
-   "VIX 15.2 (+1)",
+   "VIX 15.3 (+1)",
    "10Y 추세 (−1)",
    "HY 신용(20d) (−1)"
   ]
