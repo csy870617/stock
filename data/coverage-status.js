@@ -3,21 +3,21 @@
 window.COVERAGE_STATUS = {
  "asOf": "2026-09-08",
  "T": "2026-09-08",
- "total": 120,
+ "total": 119,
  "cycleDays": 7,
  "daily": [
   {
    "key": "techNote",
    "label": "기술 대응",
-   "done": 120,
-   "total": 120,
+   "done": 119,
+   "total": 119,
    "ok": true
   },
   {
    "key": "valueNote",
    "label": "밸류 설명",
-   "done": 120,
-   "total": 120,
+   "done": 119,
+   "total": 119,
    "ok": true
   },
   {
@@ -30,16 +30,16 @@ window.COVERAGE_STATUS = {
   {
    "key": "indexNotes",
    "label": "지수 대응",
-   "done": 0,
+   "done": 4,
    "total": 4,
-   "ok": false
+   "ok": true
   },
   {
    "key": "topPicks",
    "label": "Top Pick",
-   "done": 0,
+   "done": 6,
    "total": 6,
-   "ok": false
+   "ok": true
   },
   {
    "key": "liquidity",
@@ -67,10 +67,10 @@ window.COVERAGE_STATUS = {
   {
    "key": "verified",
    "label": "목표가 재검증",
-   "fresh": 114,
-   "total": 120,
-   "oldestDays": 8,
-   "ok": false
+   "fresh": 119,
+   "total": 119,
+   "oldestDays": 7,
+   "ok": true
   },
   {
    "key": "discovery",
@@ -85,10 +85,10 @@ window.COVERAGE_STATUS = {
    "key": "aiTarget",
    "label": "AI 적정가 재시도",
    "fresh": 119,
-   "total": 120,
-   "oldestDays": 8,
-   "ok": false
+   "total": 119,
+   "oldestDays": 7,
+   "ok": true
   }
  ],
- "ok": false
+ "ok": true
 };
