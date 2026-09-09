@@ -500,11 +500,6 @@ window.STOCK_QUOTES = {
    "date": "2026-09-08",
    "changePct": 5
   },
-  "BLK": {
-   "price": 1095.37,
-   "date": "2026-09-08",
-   "changePct": -1.9
-  },
   "BMY": {
    "price": 64.69,
    "date": "2026-09-08",
