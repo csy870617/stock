@@ -7,10 +7,10 @@ window.LIQUIDITY_AUTO = {
  "inputs": {
   "us10y": "4.84",
   "curve": "1.03",
-  "vix": "16.4",
+  "vix": "16.7",
   "hyg20": "-0.7",
-  "dxy": "98.7",
-  "usdkrw": "1342"
+  "dxy": "98.9",
+  "usdkrw": "1343"
  },
  "us": {
   "shortTerm": "신중",

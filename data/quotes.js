@@ -549,11 +549,6 @@ window.STOCK_QUOTES = {
    "price": 73.01,
    "date": "2026-09-09",
    "changePct": -0.5
-  },
-  "PFE": {
-   "price": 27.78,
-   "date": "2026-09-09",
-   "changePct": 0
   }
  }
 };
