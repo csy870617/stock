@@ -549,6 +549,11 @@ window.STOCK_QUOTES = {
    "price": 71.58,
    "date": "2026-09-10",
    "changePct": -2
+  },
+  "HUM": {
+   "price": 400.73,
+   "date": "2026-09-10",
+   "changePct": 0.2
   }
  }
 };
