@@ -5,30 +5,30 @@ window.LIQUIDITY_AUTO = {
  "asOf": "2026-09-15",
  "note": "Yahoo 시장지표 기반 자동 baseline(금리·일드커브·VIX·HY신용·달러·원달러·코스피). 거시 이벤트·내러티브는 미반영 — 온디맨드 유동성이 보정.",
  "inputs": {
-  "us10y": "4.96",
-  "curve": "1.03",
-  "vix": "17.1",
+  "us10y": "5.00",
+  "curve": "1.04",
+  "vix": "17.2",
   "hyg20": "-1.5",
   "dxy": "99.6",
-  "usdkrw": "1359"
+  "usdkrw": "1363"
  },
  "us": {
   "shortTerm": "신중",
   "midTerm": "신중",
   "shortScore": -0.33,
-  "midScore": -0.08,
+  "midScore": -0.29,
   "drivers": [
    "10Y 추세 (−2)",
    "일드커브 (+2)",
    "HY 신용(20d) (−1)",
-   "VIX 17.1 (·0)"
+   "VIX 17.2 (·0)"
   ]
  },
  "korea": {
   "shortTerm": "신중",
   "midTerm": "신중",
   "shortScore": -0.18,
-  "midScore": 0,
+  "midScore": -0.2,
   "drivers": [
    "원/달러 추세 (+2)",
    "코스피 모멘텀(20d) (−2)",
