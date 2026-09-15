@@ -549,6 +549,11 @@ window.STOCK_QUOTES = {
    "price": 407.02,
    "date": "2026-09-14",
    "changePct": -0.7
+  },
+  "AMT": {
+   "price": 176.94,
+   "date": "2026-09-14",
+   "changePct": -0.5
   }
  }
 };
