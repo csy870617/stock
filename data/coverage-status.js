@@ -67,10 +67,10 @@ window.COVERAGE_STATUS = {
   {
    "key": "verified",
    "label": "목표가 재검증",
-   "fresh": 107,
+   "fresh": 119,
    "total": 119,
-   "oldestDays": 8,
-   "ok": false
+   "oldestDays": 7,
+   "ok": true
   },
   {
    "key": "discovery",
@@ -84,11 +84,11 @@ window.COVERAGE_STATUS = {
   {
    "key": "aiTarget",
    "label": "AI 적정가 재시도",
-   "fresh": 98,
+   "fresh": 119,
    "total": 119,
-   "oldestDays": null,
-   "ok": false
+   "oldestDays": 7,
+   "ok": true
   }
  ],
- "ok": false
+ "ok": true
 };
