@@ -489,7 +489,11 @@
    "korea:078930": null,
    "korea:030000": null,
    "us:GS": null
+  },
+  "2026-09-17": {
+   "us:BMY": 63,
+   "us:COP": 144.2
   }
  },
- "lastRun": "2026-09-16"
+ "lastRun": "2026-09-17"
 }
