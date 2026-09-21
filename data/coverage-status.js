@@ -9,9 +9,9 @@ window.COVERAGE_STATUS = {
   {
    "key": "techNote",
    "label": "기술 대응",
-   "done": 0,
+   "done": 117,
    "total": 117,
-   "ok": false
+   "ok": true
   },
   {
    "key": "valueNote",
@@ -23,37 +23,37 @@ window.COVERAGE_STATUS = {
   {
    "key": "tier",
    "label": "tier 재평가",
-   "done": 0,
+   "done": 90,
    "total": 90,
-   "ok": false
+   "ok": true
   },
   {
    "key": "indexNotes",
    "label": "지수 대응",
-   "done": 0,
+   "done": 4,
    "total": 4,
-   "ok": false
+   "ok": true
   },
   {
    "key": "topPicks",
    "label": "Top Pick",
-   "done": 0,
+   "done": 6,
    "total": 6,
-   "ok": false
+   "ok": true
   },
   {
    "key": "liquidity",
    "label": "유동성 판단",
-   "done": 0,
+   "done": 1,
    "total": 1,
-   "ok": false
+   "ok": true
   },
   {
    "key": "market",
    "label": "시황",
-   "done": 0,
+   "done": 1,
    "total": 1,
-   "ok": false
+   "ok": true
   },
   {
    "key": "backbone",
@@ -67,15 +67,15 @@ window.COVERAGE_STATUS = {
   {
    "key": "verified",
    "label": "목표가 재검증",
-   "fresh": 103,
+   "fresh": 117,
    "total": 117,
-   "oldestDays": 8,
-   "ok": false
+   "oldestDays": 7,
+   "ok": true
   },
   {
    "key": "discovery",
    "label": "신규 후보 탐색",
-   "fresh": 2,
+   "fresh": 6,
    "total": 10,
    "unit": "그룹",
    "oldestDays": 8,
@@ -84,10 +84,10 @@ window.COVERAGE_STATUS = {
   {
    "key": "aiTarget",
    "label": "AI 적정가 재시도",
-   "fresh": 105,
+   "fresh": 117,
    "total": 117,
-   "oldestDays": 8,
-   "ok": false
+   "oldestDays": 7,
+   "ok": true
   }
  ],
  "ok": false
