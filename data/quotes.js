@@ -45,10 +45,10 @@ window.STOCK_QUOTES = {
    "date": "2026-09-23",
    "changePct": -0.8
   },
-  "272210": {
-   "price": 73900,
+  "298040": {
+   "price": 2896000,
    "date": "2026-09-23",
-   "changePct": -4.5
+   "changePct": -0.2
   },
   "316140": {
    "price": 35350,
