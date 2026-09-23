@@ -5,35 +5,35 @@ window.LIQUIDITY_AUTO = {
  "asOf": "2026-09-23",
  "note": "Yahoo 시장지표 기반 자동 baseline(금리·일드커브·VIX·HY신용·달러·원달러·코스피). 거시 이벤트·내러티브는 미반영 — 온디맨드 유동성이 보정.",
  "inputs": {
-  "us10y": "4.96",
-  "curve": "0.98",
-  "vix": "14.3",
-  "hyg20": "-1.2",
-  "dxy": "100.9",
-  "usdkrw": "1366"
+  "us10y": "5.11",
+  "curve": "1.09",
+  "vix": "15.2",
+  "hyg20": "-2.0",
+  "dxy": "101.1",
+  "usdkrw": "1365"
  },
  "us": {
-  "shortTerm": "신중",
+  "shortTerm": "부정",
   "midTerm": "신중",
-  "shortScore": -0.29,
-  "midScore": -0.12,
+  "shortScore": -0.54,
+  "midScore": -0.33,
   "drivers": [
    "10Y 추세 (−2)",
+   "HY 신용(20d) (−2)",
    "일드커브 (+2)",
-   "VIX 14.3 (+1)",
-   "HY 신용(20d) (−1)"
+   "VIX 15.2 (+1)"
   ]
  },
  "korea": {
   "shortTerm": "우호",
   "midTerm": "신중",
-  "shortScore": 0.56,
-  "midScore": -0.07,
+  "shortScore": 0.38,
+  "midScore": -0.26,
   "drivers": [
    "코스피 모멘텀(20d) (+2)",
+   "글로벌 신용(20d) (−2)",
    "원/달러 추세 (+1)",
-   "글로벌 변동성 VIX (+1)",
-   "글로벌 신용(20d) (−1)"
+   "글로벌 변동성 VIX (+1)"
   ]
  }
 };
