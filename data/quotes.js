@@ -3,7 +3,7 @@
 // 페이지 가격 우선순위: 실시간 API(config.js) > 이 스냅샷 > recommendations.js 종가(폴백)
 // 각 항목: ticker → { price, date }
 window.STOCK_QUOTES = {
- "generatedAt": "2026-09-23",
+ "generatedAt": "2026-09-24",
  "quotes": {
   "105560": {
    "price": 173200,
@@ -460,11 +460,6 @@ window.STOCK_QUOTES = {
    "date": "2026-09-23",
    "changePct": 0.6
   },
-  "SCHW": {
-   "price": 99.5,
-   "date": "2026-09-23",
-   "changePct": -0.8
-  },
   "AAPL": {
    "price": 337.02,
    "date": "2026-09-23",
@@ -490,18 +485,8 @@ window.STOCK_QUOTES = {
    "date": "2026-09-23",
    "changePct": -3.1
   },
-  "BMY": {
-   "price": 61.15,
-   "date": "2026-09-23",
-   "changePct": -1.8
-  },
   "UNH": {
    "price": 371.29,
-   "date": "2026-09-23",
-   "changePct": -0.4
-  },
-  "RSG": {
-   "price": 213.1,
    "date": "2026-09-23",
    "changePct": -0.4
   },
@@ -509,11 +494,6 @@ window.STOCK_QUOTES = {
    "price": 361.84,
    "date": "2026-09-23",
    "changePct": 1.6
-  },
-  "PGR": {
-   "price": 203.13,
-   "date": "2026-09-23",
-   "changePct": -1.8
   },
   "COP": {
    "price": 128.09,
@@ -530,11 +510,6 @@ window.STOCK_QUOTES = {
    "date": "2026-09-23",
    "changePct": -0.4
   },
-  "HUM": {
-   "price": 374.78,
-   "date": "2026-09-23",
-   "changePct": 0.7
-  },
   "AMT": {
    "price": 170.78,
    "date": "2026-09-23",
@@ -544,6 +519,26 @@ window.STOCK_QUOTES = {
    "price": 398.3,
    "date": "2026-09-23",
    "changePct": -0.9
+  },
+  "ADI": {
+   "price": 385.23,
+   "date": "2026-09-23",
+   "changePct": -1.3
+  },
+  "ITW": {
+   "price": 273.42,
+   "date": "2026-09-23",
+   "changePct": 1.1
+  },
+  "GILD": {
+   "price": 151.37,
+   "date": "2026-09-23",
+   "changePct": -0.9
+  },
+  "BRK.B": {
+   "price": 507.17,
+   "date": "2026-09-23",
+   "changePct": 0.7
   }
  }
 };
