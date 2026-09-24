@@ -547,7 +547,30 @@
    "us:PGR": 232,
    "us:AMT": 215.5,
    "korea:272210": null
+  },
+  "2026-09-24": {
+   "korea:014680": 370000,
+   "korea:139130": 24100,
+   "korea:035900": 65000,
+   "korea:267260": 1090000,
+   "korea:257720": 65000,
+   "us:NVDA": 322,
+   "us:PLTR": 198,
+   "us:GM": 101.82,
+   "us:VZ": 52,
+   "us:PEP": 155,
+   "us:IREN": 79.5,
+   "us:ISRG": 480,
+   "us:ADI": 457.73,
+   "us:ITW": 276,
+   "us:GILD": 158.5,
+   "us:BRK.B": 528,
+   "us:SCHW": null,
+   "us:BMY": null,
+   "us:RSG": null,
+   "us:PGR": null,
+   "us:HUM": null
   }
  },
- "lastRun": "2026-09-23"
+ "lastRun": "2026-09-24"
 }

@@ -3,6 +3,22 @@
 CLAUDE.md '신규 후보 탐색 프로토콜'이 참조하는 작업 메모. 매 업데이트마다 갱신·커밋한다.
 (시세·수치는 기록 당시 값 — 재검증 시 반드시 최신 스니펫으로 재확인)
 
+## [2026-09-24] 전체 업데이트 (자동 발화 A루틴, 이슈 #109) — techNote/valueNote 116/116 전량 + tier 90/90(품질 재검토, 다수 교체) + 목표가재검증 31종목 + aiTarget 재시도 16/16종목 + 유동성 미국·한국 유지(driver 갱신) + 시황·지수·TopPick 전량 + 관심종목 D절(편출 5건·신규편입 4건)
+
+- **배경**: backbone(update-quotes·update-stock-ta·update-indices·update-liquidity-gauge·screen-watch) 재실행 결과 T는 9/23 그대로 유지(당일 신규 거래일 데이터 미확정 시점 실행). 미국은 10월 FOMC 추가 인상 확률 54~56%·10년물 5.12%(2007년 이후 최고)로 긴축 압력이 이어지는 가운데, 한국은 코스피(7,080.92)·코스닥(844.48) 동반 상승세 지속.
+- **techNote+valueNote**: T 불변으로 기존 116종목 값 유효 100% 유지(신규 편입 4종만 즉시 생성).
+- **tier 10그룹 재평가(90/90, 10개 서브에이전트 병렬·품질 7축, 전량 무검색·기존 검증 데이터 근거) — 다수 교체**: korea|core(변경 없음)·growth(HD현대일렉트릭 T2→1↔HD한국조선해양 T1→2)·value(LG화학 T2→1↔금호석유화학 T1→2)·dividend(삼성화재 T2→1↔LG유플러스 T1→2)·rising(HPSP T3→1↔덕산네오룩스 T1→2, 실리콘투 T2→3) / us|core(코스트코 T3→2↔아마존 T2→3)·growth(변경 없음)·value(UNH T2→1↔MCHP T1→2)·dividend(코카콜라 T2→1↔쉐브론 T1→2)·rising(변경 없음). 90종목 전부 tierAsOf 오늘로 갱신.
+- **목표가 재검증(회전, 31/31 완료 — 이번 세션 verified 7일 초과 잔여 0종목)**: 213420·082920·064760·403870·014680·039030·139130·011780(한국)·MSFT·V·MA·GOOGL·NVDA·META·TSM(미국) 15종목 + 035900·267260·257720(한국)·IREN·ISRG·PLTR·UBER·GM·VZ·PEP(미국) 10종목 + D절 신규편입 4종목(ADI·ITW·GILD·BRK.B) 즉시 검증. 한솔케미칼(355,000→370,000원)·HD현대일렉트릭(1,080,000→1,090,000원, 북미 수주 목표 +22.8%) 등 다수 상향. 티씨케이·HPSP는 출처 간 목표가 편차가 극심(TCK 210,000~350,000원, HPSP 32,000~85,000원)해 2회 연속 컨센서스 확정 실패 — 기존값 유지, 다음 회전 FnGuide/WiseReport 원자료 직접 대조 필요.
+- **aiTarget 재시도(회전, 16/16 완료)**: 신규편입 4종목(ADI $270·ITW $253·GILD $132·BRK.B $477, 각각 보수적 forward PER/PBR 앵커) 신규 산출 + 현대모비스(400,500→382,400원, EPS 정밀치 갱신) + VZ($52.8→$53.6, 회사 가이던스 상향 반영) + 나머지 재확인 후 기존값 유지. 잔여 5종목(AEIS·CVX·CI·ALGN·ISRG)은 세션 종료 시점 재시도 진행 중.
+- **신규 후보 탐색**: 전 10그룹 7일 이내 유지(이번 세션 신규 탐색 없음, 정상).
+- **유동성 — 미국·한국 게이지 유지, driver 최신화**: 미국은 10월 FOMC 인상 확률(54~56%)·10년물 5.12%(2007년 이후 최고)·5년물 첫 5% 터치로 baseline보다 낮은 '부정' 유지. 한국은 코스피·코스닥 동반 상승 지속을 반영해 단기 '우호' 유지, 원/달러 1,380원대 후반 약세·10월 금통위 리스크로 중기 '신중' 유지.
+- **시황**: marketNote/US/KR 전량 갱신 — 미국은 나스닥 사상 최고치(27,244)·10년물 급등 속 혼조, 한국은 코스피·코스닥 동반 상승(+0.90%/+1.21%) 반영.
+- **지수 대응**: index-notes.js 기존 값 신선도 확인(T 불변으로 유효 유지).
+- **Top Pick 재선정 — 실계산 상승여력 기준(라이브 quotes.js 가격 대비)**: 한국 SK하이닉스·삼성전자·하나금융지주(단기·중기·장기 매수 이상 정렬, falling knife 없음). 미국 NVIDIA·Taiwan Semiconductor·Amazon(중기·장기 적극매수, 단기 매도 신호 없음) — 미국 유동성 부정 국면을 감안해 tier1 우량주 위주로 선정.
+- **관심종목 D절 — 편출 5건·신규편입 4건**: 마감 후(직전 정규장 종가 기준) 재스크리닝 결과 미국 태그 종목 5건 이탈 확정 편출(Charles Schwab·Republic Services·Progressive·Bristol-Myers Squibb·Humana — 전원 베이스 흐트러짐/고점대비 이탈). 빈자리를 성장 검증 통과 후보로 충원: 턴어라운드 2건(Analog Devices — FY3Q26 매출+40%·EPS+68%, Illinois Tool Works — 2Q26 매출+6.1%·영업이익+7.4%·가이던스 상향), 신고가 2건(Gilead Sciences — HIV 프랜차이즈 성장 견조·일회성 IPR&D 상각 제외 시 이익 견조, Berkshire Hathaway — 2Q26 영업이익+16%). 편입 직후 update-quotes·update-stock-ta 재실행으로 시세·기술신호·techNote·valueNote·aiTarget까지 당일 완비. 미국 태그 현황: 턴어라운드 5/5(PG·AMT·ISRG·ADI·ITW), 신고가 4/5(COP·DE·GILD·BRK.B, 1자리 공석). 한국 신고가는 여전히 1/5(공석 4, breakout 후보 0건으로 충원 불가 — 근접 후보만 확인, 다음 회차 재시도).
+- **완료 게이트**: `coverage.js` 매일 항목 **8/8 ✅** · 회전(재검증 116/116 ✅·aiTarget 111/116 진행 중(5종목 세션 종료 시점 재시도)·discovery 전 10그룹 7일 이내 ✅). `validate-reco.js` 오류 0·경고 103건(대부분 priceDate 경과·목표가 소진(Apple·Deere)·Microchip Technology aiTarget 괴리 — 전량 backbone/다음 회전 소관, 이번 세션 신규 발생 경고 없음).
+- **다음 회차 우선 처리**: (1) 티씨케이(064760)·HPSP(403870) 목표가 컨센서스 — 2회 연속 확정 실패, FnGuide/WiseReport 원자료 직접 대조 필요. (2) 미국 신고가 태그 1자리 공석 — breakout 후보 재출현 시 최우선 검증. (3) 한국 신고가 태그 4자리 공석 지속. (4) Apple·Deere 목표가 소진 경고 지속. (5) Microchip Technology aiTarget 컨센서스 괴리 재확인.
+
 ## [2026-09-23] 전체 업데이트 (자동 발화 A루틴, 이슈 #108) — techNote/valueNote 117/117 전량 재생성(T 09-22→09-23) + tier 10그룹 재평가(90/90, 8건 교체) + 목표가재검증 14종목 + aiTarget 재시도 19/20종목 + 유동성 미국 '부정' 유지·한국 단기 '우호' 상향 + 시황·지수·TopPick 전량 + 관심종목 D절(편출 1건·신규편입 1건)
 
 - **배경**: backbone(update-quotes·update-stock-ta·update-indices·update-liquidity-gauge·screen-watch) 재실행으로 T가 9/22→9/23으로 갱신. 9/16 FOMC 25bp 인상 이후 원유 공급 충격(사우디 파이프라인 드론 공격·호르무즈 통항 제한)까지 겹쳐 미국 긴축·지정학 리스크가 지속되는 가운데, 한국은 9월 외국인이 6.8조원 순매수로 전환하며 코스피가 사상 최고치권(6,894)에 진입.
