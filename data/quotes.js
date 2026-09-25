@@ -525,11 +525,6 @@ window.STOCK_QUOTES = {
    "date": "2026-09-24",
    "changePct": -0.7
   },
-  "ITW": {
-   "price": 272,
-   "date": "2026-09-24",
-   "changePct": -0.5
-  },
   "GILD": {
    "price": 149.69,
    "date": "2026-09-24",
@@ -539,6 +534,16 @@ window.STOCK_QUOTES = {
    "price": 505.18,
    "date": "2026-09-24",
    "changePct": -0.4
+  },
+  "SNPS": {
+   "price": 424.91,
+   "date": "2026-09-24",
+   "changePct": 2.9
+  },
+  "TMO": {
+   "price": 678.39,
+   "date": "2026-09-24",
+   "changePct": 2
   }
  }
 };

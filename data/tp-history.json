@@ -570,7 +570,13 @@
    "us:RSG": null,
    "us:PGR": null,
    "us:HUM": null
+  },
+  "2026-09-25": {
+   "us:COP": 141.24,
+   "us:SNPS": 560,
+   "us:TMO": 670,
+   "us:ITW": null
   }
  },
- "lastRun": "2026-09-24"
+ "lastRun": "2026-09-25"
 }
