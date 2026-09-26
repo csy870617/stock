@@ -3,7 +3,7 @@
 // 거시 유동성 '게이지 등급'은 판단 영역이라 data/liquidity.js 에서 온디맨드로 남는다.
 window.INDEX_TA = {
  "asOf": "2026-09-25",
- "builtAt": "2026-09-25T23:52:47Z",
+ "builtAt": "2026-09-26T08:13:48Z",
  "note": "기술적 지표는 Yahoo 일봉에서 매일 자동 계산(LLM 토큰 0). 이동평균(SMA·EMA)과 오실레이터(RSI·MACD·스토캐스틱·CCI·Williams %R·ADX·모멘텀)를 종합 투표한 5단계 신호 — 단기=일봉, 중기=주봉, 장기=월봉 3기간.",
  "indices": [
   {
@@ -22,7 +22,7 @@ window.INDEX_TA = {
     "flow": {
      "ma": 0.9333333333333333,
      "ichimoku": 0.7500000000000001,
-     "volume": 0.9400244258629036,
+     "volume": 0.9393609767880599,
      "osc": 0.25
     },
     "metrics": [
@@ -56,7 +56,7 @@ window.INDEX_TA = {
     "flow": {
      "ma": 1,
      "ichimoku": 1,
-     "volume": 0.9879649576787954,
+     "volume": 0.9879106391928072,
      "osc": -0.25
     },
     "metrics": [
@@ -90,7 +90,7 @@ window.INDEX_TA = {
     "flow": {
      "ma": 1,
      "ichimoku": 1,
-     "volume": 0.9903466100574623,
+     "volume": 0.9903332273053435,
      "osc": 0.25
     },
     "metrics": [
@@ -134,7 +134,7 @@ window.INDEX_TA = {
     "flow": {
      "ma": -0.13666666666666666,
      "ichimoku": -0.7000000000000001,
-     "volume": 0.4257114496513557,
+     "volume": 0.4256946845769591,
      "osc": -0.5
     },
     "metrics": [
@@ -168,7 +168,7 @@ window.INDEX_TA = {
     "flow": {
      "ma": 0.4933333333333333,
      "ichimoku": 1,
-     "volume": 0.4795901677877569,
+     "volume": 0.4795950525568844,
      "osc": -0.5
     },
     "metrics": [
@@ -202,7 +202,7 @@ window.INDEX_TA = {
     "flow": {
      "ma": 0.8799999999999999,
      "ichimoku": 1,
-     "volume": 0.509244115467048,
+     "volume": 0.5092572217777636,
      "osc": 0.25
     },
     "metrics": [

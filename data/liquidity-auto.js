@@ -2,7 +2,7 @@
 // Yahoo 시장지표(금리·일드커브·VIX·HY신용·달러·원달러·코스피)의 가중 합성 → 5단계.
 // 온디맨드 유동성(data/liquidity.js)이 있으면 그것을 우선 표시하고, 이 baseline 을 함께 보여준다.
 window.LIQUIDITY_AUTO = {
- "asOf": "2026-09-25",
+ "asOf": "2026-09-26",
  "note": "Yahoo 시장지표 기반 자동 baseline(금리·일드커브·VIX·HY신용·달러·원달러·코스피). 거시 이벤트·내러티브는 미반영 — 온디맨드 유동성이 보정.",
  "inputs": {
   "us10y": "5.18",
@@ -10,7 +10,7 @@ window.LIQUIDITY_AUTO = {
   "vix": "14.9",
   "hyg20": "-2.5",
   "dxy": "101.0",
-  "usdkrw": "1355"
+  "usdkrw": "1354"
  },
  "us": {
   "shortTerm": "부정",
