@@ -576,7 +576,12 @@
    "us:SNPS": 560,
    "us:TMO": 670,
    "us:ITW": null
+  },
+  "2026-09-26": {
+   "us:DE": 652,
+   "us:ECL": 314,
+   "us:AMT": null
   }
  },
- "lastRun": "2026-09-25"
+ "lastRun": "2026-09-26"
 }

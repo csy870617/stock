@@ -3,6 +3,22 @@
 CLAUDE.md '신규 후보 탐색 프로토콜'이 참조하는 작업 메모. 매 업데이트마다 갱신·커밋한다.
 (시세·수치는 기록 당시 값 — 재검증 시 반드시 최신 스니펫으로 재확인)
 
+## [2026-09-26] 전체 업데이트 (자동 발화 A루틴, 이슈 #111) — techNote/valueNote 117/117 전량 재생성(T 09-24→09-25) + 목표가재검증 DE 1종목(회전 잔여 0) + tier 90/90(10그룹, 교체 6건) + aiTarget 재시도 DE 1종목 + 유동성 미·한 유지(driver 갱신) + 시황·지수·TopPick 전량 + 관심종목 D절(편출 1건·신규편입 1건)
+
+- **배경**: backbone(update-quotes·update-stock-ta·update-indices·update-liquidity-gauge·screen-watch) 재실행으로 T가 9/24→9/25로 갱신. 연준 9월 인상(3.75~4.00%) 후 국채금리 급등(10년물 5%대)에 9/23~24 뉴욕증시가 조정을 받았다가 반도체·AI 실적 모멘텀에 9/25 3대 지수가 동반 반등(S&P500 +0.54%·나스닥 +0.45%·다우 +0.93%). 한국은 두 달 연속 기준금리 인상(3.00%)에도 반도체 수출 호조(9월 1~20일 +259%YoY)에 힘입어 코스피가 9/23 7,080선을 회복.
+- **techNote+valueNote 전 종목 재생성**: T 갱신으로 117/117(108개 고유 티커) 전량 구식화 → 9개 병렬 배치(무검색, stock-ta.js·quotes.js 숫자만 사용, 일목→매물대→오실레이터→지지저항 순 서술)로 재작성 완료.
+- **목표가 재검증(회전, 1/1 큐 완료 — verified 117/117, 잔여 0)**: us DE Deere & Company(671→652달러, TipRanks 647.81·StockAnalysis 648.03달러 컨센서스 재확인 결과 현재가 대비 목표가 소진 폭 확대).
+- **tier 10그룹 재평가(90/90, 10개 서브에이전트 병렬·품질 7축, 전량 무검색·기존 검증 데이터 근거) — 6건 교체**: korea|growth(HD한국조선해양 T2→1↔HD현대일렉트릭 T1→2, 배당수익률·수주잔고 우위), korea|rising(한솔케미칼 T3→2↔HPSP T2→3, 반도체 프리커서 고성장 vs HPSP 역성장), us|core(LLY T3→2↔UNH T2→3, 정책 리스크 반영). korea|core·value·dividend, us|growth·value·dividend·rising는 검토 후 기존 배정 유지. 90종목 전부 tierAsOf 오늘로 갱신.
+- **aiTarget 재시도(회전, 1/1 큐 완료)**: us DE는 FY2027 EPS 추정치가 단일 출처(Zacks)만 확인돼 교차검증 실패 — aiTarget 기존값(451달러) 유지, aiCheckedAt만 갱신.
+- **신규 후보 탐색**: 전 10그룹 7일 이내 유지(이번 세션 신규 탐색 없음, 정상).
+- **유동성 — 미국 '부정'/한국 '신중' 유지, driver 최신화**: 미국은 9월 SEP 근원 PCE 전망 3.7% 상향·10년물 5%대 급등을 반영해 baseline과 동일한 '부정' 유지(9/25 반등에도 정책 긴축 기조는 불변). 한국은 반도체 수출 +259%YoY 실물 호재에도 한은 긴축 전환과 미 금리발 외국인 수급 변동성을 감안해 '신중' 유지.
+- **시황**: marketNote/US/KR 전량 갱신 — 미국은 국채금리 급등발 조정 후 9/25 반도체·AI 주도 반등을, 한국은 반도체 수출 호황 속 코스피 7,080선 회복·코스닥 동반 상승을 반영.
+- **지수 대응**: index-notes.js 4개 지수 전부 갱신(asOf 9/25) — 나스닥·다우 장기 적극매수(다우 단기는 금리발 조정으로 매도), 코스피 단기 매수·중장기 적극매수, 코스닥 단기 중립·중기 매도·장기 매수.
+- **Top Pick 재선정 — 한국·미국 기존 라인업 유지(오늘자 quotes.js 실계산 상승여력 재확인, 3구간 전부 매수 이상 정렬)**: 한국 하나금융지주(31.5%)·이오테크닉스(26.7%)·신한지주(22.6%). 미국 NVIDIA(43.1%)·마이크론(42.3%)·Taiwan Semiconductor(22.7%, 직전 3위였던 Lumentum 21.9%를 근소하게 상회해 교체).
+- **관심종목 D절 — 편출 1건·신규편입 1건**: 마감 후 스크리닝 결과 American Tower(AMT, 턴어라운드, 배열 흐트러짐) 이탈 확정 편출 → 미국 턴어라운드 4/5 공석. 1순위 후보 Ecolab(ECL, 점수 71)은 2Q26 유기적 매출성장 +5%(가속)·하반기 가이던스 상향(6~7%)·41년 연속 배당 증가로 성장성 검증 통과, 컨센서스 3개 집계(stockanalysis.com 317.14·marketbeat.com 327.56·tipranks.com 297.33달러) 중앙값 314달러로 편입(신뢰 출처 2개: stockanalysis.com·marketbeat.com). 편입 직후 update-quotes·update-stock-ta 재실행으로 시세·기술신호(단기 매수·중기 적극매수·장기 적극매수) 즉시 반영, techNote·valueNote도 당일 완비(aiTarget은 EPS 가이던스 수치가 출처 간 불일치해 미산출·다음 회전 승계). 한국 신고가는 여전히 1/5(공석 4, breakout 후보 0건 — 근접 5종목 모두 조건 1개 미달), 한국 턴어라운드·미국 신고가는 5/5 만석 유지.
+- **완료 게이트**: `coverage.js` 매일 항목 **8/8 ✅** · 회전 **3/3 ✅**(재검증 117/117·aiTarget 전 종목 7일 이내·discovery 전 10그룹 7일 이내) → **exit 0, 전 항목 100%**. `validate-reco.js` 오류 0·경고 108건(대부분 priceDate 경과·목표가 소진(Apple·Deere·Thermo Fisher)·Microchip Technology aiTarget 괴리 — 전량 backbone/다음 회전 소관).
+- **다음 회차 우선 처리**: (1) 한국 관심종목 신고가 태그 4자리 공석 지속 — breakout 후보 재출현 시 최우선 검증. (2) 미국 턴어라운드 태그 1자리 공석(AMT 편출분) — 현재 후보 BlackRock·Disney·O'Reilly Automotive·Intercontinental Exchange 순으로 다음 회차 검증. (3) Apple·Deere·Thermo Fisher 목표가 소진 경고 지속. (4) Microchip Technology aiTarget 컨센서스 괴리 재확인. (5) Ecolab aiTarget — EPS 가이던스 수치(회사 발표 8.05~8.25달러 vs 일부 집계 8.43~8.63달러) 출처 간 불일치 해소 후 재시도.
+
 ## [2026-09-24] 전체 업데이트 (자동 발화 A루틴, 이슈 #109) — techNote/valueNote 116/116 전량 + tier 90/90(품질 재검토, 다수 교체) + 목표가재검증 31종목 + aiTarget 재시도 16/16종목 + 유동성 미국·한국 유지(driver 갱신) + 시황·지수·TopPick 전량 + 관심종목 D절(편출 5건·신규편입 4건)
 
 - **배경**: backbone(update-quotes·update-stock-ta·update-indices·update-liquidity-gauge·screen-watch) 재실행 결과 T는 9/23 그대로 유지(당일 신규 거래일 데이터 미확정 시점 실행). 미국은 10월 FOMC 추가 인상 확률 54~56%·10년물 5.12%(2007년 이후 최고)로 긴축 압력이 이어지는 가운데, 한국은 코스피(7,080.92)·코스닥(844.48) 동반 상승세 지속.

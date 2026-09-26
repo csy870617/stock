@@ -510,11 +510,6 @@ window.STOCK_QUOTES = {
    "date": "2026-09-25",
    "changePct": 5.4
   },
-  "AMT": {
-   "price": 169.03,
-   "date": "2026-09-25",
-   "changePct": 1.1
-  },
   "ISRG": {
    "price": 405.18,
    "date": "2026-09-25",
@@ -544,6 +539,11 @@ window.STOCK_QUOTES = {
    "price": 675,
    "date": "2026-09-25",
    "changePct": -0.5
+  },
+  "ECL": {
+   "price": 279.49,
+   "date": "2026-09-25",
+   "changePct": 1.5
   }
  }
 };
