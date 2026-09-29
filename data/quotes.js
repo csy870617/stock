@@ -245,11 +245,6 @@ window.STOCK_QUOTES = {
    "date": "2026-09-29",
    "changePct": 0.2
   },
-  "086280": {
-   "price": 197500,
-   "date": "2026-09-29",
-   "changePct": -0.8
-  },
   "047050": {
    "price": 54400,
    "date": "2026-09-29",
@@ -269,6 +264,11 @@ window.STOCK_QUOTES = {
    "price": 40400,
    "date": "2026-09-29",
    "changePct": -1.3
+  },
+  "006260": {
+   "price": 315500,
+   "date": "2026-09-29",
+   "changePct": 0.8
   },
   "MSFT": {
    "price": 509.22,
@@ -494,11 +494,6 @@ window.STOCK_QUOTES = {
    "price": 356.53,
    "date": "2026-09-28",
    "changePct": -2.4
-  },
-  "COP": {
-   "price": 126.04,
-   "date": "2026-09-28",
-   "changePct": -1
   },
   "DE": {
    "price": 689.59,
