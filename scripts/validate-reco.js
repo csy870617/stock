@@ -111,12 +111,15 @@ function validate(D, opts) {
   // 같은 화면의 카드 수치와 최대 3.5배 괴리 — 문구 수치는 최신가 기준으로 다시 쓰거나 빼야 한다.
   function narrativeUpsideGap(text, s) {
     if (!text || !s) return null;
-    const m = String(text).match(/상승여력[도은이]?\s*([\d.]+)\s*%/);
+    // 부호 표기("상승여력 +11%", "상승여력 -5.5%", 유니코드 마이너스 −)도 잡는다 — 부호가 붙으면
+    // 매치되지 않아 문구 수치 검사를 통째로 건너뛰고, 음수는 부호를 잃어 괴리가 과소 계산됐다.
+    const m = String(text).match(/상승여력[도은이]?\s*([+\-−]?)\s*(\d+(?:\.\d+)?)\s*%/);
     if (!m) return null;
     const price = (quotes[s.ticker] && quotes[s.ticker].price) || s.price;
     if (typeof s.targetPrice !== "number" || typeof price !== "number" || price <= 0) return null;
     const real = (s.targetPrice - price) / price * 100;
-    return { said: parseFloat(m[1]), real: Math.round(real * 10) / 10, gap: Math.abs(parseFloat(m[1]) - real) };
+    const said = (m[1] === "-" || m[1] === "−" ? -1 : 1) * parseFloat(m[2]);
+    return { said: said, real: Math.round(real * 10) / 10, gap: Math.abs(said - real) };
   }
   const today = opts.today || new Date().toISOString().slice(0, 10);
   const errors = [];

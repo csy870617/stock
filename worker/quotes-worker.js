@@ -98,8 +98,11 @@ export default {
         catch (e) { /* 개별 실패는 건너뜀 — 앱이 누적 스냅샷으로 폴백 */ }
       }));
       const hbody = JSON.stringify(hist);
-      await caches.default.put(hcacheKey, new Response(hbody, { headers: { "Cache-Control": "public, max-age=1800", "Content-Type": "application/json" } }));
-      return new Response(hbody, { headers: { ...CORS, "Content-Type": "application/json", "Cache-Control": "public, max-age=1800", "X-Cache": "MISS" } });
+      // 일부라도 실패한 응답(야후 429·장애)은 캐시하지 않는다 — 30분간 빈 결과가 굳어 앱이 재시도하지 못한다.
+      const hComplete = Object.keys(hist).length === symbols.length;
+      const hAge = hComplete ? 1800 : 30;
+      if (hComplete) await caches.default.put(hcacheKey, new Response(hbody, { headers: { "Cache-Control": "public, max-age=1800", "Content-Type": "application/json" } }));
+      return new Response(hbody, { headers: { ...CORS, "Content-Type": "application/json", "Cache-Control": "public, max-age=" + hAge, "X-Cache": "MISS" } });
     }
 
     // 같은 symbols 조합은 60초 엣지 캐시
@@ -121,12 +124,15 @@ export default {
     }));
 
     const body = JSON.stringify(out);
-    // 캐시에 저장 (60초)
-    await cache.put(cacheKey, new Response(body, {
-      headers: { "Cache-Control": "public, max-age=60", "Content-Type": "application/json" },
-    }));
+    // 캐시에 저장 (60초) — 전 종목을 받았을 때만. 일부 실패분까지 캐시하면 그 종목이 계속 빠진다.
+    const complete = Object.keys(out).length === symbols.length;
+    if (complete) {
+      await cache.put(cacheKey, new Response(body, {
+        headers: { "Cache-Control": "public, max-age=60", "Content-Type": "application/json" },
+      }));
+    }
     return new Response(body, {
-      headers: { ...CORS, "Content-Type": "application/json", "Cache-Control": "public, max-age=60", "X-Cache": "MISS" },
+      headers: { ...CORS, "Content-Type": "application/json", "Cache-Control": "public, max-age=" + (complete ? 60 : 10), "X-Cache": "MISS" },
     });
   },
 };

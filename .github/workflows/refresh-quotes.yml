@@ -100,9 +100,26 @@ jobs:
           git commit -m "매일 데이터 갱신 (자동) — 시세·기준일·스냅샷 (update-quotes + daily-maintenance)"
           # 다른 자동 커밋(LLM 재평가 Routine 등)과 경합해 push 가 거부될 수 있으므로,
           # 거부되면 원격 변경을 rebase 로 얹어 1회 재시도한다(그날 갱신이 조용히 유실되지 않도록).
+          # 업데이트 세션도 같은 생성 파일(quotes·stock-ta·history 등)을 다시 만들어 커밋하므로 rebase 가
+          # 충돌하기 쉽다. 충돌하면 한쪽을 통째로 택하지 않고(세션의 분석 변경 유실 방지) 원격 최신을
+          # 기준으로 이번 실행의 야후 산출물만 얹은 뒤 파생 파일(기준일·스냅샷·커버리지)을 다시 만든다.
           if ! git push origin HEAD:${TARGET_BRANCH}; then
             echo "push 거부 — origin 을 rebase 후 재시도"
-            git pull --rebase origin ${TARGET_BRANCH}
+            git fetch origin "${TARGET_BRANCH}"
+            if ! git rebase FETCH_HEAD; then
+              git rebase --abort
+              echo "::warning::rebase 충돌 — 원격 최신 위에 이번 실행 산출물을 다시 얹습니다"
+              GEN="$RUNNER_TEMP/gen"; mkdir -p "$GEN"
+              cp data/quotes.js data/indices.js data/stock-ta.js data/liquidity-auto.js data/watch-candidates.js "$GEN/"
+              git reset --hard FETCH_HEAD
+              cp "$GEN"/* data/
+              node scripts/daily-maintenance.js || true
+              node scripts/coverage.js --emit || true
+              git add data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/liquidity-auto.js data/watch-candidates.js data/coverage-status.js
+              git diff --cached --quiet || git commit -m "매일 데이터 갱신 (자동) — 시세·기준일·스냅샷 (update-quotes + daily-maintenance)"
+            fi
+            # 원격 변경과 합쳐진 결과도 커밋 전과 같은 게이트를 통과해야 push 한다
+            node scripts/validate-reco.js
             git push origin HEAD:${TARGET_BRANCH}
           fi
           echo "changed=true" >> "$GITHUB_OUTPUT"

@@ -169,7 +169,9 @@ const origTp = {};
     matches.forEach((m) => {
       if (m.targetPrice !== fields.targetPrice) {
         const ok = country + ":" + ticker + ":" + m.theme;
-        if (!(ok in ledgerTp)) tpChanged[ok] = m.targetPrice;   // 오늘 첫 변경 전 값만 기준선으로
+        // 오늘 첫 변경 전 값만 기준선으로 — 같은 패치의 앞선 entry 가 이미 바꾼 값(m.targetPrice)을
+        // 기준선으로 남기면 다음 실행에서 +45%→+45% 식 체이닝이 통과된다. 원본값을 기록한다.
+        if (!(ok in ledgerTp) && !(ok in tpChanged)) tpChanged[ok] = (ok in origTp) ? origTp[ok] : m.targetPrice;
       }
     });
   }
@@ -182,6 +184,14 @@ const origTp = {};
 (patch.remove || []).forEach((r) => {
   if (!r.country || !D[r.country] || !r.ticker) { warnings.push("remove 에 country/ticker 필요"); return; }
   const before = D[r.country].length;
+  // 편출 카드의 목표가도 오늘 기준선으로 남긴다 — 남기지 않으면 '오늘 편출 → 다음 실행에서 재편입'으로
+  // 기준선이 사라져 ±50% 급변 검사를 건너뛴다(실행을 나눈 remove/add 우회).
+  D[r.country].forEach((s) => {
+    if (s.ticker !== r.ticker || !(r.theme == null || s.theme === r.theme)) return;
+    const ok = r.country + ":" + s.ticker + ":" + s.theme;
+    const base = (ok in origTp) ? origTp[ok] : s.targetPrice;
+    if (typeof base === "number" && base > 0 && !(ok in ledgerTp) && !(ok in tpChanged)) tpChanged[ok] = base;
+  });
   D[r.country] = D[r.country].filter((s) => !(s.ticker === r.ticker && (r.theme == null || s.theme === r.theme)));
   removed += before - D[r.country].length;
 });

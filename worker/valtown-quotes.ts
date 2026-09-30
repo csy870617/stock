@@ -84,8 +84,10 @@ export default async function (req: Request): Promise<Response> {
         if (h) hist[sym] = h;
       } catch (_e) { /* 개별 실패는 건너뜀 — 앱이 누적 스냅샷으로 폴백 */ }
     }));
+    // 일부라도 실패한 응답은 짧게만 캐시 — 브라우저가 빈 결과를 30분간 재사용하지 않게
+    const hAge = Object.keys(hist).length === symbols.length ? 1800 : 30;
     return new Response(JSON.stringify(hist), {
-      headers: { ...CORS, "Content-Type": "application/json", "Cache-Control": "public, max-age=1800" },
+      headers: { ...CORS, "Content-Type": "application/json", "Cache-Control": "public, max-age=" + hAge },
     });
   }
 
@@ -97,7 +99,8 @@ export default async function (req: Request): Promise<Response> {
     } catch (_e) { /* 개별 실패는 건너뜀 — 페이지가 그 종목은 스냅샷 유지 */ }
   }));
 
+  const qAge = Object.keys(out).length === symbols.length ? 60 : 10;
   return new Response(JSON.stringify(out), {
-    headers: { ...CORS, "Content-Type": "application/json", "Cache-Control": "public, max-age=60" },
+    headers: { ...CORS, "Content-Type": "application/json", "Cache-Control": "public, max-age=" + qAge },
   });
 }

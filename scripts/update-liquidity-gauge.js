@@ -30,6 +30,7 @@ function argVal(name) {
 
 // ── Yahoo 3개월 일봉(종가 배열) ──
 const sleepMs = (ms) => new Promise((res) => setTimeout(res, ms));
+const TOTAL_RETURN = new Set(["HYG"]);   // 분배금이 커서 수정주가(총수익)로 봐야 하는 심볼
 
 // 야후 간헐 429/5xx 대비 — screen-watch.js 와 동일한 지수 백오프 3회 재시도
 async function series(sym) {
@@ -56,8 +57,16 @@ async function seriesOnce(sym) {
   const res = j && j.chart && j.chart.result && j.chart.result[0];
   // quote[0] 까지 가드 — 야후가 indicators:{} 또는 quote:[] 를 돌려주면 TypeError 로
   // 프로세스가 죽고, refresh-quotes 워크플로우의 후속 스텝(screen-watch·commit)까지 전멸한다.
-  const c = res && res.indicators && res.indicators.quote &&
+  let c = res && res.indicators && res.indicators.quote &&
             res.indicators.quote[0] && res.indicators.quote[0].close;
+  // HYG 는 매월 분배금(월 ~0.45%)을 지급해 분배락 때마다 종가가 떨어진다 — 가격(close)만 보면
+  // 신용 여건이 제자리여도 60일 변화율이 약 -1.35% 로 나와 신용 점수가 상시 -1 로 기운다.
+  // 분배금을 반영한 수정주가(adjclose)로 총수익 기준 변화율을 본다(없으면 종가 폴백).
+  if (TOTAL_RETURN.has(sym)) {
+    const adj = res && res.indicators && res.indicators.adjclose &&
+                res.indicators.adjclose[0] && res.indicators.adjclose[0].adjclose;
+    if (Array.isArray(adj) && adj.some((x) => x != null)) c = adj;
+  }
   if (!c) return null;
   const arr = c.filter((x) => x != null);
   if (arr.length < 25) return null;

@@ -930,6 +930,8 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     // 우선순위: 실시간(liveCache, 신선할 때) > quotes.js 스냅샷 > 별도 조회분 > 없음.
     // 편성에서 빠진 종목은 quotes.js 에 없으므로(예: 07-03 스냅샷 67종목 중 13종목) 아래에서 따로 조회한다.
     var pastLive = {};        // ticker → price | null(조회했으나 없음)
+    var pastInflight = {};    // 조회 중인 ticker — 기준일을 빠르게 바꿀 때 같은 종목을 중복 요청하지 않게
+    var shownDate = null;     // 지금 패널이 보여주는 기준일 — 늦게 온 응답이 다른 날짜 표를 덮어쓰지 않게
     // 현재가 칸 — 가격 + 그날 대비 등락률. 등락률은 별도 열로 두면 좁은 화면에서 표가
     // 밀리므로 가격 아래 보조 줄로 붙인다. 색은 앱 전역의 --up/--down 을 그대로 쓴다.
     function nowCell(s, now) {
@@ -968,9 +970,10 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       if (!liveSupported) return;
       var Q = (window.STOCK_QUOTES && window.STOCK_QUOTES.quotes) || {};
       var todo = h.stocks.filter(function (s) {
-        return !Q[s.t] && liveCache[s.t] === undefined && pastLive[s.t] === undefined;
+        return !Q[s.t] && liveCache[s.t] === undefined && pastLive[s.t] === undefined && !pastInflight[s.t];
       });
       if (!todo.length) return;
+      todo.forEach(function (s) { pastInflight[s.t] = true; });
       var symbols = [], owner = {};
       todo.forEach(function (s) {
         candidates(s.t).forEach(function (sym) { symbols.push(sym); owner[sym] = s.t; });
@@ -982,7 +985,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
         .then(function (r) { if (!r.ok) throw new Error("http " + r.status); return r.json(); })
         .then(function (map) {
           clearTimeout(to);
-          todo.forEach(function (s) { pastLive[s.t] = null; });   // 기본값: 조회했으나 없음
+          todo.forEach(function (s) { pastLive[s.t] = null; delete pastInflight[s.t]; });   // 기본값: 조회했으나 없음
           symbols.forEach(function (sym) {
             var v = map && map[sym], t = owner[sym];
             if (pastLive[t] != null) return;                     // 먼저 응답한 후보 채택
@@ -992,7 +995,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
         })
         .catch(function () {
           clearTimeout(to);
-          todo.forEach(function (s) { delete pastLive[s.t]; });   // 다음 진입에서 재시도
+          todo.forEach(function (s) { delete pastLive[s.t]; delete pastInflight[s.t]; });   // 다음 진입에서 재시도
         });
     }
     // 과거 보기로 전환할 때 숨길 대상 — .wrap 의 형제 중 과거 패널 자신만 남긴다.
@@ -1007,9 +1010,16 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
 
     function show(date) {
       if (!date) {                       // 오늘(라이브)로 복귀
+        var wasPast = window.__pastActive;
         window.__pastActive = false;
+        shownDate = null;
         panel.hidden = true;
-        siblings.forEach(function (el) { el.style.display = ""; });
+        // 숨기기 전 값으로 되돌린다 — 원래 숨겨져 있던 빈 섹션(유동성·Top Pick·종목 업데이트)이 되살아나지 않게
+        siblings.forEach(function (el) {
+          if (el.__pvDisp !== undefined) { el.style.display = el.__pvDisp; delete el.__pvDisp; }
+        });
+        // 과거 보기 중 도착한 실시간 시세는 오늘 화면에 그려지지 않았으므로(Top Pick 은 그리기를 건너뜀) 다시 그린다
+        if (wasPast) refreshLive();
         return;
       }
       var h = null;
@@ -1017,12 +1027,22 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       if (!h) return;
       if (!pastCountry) pastCountry = state.country;   // 첫 진입만 메인 선택을 이어받는다
       window.__pastActive = true;        // 진행 중인 비동기 콜백(refreshLive)이 숨긴 섹션을 되살리지 않게
-      siblings.forEach(function (el) { el.style.display = "none"; });
+      siblings.forEach(function (el) {
+        if (el.__pvDisp === undefined) el.__pvDisp = el.style.display;   // 첫 진입 때의 표시 상태만 기억
+        el.style.display = "none";
+      });
       panel.innerHTML = pastHtml(h);
       panel.hidden = false;
+      shownDate = h.date;
       // 편출 종목 현재가는 비동기로 채운다 — 응답이 오면 해당 칸만 바꿔 스크롤을 흔들지 않는다.
       fillPastPrices(h, function () {
-        h.stocks.forEach(function (s) {
+        // 응답 전에 다른 기준일로 바뀌었을 수 있다 — 요청한 날(h)이 아니라 지금 보이는 날의 행을
+        // 그날 가격 기준으로 채운다(다른 날짜 기준 등락률이 섞이지 않게, 중복 제거된 요청도 반영되게).
+        if (panel.hidden || !shownDate) return;
+        var cur = null;
+        for (var j = 0; j < H.length; j++) { if (H[j].date === shownDate) { cur = H[j]; break; } }
+        if (!cur) return;
+        cur.stocks.forEach(function (s) {
           var td = panel.querySelector('tr[data-pt="' + s.t.replace(/"/g, '\\"') + '"] .pv-now');
           if (!td) return;
           var v = pastNowPrice(s.t);
@@ -1885,7 +1905,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       pickSigBadges(s) + rz + "</div>";
   }
   // 국가별 상위 3 폴백(큐레이션 데이터 없을 때) — 그 국가 정식 추천 중 종합점수 상위 3
-  function fallbackPicks(cc) {
+  function fallbackPicks(cc, n) {
     var seen = {}, picks = [];
     (D[cc] || []).forEach(function (s) {
       if (seen[s.ticker] || isPersonal(s.theme)) return;   // 관심·보유는 추천이 아니므로 Top Pick 후보에서 제외
@@ -1894,7 +1914,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       seen[s.ticker] = true; picks.push(s);
     });
     picks.sort(function (a, b) { return (pickScore(b) - pickScore(a)) || (numOr(b.upside, 0) - numOr(a.upside, 0)); });
-    return picks.slice(0, 3);
+    return picks.slice(0, n || 3);
   }
   function renderTopPicks() {
     var box = document.getElementById("picksBox");
@@ -1915,12 +1935,21 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
         TP[cc].forEach(function (it) { var s = byT[it.ticker]; if (s) rows.push({ s: s, reason: it.reason }); });
       }
       var curatedFull = Array.isArray(TP[cc]) && rows.length === TP[cc].length && rows.length > 0;
-      if (!rows.length) fallbackPicks(cc).forEach(function (s) { rows.push({ s: s, reason: "" }); });
+      var hadCurated = rows.length > 0;
+      // 큐레이션 일부가 편성에서 빠졌으면 빈자리를 상위 종목으로 채워 3종목을 유지한다
+      // (전부 빠졌거나 큐레이션이 없으면 전량 폴백).
+      if (!curatedFull) {
+        var shown = {};
+        rows.forEach(function (r) { shown[r.s.ticker] = true; });
+        fallbackPicks(cc, 6).forEach(function (s) {
+          if (rows.length < 3 && !shown[s.ticker]) { shown[s.ticker] = true; rows.push({ s: s, reason: "" }); }
+        });
+      }
       if (!rows.length) { group.style.display = "none"; return { n: 0, curated: false }; }
       group.style.display = "";
       grid.innerHTML = rows.map(function (r, i) { return pickCard(r.s, cc, i + 1, r.reason); }).join("");
       rows.forEach(function (r) { live.push(r.s); });
-      return { n: rows.length, curated: curatedFull };
+      return { n: rows.length, curated: curatedFull, partial: hadCurated && !curatedFull };
     }
 
     // 선택된 국가의 Top Pick 만 표시(다른 국가 그룹은 숨김)
@@ -1942,7 +1971,9 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       crit.innerHTML = esc(TP.note || DEFAULT_CRIT) + (TP.asOf ? " · " + esc(TP.asOf) + " 기준" : "") +
         (stale ? '<span class="pk-stale" title="오늘 데이터(' + esc(taAsOf) + ')로 아직 갱신되지 않았습니다. 표시는 ' + esc(TP.asOf) + ' 기준입니다.">⚠ 미갱신</span>' : "");
     } else {
-      crit.innerHTML = esc(DEFAULT_CRIT) + " · 자동 선정(큐레이션 일부가 편성에서 제외되어 상위 종목으로 대체)";
+      crit.innerHTML = esc(DEFAULT_CRIT) + (g.partial || (Array.isArray(TP[cc]) && TP[cc].length)
+        ? " · 자동 선정(큐레이션 일부가 편성에서 제외되어 상위 종목으로 대체)"
+        : " · 자동 선정");
     }
     ensureLive(live, refreshLive);
   }
@@ -2063,20 +2094,28 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     if (!H.length) return null;
     var benchKey = country === "korea" ? "kospi" : "sp500";
     var last = H[H.length - 1];
+    // 주말·휴장일 스냅샷은 지수값이 비어 있다(null) — 직전 기록값(=마지막 종가)을 이어 쓴다.
+    // 그러지 않으면 주말마다 '시장 대비 초과수익'이 통째로 사라지고, 주말에 처음 기록된 종목은 영영 비교되지 않는다.
+    var benchAt = [], prevBench = null;
+    H.forEach(function (snap, i) {
+      if (snap[benchKey]) prevBench = snap[benchKey];
+      benchAt[i] = prevBench;
+    });
     var firstSeen = {};
-    H.forEach(function (snap) {
+    H.forEach(function (snap, i) {
       snap.stocks.forEach(function (e) {
         if (e.c !== country) return;
-        if (!firstSeen[e.t]) firstSeen[e.t] = { snap: snap, entry: e };
+        if (!firstSeen[e.t]) firstSeen[e.t] = { snap: snap, entry: e, bench: benchAt[i] };
       });
     });
+    var lastBench = benchAt[H.length - 1];
     var rows = [];
     last.stocks.forEach(function (e) {
       if (e.c !== country) return;
       var f = firstSeen[e.t]; if (!f) return;
       var days = Math.round((new Date(last.date) - new Date(f.snap.date)) / 86400000);
       var ret = (f.entry.p && e.p) ? (e.p - f.entry.p) / f.entry.p * 100 : null;
-      var benchRet = (f.snap[benchKey] && last[benchKey]) ? (last[benchKey] - f.snap[benchKey]) / f.snap[benchKey] * 100 : null;
+      var benchRet = (f.bench && lastBench) ? (lastBench - f.bench) / f.bench * 100 : null;
       // theme·tier 모두 '첫 기록 시점' 값으로 — 마지막 스냅샷 theme 과 섞으면 그 사이 주제가
       // 바뀐 종목(48/115 실측)이 엉뚱한 주제×Tier 셀에 집계된다(감사).
       rows.push({ name: e.n, ticker: e.t, theme: f.entry.th, tier: f.entry.tier,
@@ -2356,8 +2395,10 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   // ── 정밀분석 요청 상태 — GitHub 이슈('관심종목/보유종목 정밀분석 요청:')를 읽어 티커별 진행상태 표시 ──
   var wlReqCache = null;   // null=미조회 | { ticker: {state:'open'|'closed', url} }
   var wlReqInflight = false;
+  var wlReqFailAt = 0;     // 마지막 실패 시각 — 실패 직후 렌더마다 재요청해 비인증 한도(시간당 60회)를 태우지 않게
   function fetchWatchReqs(onDone) {
     if (wlReqCache || wlReqInflight) return;
+    if (wlReqFailAt && Date.now() - wlReqFailAt < 5 * 60 * 1000) return;
     wlReqInflight = true;
     fetch("https://api.github.com/repos/csy870617/stock/issues?state=all&per_page=50&sort=created&direction=desc",
       { headers: { "Accept": "application/vnd.github+json" } })
@@ -2366,7 +2407,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
         wlReqInflight = false;
         // 403(비인증 rate limit) 등으로 목록을 못 받았으면 캐시를 확정하지 않는다 —
         // 빈 맵을 캐시하면 세션 내내 '요청 없음'으로 굳어 중복 이슈 생성을 유도한다(감사).
-        if (!Array.isArray(list)) return;
+        if (!Array.isArray(list)) { wlReqFailAt = Date.now(); return; }
         var map = {};
         if (Array.isArray(list)) list.forEach(function (it) {
           var ti = (it && it.title) || "";
@@ -2380,7 +2421,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
         wlReqCache = map;
         if (onDone) onDone();
       })
-      .catch(function () { wlReqInflight = false; });
+      .catch(function () { wlReqInflight = false; wlReqFailAt = Date.now(); });
   }
   function wlSymbols(code, country) {
     // 정식 편성 경로(symbolFor)와 동일하게 점 포함 미국 티커를 야후 형식으로(BRK.B → BRK-B)
@@ -2399,9 +2440,20 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       var sym = syms[i];
       var hUrl = QUOTES_API + (QUOTES_API.indexOf("?") >= 0 ? "&" : "?") + "history=1&range=" + HIST_RANGE + "&symbols=" + encodeURIComponent(sym);
       var pUrl = QUOTES_API + (QUOTES_API.indexOf("?") >= 0 ? "&" : "?") + "symbols=" + encodeURIComponent(sym);
+      // 시한을 둔다 — 시세 서버가 응답 없이 멈추면 카드가 세션 내내 '불러오는 중…'에 갇힌다
+      // ("loading" 상태가 재시도를 막으므로). 시한 초과는 실패로 보고 다음 후보 심볼로 넘어간다.
+      function getJson(url, opt, ms) {
+        var ctrl = new AbortController();
+        var to = setTimeout(function () { ctrl.abort(); }, ms);
+        opt = opt || {}; opt.signal = ctrl.signal;
+        return fetch(url, opt)
+          .then(function (r) { return r.ok ? r.json() : null; })
+          .catch(function () { return null; })
+          .then(function (v) { clearTimeout(to); return v; });
+      }
       Promise.all([
-        fetch(hUrl).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
-        fetch(pUrl, { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })
+        getJson(hUrl, null, 15000),
+        getJson(pUrl, { cache: "no-store" }, 9000)
       ]).then(function (res) {
         var hv = res[0] && res[0][sym], pv = res[1] && res[1][sym];
         if (!hv || !Array.isArray(hv.closes) || hv.closes.length < 35) { tryIdx(i + 1); return; }
@@ -2771,7 +2823,9 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       raf = requestAnimationFrame(autoScroll);
     }
     function begin() {
-      if (!dragging) return;
+      // 롱프레스 대기(320ms) 중 실시간 시세 도착으로 목록이 다시 그려졌으면 잡고 있던 노드는 이미 문서에서
+      // 빠져 있다 — 그대로 진행하면 좌표가 0 이라 페이지가 엉뚱하게 스크롤된다. 이번 제스처는 취소한다.
+      if (!dragging || !dragging.isConnected) { dragging = null; listEl = null; return; }
       plDragging = true; plDragMoved = true;   // 드래그로 시작된 제스처는 행 탭(상세 펼침)으로 처리하지 않는다
       try { host.setPointerCapture(pid); } catch (_e) {}
       if (ptype === "touch" && navigator.vibrate) { try { navigator.vibrate(12); } catch (_e) {} }
