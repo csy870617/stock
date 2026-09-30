@@ -228,6 +228,23 @@ function validate(D, opts) {
           if (n.sigShort != null && SIGS.indexOf(n.sigShort) < 0) errors.push(tag + ": techNote.sigShort 는 5단계(" + SIGS.join("/") + ") 중 하나여야 함 (현재 '" + n.sigShort + "')");
           if (n.sigMid != null && SIGS.indexOf(n.sigMid) < 0) errors.push(tag + ": techNote.sigMid 는 5단계 중 하나여야 함 (현재 '" + n.sigMid + "')");
           if (n.sigLong != null && SIGS.indexOf(n.sigLong) < 0) errors.push(tag + ": techNote.sigLong 는 5단계 중 하나여야 함 (현재 '" + n.sigLong + "')");
+          // 엔진 정합성 — 같은 거래일(techNote.asOf == stock-ta.asOf)에 쓴 신호 등급이 백테스트로 검증된
+          // 엔진 등급(stock-ta.js)과 어긋나면 사용자는 근거 없는 등급을 보게 된다(2026-09-30 실측:
+          // 348개 등급 중 47개 불일치, 3개는 2단계 이상 — 엔진 '매도'인데 문구 '매수'). 문구가 설명하는
+          // 대상은 엔진 등급이어야 하므로 1단계 차이는 경고, 방향이 뒤집히는 2단계 이상은 오류로 막는다.
+          // 날짜가 다르면(Action 이 T 를 올린 뒤 등) 비교 대상이 아니므로 검사하지 않는다 — 그 경우는
+          // '⚠ 미갱신' 표시와 coverage.js 게이트가 처리한다.
+          const TAx = opts.ta && opts.ta.ta && opts.ta.ta[s.ticker];
+          if (TAx && n.asOf && opts.ta.asOf === n.asOf) {
+            [["sigShort", "short", "단기"], ["sigMid", "mid", "중기"], ["sigLong", "long", "장기"]].forEach(([k, tf, lbl]) => {
+              const eng = TAx[tf] && TAx[tf].signal, mine = n[k];
+              const ie = SIGS.indexOf(eng), im = SIGS.indexOf(mine);
+              if (ie < 0 || im < 0 || ie === im) return;
+              const msg = tag + ": techNote." + k + "(" + lbl + ") '" + mine + "' 가 같은 날 엔진 등급 '" + eng + "' 와 " + Math.abs(ie - im) + "단계 어긋남";
+              if (Math.abs(ie - im) >= 2) errors.push(msg + " — 엔진 등급으로 맞추고 문구를 그 근거로 다시 쓸 것");
+              else warnings.push(msg + " — 엔진 등급과 맞출 것");
+            });
+          }
         }
       }
 
@@ -354,6 +371,13 @@ function validate(D, opts) {
   return { errors, warnings };
 }
 
+// 엔진 등급(stock-ta.js) — techNote 신호 등급 정합성 검사용. 없거나 깨졌으면 검사 생략(null).
+function loadTa() {
+  const TA_FILE = path.join(ROOT, "data", "stock-ta.js");
+  if (!fs.existsSync(TA_FILE)) return null;
+  try { return loadGlobalScript(TA_FILE, "STOCK_TA") || null; } catch (_e) { return null; }
+}
+
 // ── CLI ──
 if (require.main === module) {
   const fileIdx = process.argv.indexOf("--file");
@@ -369,7 +393,7 @@ if (require.main === module) {
     try { quotes = (loadGlobalScript(QUOTES, "STOCK_QUOTES") || {}).quotes || {}; } catch (_e) {}
   }
 
-  const { errors, warnings } = validate(D, { quotes });
+  const { errors, warnings } = validate(D, { quotes, ta: loadTa() });
   if (warnings.length) {
     console.log("⚠ 경고 " + warnings.length + "건:");
     warnings.forEach((w) => console.log("  - " + w));
@@ -384,4 +408,4 @@ if (require.main === module) {
   console.log("✓ 검증 통과: " + total + "종목, 오류 0건, 경고 " + warnings.length + "건 (" + path.relative(ROOT, file) + ")");
 }
 
-module.exports = { validate, isTrustedSource, isBlockedSource, sourceHost, trustedDomainOf, PERSONAL_THEMES, isPersonalTheme };
+module.exports = { validate, loadTa, isTrustedSource, isBlockedSource, sourceHost, trustedDomainOf, PERSONAL_THEMES, isPersonalTheme };

@@ -34,7 +34,7 @@
 
 const fs = require("fs");
 const path = require("path");
-const { validate, isTrustedSource, isBlockedSource, sourceHost, trustedDomainOf } = require("./validate-reco");
+const { validate, loadTa, isTrustedSource, isBlockedSource, sourceHost, trustedDomainOf } = require("./validate-reco");
 
 const ROOT = path.join(__dirname, "..");
 const RECO = path.join(ROOT, "data", "recommendations.js");
@@ -344,7 +344,7 @@ try {
       quotes = (global.window.STOCK_QUOTES || {}).quotes || {};
     } catch (_e) {}
   }
-  const res = validate(D, { quotes });
+  const res = validate(D, { quotes, ta: loadTa() });
   if (res.warnings.length) {
     console.log("⚠ 검증 경고 " + res.warnings.length + "건:");
     res.warnings.forEach((w) => console.log("  - " + w));

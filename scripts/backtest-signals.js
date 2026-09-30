@@ -42,7 +42,7 @@ const HORIZONS = [5, 21, 63];            // 사후 수익률 구간(거래일): 
 // 일목 블록이 빠진 채 평가돼 비교가 불공정해진다). 대신 10년 미만 상장 종목은 표본에서 빠진다.
 const WARMUP = argNum("warmup", 1630);
 const GRADES = ["적극매도", "매도", "중립", "매수", "적극매수"];
-const ENGINES = ["legacy", "block", "flow"];
+const ENGINES = ["legacy", "block", "flow", "mtf"];
 
 function symbolFor(s) {
   if (s.market === "KOSPI") return s.ticker + ".KS";
@@ -88,14 +88,73 @@ async function fetchRowsOnce(symbol) {
   const res = j && j.chart && j.chart.result && j.chart.result[0];
   if (!res || !res.indicators || !res.indicators.quote || !res.indicators.quote[0]) return null;
   const q = res.indicators.quote[0], ts = res.timestamp || [], rows = [];
+  const off = ((res.meta && res.meta.gmtoffset) || 0) * 1000;   // 거래소 현지 날짜(지수와 날짜 맞춤용)
   for (let i = 0; i < (q.close || []).length; i++) {
     if (q.close[i] == null) continue;
-    rows.push({ t: ts[i], close: q.close[i],
+    rows.push({ t: ts[i], d: new Date(ts[i] * 1000 + off).toISOString().slice(0, 10), close: q.close[i],
       high: q.high && q.high[i] != null ? q.high[i] : q.close[i],
       low: q.low && q.low[i] != null ? q.low[i] : q.close[i],
       vol: q.volume && q.volume[i] != null ? q.volume[i] : null });
   }
-  return rows.length >= WARMUP + Math.max.apply(null, HORIZONS) ? rows : null;
+  return rows;
+}
+
+// ── 시장 대비(초과수익) 기준 — 같은 나라 대표 지수 ─────────────────────────────
+// 절대수익률만 보면 '적극매수'가 단지 상승장에 많이 나온 등급이어도 좋아 보인다(국면·베타 오염).
+// 신호가 종목을 '고르는' 힘이 있는지는 같은 기간 지수 수익률을 뺀 초과수익으로 봐야 한다.
+const BENCH = { korea: "^KS11", us: "^GSPC" };
+function benchLookup(rows) {
+  const ds = rows.map((r) => r.d), cs = rows.map((r) => r.close);
+  // d 이하 가장 가까운 거래일 종가(휴장일 차이 흡수)
+  const f = (d) => {
+    let lo = 0, hi = ds.length - 1, ans = -1;
+    while (lo <= hi) { const mid = (lo + hi) >> 1; if (ds[mid] <= d) { ans = mid; lo = mid + 1; } else hi = mid - 1; }
+    return ans >= 0 ? cs[ans] : null;
+  };
+  // 평가일 달력 — 지수 거래일 STEP 간격. 모든 종목을 '같은 날'에 평가해야 날짜별 횡단면(종목 간 순위)
+  // 비교가 가능하다(종목마다 상장 길이가 달라 t 인덱스로 뽑으면 평가일이 서로 어긋난다).
+  f.evalDates = new Set(ds.filter((_, i) => (ds.length - 1 - i) % STEP === 0));
+  return f;
+}
+
+// ── 개선 가설(변형) — 같은 시점·같은 표본에서 기간별 점수를 조합만 바꿔 비교한다 ──
+// base: 현행(기간별 flow 점수 그대로).
+// mtf : 다중 시간프레임 합류 — 짧은 기간 신호를 상위 기간 추세 쪽으로 기울인다.
+//       (단기 = 0.5·일봉 + 0.3·주봉 + 0.2·월봉, 중기 = 0.7·주봉 + 0.3·월봉, 장기 = 월봉)
+// gate: 상위 추세 거스름 차단 — 상위 기간이 뚜렷한 반대 방향(|점수|≥0.15)이면 하위 기간의
+//       같은 방향 신호를 중립 경계(±0.149)로 눌러 '하락 추세 속 반등 매수' 류를 줄인다.
+const VARIANTS = {
+  base: (s, m, l) => ({ short: s, mid: m, long: l }),
+  mtf: (s, m, l) => ({ short: wsum([[s, 0.5], [m, 0.3], [l, 0.2]]), mid: wsum([[m, 0.7], [l, 0.3]]), long: l }),
+  gate: (s, m, l) => ({ short: gateBy(s, m), mid: gateBy(m, l), long: l }),
+};
+function wsum(pairs) {
+  let s = 0, w = 0;
+  pairs.forEach(([v, k]) => { if (v != null && isFinite(v)) { s += v * k; w += k; } });
+  return w ? s / w : null;
+}
+function gateBy(x, up) {
+  if (x == null || up == null) return x;
+  if (up <= -0.15 && x > 0.149) return 0.149;
+  if (up >= 0.15 && x < -0.149) return -0.149;
+  return x;
+}
+// Spearman 순위상관(동순위 평균순위) — 등급 양 끝 표본에 좌우되는 스프레드보다 안정적인 예측력 척도
+function spearman(xs, ys, minN) {
+  const n = xs.length;
+  if (n < (minN || 30)) return null;
+  const rank = (a) => {
+    const idx = a.map((v, i) => i).sort((i, j) => a[i] - a[j]), r = new Array(n);
+    for (let i = 0; i < n;) {
+      let j = i; while (j + 1 < n && a[idx[j + 1]] === a[idx[i]]) j++;
+      const avg = (i + j) / 2 + 1; for (let k = i; k <= j; k++) r[idx[k]] = avg; i = j + 1;
+    }
+    return r;
+  };
+  const rx = rank(xs), ry = rank(ys), mx = (n + 1) / 2;
+  let num = 0, dx = 0, dy = 0;
+  for (let i = 0; i < n; i++) { num += (rx[i] - mx) * (ry[i] - mx); dx += (rx[i] - mx) ** 2; dy += (ry[i] - mx) ** 2; }
+  return dx && dy ? +(num / Math.sqrt(dx * dy)).toFixed(4) : null;
 }
 
 async function mapLimit(items, limit, fn) {
@@ -134,28 +193,45 @@ function stats(arr) {
 
   const buckets = makeBuckets();
   let done = 0, failed = 0, evals = 0;
+  const records = [];   // 시점별 {d, sc:{s,m,l}, fwd:{h}, ex:{h}} — 초과수익·IC·표본 분할 검증용
+
+  const bench = {};
+  for (const c of Object.keys(BENCH)) {
+    const b = await fetchRows(BENCH[c]);
+    bench[c] = b && b.length ? benchLookup(b) : null;
+    if (!bench[c]) console.log("  ⚠ 기준 지수 " + BENCH[c] + " 조회 실패 — " + c + " 초과수익 생략");
+  }
 
   await mapLimit(stocks, 6, async (s) => {
     const rows = await fetchRows(s.symbol);
-    if (!rows) { failed++; return; }
+    if (!rows || rows.length < WARMUP + Math.max.apply(null, HORIZONS)) { failed++; return; }
+    const bx = bench[s.country];
     const maxH = Math.max.apply(null, HORIZONS);
-    for (let t = WARMUP; t < rows.length - maxH; t += STEP) {
+    for (let t = WARMUP; t < rows.length - maxH; t++) {
+      // 평가일: 지수 달력의 STEP 간격 날짜(횡단면 정렬). 지수를 못 받았으면 종전처럼 종목별 STEP 간격.
+      if (bx ? !bx.evalDates.has(rows[t].d) : (t - WARMUP) % STEP !== 0) continue;
       // 그 시점까지의 봉만으로 신호 계산 — 룩어헤드 없음
       const a = TA.analyzeTimeframes(rows.slice(0, t + 1), { dp: 2, srDp: 2 });
       if (!a) continue;
       evals++;
       const px = rows[t].close;
+      const rec = { c: s.country, d: rows[t].d, sc: { s: a.short.scoreFlow, m: a.mid.scoreFlow, l: a.long.scoreFlow }, fwd: {}, ex: {} };
+      const b0 = bx ? bx(rows[t].d) : null;
       HORIZONS.forEach((h) => {
         const fwd = (rows[t + h].close - px) / px * 100;
+        rec.fwd[h] = fwd;
+        const b1 = bx ? bx(rows[t + h].d) : null;
+        rec.ex[h] = (b0 && b1) ? fwd - (b1 - b0) / b0 * 100 : null;
         [["short", a.short], ["mid", a.mid], ["long", a.long]].forEach(([tf, sig]) => {
           if (!sig) return;
-          const byEng = { legacy: sig.sigLegacy, block: sig.sigBlock, flow: sig.sigFlow };
+          const byEng = { legacy: sig.sigLegacy, block: sig.sigBlock, flow: sig.sigFlow, mtf: sig.sigMtf };
           ENGINES.forEach((eng) => {
             const g = byEng[eng];
             if (g && buckets[eng][tf][h][g]) buckets[eng][tf][h][g].push(fwd);
           });
         });
       });
+      records.push(rec);
     }
     done++;
     if (done % 20 === 0) console.log("  …" + done + "/" + stocks.length + "종목 · 평가 " + evals + "회");
@@ -180,7 +256,64 @@ function stats(arr) {
     });
   });
 
+  // ── 정밀 검증(2026-09-30): 시장 대비 초과수익 · 순위상관(IC) · 기간 전/후반 분할 ──
+  // 채택 기준(과적합 방지): 변형은 전반·후반 두 구간 모두에서 base 보다 초과수익 IC 가 높아야 한다.
+  const dates = records.map((r) => r.d).sort();
+  const split = dates.length ? dates[Math.floor(dates.length / 2)] : null;
+  const validation = { method: "flow 엔진 점수의 시장 대비 초과수익(국가 대표 지수 차감) 예측력. IC=점수와 사후 초과수익의 Spearman 순위상관. first/second=평가일 중앙값(" + split + ") 기준 전반·후반 분할(표본 밖 안정성 확인).",
+    benchmark: BENCH, split, records: records.length, variants: {} };
+  Object.keys(VARIANTS).forEach((vk) => {
+    validation.variants[vk] = {};
+    const scored = records.map((r) => ({ r, v: VARIANTS[vk](r.sc.s, r.sc.m, r.sc.l) }));
+    ["short", "mid", "long"].forEach((tf) => {
+      validation.variants[vk][tf] = {};
+      HORIZONS.forEach((h) => {
+        const pts = scored.filter((x) => x.v[tf] != null && x.r.ex[h] != null);
+        const byGrade = {};
+        GRADES.forEach((g) => { byGrade[g] = stats(pts.filter((x) => TA.grade(x.v[tf]) === g).map((x) => x.r.ex[h])); });
+        const top = byGrade["적극매수"], bot = byGrade["적극매도"];
+        const means = GRADES.map((g) => byGrade[g].mean);
+        // 횡단면 IC: 같은 날·같은 나라 종목들 사이에서 '신호가 높은 종목이 이후 시장을 더 이겼나'.
+        // 날짜별 Spearman 을 평균한다 — 국면(상승장·하락장)이 섞이지 않는, 종목 선별력의 표준 척도.
+        const xsIC = (arr) => {
+          const g = {};
+          arr.forEach((x) => { const k = x.r.c + "|" + x.r.d; (g[k] = g[k] || []).push(x); });
+          const ics = Object.values(g).map((a) => spearman(a.map((x) => x.v[tf]), a.map((x) => x.r.ex[h]), 8)).filter((v) => v != null);
+          if (ics.length < 10) return { mean: null, n: ics.length, t: null, hit: null };
+          const mean = ics.reduce((a, b) => a + b, 0) / ics.length;
+          const sd = Math.sqrt(ics.reduce((a, b) => a + (b - mean) ** 2, 0) / (ics.length - 1));
+          // 지평(h)이 평가 간격(STEP)보다 길면 인접 날짜의 IC 가 겹쳐 독립이 아니다 — t 값을 √(h/STEP) 로 보수 할인
+          const tRaw = sd > 0 ? mean / (sd / Math.sqrt(ics.length)) : null;
+          const t = tRaw == null ? null : tRaw / Math.sqrt(Math.max(1, h / STEP));
+          return { mean: +mean.toFixed(4), n: ics.length, t: t == null ? null : +t.toFixed(2),
+                   hit: +(ics.filter((v) => v > 0).length / ics.length).toFixed(3) };
+        };
+        const all = xsIC(pts), first = xsIC(pts.filter((x) => x.r.d < split)), second = xsIC(pts.filter((x) => x.r.d >= split));
+        validation.variants[vk][tf][h + "d"] = {
+          n: pts.length,
+          exByGrade: byGrade,
+          spread: (top.mean != null && bot.mean != null) ? +(top.mean - bot.mean).toFixed(3) : null,
+          monotonic: means.every((m, i) => m != null && (i === 0 || m >= means[i - 1])),
+          ic: all.mean, icT: all.t, icHit: all.hit, icDates: all.n,
+          icFirst: first.mean, icSecond: second.mean,
+          pooledIc: spearman(pts.map((x) => x.v[tf]), pts.map((x) => x.r.ex[h])),
+        };
+      });
+    });
+  });
+  report.validation = validation;
+
   fs.writeFileSync(OUT, JSON.stringify(report, null, 1) + "\n");
+  console.log("\n══ 정밀 검증: 시장 대비 초과수익 기준 (분할일 " + split + ", 평가 " + records.length + "회) ══");
+  Object.keys(VARIANTS).forEach((vk) => {
+    console.log("[" + vk + "]");
+    ["short", "mid", "long"].forEach((tf) => {
+      console.log("  " + tf + ": " + HORIZONS.map((h) => {
+        const r = validation.variants[vk][tf][h + "d"];
+        return "+" + h + "일 IC " + r.ic + "(t " + r.icT + ", 양수 " + r.icHit + ") 전 " + r.icFirst + " / 후 " + r.icSecond + " · 스프레드 " + r.spread + "%p" + (r.monotonic ? " 단조" : "");
+      }).join(" | "));
+    });
+  });
   console.log("\n종목 " + done + " (실패 " + failed + ") · 신호 평가 " + evals + "회 → " + OUT);
   ENGINES.forEach((eng) => {
     console.log("\n══ 엔진: " + eng + " ══");

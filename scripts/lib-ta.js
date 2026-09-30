@@ -402,7 +402,7 @@ function adxText(ax) {
 // ── 공개: 단기(일봉)/장기(주봉) 기술적 분석 ──
 function analyzeTimeframes(rows, opts) {
   opts = opts || {};
-  const engine = opts.engine || DEFAULT_ENGINE;   // "block"(기본) | "legacy" — 백테스트 비교용으로 둘 다 병기 반환
+  const engine = opts.engine || DEFAULT_ENGINE;   // "mtf"(기본) | "flow" | "block" | "legacy" — 백테스트 비교용으로 전부 병기 반환
   const dp = opts.dp != null ? opts.dp : 2, srDp = opts.srDp != null ? opts.srDp : 0;
   if (!rows || rows.length < 35) return null;
   const closes = rows.map((r) => r.close), level = closes[closes.length - 1];
@@ -443,17 +443,31 @@ function analyzeTimeframes(rows, opts) {
   const vs200 = S.sma200 != null ? (level - S.sma200) / S.sma200 * 100 : null;
 
   const rsS = rsiState(S.rsi), rsM = rsiState(M.rsi), rsL = rsiState(L.rsi);
-  const pick = (X) => (engine === "legacy" ? X.signal : engine === "block" ? X.signalBlock : X.signalFlow);
+  // 다중 시간프레임 합류(mtf) — 짧은 기간 flow 점수를 상위 기간 추세 쪽으로 기울인다.
+  //   단기 = 0.5·일봉 + 0.3·주봉 + 0.2·월봉 · 중기 = 0.7·주봉 + 0.3·월봉 · 장기 = 월봉 그대로.
+  // 결측 기간은 가중에서 빼고 재정규화한다(wavg). 근거는 파일 하단 '엔진 선택' 주석 참조.
+  const mtf = {
+    S: wavg([[S.scoreFlow, 0.5], [M.scoreFlow, 0.3], [L.scoreFlow, 0.2]]),
+    M: wavg([[M.scoreFlow, 0.7], [L.scoreFlow, 0.3]]),
+    L: L.scoreFlow,
+  };
+  // tf = "S"|"M"|"L" — 객체 동일성으로 구분하면 안 된다(주봉이 모자라면 M 이 S 와 같은 객체다).
+  const sigMtf = (tf) => grade(mtf[tf] == null ? 0 : mtf[tf]);
+  const pick = (X, tf) => (engine === "legacy" ? X.signal : engine === "block" ? X.signalBlock
+    : engine === "flow" ? X.signalFlow : sigMtf(tf));
   // read 요약 — 엔진마다 결론의 근거를 그 엔진의 언어로 보여준다.
   const fb = (v) => (v == null ? "–" : (v > 0 ? "+" : "") + v.toFixed(2));
-  const tally = (X, label) =>
+  const MTF_TXT = { S: "일·주·월 5:3:2", M: "주·월 7:3" };
+  const tally = (X, label, tf) =>
     engine === "legacy"
       ? "지표 " + X.total + "개 중 매수 " + X.buy + "·매도 " + X.sell + (X.neu ? "·중립 " + X.neu : "") + " → " + label + " '" + X.signal + "'. "
       : engine === "block"
       ? "추세 " + fb(X.blocks.trend) + " · 모멘텀 " + fb(X.blocks.momentum) + " · 과열 " + fb(X.blocks.osc) +
         " → " + label + " '" + X.signalBlock + "'(3블록 균형 투표). "
       : "이평 " + fb(X.flow.ma) + " · 일목 " + fb(X.flow.ichimoku) + " · 매물대 " + fb(X.flow.volume) +
-        " · 보조 " + fb(X.flow.osc) + " → " + label + " '" + X.signalFlow + "'(이평30·일목30·매물대25·보조15). ";
+        " · 보조 " + fb(X.flow.osc) + " → " + label + " '" + X.signalFlow + "'(이평30·일목30·매물대25·보조15)" +
+        // mtf: 이 기간 자체 등급 뒤에 상위 추세를 반영한 최종 등급을 밝힌다(장기는 반영할 상위 기간이 없다)
+        (engine === "mtf" && MTF_TXT[tf] ? ", 상위 추세 반영(" + MTF_TXT[tf] + ") 최종 '" + sigMtf(tf) + "'" : "") + ". ";
 
   // 일목·매물대 표시 문구 — 카드에서 '힘과 흐름'을 숫자로 확인할 수 있게 한다.
   const ichiText = (X) => {
@@ -472,9 +486,9 @@ function analyzeTimeframes(rows, opts) {
 
   // 지표 표시 순서 = 판단 가중 순서(일목·매물대·이평 → 보조). 카드에서 근거가 바로 읽히도록.
   const short = {
-    trend: trendFromSignal(pick(S)),
-    signal: pick(S), sigLegacy: S.signal, sigBlock: S.signalBlock, sigFlow: S.signalFlow,
-    blocks: S.blocks, flow: S.flow,
+    trend: trendFromSignal(pick(S, "S")),
+    signal: pick(S, "S"), sigLegacy: S.signal, sigBlock: S.signalBlock, sigFlow: S.signalFlow, sigMtf: sigMtf("S"), scoreMtf: mtf.S,
+    scoreFlow: S.scoreFlow, blocks: S.blocks, flow: S.flow,
     metrics: [
       ["일목균형표", ichiText(S)],
       ["매물대", vpText(S)],
@@ -482,13 +496,13 @@ function analyzeTimeframes(rows, opts) {
       ["MACD", macdText(S.macd, S.level)],
       ["지지 / 저항", fmtNum(srS.support, srDp) + " / " + fmtNum(srS.resistance, srDp)]
     ],
-    read: tally(S, "단기") + adxText(S.adx) +
+    read: tally(S, "단기", "S") + adxText(S.adx) +
       (S.stoch ? ", 스토캐스틱 " + S.stoch.k.toFixed(0) : "") + "."
   };
   const mid = {
-    trend: trendFromSignal(pick(M)),
-    signal: pick(M), sigLegacy: M.signal, sigBlock: M.signalBlock, sigFlow: M.signalFlow,
-    blocks: M.blocks, flow: M.flow,
+    trend: trendFromSignal(pick(M, "M")),
+    signal: pick(M, "M"), sigLegacy: M.signal, sigBlock: M.signalBlock, sigFlow: M.signalFlow, sigMtf: sigMtf("M"), scoreMtf: mtf.M,
+    scoreFlow: M.scoreFlow, blocks: M.blocks, flow: M.flow,
     metrics: [
       [mdName + " 일목균형표", ichiText(M)],
       [mdName + " 매물대", vpText(M)],
@@ -496,13 +510,13 @@ function analyzeTimeframes(rows, opts) {
       [mdName + " MACD", macdText(M.macd, M.level)],
       ["지지 / 저항", fmtNum(srM.support, srDp) + " / " + fmtNum(srM.resistance, srDp)]
     ],
-    read: tally(M, "중기") + mdName + " 기준 " +
+    read: tally(M, "중기", "M") + mdName + " 기준 " +
       (M.macd ? "MACD " + macdText(M.macd, M.level).split(" ·")[0] : "") + "."
   };
   const long = {
-    trend: trendFromSignal(pick(L)),
-    signal: pick(L), sigLegacy: L.signal, sigBlock: L.signalBlock, sigFlow: L.signalFlow,
-    blocks: L.blocks, flow: L.flow,
+    trend: trendFromSignal(pick(L, "L")),
+    signal: pick(L, "L"), sigLegacy: L.signal, sigBlock: L.signalBlock, sigFlow: L.signalFlow, sigMtf: sigMtf("L"), scoreMtf: mtf.L,
+    scoreFlow: L.scoreFlow, blocks: L.blocks, flow: L.flow,
     metrics: [
       [lgName + " 일목균형표", ichiText(L)],
       [lgName + " 매물대", vpText(L)],
@@ -510,7 +524,7 @@ function analyzeTimeframes(rows, opts) {
       [lgName + " RSI(14)", (L.rsi == null ? "–" : L.rsi.toFixed(1)) + (rsL ? " · " + rsL : "")],
       ["지지 / 저항", fmtNum(srL.support, srDp) + " / " + fmtNum(srL.resistance, srDp)]
     ],
-    read: tally(L, "장기") + lgName + " 기준, " + cross + "."
+    read: tally(L, "장기", "L") + lgName + " 기준, " + cross + "."
   };
 
   return {
@@ -539,7 +553,23 @@ function analyzeTimeframes(rows, opts) {
 //       생존편향·거래비용 미반영, 10년 미만 상장 종목은 표본에서 빠졌다(WARMUP 1,630봉).
 //       → 앱 푸터의 '매매 트리거가 아닌 참고 지표' 고지는 유지한다.
 // 재도전 규칙은 그대로: 가설을 세우고 backtest-signals.js 로 같은 표본에서 비교할 것.
-var DEFAULT_ENGINE = "flow";
+//
+// ── 2026-09-30 정밀 재검증 → mtf 채택 ─────────────────────────────────────
+// 위 수치는 '절대수익률' 스프레드라 상승장에 많이 나온 등급이 좋아 보이는 국면(베타) 효과가 섞여
+// 있었다. 같은 나라 지수를 뺀 **초과수익**의 **날짜별 횡단면 IC**(같은 날 종목 간 순위 상관, 평균)로
+// 다시 재자(96종목·10년·평가 14,748회, 전반/후반 분할 = 2024-11-27 기준):
+//                    +5일            +21일           +63일        (IC, 괄호=전반/후반)
+//   flow 단기   0.010(0.023/-0.004) 0.008(0.030/-0.014) -0.013(0.029/-0.055)
+//   flow 중기   0.016(0.025/ 0.005) 0.012(0.032/-0.008)  0.025(0.061/-0.011)
+//   flow 장기   0.033(0.028/ 0.038) 0.043(0.040/ 0.045)  0.058(0.063/ 0.054)   ← 전·후반 모두 양(+)
+//   mtf  단기   0.016(0.023/ 0.008) 0.018(0.032/ 0.004)  0.016(0.048/-0.018)
+//   mtf  중기   0.021(0.026/ 0.016) 0.023(0.036/ 0.010)  0.037(0.065/ 0.010)
+// 결론: ①단기·중기 자체 신호는 '시장 대비 종목 선별력'이 거의 없고 후반부엔 음(-)으로 뒤집혔다.
+//       ②장기(월봉)만 전·후반 모두 일관된 양의 IC. ③상위 추세를 섞은 mtf 는 단기·중기 6개 조합
+//       모두에서 **전반·후반 둘 다** flow 보다 높았다(사전에 정한 채택 기준 — 과적합 방지).
+//       ④상위 추세 역행 신호를 누르는 gate 변형은 혼조라 기각.
+// 한계: IC 절대값은 여전히 작다(0.02~0.06). 등급은 '참고 지표'이며, 앱 푸터 고지도 이 수치로 고쳤다.
+var DEFAULT_ENGINE = "mtf";
 var MIN_BARS = 35;   // computeSuite 최소 봉수(MACD 26+9) — 호출부 게이트도 이 상수를 쓸 것
 var _LIB_TA = { MIN_BARS, sma, ema, rsi, rsiState, macd, stochastic, cci, williamsR, adx, momentum, chgN, fmtNum, levels, toWeekly, toMonthly, ichimoku, volumeProfile, grade, computeSuite, analyzeTimeframes };
 if (typeof module !== "undefined" && module.exports) module.exports = _LIB_TA;   // Node (update 스크립트)
