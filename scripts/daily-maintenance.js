@@ -58,11 +58,15 @@ async function indexPrice(sym) {
 (async () => {
   const kospi = await indexPrice("^KS11");
   const sp500 = await indexPrice("^GSPC");
+  // 동일비중 S&P500(RSP) — 소수 초대형주 쏠림을 뺀 '평균 종목' 기준선. 성과 탭이 시가총액 지수와 함께 비교한다.
+  const rsp = await indexPrice("RSP");
   // 3) 스냅샷 축적 (snapshot.js 가 generatedAt 기준일로 기록, 시세는 quotes.js 사용)
   const args = [path.join("scripts", "snapshot.js")];
   if (kospi != null) args.push("--kospi", String(kospi));
   if (sp500 != null) args.push("--sp500", String(sp500));
+  if (rsp != null) args.push("--rsp", String(rsp));
   execFileSync("node", args, { cwd: ROOT, stdio: "inherit" });
   console.log("daily-maintenance: generatedAt=" + TODAY +
-    " kospi=" + (kospi == null ? "-" : kospi) + " sp500=" + (sp500 == null ? "-" : sp500));
+    " kospi=" + (kospi == null ? "-" : kospi) + " sp500=" + (sp500 == null ? "-" : sp500) +
+    " rsp=" + (rsp == null ? "-" : rsp));
 })();

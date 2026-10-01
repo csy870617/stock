@@ -247,6 +247,8 @@ a { color: inherit; }
 .perf-periods .chip.on { background: var(--accent); color: #fff; border-color: var(--accent); }
 .perf-sec-t { font-size: 0.9rem; font-weight: 700; color: var(--ink); margin: 22px 0 9px; }
 .perf-sec-t span { color: var(--muted); font-weight: 500; font-size: 0.8rem; }
+.perf-note { color: var(--muted); font-size: 0.76rem; line-height: 1.55; margin: -16px 0 18px; }
+.perf-periods + .perf-note { margin: -6px 0 14px; }
 /* 주제×Tier 컴팩트 매트릭스 — 모바일 한 화면(가로 스크롤 없음, 값+종목수 2줄 셀) */
 .perf-mtx { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-sm); box-shadow: var(--shadow-sm); overflow: hidden; margin-bottom: 6px; }
 .pm-tbl { width: 100%; border-collapse: collapse; table-layout: fixed; }
@@ -263,6 +265,7 @@ a { color: inherit; }
 .pm-tbl tr.pm-tot td { background: var(--chip-bg); border-top: 2px solid var(--grid); font-weight: 700; }
 /* 주제별 성과 비교표 — 행 탭으로 주제 전환, 현재 주제 강조 */
 .pt-tbl tr.pt-row { cursor: pointer; }
+.pt-tbl td.pt-b { color: var(--muted); font-size: 0.78rem; font-variant-numeric: tabular-nums; }
 .pt-tbl tr.pt-row:hover td { background: var(--chip-bg); }
 .pt-tbl tr.pt-on td { background: var(--chip-bg); }
 .pt-tbl tr.pt-on td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
@@ -2150,6 +2153,61 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     return { rows: rows, mode: "since", benchRet: null };
   }
 
+  // (A-2) 실제 보유 기준 성적 — 매 스냅샷의 편성을 그대로 다음 스냅샷까지 동일비중 보유했다고 보고
+  // 일별 수익률을 이어 붙인다. computePerf 는 '지금 남아 있는 종목'만 세므로 중간에 편출된 종목의
+  // 손익이 빠진다(생존 편향). 이 값이 추천의 실제 성적이다.
+  //  · themeKey 없으면 정식 편성 전체(관심·보유 제외), 있으면 그 날 그 주제였던 종목
+  //  · beta: 주간(7스냅샷) 수익률을 지수에 회귀 — 6주 미만이면 산출하지 않는다
+  //  · betaAlpha = 수익률 − β×지수수익률 (시장 민감도만큼의 몫을 뺀 '선별' 효과)
+  //  · eq: 미국은 동일비중 S&P500(RSP) 대비 — 소수 초대형주 쏠림을 뺀 '평균 종목'과의 비교
+  function computeHeld(country, themeKey) {
+    if (H.length < 2) return null;
+    var bk = country === "korea" ? "kospi" : "sp500";
+    var prev = {}, rets = [], brs = [], ers = [], cum = 1, bcum = 1, ecum = 1, eqOk = country === "us";
+    var from = null, to = null;
+    function lv(snap, k) { if (snap[k]) prev[k] = snap[k]; return prev[k] || null; }
+    lv(H[0], bk); lv(H[0], "rsp");
+    for (var i = 1; i < H.length; i++) {
+      var a = H[i - 1], b = H[i];
+      var b0 = prev[bk] || null, e0 = prev.rsp || null;
+      var b1 = lv(b, bk), e1 = lv(b, "rsp");
+      var pb = {};
+      b.stocks.forEach(function (e) { if (e.c === country && e.p) pb[e.t] = e.p; });
+      var seen = {}, sum = 0, n = 0;
+      a.stocks.forEach(function (e) {
+        if (e.c !== country || seen[e.t] || !e.p || !pb[e.t]) return;
+        if (themeKey ? e.th !== themeKey : isPersonal(e.th)) return;
+        seen[e.t] = 1; sum += pb[e.t] / e.p - 1; n++;
+      });
+      if (!n) continue;
+      var r = sum / n, rb = (b0 && b1) ? b1 / b0 - 1 : 0, re = (e0 && e1) ? e1 / e0 - 1 : 0;
+      if (!e0 || !e1) eqOk = false;
+      if (!from) from = a.date;
+      to = b.date;
+      cum *= 1 + r; bcum *= 1 + rb; ecum *= 1 + re;
+      rets.push(r); brs.push(rb); ers.push(re);
+    }
+    if (!rets.length) return null;
+    var beta = null;
+    var wp = [], wb = [];
+    for (var j = 0; j + 7 <= rets.length; j += 7) {
+      var x = 1, y = 1;
+      for (var k = j; k < j + 7; k++) { x *= 1 + rets[k]; y *= 1 + brs[k]; }
+      wp.push(x - 1); wb.push(y - 1);
+    }
+    if (wp.length >= 6) {
+      var mp = wp.reduce(function (s, v) { return s + v; }, 0) / wp.length;
+      var mb = wb.reduce(function (s, v) { return s + v; }, 0) / wb.length;
+      var cv = 0, vb = 0;
+      wp.forEach(function (v, q) { cv += (v - mp) * (wb[q] - mb); vb += (wb[q] - mb) * (wb[q] - mb); });
+      if (vb > 0) beta = cv / vb;
+    }
+    var ret = (cum - 1) * 100, bench = (bcum - 1) * 100;
+    return { ret: ret, bench: bench, excess: ret - bench, beta: beta,
+      betaAlpha: beta == null ? null : ret - beta * bench,
+      eq: eqOk ? (ecum - 1) * 100 : null, from: from, to: to };
+  }
+
   // (B) 기간별(1·2·3·6개월·1년) — 실측 2년 일봉(closeSeries) 기준, 지수 대비 초과수익
   function computePerfPeriod(country, P) {
     var sym = indexSymbol(country), bc = indexCache[sym], benchRet = null;
@@ -2208,19 +2266,39 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
         pTile(bLabel + " 수익률", data.benchRet == null ? "–" : fmtPct(data.benchRet), data.benchRet != null && data.benchRet > 0) +
         pTile("지수 대비 초과", st.alpha == null ? "–" : fmtPct(st.alpha), st.alpha != null && st.alpha > 0) + "</div>";
     } else {
-      tiles = '<div class="tiles">' +
-        pTile("평균 수익률", fmtPct(st.avg), st.avg > 0) +
-        pTile("승률", Math.round(st.wins / st.n * 100) + "% (" + st.wins + "/" + st.n + ")", st.wins / st.n > 0.5) +
-        pTile("시장 대비 초과수익", st.alpha == null ? "–" : fmtPct(st.alpha), st.alpha != null && st.alpha > 0) + "</div>";
+      // 추천시점 모드의 요약은 '실제 보유 기준'(편출 종목 포함) — 지금 남은 종목 평균은 생존 편향이 있어 보조 줄로 내린다.
+      var hd = computeHeld(country, state.theme);
+      var bName = country === "korea" ? "KOSPI" : "S&P500";
+      if (!hd) {
+        tiles = '<div class="theme-desc">' + themeTag + " 주제는 아직 보유 기록이 부족합니다.</div>";
+      } else {
+        tiles = '<div class="tiles">' +
+          pTile("보유 기준 수익률", fmtPct(hd.ret), hd.ret > 0) +
+          pTile(bName + " 같은 기간", fmtPct(hd.bench), hd.bench > 0) +
+          pTile("지수 대비 초과", fmtPct(hd.excess), hd.excess > 0) +
+          pTile("β 반영 초과" + (hd.beta == null ? "" : " (β " + hd.beta.toFixed(2) + ")"),
+            hd.betaAlpha == null ? "–" : fmtPct(hd.betaAlpha), hd.betaAlpha != null && hd.betaAlpha > 0) +
+          (hd.eq == null ? "" : pTile("동일비중 S&P 대비", fmtPct(hd.ret - hd.eq), hd.ret - hd.eq > 0)) + "</div>" +
+          '<div class="perf-note">' + esc(hd.from) + " ~ " + esc(hd.to) +
+          " · 그날그날의 편성(중간에 뺀 종목 포함)을 동일비중으로 보유했다고 본 실제 성적입니다." +
+          " <b>β 반영 초과</b>는 시장에 덜·더 민감하게 움직인 몫(β×지수)을 뺀 순수 종목 선별 효과입니다." +
+          " 참고: 지금 남아 있는 " + st.n + "종목만 보면 평균 " + fmtPct(st.avg) + ", 승률 " +
+          Math.round(st.wins / st.n * 100) + "% (편출 종목 제외라 실제보다 좋게 보일 수 있음).</div>";
+      }
     }
 
     var perfList = themeRows.length
       ? perfTable(themeRows, country, data.mode)
       : '<div class="empty">이 주제의 성과 기록이 아직 없습니다.</div>';
 
-    return chips +
+    var periodNote = data.mode === "period"
+      ? '<div class="perf-note">⚠ 기간별 수익률은 <b>지금 편성된 종목</b>의 과거 주가 흐름입니다 — 그 기간에 추천했던 성적이 아닙니다. 실제 추천 성적은 \'추천시점\'에서 보세요.</div>'
+      : "";
+
+    return chips + periodNote +
       '<div class="perf-sec-t">성과 요약 <span>(' + themeTag + ")</span></div>" + tiles +
-      '<div class="perf-sec-t">주제별 성과 비교 <span>(행을 누르면 그 주제로 이동)</span></div>' + perfThemeTable(data) +
+      '<div class="perf-sec-t">주제별 성과 비교 <span>(행을 누르면 그 주제로 이동)</span></div>' +
+      (data.mode === "period" ? perfThemeTable(data) : heldThemeTable(country)) +
       '<div class="perf-sec-t">주제 × Tier 세분화 <span>(평균 수익률 · 종목수)</span></div>' + perfMatrix(data.rows) +
       '<div class="perf-sec-t">종목별 성과 <span>(' + themeTag + ")</span></div>" + perfList;
 
@@ -2264,6 +2342,24 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
         "<td><b>" + s.n + "</b></td></tr>";
     }).join("");
     return '<div class="perf-mtx"><table class="pm-tbl pt-tbl"><thead>' + head + "</thead><tbody>" + body + "</tbody></table></div>";
+  }
+
+  // 추천시점 모드의 주제별 비교 — 실제 보유 기준(편출 포함) 수익률·지수 대비·β 반영 초과·β. 맨 아래 정식 편성 전체.
+  function heldThemeTable(country) {
+    var themes = D.themes || [];
+    function num(v) { return v == null ? '<td class="pm-na">–</td>' : '<td class="' + (v >= 0 ? "up" : "down") + '"><b>' + fmtPct(v) + "</b></td>"; }
+    function cells(h) {
+      if (!h) return '<td class="pm-na">–</td><td class="pm-na">–</td><td class="pm-na">–</td><td class="pm-na">–</td>';
+      return num(h.ret) + num(h.excess) + num(h.betaAlpha) + '<td class="pt-b">' + (h.beta == null ? "–" : h.beta.toFixed(2)) + "</td>";
+    }
+    var head = "<tr><th>주제</th><th>수익률</th><th>지수 대비</th><th>β 반영</th><th>β</th></tr>";
+    var body = themes.map(function (th) {
+      var on = th.key === state.theme ? " pt-on" : "";
+      return '<tr class="pt-row' + on + '" data-ptheme="' + esc(th.key) + '"><td class="pm-th">' +
+        (th.emoji ? esc(th.emoji) + " " : "") + esc(th.label) + "</td>" + cells(computeHeld(country, th.key)) + "</tr>";
+    }).join("");
+    var tot = '<tr class="pm-tot"><td>정식 전체</td>' + cells(computeHeld(country, null)) + "</tr>";
+    return '<div class="perf-mtx"><table class="pm-tbl pt-tbl"><thead>' + head + "</thead><tbody>" + body + tot + "</tbody></table></div>";
   }
 
   // 주제 × Tier 매트릭스 (셀 = 평균 수익률 + 종목수) — 모바일 한 화면용 컴팩트 표(셀은 값+종목수 2줄)

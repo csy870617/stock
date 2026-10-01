@@ -83,6 +83,7 @@ const snap = {
   date: D.generatedAt,
   kospi: arg("kospi"),
   sp500: arg("sp500"),
+  rsp: arg("rsp"),
   note: D.marketNote || null,
   noteUS: D.marketNoteUS || null,
   noteKR: D.marketNoteKR || null,
@@ -108,6 +109,7 @@ const idx = history.findIndex((h) => h.date === snap.date);
 if (idx >= 0) {
   if (snap.kospi == null && history[idx].kospi != null) snap.kospi = history[idx].kospi;
   if (snap.sp500 == null && history[idx].sp500 != null) snap.sp500 = history[idx].sp500;
+  if (snap.rsp == null && history[idx].rsp != null) snap.rsp = history[idx].rsp;
   history[idx] = snap;
 } else {
   history.push(snap);
@@ -168,7 +170,7 @@ const TPH = path.join(ROOT, "data", "tp-history.json");
 })();
 
 const out = "// 일별 추천 스냅샷 히스토리 — scripts/snapshot.js 가 자동 생성/추가\n" +
-  "// 각 항목: {date, kospi, sp500, note·noteUS·noteKR 시황, liq 유동성{us,korea,headline}, picks Top Pick{korea[],us[]},\n" +
+  "// 각 항목: {date, kospi, sp500, rsp(동일비중 S&P500 ETF), note·noteUS·noteKR 시황, liq 유동성{us,korea,headline}, picks Top Pick{korea[],us[]},\n" +
   "//           stocks:[{t 티커, n 이름, c 국가, th 주제, tier, p 가격, pd 가격기준일, tp 목표가, ss 단기신호, sl 장기신호}]}\n" +
   "window.STOCK_HISTORY = " + JSON.stringify(history, null, 1) + ";\n";
 fs.writeFileSync(HIST, out);

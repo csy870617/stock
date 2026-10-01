@@ -172,6 +172,66 @@ Object.keys(byTheme).sort().forEach((gk) => {
   }
 });
 
+// 실제 보유 기준 성적 — 매 스냅샷 편성을 다음 스냅샷까지 동일비중 보유했다고 보고 일별 수익률을 이어 붙인다
+// (앱 성과 탭 computeHeld 와 같은 계산). 위 avgReturn/avgExcess 는 '지금 남은 종목'만 세서 편출 종목의
+// 손익이 빠진다(생존 편향) — 추천의 실제 성적은 이쪽이다. beta 는 주간(7스냅샷) 회귀, 6주 미만이면 null.
+const PERSONAL = { watch: 1, hold: 1 };
+function held(country, themeKey) {
+  const bk = country === "korea" ? "kospi" : "sp500";
+  const last = {};
+  const lv = (snap, k) => { if (snap[k]) last[k] = snap[k]; return last[k] || null; };
+  lv(H[0], bk); lv(H[0], "rsp");
+  const rets = [], brs = [];
+  let cum = 1, bcum = 1, ecum = 1, eqOk = country === "us";
+  for (let i = 1; i < H.length; i++) {
+    const a = H[i - 1], b = H[i];
+    const b0 = last[bk] || null, e0 = last.rsp || null;
+    const b1 = lv(b, bk), e1 = lv(b, "rsp");
+    const pb = {};
+    b.stocks.forEach((e) => { if (e.c === country && e.p) pb[e.t] = e.p; });
+    const seenT = {};
+    let sum = 0, n = 0;
+    a.stocks.forEach((e) => {
+      if (e.c !== country || seenT[e.t] || !e.p || !pb[e.t]) return;
+      if (themeKey ? e.th !== themeKey : PERSONAL[e.th]) return;
+      seenT[e.t] = 1; sum += pb[e.t] / e.p - 1; n++;
+    });
+    if (!n) continue;
+    const r = sum / n, rb = b0 && b1 ? b1 / b0 - 1 : 0, re = e0 && e1 ? e1 / e0 - 1 : 0;
+    if (!e0 || !e1) eqOk = false;
+    cum *= 1 + r; bcum *= 1 + rb; ecum *= 1 + re;
+    rets.push(r); brs.push(rb);
+  }
+  if (!rets.length) return null;
+  const wp = [], wb = [];
+  for (let j = 0; j + 7 <= rets.length; j += 7) {
+    let x = 1, y = 1;
+    for (let k = j; k < j + 7; k++) { x *= 1 + rets[k]; y *= 1 + brs[k]; }
+    wp.push(x - 1); wb.push(y - 1);
+  }
+  let beta = null;
+  if (wp.length >= 6) {
+    const mp = wp.reduce((x, y) => x + y, 0) / wp.length, mb = wb.reduce((x, y) => x + y, 0) / wb.length;
+    let cv = 0, vb = 0;
+    wp.forEach((v, q) => { cv += (v - mp) * (wb[q] - mb); vb += (wb[q] - mb) ** 2; });
+    if (vb > 0) beta = cv / vb;
+  }
+  const ret = (cum - 1) * 100, bench = (bcum - 1) * 100, r2 = (v) => (v == null ? null : +v.toFixed(2));
+  return { ret: r2(ret), bench: r2(bench), excess: r2(ret - bench), beta: r2(beta),
+    betaAlpha: beta == null ? null : r2(ret - beta * bench), vsEqualWeight: eqOk ? r2(ret - (ecum - 1) * 100) : null };
+}
+const heldReport = {};
+["korea", "us"].forEach((c) => {
+  heldReport[c] = { all: held(c, null), themes: {} };
+  ((D && D.themes) || []).forEach((th) => { const h = held(c, th.key); if (h) heldReport[c].themes[th.key] = h; });
+});
+// 액티브 위험 점검 — 정식 편성 전체의 β 가 0.7~1.3 을 벗어나면 성과가 '종목 선별'이 아니라 '시장 민감도'로 갈린다.
+// 검증된 선별력이 없는 상태에서 지수와 성격이 크게 다르면 위험만 커지므로, 신규 편입·교체에서 β 를 1 쪽으로 되돌리는
+// 후보를 우선한다(CLAUDE.md '지수 구성 반영' 절).
+const BETA_BAND = [0.7, 1.3];
+const betaWarn = ["korea", "us"].filter((c) => heldReport[c].all && heldReport[c].all.beta != null &&
+  (heldReport[c].all.beta < BETA_BAND[0] || heldReport[c].all.beta > BETA_BAND[1]));
+
 const report = {
   asOf: latest.date,
   snapshotDays: H.length,
@@ -191,6 +251,9 @@ const report = {
     us: byCountry.us && avgEx(byCountry.us) != null ? +avgEx(byCountry.us).toFixed(2) : null
   },
   perfNote: "avgReturn 은 종목별 편입시점~현재 원수익률(편입 구간이 종목마다 달라 전체구간 벤치마크와 직접 비교는 왜곡). avgExcess/byTierExcess 는 각 종목 편입일에 맞춘 지수 대비 초과수익으로 like-for-like.",
+  held: heldReport,
+  heldNote: "held = 실제 보유 기준(편출 종목 포함, 동일비중 일별 연결). betaAlpha = 수익률 − β×지수(시장 민감도 몫을 뺀 선별 효과). vsEqualWeight = 동일비중 S&P500(RSP) 대비(미국).",
+  betaWarn,
   byTier: Object.fromEntries(Object.keys(byTier).sort().map((k) => [k, +avg(byTier[k]).toFixed(2)])),
   byTierExcess: Object.fromEntries(Object.keys(byTier).sort().map((k) => [k, avgEx(byTier[k]) == null ? null : +avgEx(byTier[k]).toFixed(2)])),
   byTheme: Object.fromEntries(Object.keys(byTheme).sort().map((k) => [k, +avg(byTheme[k]).toFixed(2)])),
@@ -213,7 +276,18 @@ if (report.caveat) console.log("⚠ " + report.caveat);
 console.log("");
 console.log("벤치마크(전체구간):  KOSPI " + fmt(report.benchmark.kospi) + "   S&P500 " + fmt(report.benchmark.sp500));
 console.log("추천 평균(원수익률): 한국  " + fmt(report.avgReturn.korea) + "   미국   " + fmt(report.avgReturn.us));
-console.log("초과수익(편입일 정렬·지수대비): 한국  " + fmt(report.avgExcess.korea) + "   미국   " + fmt(report.avgExcess.us) + "   ← 추천 능력의 like-for-like 지표");
+console.log("초과수익(편입일 정렬·지수대비): 한국  " + fmt(report.avgExcess.korea) + "   미국   " + fmt(report.avgExcess.us) + "   (현재 남은 종목만 — 생존 편향)");
+console.log("");
+console.log("실제 보유 기준 성적(편출 종목 포함·동일비중) — 추천의 실제 성적:");
+["korea", "us"].forEach((c) => {
+  const pr = (lab, h) => h && console.log("  " + (c + "/" + lab).padEnd(16) + " 수익률 " + fmt(h.ret) + "  지수 " + fmt(h.bench) +
+    "  초과 " + fmt(h.excess) + "  β " + (h.beta == null ? "n/a" : h.beta.toFixed(2)) + "  β반영 " + fmt(h.betaAlpha) +
+    (h.vsEqualWeight == null ? "" : "  동일비중S&P대비 " + fmt(h.vsEqualWeight)));
+  pr("정식전체", report.held[c].all);
+  Object.keys(report.held[c].themes).forEach((k) => pr(k, report.held[c].themes[k]));
+});
+report.betaWarn.forEach((c) => console.log("  ⚠ 액티브 위험: " + c + " 정식 편성 β " + report.held[c].all.beta.toFixed(2) +
+  " (허용 " + BETA_BAND.join("~") + ") — 성과가 선별보다 시장 민감도로 갈린다. 신규 편입·교체는 β 를 1 쪽으로 되돌리는 후보를 우선한다."));
 console.log("");
 console.log("티어별 (원수익률 / 초과수익) — 품질 tier 가 성과로 뒷받침되는지 참고 점검(Tier1>Tier3 이면 정합, tier 는 성과로 바꾸지 않음):");
 Object.keys(report.byTier).forEach((k) => console.log("  " + k + ": " + fmt(report.byTier[k]) + "  /  초과 " + fmt(report.byTierExcess[k])));
