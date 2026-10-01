@@ -380,11 +380,6 @@ window.STOCK_QUOTES = {
    "date": "2026-10-01",
    "changePct": -0.1
   },
-  "CRDO": {
-   "price": 210.17,
-   "date": "2026-10-01",
-   "changePct": 7.9
-  },
   "RDDT": {
    "price": 149.53,
    "date": "2026-10-01",
@@ -404,11 +399,6 @@ window.STOCK_QUOTES = {
    "price": 79.48,
    "date": "2026-10-01",
    "changePct": 2
-  },
-  "FOUR": {
-   "price": 35.58,
-   "date": "2026-10-01",
-   "changePct": -1.6
   },
   "TCOM": {
    "price": 38.76,
@@ -544,6 +534,16 @@ window.STOCK_QUOTES = {
    "price": 85.67,
    "date": "2026-10-01",
    "changePct": 1.6
+  },
+  "NVT": {
+   "price": 165.77,
+   "date": "2026-10-01",
+   "changePct": 3.4
+  },
+  "FSS": {
+   "price": 112.17,
+   "date": "2026-10-01",
+   "changePct": 1.2
   }
  }
 };
