@@ -610,7 +610,12 @@
    "korea:029780": 63667,
    "korea:175330": 36800,
    "korea:024110": 25385,
-   "us:CI": 337
+   "us:CI": 337,
+   "us:APH": 98.12,
+   "us:NVT": 201.37,
+   "us:FSS": 142.04,
+   "us:CRDO": null,
+   "us:FOUR": null
   }
  },
  "lastRun": "2026-10-01"
