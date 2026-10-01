@@ -525,16 +525,6 @@ window.STOCK_QUOTES = {
    "date": "2026-10-01",
    "changePct": 1
   },
-  "FIX": {
-   "price": 1685.29,
-   "date": "2026-10-01",
-   "changePct": 1.9
-  },
-  "EME": {
-   "price": 769.03,
-   "date": "2026-10-01",
-   "changePct": 1.9
-  },
   "MKSI": {
    "price": 271.24,
    "date": "2026-10-01",
@@ -544,6 +534,16 @@ window.STOCK_QUOTES = {
    "price": 82.28,
    "date": "2026-10-01",
    "changePct": -0.6
+  },
+  "NVMI": {
+   "price": 386.6,
+   "date": "2026-10-01",
+   "changePct": 0.4
+  },
+  "POWL": {
+   "price": 190.6,
+   "date": "2026-10-01",
+   "changePct": 3.3
   }
  }
 };

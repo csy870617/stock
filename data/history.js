@@ -111328,32 +111328,6 @@ window.STOCK_HISTORY = [
     "sl": "적극매수"
    },
    {
-    "t": "FIX",
-    "n": "Comfort Systems USA",
-    "c": "us",
-    "th": "rising",
-    "tier": 1,
-    "p": 1685.29,
-    "pd": "2026-10-01",
-    "tp": 2139.93,
-    "ss": "매수",
-    "sm": "매수",
-    "sl": "적극매수"
-   },
-   {
-    "t": "EME",
-    "n": "EMCOR Group",
-    "c": "us",
-    "th": "rising",
-    "tier": 2,
-    "p": 769.03,
-    "pd": "2026-10-01",
-    "tp": 1009.18,
-    "ss": "매수",
-    "sm": "매수",
-    "sl": "적극매수"
-   },
-   {
     "t": "MKSI",
     "n": "MKS Inc.",
     "c": "us",
@@ -111378,6 +111352,32 @@ window.STOCK_HISTORY = [
     "ss": "중립",
     "sm": "중립",
     "sl": "중립"
+   },
+   {
+    "t": "NVMI",
+    "n": "Nova Ltd.",
+    "c": "us",
+    "th": "rising",
+    "tier": 1,
+    "p": 386.6,
+    "pd": "2026-10-01",
+    "tp": 523.22,
+    "ss": "중립",
+    "sm": "중립",
+    "sl": "적극매수"
+   },
+   {
+    "t": "POWL",
+    "n": "Powell Industries",
+    "c": "us",
+    "th": "rising",
+    "tier": 2,
+    "p": 190.6,
+    "pd": "2026-10-01",
+    "tp": 247.71,
+    "ss": "매수",
+    "sm": "매수",
+    "sl": "적극매수"
    }
   ]
  }
