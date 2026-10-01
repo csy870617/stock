@@ -110957,45 +110957,6 @@ window.STOCK_HISTORY = [
     "sl": "중립"
    },
    {
-    "t": "RDDT",
-    "n": "레딧",
-    "c": "us",
-    "th": "rising",
-    "tier": 3,
-    "p": 149.53,
-    "pd": "2026-10-01",
-    "tp": 215,
-    "ss": "매도",
-    "sm": "매도",
-    "sl": "매도"
-   },
-   {
-    "t": "AEIS",
-    "n": "Advanced Energy",
-    "c": "us",
-    "th": "rising",
-    "tier": 1,
-    "p": 294.11,
-    "pd": "2026-10-01",
-    "tp": 426,
-    "ss": "중립",
-    "sm": "매수",
-    "sl": "적극매수"
-   },
-   {
-    "t": "STRL",
-    "n": "Sterling Infrastructure",
-    "c": "us",
-    "th": "rising",
-    "tier": 2,
-    "p": 505.12,
-    "pd": "2026-10-01",
-    "tp": 863,
-    "ss": "매수",
-    "sm": "매수",
-    "sl": "적극매수"
-   },
-   {
     "t": "NXT",
     "n": "Nextracker",
     "c": "us",
@@ -111085,19 +111046,6 @@ window.STOCK_HISTORY = [
     "ss": "매수",
     "sm": "매수",
     "sl": "매수"
-   },
-   {
-    "t": "LITE",
-    "n": "Lumentum Holdings",
-    "c": "us",
-    "th": "rising",
-    "tier": 2,
-    "p": 1045.78,
-    "pd": "2026-10-01",
-    "tp": 1148,
-    "ss": "적극매수",
-    "sm": "적극매수",
-    "sl": "적극매수"
    },
    {
     "t": "TSLA",
@@ -111215,19 +111163,6 @@ window.STOCK_HISTORY = [
     "ss": "매도",
     "sm": "중립",
     "sl": "매도"
-   },
-   {
-    "t": "CLS",
-    "n": "Celestica",
-    "c": "us",
-    "th": "rising",
-    "tier": 1,
-    "p": 373.09,
-    "pd": "2026-10-01",
-    "tp": 473.26,
-    "ss": "적극매수",
-    "sm": "적극매수",
-    "sl": "적극매수"
    },
    {
     "t": "DE",
@@ -111378,6 +111313,71 @@ window.STOCK_HISTORY = [
     "ss": "중립",
     "sm": "매수",
     "sl": "적극매수"
+   },
+   {
+    "t": "MPWR",
+    "n": "Monolithic Power Systems",
+    "c": "us",
+    "th": "rising",
+    "tier": 1,
+    "p": 1360.97,
+    "pd": "2026-10-01",
+    "tp": 1784.27,
+    "ss": "매수",
+    "sm": "매수",
+    "sl": "적극매수"
+   },
+   {
+    "t": "FIX",
+    "n": "Comfort Systems USA",
+    "c": "us",
+    "th": "rising",
+    "tier": 1,
+    "p": 1685.29,
+    "pd": "2026-10-01",
+    "tp": 2139.93,
+    "ss": "매수",
+    "sm": "매수",
+    "sl": "적극매수"
+   },
+   {
+    "t": "EME",
+    "n": "EMCOR Group",
+    "c": "us",
+    "th": "rising",
+    "tier": 2,
+    "p": 769.03,
+    "pd": "2026-10-01",
+    "tp": 1009.18,
+    "ss": "매수",
+    "sm": "매수",
+    "sl": "적극매수"
+   },
+   {
+    "t": "MKSI",
+    "n": "MKS Inc.",
+    "c": "us",
+    "th": "rising",
+    "tier": 2,
+    "p": 271.24,
+    "pd": "2026-10-01",
+    "tp": 370.19,
+    "ss": "매수",
+    "sm": "매수",
+    "sl": "적극매수"
+   },
+   {
+    "t": "AAON",
+    "n": "AAON",
+    "c": "us",
+    "th": "rising",
+    "tier": 3,
+    "p": 82.28,
+    "pd": "2026-10-01",
+    "tp": 133.17,
+    "ss": "중립",
+    "sm": "중립",
+    "sl": "중립"
    }
   ]
  }

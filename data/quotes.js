@@ -380,21 +380,6 @@ window.STOCK_QUOTES = {
    "date": "2026-10-01",
    "changePct": -0.1
   },
-  "RDDT": {
-   "price": 149.53,
-   "date": "2026-10-01",
-   "changePct": 5
-  },
-  "AEIS": {
-   "price": 294.11,
-   "date": "2026-10-01",
-   "changePct": 4.4
-  },
-  "STRL": {
-   "price": 505.12,
-   "date": "2026-10-01",
-   "changePct": 2.7
-  },
   "NXT": {
    "price": 79.48,
    "date": "2026-10-01",
@@ -429,11 +414,6 @@ window.STOCK_QUOTES = {
    "price": 137.76,
    "date": "2026-10-01",
    "changePct": 2.8
-  },
-  "LITE": {
-   "price": 1045.78,
-   "date": "2026-10-01",
-   "changePct": 7.7
   },
   "TSLA": {
    "price": 354.11,
@@ -479,11 +459,6 @@ window.STOCK_QUOTES = {
    "price": 365.2,
    "date": "2026-10-01",
    "changePct": -0.5
-  },
-  "CLS": {
-   "price": 373.09,
-   "date": "2026-10-01",
-   "changePct": 3.2
   },
   "DE": {
    "price": 667.26,
@@ -544,6 +519,31 @@ window.STOCK_QUOTES = {
    "price": 112.17,
    "date": "2026-10-01",
    "changePct": 1.2
+  },
+  "MPWR": {
+   "price": 1360.97,
+   "date": "2026-10-01",
+   "changePct": 1
+  },
+  "FIX": {
+   "price": 1685.29,
+   "date": "2026-10-01",
+   "changePct": 1.9
+  },
+  "EME": {
+   "price": 769.03,
+   "date": "2026-10-01",
+   "changePct": 1.9
+  },
+  "MKSI": {
+   "price": 271.24,
+   "date": "2026-10-01",
+   "changePct": 2.2
+  },
+  "AAON": {
+   "price": 82.28,
+   "date": "2026-10-01",
+   "changePct": -0.6
   }
  }
 };

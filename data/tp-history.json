@@ -614,8 +614,18 @@
    "us:APH": 98.12,
    "us:NVT": 201.37,
    "us:FSS": 142.04,
+   "us:MPWR": 1784.27,
+   "us:FIX": 2139.93,
+   "us:EME": 1009.18,
+   "us:MKSI": 370.19,
+   "us:AAON": 133.17,
    "us:CRDO": null,
-   "us:FOUR": null
+   "us:RDDT": null,
+   "us:AEIS": null,
+   "us:STRL": null,
+   "us:FOUR": null,
+   "us:LITE": null,
+   "us:CLS": null
   }
  },
  "lastRun": "2026-10-01"
