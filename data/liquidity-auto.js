@@ -8,9 +8,9 @@ window.LIQUIDITY_AUTO = {
   "us10y": "5.29",
   "curve": "1.26",
   "vix": "16.3",
-  "hyg20": "-2.5",
-  "dxy": "101.5",
-  "usdkrw": "1359"
+  "hyg20": "-2.4",
+  "dxy": "101.6",
+  "usdkrw": "1358"
  },
  "us": {
   "shortTerm": "부정",
@@ -25,15 +25,15 @@ window.LIQUIDITY_AUTO = {
   ]
  },
  "korea": {
-  "shortTerm": "부정",
+  "shortTerm": "신중",
   "midTerm": "부정",
-  "shortScore": -0.52,
+  "shortScore": -0.28,
   "midScore": -0.39,
   "drivers": [
    "글로벌 신용(20d) (−2)",
+   "코스피 모멘텀(20d) (+1)",
    "달러 추세 (−1)",
-   "원/달러 추세 (·0)",
-   "코스피 모멘텀(20d) (·0)"
+   "원/달러 추세 (·0)"
   ]
  }
 };
