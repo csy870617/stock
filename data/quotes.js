@@ -539,6 +539,11 @@ window.STOCK_QUOTES = {
    "price": 271.26,
    "date": "2026-10-01",
    "changePct": -1.2
+  },
+  "APH": {
+   "price": 85.67,
+   "date": "2026-10-01",
+   "changePct": 1.6
   }
  }
 };
