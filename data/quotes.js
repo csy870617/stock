@@ -485,11 +485,6 @@ window.STOCK_QUOTES = {
    "date": "2026-10-02",
    "changePct": 0.4
   },
-  "SNPS": {
-   "price": 489.9,
-   "date": "2026-10-02",
-   "changePct": -0.1
-  },
   "TMO": {
    "price": 654.8,
    "date": "2026-10-02",
@@ -539,6 +534,11 @@ window.STOCK_QUOTES = {
    "price": 196.1,
    "date": "2026-10-02",
    "changePct": 2.9
+  },
+  "TXN": {
+   "price": 293.8,
+   "date": "2026-10-02",
+   "changePct": 4.4
   }
  }
 };
