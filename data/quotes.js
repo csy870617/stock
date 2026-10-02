@@ -265,11 +265,6 @@ window.STOCK_QUOTES = {
    "date": "2026-10-02",
    "changePct": 3.9
   },
-  "006260": {
-   "price": 298500,
-   "date": "2026-10-02",
-   "changePct": 0.2
-  },
   "MSFT": {
    "price": 512.8,
    "date": "2026-10-01",
