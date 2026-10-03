@@ -113,8 +113,22 @@ function fairQueue(list, dateOf) {
 // 세션이 그 몫까지 이어받는다.
 const staleVerif = fairQueue(all.filter((s) => daysAgo(s.verifiedAt) > VERIF_CYCLE_DAYS), (s) => s.verifiedAt);
 const missVerif = staleVerif;
+// ── 선행(look-ahead) 채움 ─────────────────────────────────────────────
+// 큐가 '7일 초과'만 내주면 재검증일이 하루에 몰린 종목들이 같은 날 한꺼번에 만료된다.
+// (2026-10-03 실측: verifiedAt 09-30 이 45종목 — 10-08 하루에 45종목이 만료되는데 하루 처리량은
+//  A 15 + B 15 = 30이라 사나흘 게이트가 red. 반면 그 전 며칠은 큐가 0~5종목이라 B 예산이 놀았다.)
+// 그래서 만료분이 QUOTA 에 못 미치면 남는 자리를 LOOKAHEAD 일 이상 지난 종목(오래된 순)으로 미리
+// 채운다. 게이트 기준(7일)은 그대로이고, 노는 예산을 몰리는 날 이전으로 당겨 쓰는 것뿐이다.
+const LOOKAHEAD_DAYS = Number(argVal("lookahead") || 4);
+function withLookahead(stale, pool, dateOf, quota, minAge) {
+  const head = stale.slice(0, quota);
+  if (head.length >= quota) return head;
+  const inStale = new Set(stale);
+  const extra = fairQueue(pool.filter((x) => !inStale.has(x) && daysAgo(dateOf(x)) >= minAge), dateOf);
+  return head.concat(extra.slice(0, quota - head.length));
+}
 // 세션에 한 번에 던질 수 있는 양은 예산이 정한다 — 큐는 오래된 순으로 QUOTA 만큼만 준다.
-const verifQueue = staleVerif.slice(0, VERIF_QUOTA);
+const verifQueue = withLookahead(staleVerif, all, (s) => s.verifiedAt, VERIF_QUOTA, LOOKAHEAD_DAYS);
 const verifiedToday = all.filter((s) => s.verifiedAt === today);
 
 const tierable  = all.filter((s) => !isPersonalTheme(s.theme));
@@ -164,16 +178,28 @@ const DISC_GROUPS = [];
   [...seen].sort().forEach((t) => DISC_GROUPS.push(c + "|" + t));
 });
 const discMap = D.discovery || {};
-const staleDisc = DISC_GROUPS.filter((g) => daysAgo(discMap[g]) > VERIF_CYCLE_DAYS)
-  .sort((a, b) => daysAgo(discMap[b]) - daysAgo(discMap[a]));
+const byDiscAge = (a, b) => daysAgo(discMap[b]) - daysAgo(discMap[a]);
+const staleDisc = DISC_GROUPS.filter((g) => daysAgo(discMap[g]) > VERIF_CYCLE_DAYS).sort(byDiscAge);
 const missDisc = staleDisc.map((g) => g + "(" + (discMap[g] || "기록 없음") + ")");
-const discQueue = staleDisc.slice(0, Number(argVal("discQuota") || 4));
+// 그룹도 같은 날 몰려 만료되므로(10그룹이 09-29~30 에 탐색됨) 선행 채움을 쓴다.
+const DISC_QUOTA = Number(argVal("discQuota") || 4);
+const discQueue = staleDisc.slice(0, DISC_QUOTA).concat(
+  DISC_GROUPS.filter((g) => !staleDisc.includes(g) && daysAgo(discMap[g]) >= LOOKAHEAD_DAYS)
+    .sort(byDiscAge)).slice(0, DISC_QUOTA);
 
 // aiTarget — '산출됐는가'가 아니라 '최근에 재시도했는가'를 본다. 입력값 검증 실패로 값이
 // 없는 건 정상이지만, 몇 주째 재시도조차 안 하는 건 갱신 누락이다. 그래서 시도한 날을
 // aiCheckedAt 에 남기고(산출 성공 시 aiAsOf 도 함께), 전 종목 7일 회전으로 게이트한다.
-const staleAi = fairQueue(all.filter((s) => daysAgo(s.aiCheckedAt) > VERIF_CYCLE_DAYS), (s) => s.aiCheckedAt);
-const aiQueue = staleAi.slice(0, Number(argVal("aiQuota") || 20));
+// ── 반복 실패 백오프 ──
+// 값이 없는 채로 연속 실패(aiFailCount ≥ 2)한 종목은 같은 이유로 또 실패할 가능성이 높아,
+// 7일마다 검색 4회씩 다시 쓰는 대신 주기를 14일로 늘린다(2026-09-30 B 회차: 24종목 중 19 실패).
+// 실패 시 세션이 aiFailCount(+1)·aiFailReason 을, 성공 시 aiFailCount=0 을 기록한다.
+const AI_BACKOFF_DAYS = 14;
+const aiCycle = (s) => (s.aiTarget == null && (s.aiFailCount || 0) >= 2 ? AI_BACKOFF_DAYS : VERIF_CYCLE_DAYS);
+const staleAi = fairQueue(all.filter((s) => daysAgo(s.aiCheckedAt) > aiCycle(s)), (s) => s.aiCheckedAt);
+// 선행 채움 — 백오프 종목은 선행 대상에서도 뺀다(백오프의 의미가 사라지므로).
+const aiQueue = withLookahead(staleAi, all.filter((s) => aiCycle(s) === VERIF_CYCLE_DAYS),
+  (s) => s.aiCheckedAt, Number(argVal("aiQuota") || 20), LOOKAHEAD_DAYS);
 
 // ── backbone 최신화 게이트 ──────────────────────────────────────────────
 // techNote 는 'asOf == T(최신 거래일)' 로 판정하는데, T 는 stock-ta.js 가 정한다.
@@ -202,7 +228,8 @@ const REMAIN = {
 };
 // discovery 는 종목이 아니라 그룹 목록이라 따로 처리한다.
 if (argVal("remaining") === "discovery") {
-  discQueue.forEach((g) => console.log(g.replace("|", " "), discMap[g] || "기록없음"));
+  discQueue.forEach((g) => console.log(g.replace("|", " "), discMap[g] || "기록없음",
+    staleDisc.includes(g) ? "" : "(선행)"));
   process.exit(discQueue.length ? 1 : 0);
 }
 const which = argVal("remaining");
@@ -212,7 +239,14 @@ if (which) {
     console.error("--remaining 값은 " + Object.keys(REMAIN).join("|") + "|discovery 중 하나여야 합니다.");
     process.exit(2);
   }
-  list.forEach((s) => console.log(s.country || (D.korea.includes(s) ? "korea" : "us"), s.ticker, s.name));
+  // 선행 채움 종목은 끝에 '(선행)'을 붙인다 — 만료분이 먼저, 선행분이 뒤에 온다.
+  const staleSet = new Set(which === "verified" ? staleVerif : which === "aiTarget" ? staleAi : list);
+  // 같은 티커가 여러 주제에 있으면(예: SK하이닉스 core+watch) update-reco 가 국가+티커로 전부 merge 하므로 한 번만 낸다.
+  const seenT = new Set();
+  list.filter((s) => { const k = (D.korea.includes(s) ? "korea" : "us") + ":" + s.ticker;
+    return seenT.has(k) ? false : seenT.add(k); })
+    .forEach((s) => console.log(s.country || (D.korea.includes(s) ? "korea" : "us"), s.ticker, s.name,
+    staleSet.has(s) ? "" : "(선행)"));
   process.exit(list.length ? 1 : 0);
 }
 
@@ -292,13 +326,34 @@ rows.forEach(([name, done, total, miss]) => {
 const hasAi = all.filter((s) => s.aiTarget != null);
 const freshAi = hasAi.filter((s) => s.aiAsOf === today);
 console.log("  ℹ️  aiTarget 보유(참고): " + hasAi.length + "/" + N + " · 오늘 산출 " + freshAi.length +
-  " · 미보유 " + (N - hasAi.length) + (aiQueue.length ? " → 이번 세션 재시도 큐 " + aiQueue.length + "종목" : ""));
+  " · 미보유 " + (N - hasAi.length) +
+  " (백오프 " + all.filter((s) => aiCycle(s) !== VERIF_CYCLE_DAYS).length + ")" + (aiQueue.length ? " → 이번 세션 재시도 큐 " + aiQueue.length + "종목" : ""));
 
 // 회전 진척(참고) — 오늘 처리량과 이번 세션이 받아 갈 큐 크기
 console.log("  ℹ️  재검증 회전(참고): 오늘 " + verifiedToday.length + "종목 · 7일 초과 " +
-  staleVerif.length + "종목" + (staleVerif.length ? " → 이번 세션 큐 " + verifQueue.length +
+  staleVerif.length + "종목" + (verifQueue.length ? " → 이번 세션 큐 " + verifQueue.length +
   "종목(--remaining verified): " + verifQueue.slice(0, 5).map(label).join(", ") +
-  (verifQueue.length > 5 ? " 외 " + (verifQueue.length - 5) : "") : " (전 종목 주기 내)"));
+  (verifQueue.length > 5 ? " 외 " + (verifQueue.length - 5) : "") +
+  (verifQueue.length > staleVerif.length ? " — 선행 " + (verifQueue.length - Math.min(staleVerif.length, verifQueue.length)) + "종목 포함" : "")
+  : " (전 종목 주기 내)"));
+
+// ── 서머타임 전환 알림 ──
+// 루틴 cron 은 UTC 고정이라 LA 01:00 을 유지하려면 전환 때 손으로 옮겨야 한다(앱 문구·ETA 는 자동).
+// 전환 전후 14일 동안 매 세션 보고에 띄워 잊지 않게 한다 — 게이트(blockers)에는 넣지 않는다.
+const laOffset = (iso) => {
+  try {
+    const h = Number(new Intl.DateTimeFormat("en-US", { timeZone: "America/Los_Angeles", hour: "numeric", hourCycle: "h23" })
+      .format(new Date(iso + "T12:00:00Z")));
+    return 12 - h;
+  } catch (e) { return null; }
+};
+const shiftDay = (n) => new Date(Date.parse(today + "T00:00:00Z") + n * 86400000).toISOString().slice(0, 10);
+const offNow = laOffset(today), offPast = laOffset(shiftDay(-14)), offNext = laOffset(shiftDay(14));
+if (offNow != null && (offNow !== offPast || offNow !== offNext)) {
+  const target = offNow !== offNext ? offNext : offNow;          // 곧 바뀔 값 또는 방금 바뀐 값
+  console.log("  ⚠️  서머타임 전환 " + (offNow !== offNext ? "임박" : "직후") + " — LA 01:00 유지하려면 루틴 cron 을 A `0 " +
+    (1 + target) + " * * *` · B `0 " + (3 + target) + " * * *` 로 옮겼는지 확인(CLAUDE.md 발화 계획)");
+}
 
 const blockers = missTech.length + missValue.length + missVerif.length + missTier.length +
   missIdx.length + missTop.length + missLiq.length + missDisc.length + staleAi.length +
