@@ -8,7 +8,7 @@ window.LIQUIDITY_AUTO = {
   "us10y": "5.28",
   "curve": "1.28",
   "vix": "15.3",
-  "hyg20": "-2.4",
+  "hyg20": "-2.5",
   "dxy": "101.9",
   "usdkrw": "1343"
  },
@@ -27,11 +27,11 @@ window.LIQUIDITY_AUTO = {
  "korea": {
   "shortTerm": "신중",
   "midTerm": "신중",
-  "shortScore": -0.1,
+  "shortScore": 0.14,
   "midScore": -0.26,
   "drivers": [
+   "코스피 모멘텀(20d) (+2)",
    "글로벌 신용(20d) (−2)",
-   "코스피 모멘텀(20d) (+1)",
    "글로벌 변동성 VIX (+1)",
    "달러 추세 (−1)"
   ]
