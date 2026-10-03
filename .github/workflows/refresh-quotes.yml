@@ -6,6 +6,7 @@ name: Refresh quotes (daily, token-free)
 #   3) update-stock-ta.js → data/stock-ta.js (개별 종목 단기/장기 기술적 분석)
 #   4) update-liquidity-gauge.js → data/liquidity-auto.js (시장지표 기반 유동성 게이지 baseline)
 #   5) screen-watch.js → data/watch-candidates.js (관심종목 차트 후보: 턴어라운드·신고가 + 기존 태그 유효성)
+#   (월) gen-tickers.js → data/tickers.js (관심종목 검색 사전, 주 1회)
 #   6) daily-maintenance.js → recommendations.js generatedAt(오늘) + 지수·스냅샷(history.js)
 # 이렇게 하면 LLM 추천 Routine이 실패해도 앱은 매일 오늘자 날짜·시세·지수 기술적 분석·유동성 baseline·스냅샷을 유지한다.
 # (종목별 심층 분석·발굴, 유동성 '이벤트·내러티브 판단'은 온디맨드로 남아 baseline 을 보정한다.)
@@ -72,6 +73,13 @@ jobs:
         run: node scripts/screen-watch.js
         continue-on-error: true
 
+      # 관심종목 검색 사전(이름→코드) — 신규 상장 반영용, 월요일 아침 실행에서만 주 1회.
+      # KRX 가 막히면 네이버로 폴백하고, 둘 다 실패한 국가는 기존 값을 유지한다(스크립트 내부 처리).
+      - name: Refresh ticker dictionary (weekly, → data/tickers.js, token-free)
+        if: github.event.schedule == '0 7 * * 1-5'
+        run: if [ "$(date -u +%u)" = "1" ]; then node scripts/gen-tickers.js; else echo "월요일만 실행 — 건너뜀"; fi
+        continue-on-error: true
+
       - name: Daily maintenance (generatedAt + 지수·스냅샷, token-free)
         run: node scripts/daily-maintenance.js
         continue-on-error: true
@@ -89,14 +97,14 @@ jobs:
       - name: Commit & push if changed
         id: commit
         run: |
-          if git diff --quiet -- data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/liquidity-auto.js data/watch-candidates.js data/coverage-status.js; then
+          if git diff --quiet -- data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/liquidity-auto.js data/watch-candidates.js data/coverage-status.js data/tickers.js; then
             echo "변화 없음 — 커밋 생략"
             echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/liquidity-auto.js data/watch-candidates.js data/coverage-status.js
+          git add data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/liquidity-auto.js data/watch-candidates.js data/coverage-status.js data/tickers.js
           git commit -m "매일 데이터 갱신 (자동) — 시세·기준일·스냅샷 (update-quotes + daily-maintenance)"
           # 다른 자동 커밋(LLM 재평가 Routine 등)과 경합해 push 가 거부될 수 있으므로,
           # 거부되면 원격 변경을 rebase 로 얹어 1회 재시도한다(그날 갱신이 조용히 유실되지 않도록).
@@ -110,12 +118,12 @@ jobs:
               git rebase --abort
               echo "::warning::rebase 충돌 — 원격 최신 위에 이번 실행 산출물을 다시 얹습니다"
               GEN="$RUNNER_TEMP/gen"; mkdir -p "$GEN"
-              cp data/quotes.js data/indices.js data/stock-ta.js data/liquidity-auto.js data/watch-candidates.js "$GEN/"
+              cp data/quotes.js data/indices.js data/stock-ta.js data/liquidity-auto.js data/watch-candidates.js data/tickers.js "$GEN/"
               git reset --hard FETCH_HEAD
               cp "$GEN"/* data/
               node scripts/daily-maintenance.js || true
               node scripts/coverage.js --emit || true
-              git add data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/liquidity-auto.js data/watch-candidates.js data/coverage-status.js
+              git add data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/liquidity-auto.js data/watch-candidates.js data/coverage-status.js data/tickers.js
               git diff --cached --quiet || git commit -m "매일 데이터 갱신 (자동) — 시세·기준일·스냅샷 (update-quotes + daily-maintenance)"
             fi
             # 원격 변경과 합쳐진 결과도 커밋 전과 같은 게이트를 통과해야 push 한다

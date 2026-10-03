@@ -1,8 +1,8 @@
 // 관심종목 검색용 사전 생성기 — 이름→코드.
 //   ① 추천 편성(recommendations.js, 검증됨) + 한글 별칭 큐레이션(우선순위 앞)
-//   ② KRX 전체 상장(KOSPI+KOSDAQ) — kind.krx.co.kr corpList (EUC-KR)
+//   ② KRX 전체 상장(KOSPI+KOSDAQ) — kind.krx.co.kr corpList (EUC-KR), 실패 시 네이버 m.stock 폴백
 //   ③ 미국 보통주(Nasdaq/NYSE 등) — nasdaqtrader.com SymDir (nasdaqlisted + otherlisted)
-// 사용법: node scripts/gen-tickers.js   (네트워크 필요; 실패 시 기존 tickers.js 유지)
+// 사용법: node scripts/gen-tickers.js   (네트워크 필요; 출처별로 실패한 국가는 기존 tickers.js 값 유지)
 const fs = require("fs"), path = require("path");
 const ROOT = path.join(__dirname, "..");
 
@@ -29,6 +29,22 @@ function parseKrx(html) {
     const name = cells[0], code = cells[2];
     if (/^\d{6}$/.test(code) && name) out.push({ n: name, t: code, c: "korea" });
   });
+  return out;
+}
+
+// 네이버 모바일 시가총액 목록(JSON) — KRX 가 막혔을 때의 폴백. ETF·ETN 등은 stockEndType 으로 거른다.
+async function fetchNaverKr() {
+  const out = [];
+  for (const mkt of ["KOSPI", "KOSDAQ"]) {
+    for (let page = 1; page <= 40; page++) {
+      const j = JSON.parse(await getText("https://m.stock.naver.com/api/stocks/marketValue/" + mkt + "?page=" + page + "&pageSize=100"));
+      const rows = j.stocks || [];
+      rows.forEach((r) => {
+        if (r.stockEndType === "stock" && /^\d{6}$/.test(r.itemCode || "") && r.stockName) out.push({ n: r.stockName, t: r.itemCode, c: "korea" });
+      });
+      if (rows.length < 100 || page * 100 >= (j.totalCount || 0)) break;
+    }
+  }
   return out;
 }
 
@@ -75,22 +91,45 @@ const ALIASES = [
   // ② 한글 별칭
   ALIASES.forEach(([n, t, c]) => add({ n, t, c }));
 
-  // ③ 전체 상장 목록 fetch
+  // ③ 전체 상장 목록 fetch — 출처별로 독립 처리한다. 예전엔 Promise.all 로 묶여 KRX 한 곳이
+  //    403 을 내면 미국 목록까지 통째로 버려졌다(2026-10-03 실측: kind.krx.co.kr 403 → 전체 실패).
+  //    한국은 KRX → 네이버(m.stock) 순으로 폴백하고, 그래도 실패한 국가는 기존 tickers.js 값을 유지한다.
+  const prev = (() => {
+    try { global.window = {}; delete require.cache[require.resolve(path.join(ROOT, "data/tickers.js"))];
+      require(path.join(ROOT, "data/tickers.js")); return global.window.TICKER_DICT || []; } catch (_e) { return []; }
+  })();
+  const keepPrev = (c) => { const k = prev.filter((x) => x.c === c); k.forEach(add); return k.length; };
+  const notes = [];
+
+  let krList = null;
   try {
-    const [kospi, kosdaq, nas, oth] = await Promise.all([
+    const [kospi, kosdaq] = await Promise.all([
       getText("https://kind.krx.co.kr/corpgeneral/corpList.do?method=download&marketType=stockMkt", "euc-kr"),
       getText("https://kind.krx.co.kr/corpgeneral/corpList.do?method=download&marketType=kosdaqMkt", "euc-kr"),
+    ]);
+    krList = parseKrx(kospi).concat(parseKrx(kosdaq));
+    notes.push("한국=KRX");
+  } catch (e) {
+    console.error("KRX 목록 실패 (" + e.message + ") — 네이버로 폴백");
+    try { krList = await fetchNaverKr(); notes.push("한국=네이버(폴백)"); }
+    catch (e2) { console.error("네이버 목록 실패 (" + e2.message + ")"); }
+  }
+  if (krList && krList.length > 1000) krList.forEach(add);
+  else notes.push("한국=기존 유지 " + keepPrev("korea") + "건");
+
+  try {
+    const [nas, oth] = await Promise.all([
       getText("https://www.nasdaqtrader.com/dynamic/SymDir/nasdaqlisted.txt"),
       getText("https://www.nasdaqtrader.com/dynamic/SymDir/otherlisted.txt"),
     ]);
-    parseKrx(kospi).forEach(add);
-    parseKrx(kosdaq).forEach(add);
     parseUs(nas, 0, 1, 6, 3).forEach(add);   // Symbol|Security Name|…|Test|…|…|ETF
     parseUs(oth, 0, 1, 4, 6).forEach(add);   // ACT Symbol|Security Name|Exchange|CQS|ETF|Round|Test
+    notes.push("미국=nasdaqtrader");
   } catch (e) {
-    console.error("전체 목록 fetch 실패 (" + e.message + ") — 기존 tickers.js 유지");
-    process.exit(1);
+    console.error("미국 목록 실패 (" + e.message + ")");
+    notes.push("미국=기존 유지 " + keepPrev("us") + "건");
   }
+  console.log("출처: " + notes.join(" · "));
 
   const kr = list.filter((x) => x.c === "korea").length, us = list.filter((x) => x.c === "us").length;
   fs.writeFileSync(path.join(ROOT, "data/tickers.js"),

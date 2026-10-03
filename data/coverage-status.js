@@ -21,13 +21,6 @@ window.COVERAGE_STATUS = {
    "ok": true
   },
   {
-   "key": "tier",
-   "label": "tier 재평가",
-   "done": 90,
-   "total": 90,
-   "ok": true
-  },
-  {
    "key": "indexNotes",
    "label": "지수 대응",
    "done": 4,
@@ -87,6 +80,15 @@ window.COVERAGE_STATUS = {
    "fresh": 117,
    "total": 117,
    "oldestDays": 7,
+   "ok": true
+  },
+  {
+   "key": "tier",
+   "label": "tier 재평가",
+   "fresh": 10,
+   "total": 10,
+   "unit": "그룹",
+   "oldestDays": 0,
    "ok": true
   }
  ],

@@ -285,9 +285,14 @@ function validate(D, opts) {
         const liveUp = (s.targetPrice - cur) / cur * 100;
         if (liveUp <= 0) warnings.push(tag + ": 목표가 소진 (현재가 " + cur + " ≥ 목표가 " + s.targetPrice + ") — 재평가 우선 대상");
       }
-      if (RE_DATE.test(s.priceDate || "")) {
-        const age = (new Date(today) - new Date(s.priceDate)) / 86400000;
-        if (age > STALE_PRICE_DAYS) warnings.push(tag + ": priceDate 가 " + Math.round(age) + "일 경과 (" + s.priceDate + ")");
+      // 시세 신선도 — 표시 가격은 quotes.js 가 우선이므로 그쪽 날짜로 본다. 저장된 price/priceDate 는
+      // quotes.js 미보유 종목용 폴백일 뿐이라, quotes.js 에 시세가 있는데 폴백 날짜로 경고하면
+      // 실제 문제(목표가 소진 등) 경고가 노이즈에 묻힌다(2026-10-03 실측: 경고 99건 중 93건이 이것).
+      const effDate = q && typeof q.price === "number" && RE_DATE.test(q.date || "") ? q.date : s.priceDate;
+      if (RE_DATE.test(effDate || "")) {
+        const age = (new Date(today) - new Date(effDate)) / 86400000;
+        if (age > STALE_PRICE_DAYS) warnings.push(tag + ": 시세가 " + Math.round(age) + "일 경과 (" + effDate +
+          (effDate === s.priceDate && !q ? ", quotes.js 미보유" : "") + ")");
       }
       // 티어 신선도 — 티어는 항상 최신 펀더멘털로 유지(관심·보유는 tier 구조 면제라 제외)
       if (!isPersonalTheme(s.theme)) {

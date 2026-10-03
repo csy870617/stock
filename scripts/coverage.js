@@ -17,7 +17,11 @@
 //   discovery  : 7일 회전 — 10개 (주제×국가) 그룹의 D.discovery["<country>|<theme>"] 가 7일 이내
 //   aiTarget   : 7일 회전 — 전 종목의 aiCheckedAt(재시도한 날)이 7일 이내. 값 자체가 없는 건
 //                정상이지만(입력값 검증 실패) 재시도조차 안 하는 건 갱신 누락이라 게이트다.
-//   tier       : tierAsOf == 오늘 (관심·보유는 tier 구조 면제라 제외)
+//   tier       : 7일 회전(그룹 단위) — 10개 (주제×국가) 그룹 전부 tierAsOf 가 7일 이내.
+//                큐(--remaining tier)는 만료 그룹 + 선행(LOOKAHEAD 일+) 그룹, 최대 3그룹. 관심·보유 제외.
+//   topPicks·liquidity·시황 : asOf ≥ T(최신 거래일) — '== 오늘'이 아니다(2026-10-03 개정).
+//                주말·휴장일엔 T 가 그대로라 직전 거래일 판단이 그대로 유효하다. 예전 '== 오늘' 게이트는
+//                새 데이터가 없는 토요일에도 tier 90종목·시황·유동성을 날짜만 바꿔 다시 찍게 만들었다.
 //   indexNotes : INDEX_NOTES.asOf == indices.js asOf + 4개 지수 5개 필드
 //   topPicks   : topPicks.asOf == 오늘 + korea/us 각 3종목
 //   liquidity  : liquidity.js asOf == 오늘 + 통합·미국·한국 headline
@@ -128,11 +132,39 @@ function withLookahead(stale, pool, dateOf, quota, minAge) {
   return head.concat(extra.slice(0, quota - head.length));
 }
 // 세션에 한 번에 던질 수 있는 양은 예산이 정한다 — 큐는 오래된 순으로 QUOTA 만큼만 준다.
-const verifQueue = withLookahead(staleVerif, all, (s) => s.verifiedAt, VERIF_QUOTA, LOOKAHEAD_DAYS);
+// 목표가 소진(현재가 ≥ 목표가) 종목은 7일을 기다리지 않고 큐 맨 앞에 당긴다 — validate-reco 가
+// '재평가 우선 대상'으로 경고만 하고 아무도 집어 가지 않던 구멍(TMO·Deere 가 몇 주째 소진 상태로 방치).
+// 3일 이내 재검증분은 빼서 같은 종목을 매 회차 다시 검색하지 않게 한다.
+const QT = load("data/quotes.js", "STOCK_QUOTES");
+const curPrice = (s) => { const q = QT && QT.quotes && QT.quotes[s.ticker]; return q && typeof q.price === "number" ? q.price : s.price; };
+const exhausted = fairQueue(all.filter((s) => typeof s.targetPrice === "number" && curPrice(s) >= s.targetPrice &&
+  daysAgo(s.verifiedAt) >= 3), (s) => s.verifiedAt);
+const verifQueue = exhausted.concat(withLookahead(staleVerif.filter((s) => !exhausted.includes(s)),
+  all.filter((s) => !exhausted.includes(s)), (s) => s.verifiedAt, VERIF_QUOTA, LOOKAHEAD_DAYS)).slice(0, VERIF_QUOTA);
 const verifiedToday = all.filter((s) => s.verifiedAt === today);
 
 const tierable  = all.filter((s) => !isPersonalTheme(s.theme));
-const missTier  = tierable.filter((s) => s.tierAsOf !== today);
+// ── tier 재평가 — 7일 회전(그룹 단위, 2026-10-03 개정) ──
+// tier 는 그룹 내 품질 순위라 잘 변하지 않는다(10/2 변경 4건·10/3 0건). 매일 90종목 전량은
+// 날짜만 찍는 의식이 돼서, 다른 회전 항목처럼 '전 그룹이 7일 이내'로 게이트한다.
+// 그룹 나이 = 그 그룹에서 가장 오래된 tierAsOf. 큐는 만료 그룹 먼저, 남는 자리는 선행(LOOKAHEAD 일+) 그룹,
+// 동률이면 한·미 교대. A 하루 1회 × 3그룹이면 10그룹이 7일 안에 넉넉히 돈다.
+// (실적 발표·가이던스 급변이 있는 그룹은 회전과 무관하게 즉시 재평가 — CLAUDE.md)
+const TIER_QUOTA = Number(argVal("tierQuota") || 3);
+const tierGroups = {};
+tierable.forEach((s) => {
+  const g = ((D.korea || []).includes(s) ? "korea" : "us") + "|" + s.theme;
+  (tierGroups[g] = tierGroups[g] || []).push(s);
+});
+const tierAge = (g) => tierGroups[g].reduce((m, s) => Math.max(m, daysAgo(s.tierAsOf)), 0);
+const staleTierGroups = Object.keys(tierGroups).filter((g) => tierAge(g) > VERIF_CYCLE_DAYS);
+const missTier  = tierable.filter((s) => s.tierAsOf == null || staleTierGroups.some((g) => tierGroups[g].includes(s)));
+const tierRank = {};
+["korea", "us"].forEach((c) => Object.keys(tierGroups).filter((g) => g.startsWith(c + "|"))
+  .sort((a, b) => tierAge(b) - tierAge(a)).forEach((g, i) => (tierRank[g] = i)));
+const tierQueueGroups = Object.keys(tierGroups).filter((g) => tierAge(g) >= LOOKAHEAD_DAYS)
+  .sort((a, b) => tierAge(b) - tierAge(a) || tierRank[a] - tierRank[b] || (a < b ? -1 : 1)).slice(0, TIER_QUOTA);
+const tierQueue = [].concat(...tierQueueGroups.map((g) => tierGroups[g]));
 
 // ── 문서 단위 항목 ──
 const IX_ASOF = IX && IX.asOf;
@@ -154,7 +186,7 @@ const tp = D.topPicks || {};
 const missTop = [];
 if (!tp.asOf) missTop.push("topPicks 없음");
 else {
-  if (tp.asOf !== today) missTop.push("asOf " + tp.asOf + " ≠ 오늘 " + today);
+  if (!(tp.asOf >= T)) missTop.push("asOf " + tp.asOf + " < 최신 거래일 " + T);
   [["korea", tp.korea], ["us", tp.us]].forEach(([n, arr]) => {
     if (!Array.isArray(arr) || arr.length !== 3) missTop.push(n + " " + ((arr || []).length) + "/3");
   });
@@ -163,7 +195,7 @@ else {
 const missLiq = [];
 if (!LQ) missLiq.push("liquidity.js 없음");
 else {
-  if (LQ.asOf !== today) missLiq.push("asOf " + LQ.asOf + " ≠ 오늘 " + today);
+  if (!(LQ.asOf >= T)) missLiq.push("asOf " + LQ.asOf + " < 최신 거래일 " + T);
   ["headline", "headlineUS", "headlineKR"].forEach((f) => {
     if (!LQ[f] || !String(LQ[f]).trim()) missLiq.push(f);
   });
@@ -213,18 +245,19 @@ const builtDay = (v) => (v && typeof v === "string" ? v.slice(0, 10) : null);
 [["stock-ta.js", TA], ["indices.js", IX]].forEach(([name, obj]) => {
   const b = builtDay(obj && obj.builtAt);
   if (!b) missBackbone.push(name + " builtAt 없음(스크립트 재실행 필요)");
-  else if (b !== today) missBackbone.push(name + " 마지막 생성 " + b + " ≠ 오늘 " + today);
+  // 오늘 재생성했거나, T 의 양국 장 마감 뒤(T 21:00Z — 평일 21:00 Action 이후)에 재생성했으면 통과.
+  // 후자는 주말·휴장일에 금요일 밤 데이터가 그대로 최신인 경우다(그날 다시 돌려도 바뀌는 게 없다).
+  else if (b !== today && !(obj.builtAt >= T + "T21:00:00Z")) missBackbone.push(name + " 마지막 생성 " + obj.builtAt + " — 오늘 재실행 필요");
 });
 
 const missMarket = ["marketNote", "marketNoteUS", "marketNoteKR"].filter((f) => !D[f] || !String(D[f]).trim());
-if (D.generatedAt !== today) missMarket.push("generatedAt " + D.generatedAt + " ≠ 오늘 " + today);
 // generatedAt 은 daily-maintenance 가 매일 올려 시황 신선도를 가리므로,
 // 시황 문구를 실제로 다시 쓴 날(marketNoteAsOf)을 별도로 게이트한다.
-if (D.marketNoteAsOf !== today) missMarket.push("marketNoteAsOf " + (D.marketNoteAsOf || "없음") + " ≠ 오늘 " + today);
+if (!(D.marketNoteAsOf >= T)) missMarket.push("marketNoteAsOf " + (D.marketNoteAsOf || "없음") + " < 최신 거래일 " + T);
 
 // ── --remaining: 남은 티커만 출력(배치 재시도 입력용) ──
 const REMAIN = {
-  techNote: missTech, valueNote: missValue, verified: verifQueue, tier: missTier, aiTarget: aiQueue,
+  techNote: missTech, valueNote: missValue, verified: verifQueue, tier: tierQueue, aiTarget: aiQueue,
 };
 // discovery 는 종목이 아니라 그룹 목록이라 따로 처리한다.
 if (argVal("remaining") === "discovery") {
@@ -240,13 +273,16 @@ if (which) {
     process.exit(2);
   }
   // 선행 채움 종목은 끝에 '(선행)'을 붙인다 — 만료분이 먼저, 선행분이 뒤에 온다.
-  const staleSet = new Set(which === "verified" ? staleVerif : which === "aiTarget" ? staleAi : list);
+  const staleSet = new Set(which === "verified" ? staleVerif.concat(exhausted) : which === "aiTarget" ? staleAi :
+    which === "tier" ? missTier : list);
   // 같은 티커가 여러 주제에 있으면(예: SK하이닉스 core+watch) update-reco 가 국가+티커로 전부 merge 하므로 한 번만 낸다.
   const seenT = new Set();
-  list.filter((s) => { const k = (D.korea.includes(s) ? "korea" : "us") + ":" + s.ticker;
+  // 단, tier 는 주제별 값이라(같은 티커도 그룹마다 tier 가 다르다) 중복 제거 없이 주제를 함께 낸다.
+  list.filter((s) => { if (which === "tier") return true;
+    const k = (D.korea.includes(s) ? "korea" : "us") + ":" + s.ticker;
     return seenT.has(k) ? false : seenT.add(k); })
     .forEach((s) => console.log(s.country || (D.korea.includes(s) ? "korea" : "us"), s.ticker, s.name,
-    staleSet.has(s) ? "" : "(선행)"));
+    which === "tier" ? s.theme : "", staleSet.has(s) ? "" : "(선행)"));
   process.exit(list.length ? 1 : 0);
 }
 
@@ -265,7 +301,6 @@ if (process.argv.includes("--emit")) {
     daily: [
       { key: "techNote",  label: "기술 대응",   done: N - missTech.length,  total: N },
       { key: "valueNote", label: "밸류 설명",   done: N - missValue.length, total: N },
-      { key: "tier",      label: "tier 재평가", done: tierable.length - missTier.length, total: tierable.length },
       { key: "indexNotes", label: "지수 대응",  done: missIdx.length ? 0 : 4, total: 4 },
       { key: "topPicks",  label: "Top Pick",   done: missTop.length ? 0 : 6, total: 6 },
       { key: "liquidity", label: "유동성 판단", done: missLiq.length ? 0 : 1, total: 1 },
@@ -281,6 +316,9 @@ if (process.argv.includes("--emit")) {
         oldestDays: finite(oldest(DISC_GROUPS, (g) => discMap[g])) },
       { key: "aiTarget", label: "AI 적정가 재시도", fresh: N - staleAi.length, total: N,
         oldestDays: finite(oldest(all, (s) => s.aiCheckedAt)) },
+      { key: "tier", label: "tier 재평가", fresh: Object.keys(tierGroups).length - staleTierGroups.length,
+        total: Object.keys(tierGroups).length, unit: "그룹",
+        oldestDays: finite(Object.keys(tierGroups).reduce((m, g) => Math.max(m, tierAge(g)), 0)) },
     ],
   };
   status.daily.forEach((r) => (r.ok = r.done === r.total));
@@ -300,7 +338,7 @@ const rows = [
   ["techNote  (asOf==" + T + ")", N - missTech.length, N, missTech],
   ["valueNote", N - missValue.length, N, missValue],
   ["목표가 재검증 (전 종목 " + VERIF_CYCLE_DAYS + "일 이내)", N - staleVerif.length, N, missVerif],
-  ["tier 재평가 (tierAsOf==" + today + ")", tierable.length - missTier.length, tierable.length, missTier],
+  ["tier 재평가 (전 그룹 " + VERIF_CYCLE_DAYS + "일 이내)", tierable.length - missTier.length, tierable.length, missTier],
 ];
 
 console.log("풀 업데이트 커버리지 — 오늘 " + today + " · 최신 거래일 T " + T + " · 종목 " + N + "\n");
@@ -334,8 +372,14 @@ console.log("  ℹ️  재검증 회전(참고): 오늘 " + verifiedToday.length
   staleVerif.length + "종목" + (verifQueue.length ? " → 이번 세션 큐 " + verifQueue.length +
   "종목(--remaining verified): " + verifQueue.slice(0, 5).map(label).join(", ") +
   (verifQueue.length > 5 ? " 외 " + (verifQueue.length - 5) : "") +
-  (verifQueue.length > staleVerif.length ? " — 선행 " + (verifQueue.length - Math.min(staleVerif.length, verifQueue.length)) + "종목 포함" : "")
+  (verifQueue.some((x) => !staleVerif.includes(x) && !exhausted.includes(x)) ? " — 선행 " +
+    verifQueue.filter((x) => !staleVerif.includes(x) && !exhausted.includes(x)).length + "종목 포함" : "")
   : " (전 종목 주기 내)"));
+
+console.log("  ℹ️  tier 회전(참고): " + Object.keys(tierGroups).length + "그룹 중 7일 초과 " + staleTierGroups.length +
+  (tierQueueGroups.length ? " → 이번 세션 큐 " + tierQueueGroups.length + "그룹(--remaining tier): " + tierQueueGroups.join(", ")
+    : " · 큐 없음(전 그룹 " + LOOKAHEAD_DAYS + "일 미만)") +
+  (exhausted.length ? " · 목표가 소진 재검증 우선 " + exhausted.length + "종목: " + exhausted.slice(0, 5).map(label).join(", ") : ""));
 
 const blockers = missTech.length + missValue.length + missVerif.length + missTier.length +
   missIdx.length + missTop.length + missLiq.length + missDisc.length + staleAi.length +
