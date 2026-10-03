@@ -819,7 +819,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
 
   <footer class="site">
     <p id="disclaimer"></p>
-    <p style="margin-top:6px;"><span id="routineTime">매일 오전 1시(LA·한국시간 오후 5시)</span> 자동 갱신 · 현재가에 '실시간' 표기가 있으면 장중 시세, 없으면 종가</p>
+    <p style="margin-top:6px;"><span id="routineTime">매일 한국시간 오후 5시(LA 오전 1시)</span> 자동 갱신 · 현재가에 '실시간' 표기가 있으면 장중 시세, 없으면 종가</p>
     <p style="margin-top:6px;">기술 신호 등급(적극매수~적극매도)은 이동평균선·일목균형표·매물대 가중 종합에 상위 기간 추세를 반영한 값입니다(단기=일·주·월봉 5:3:2, 중기=주·월봉 7:3). 시장(지수) 대비 초과수익으로 검증하면(96종목·10년·14,748회) <b>종목을 가려내는 힘이 기간 전·후반 모두 일관된 것은 장기(월봉) 신호뿐이고(순위상관 +0.03~+0.06), 단기·중기 신호의 선별력은 미약합니다</b>. 컨센서스 목표가 기준 상승여력도 최근 85일(단일 국면) 검증에서는 미국 종목에서만 이후 수익률과 뚜렷한 양(+)의 관계를 보였고 한국 종목은 뚜렷하지 않았습니다. 매매 트리거가 아닌 참고 지표로만 활용하세요.</p>
   </footer>
 </div>
@@ -2579,29 +2579,24 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     });
   })();
 
-  // 정기 분석 루틴 = 매일 LA 01:00. cron 은 UTC 고정이라 서머타임마다 08:00(PDT)↔09:00(PST) UTC 로
-  // 옮겨지므로, 화면 문구·ETA 는 하드코딩하지 않고 LA 시간대에서 그날의 UTC 시각을 계산한다.
-  // (11월·3월 전환 시 손볼 곳은 루틴 cron 2개뿐 — index.html 은 자동으로 따라간다.)
-  function laUtcOffsetHours(d) {
-    try {
-      var h = Number(new Intl.DateTimeFormat("en-US", { timeZone: "America/Los_Angeles", hour: "numeric", hourCycle: "h23" })
-        .format(new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 12))));
-      return 12 - h;                         // PDT 7 · PST 8
-    } catch (e) { return 7; }
-  }
-  function routineUtcHour(d) { return 1 + laUtcOffsetHours(d || new Date()); }   // LA 01:00 → UTC 8 or 9
+  // 정기 분석 루틴 = 매일 08:00 UTC 고정(서머타임에 옮기지 않음) → 한국시간은 연중 오후 5시,
+  // LA 시각만 PDT 01:00 / PST 00:00 으로 바뀐다. LA 표기는 Intl 로 그날 기준 자동 계산한다.
+  var ROUTINE_UTC_HOUR = 8;
   function routineTimeLabel() {
-    var kst = (routineUtcHour() + 9) % 24;                                      // KST = UTC+9 → 17 or 18
-    return "매일 오전 1시(LA·한국시간 오후 " + (kst - 12) + "시)";
+    var la = "오전 1시";
+    try {
+      var n = new Date();
+      var h = Number(new Intl.DateTimeFormat("en-US", { timeZone: "America/Los_Angeles", hour: "numeric", hourCycle: "h23" })
+        .format(new Date(Date.UTC(n.getUTCFullYear(), n.getUTCMonth(), n.getUTCDate(), ROUTINE_UTC_HOUR))));
+      la = h === 0 ? "자정" : "오전 " + h + "시";
+    } catch (e) {}
+    return "매일 한국시간 오후 " + ((ROUTINE_UTC_HOUR + 9) % 24 - 12) + "시(LA " + la + ")";
   }
   // 정밀분석 요청 → 다음 정기 분석 반영 시점 안내.
   function nextAnalysisEta() {
     var now = new Date();
-    var next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), routineUtcHour(now), 0, 0));
-    if (next.getTime() <= now.getTime()) {
-      var tmr = new Date(next.getTime() + 86400000);
-      next = new Date(Date.UTC(tmr.getUTCFullYear(), tmr.getUTCMonth(), tmr.getUTCDate(), routineUtcHour(tmr), 0, 0));
-    }
+    var next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), ROUTINE_UTC_HOUR, 0, 0));
+    if (next.getTime() <= now.getTime()) next = new Date(next.getTime() + 86400000);
     var hrs = Math.max(1, Math.round((next.getTime() - now.getTime()) / 3600000));
     return routineTimeLabel() + " 정기 분석에 반영 · 약 " + hrs + "시간 뒤";
   }

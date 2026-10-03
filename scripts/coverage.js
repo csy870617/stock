@@ -337,24 +337,6 @@ console.log("  ℹ️  재검증 회전(참고): 오늘 " + verifiedToday.length
   (verifQueue.length > staleVerif.length ? " — 선행 " + (verifQueue.length - Math.min(staleVerif.length, verifQueue.length)) + "종목 포함" : "")
   : " (전 종목 주기 내)"));
 
-// ── 서머타임 전환 알림 ──
-// 루틴 cron 은 UTC 고정이라 LA 01:00 을 유지하려면 전환 때 손으로 옮겨야 한다(앱 문구·ETA 는 자동).
-// 전환 전후 14일 동안 매 세션 보고에 띄워 잊지 않게 한다 — 게이트(blockers)에는 넣지 않는다.
-const laOffset = (iso) => {
-  try {
-    const h = Number(new Intl.DateTimeFormat("en-US", { timeZone: "America/Los_Angeles", hour: "numeric", hourCycle: "h23" })
-      .format(new Date(iso + "T12:00:00Z")));
-    return 12 - h;
-  } catch (e) { return null; }
-};
-const shiftDay = (n) => new Date(Date.parse(today + "T00:00:00Z") + n * 86400000).toISOString().slice(0, 10);
-const offNow = laOffset(today), offPast = laOffset(shiftDay(-14)), offNext = laOffset(shiftDay(14));
-if (offNow != null && (offNow !== offPast || offNow !== offNext)) {
-  const target = offNow !== offNext ? offNext : offNow;          // 곧 바뀔 값 또는 방금 바뀐 값
-  console.log("  ⚠️  서머타임 전환 " + (offNow !== offNext ? "임박" : "직후") + " — LA 01:00 유지하려면 루틴 cron 을 A `0 " +
-    (1 + target) + " * * *` · B `0 " + (3 + target) + " * * *` 로 옮겼는지 확인(CLAUDE.md 발화 계획)");
-}
-
 const blockers = missTech.length + missValue.length + missVerif.length + missTier.length +
   missIdx.length + missTop.length + missLiq.length + missDisc.length + staleAi.length +
   missBackbone.length + missMarket.length;
