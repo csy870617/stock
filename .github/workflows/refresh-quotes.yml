@@ -2,6 +2,7 @@ name: Refresh quotes (daily, token-free)
 
 # 매일 앱 최신성을 순수 스크립트로 보장한다(LLM 토큰 0):
 #   1) update-quotes.js  → data/quotes.js (실제 Yahoo 시세)
+#   1-2) update-consensus.js → data/consensus.js + recommendations.js targetPrice (네이버 컨센서스)
 #   2) update-indices.js → data/indices.js (지수 단기/장기 이동평균·RSI·추세·지지/저항·신호)
 #   3) update-stock-ta.js → data/stock-ta.js (개별 종목 단기/장기 기술적 분석)
 #   4) update-liquidity-gauge.js → data/liquidity-auto.js (시장지표 기반 유동성 게이지 baseline)
@@ -56,6 +57,12 @@ jobs:
         run: node scripts/update-quotes.js
         continue-on-error: true
 
+      # 컨센서스 목표가(네이버 증권 — 한국 FnGuide·미국 LSEG 집계) → data/consensus.js + recommendations.js targetPrice.
+      # 기준일 30일 초과·±50% 초과 변화는 반영하지 않고 표시/경고만 남긴다(세션이 웹 검색으로 확인).
+      - name: Update consensus targets (Naver → targetPrice, token-free)
+        run: node scripts/update-consensus.js
+        continue-on-error: true
+
       - name: Update index technicals (Yahoo → data/indices.js, token-free)
         run: node scripts/update-indices.js
         continue-on-error: true
@@ -97,14 +104,14 @@ jobs:
       - name: Commit & push if changed
         id: commit
         run: |
-          if git diff --quiet -- data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/liquidity-auto.js data/watch-candidates.js data/coverage-status.js data/tickers.js; then
+          if git diff --quiet -- data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/liquidity-auto.js data/watch-candidates.js data/coverage-status.js data/tickers.js data/consensus.js data/reco-ops.json; then
             echo "변화 없음 — 커밋 생략"
             echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/liquidity-auto.js data/watch-candidates.js data/coverage-status.js data/tickers.js
+          git add data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/liquidity-auto.js data/watch-candidates.js data/coverage-status.js data/tickers.js data/consensus.js data/reco-ops.json
           git commit -m "매일 데이터 갱신 (자동) — 시세·기준일·스냅샷 (update-quotes + daily-maintenance)"
           # 다른 자동 커밋(LLM 재평가 Routine 등)과 경합해 push 가 거부될 수 있으므로,
           # 거부되면 원격 변경을 rebase 로 얹어 1회 재시도한다(그날 갱신이 조용히 유실되지 않도록).
@@ -121,9 +128,10 @@ jobs:
               cp data/quotes.js data/indices.js data/stock-ta.js data/liquidity-auto.js data/watch-candidates.js data/tickers.js "$GEN/"
               git reset --hard FETCH_HEAD
               cp "$GEN"/* data/
+              node scripts/update-consensus.js || true
               node scripts/daily-maintenance.js || true
               node scripts/coverage.js --emit || true
-              git add data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/liquidity-auto.js data/watch-candidates.js data/coverage-status.js data/tickers.js
+              git add data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/liquidity-auto.js data/watch-candidates.js data/coverage-status.js data/tickers.js data/consensus.js data/reco-ops.json
               git diff --cached --quiet || git commit -m "매일 데이터 갱신 (자동) — 시세·기준일·스냅샷 (update-quotes + daily-maintenance)"
             fi
             # 원격 변경과 합쳐진 결과도 커밋 전과 같은 게이트를 통과해야 push 한다

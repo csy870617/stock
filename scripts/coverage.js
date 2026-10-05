@@ -137,8 +137,11 @@ function withLookahead(stale, pool, dateOf, quota, minAge) {
 // 3일 이내 재검증분은 빼서 같은 종목을 매 회차 다시 검색하지 않게 한다.
 const QT = load("data/quotes.js", "STOCK_QUOTES");
 const curPrice = (s) => { const q = QT && QT.quotes && QT.quotes[s.ticker]; return q && typeof q.price === "number" ? q.price : s.price; };
-const exhausted = fairQueue(all.filter((s) => typeof s.targetPrice === "number" && curPrice(s) >= s.targetPrice &&
-  daysAgo(s.verifiedAt) >= 3), (s) => s.verifiedAt);
+// 2026-10-05: 목표가는 네이버 컨센서스로 매일 자동 갱신되므로(update-consensus.js), 그 값이 없거나(tpSource≠naver)
+// 집계 기준일이 30일을 넘은(tpStale) 종목도 같은 우선 큐에 넣는다 — 웹 검색으로 목표가를 확인해야 하는 종목은 이들뿐이다.
+const needsTpCheck = (s) => typeof s.targetPrice === "number" &&
+  (curPrice(s) >= s.targetPrice || s.tpStale === true || s.tpSource !== "naver");
+const exhausted = fairQueue(all.filter((s) => needsTpCheck(s) && daysAgo(s.verifiedAt) >= 3), (s) => s.verifiedAt);
 const verifQueue = exhausted.concat(withLookahead(staleVerif.filter((s) => !exhausted.includes(s)),
   all.filter((s) => !exhausted.includes(s)), (s) => s.verifiedAt, VERIF_QUOTA, LOOKAHEAD_DAYS)).slice(0, VERIF_QUOTA);
 const verifiedToday = all.filter((s) => s.verifiedAt === today);
@@ -379,7 +382,7 @@ console.log("  ℹ️  재검증 회전(참고): 오늘 " + verifiedToday.length
 console.log("  ℹ️  tier 회전(참고): " + Object.keys(tierGroups).length + "그룹 중 7일 초과 " + staleTierGroups.length +
   (tierQueueGroups.length ? " → 이번 세션 큐 " + tierQueueGroups.length + "그룹(--remaining tier): " + tierQueueGroups.join(", ")
     : " · 큐 없음(전 그룹 " + LOOKAHEAD_DAYS + "일 미만)") +
-  (exhausted.length ? " · 목표가 소진 재검증 우선 " + exhausted.length + "종목: " + exhausted.slice(0, 5).map(label).join(", ") : ""));
+  (exhausted.length ? " · 목표가 우선 재검증(소진·컨센서스 없음/낡음) " + exhausted.length + "종목: " + exhausted.slice(0, 5).map(label).join(", ") : ""));
 
 const blockers = missTech.length + missValue.length + missVerif.length + missTier.length +
   missIdx.length + missTop.length + missLiq.length + missDisc.length + staleAi.length +

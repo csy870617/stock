@@ -9,6 +9,7 @@
 `refresh-quotes` GitHub Action 이 **평일 07:00·21:00 UTC** 에 순수 스크립트로 처리한다(주말·휴장일은 A 루틴 세션의 backbone 재실행이 대신한다). 아래 파일과 `price`·`priceDate`·`upside`·`generatedAt` 은 이 Action 몫이다 — **직접 조사·수정하지 않는다.**
 - `data/quotes.js`(시세) · `data/indices.js`(나스닥·다우·코스피·코스닥) · `data/stock-ta.js`(전 종목) — Yahoo **10년** 일봉에서 단기(일봉)·중기(주봉)·장기(월봉) 3기간 계산(`scripts/update-indices.js`·`update-stock-ta.js`, 공유 `lib-ta.js`). 10년인 이유: 월봉 일목 선행스팬B(52)+선행(26)=78개월이 필요.
 - **신호 엔진 `mtf`**: 기간별로 이동평균 30%·일목균형표 30%·매물대 25%·오실레이터(RSI·스토캐스틱·MACD·ADX) 15% 가중(=`flow` 점수) 후 상위 기간 추세를 섞는다(단기=일·주·월 5:3:2, 중기=주·월 7:3, 장기=월봉). 중립 밴드 안이면 그 축은 기권하고, 결측은 재정규화한다. 5단계 신호.
+- **`data/consensus.js` + 각 종목 `targetPrice`·`tpSource`·`tpAsOf`·`tpHigh`·`tpLow`·`tpStale`**(`update-consensus.js`): 네이버 증권 컨센서스(한국 FnGuide·미국 LSEG 집계)를 매일 받아 목표가에 반영. 집계 기준일 30일 초과는 반영하지 않고 `tpStale:true`, ±50% 초과 변화는 미반영·경고, 0.5% 미만 변화는 무시. 한국은 평균만, 미국은 최저·최고 범위도 제공.
 - `data/liquidity-auto.js`(유동성 baseline, `update-liquidity-gauge.js`) · `data/watch-candidates.js`(관심 차트 후보, `screen-watch.js`) · `data/history.js`(스냅샷, `rsp` 포함) · `data/coverage-status.js`(앱 '데이터 신선도' 패널, `coverage.js --emit`) · `data/tickers.js`(검색 사전, `gen-tickers.js` — 월요일 주 1회, KRX 실패 시 네이버 폴백).
 
 ### 1-2. 온디맨드 분석(LLM) — "업데이트" 요청 시
@@ -100,7 +101,9 @@
 **공통**: WebSearch 만 사용(WebFetch·금융 API 직접 호출은 403). 수치는 검색 스니펫에 실제로 적힌 값만, 확인 못 한 값은 기존값 유지. 패치는 `node scripts/update-reco.js <patch.json>` 증분 적용(시세 필드는 넣지 않는다).
 
 ### 4-1. 목표가·논거 (`recommendations.js`)
-- 목표가는 **컨센서스**(단일 증권사 최고치 금지), 서로 다른 신뢰 도메인 2개 교차확인. 두 출처가 5% 이상 다르면 세 번째로 판별해 다수/중앙값. 확인 못 하면 기존값 유지하되 `verifiedAt` 은 갱신하고 못 채운 필드를 보고.
+- **목표가는 네이버 컨센서스 자동 갱신값이 기본**(`tpSource:"naver"`, §1-1) — 세션은 이 값을 손으로 덮어쓰지 않는다(다음 Action 이 되돌린다). 2026-10-05 도입: 웹 검색 스니펫으로 맞춘 한국 목표가가 네이버 컨센서스와 중간값 4.6%·15/53종목 10% 넘게 어긋났다(미국 1.6%).
+- **세션이 웹 검색으로 목표가를 확인하는 경우는 셋뿐**: ①네이버 값이 없음(`tpSource≠naver`) ②집계 기준일 30일 초과(`tpStale`) ③update-consensus 가 ±50% 초과로 미반영한 종목(Action 로그 경고). 이때는 컨센서스(단일 증권사 최고치 금지)를 서로 다른 신뢰 도메인 2개로 교차확인하고, 두 출처가 5% 이상 다르면 세 번째로 판별해 다수/중앙값. 확인 못 하면 기존값 유지. `coverage.js` 가 이 종목들과 목표가 소진 종목을 재검증 큐 맨 앞에 둔다.
+- 재검증 회전(`verifiedAt`)의 몫은 목표가가 아니라 **논거·리스크·배당·실적**이다 — 목표가가 네이버 값이면 그대로 두고 나머지를 확인한다.
 - 재검증 시 `thesis`·`risks`·`dividendYield`·`earnings` 도 재확인. 지배구조 스크리닝 수행(과거 편출 종목도 결격 해소 시 재편입 가능).
 - 우선순위 도구: `performance-report.js`(목표가 소진·성과 부진·`tierReview` 참고)·`validate-reco.js` 경고.
 - **내러티브 수치 신선도**: `reason`·`valueNote`·`thesis` 의 상승여력·목표가 수치는 **작성 시점 quotes.js 가격 기준**으로 계산한다(저장 `upside` 를 박지 말 것). validate 가 topPicks ±10%p·valueNote ±15%p 괴리를 경고하면 다음 회차에 우선 재작성. 수치 없이 써도 된다.

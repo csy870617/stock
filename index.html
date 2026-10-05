@@ -472,6 +472,7 @@ a { color: inherit; }
 .c-sv.c-muted { color: var(--muted); font-weight: 600; }
 .c-vd { color: var(--muted); font-size: 0.66rem; margin-top: 2px; white-space: nowrap; }
 .c-vd.old { color: var(--down); }
+.c-vd.wide { color: var(--tier3); }
 
 .earn { color: var(--ink-2); font-size: 0.84rem; line-height: 1.55; border-left: 3px solid var(--grid); padding-left: 11px; }
 .thesis { font-size: 0.9rem; line-height: 1.6; }
@@ -1400,13 +1401,37 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     var d = (Date.now() - new Date(s.verifiedAt + "T00:00:00Z")) / 86400000;
     return isNaN(d) ? null : Math.max(0, Math.floor(d));
   }
+  // 목표가 아래 작은 줄 — 네이버 컨센서스(매일 자동)면 집계 기준일·최저~최고 범위·의견 분산을,
+  //   수기 검증 값이면 마지막 재확인일을 보여준다.
+  function mdOf(d) { return String(d).slice(5).replace(/^0/, "").replace("-", "/").replace("/0", "/"); }
+  function fmtTpShort(v, isKr) {
+    if (v == null) return "–";
+    if (!isKr) return "$" + (v >= 1000 ? Math.round(v).toLocaleString("en-US") : (Math.round(v * 10) / 10));
+    return v >= 10000 ? (Math.round(v / 1000) / 10).toLocaleString("ko-KR") + "만" : Math.round(v).toLocaleString("ko-KR");
+  }
+  // 의견 분산 = (최고 − 최저) / 평균 — 0.6 이상이면 평균값의 신뢰도가 낮다고 표시
+  function tpDispersion(s) {
+    return (s.tpHigh != null && s.tpLow != null && s.targetPrice) ? (s.tpHigh - s.tpLow) / s.targetPrice : null;
+  }
   function tpVerifiedLine(s) {
+    if (s.tpSource === "naver" && s.tpAsOf) {
+      var isKr = /^\d/.test(s.ticker), disp = tpDispersion(s);
+      var range = (s.tpHigh != null && s.tpLow != null) ? fmtTpShort(s.tpLow, isKr) + "~" + fmtTpShort(s.tpHigh, isKr) : "";
+      return '<div class="c-vd' + (s.tpStale ? " old" : "") + '">' + esc(mdOf(s.tpAsOf)) + " 컨센서스" + (s.tpStale ? " · 오래됨" : "") + "</div>" +
+        (range ? '<div class="c-vd' + (disp != null && disp >= 0.6 ? " wide" : "") + '">' + esc(range) +
+          (disp != null && disp >= 0.6 ? " · 의견 분산" : "") + "</div>" : "");
+    }
     var d = tpVerifiedDays(s);
     if (d == null) return "";
-    var md = s.verifiedAt.slice(5).replace(/^0/, "").replace("-", "/").replace("/0", "/");
-    return '<div class="c-vd' + (d > 7 ? " old" : "") + '">' + esc(md) + " 확인" + (d > 7 ? " · 재확인 필요" : "") + "</div>";
+    return '<div class="c-vd' + (d > 7 ? " old" : "") + '">' + esc(mdOf(s.verifiedAt)) + " 확인" + (d > 7 ? " · 재확인 필요" : "") + "</div>";
   }
   function tpVerifiedTitle(s) {
+    if (s.tpSource === "naver" && s.tpAsOf) {
+      var disp = tpDispersion(s);
+      return ' title="' + esc("네이버 증권 컨센서스(다수 증권사 평균 — 한국 FnGuide·미국 LSEG 집계) · 기준일 " + s.tpAsOf +
+        (s.tpLow != null ? " · 최저 " + s.tpLow + " ~ 최고 " + s.tpHigh : "") +
+        (disp != null && disp >= 0.6 ? " · 증권사 간 의견 차이가 커 평균값의 신뢰도가 낮습니다" : "") + "") + '"';
+    }
     if (!s.verifiedAt) return "";
     return ' title="' + esc("컨센서스 목표가(다수 증권사 평균, 신뢰 출처 2곳 교차확인) · 최근 재확인 " + s.verifiedAt) + '"';
   }

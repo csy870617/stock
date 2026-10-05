@@ -257,6 +257,12 @@ function validate(D, opts) {
         if (vg && vg.gap > 15) warnings.push(tag + ": valueNote 속 상승여력 " + vg.said + "% 가 실계산 " + vg.real + "% 와 " + vg.gap.toFixed(1) + "%p 괴리 — 다음 회전에서 수치 갱신 필요");
       }
 
+      // 컨센서스 신선도 — 네이버 집계 기준일이 30일을 넘었거나(tpStale) 수기 목표가인데 재확인이 14일 넘게 없으면 경고
+      {
+        if (s.tpStale) warnings.push(tag + ": 컨센서스 집계 기준일 " + (s.tpAsOf || "?") + " — 30일 초과(목표가 웹 재검증 우선)");
+        else if (s.tpSource !== "naver" && s.verifiedAt && (Date.now() - Date.parse(s.verifiedAt)) / 86400000 > 14)
+          warnings.push(tag + ": 수기 목표가(네이버 컨센서스 없음) 재확인 14일 초과 — 재검증 우선");
+      }
       // 출처 — 신규 편입·논거 변경의 증거 사슬
       if (!RE_URL.test(s.chartUrl || "")) errors.push(tag + ": chartUrl 오류");
       // 차트 링크 형식 — 한국 m.stock.naver.com/domestic/stock/<코드>/total, 미국 …/worldstock/stock/<네이버 reutersCode>/total
