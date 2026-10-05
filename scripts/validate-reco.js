@@ -259,6 +259,10 @@ function validate(D, opts) {
 
       // 출처 — 신규 편입·논거 변경의 증거 사슬
       if (!RE_URL.test(s.chartUrl || "")) errors.push(tag + ": chartUrl 오류");
+      // 차트 링크 형식 — 한국 m.stock.naver.com/fchart/domestic/stock/<코드>, 미국 …/fchart/foreign/stock/<네이버 reutersCode>
+      //   (네이버 미국 코드: 나스닥 'AAPL.O', 뉴욕거래소는 접미사 없이 'KO', 버크셔 B 'BRKb' — 'KO.N' 은 없는 코드라 빈 화면이 뜬다)
+      else if (!new RegExp("^https://m\\.stock\\.naver\\.com/fchart/" + (c === "korea" ? "domestic" : "foreign") + "/stock/[A-Za-z0-9.]+$").test(s.chartUrl))
+        warnings.push(tag + ": chartUrl 형식 — 네이버 차트(fchart) 주소로 통일할 것(" + s.chartUrl + ")");
       if (!Array.isArray(s.sources) || s.sources.length < 1 || s.sources.length > 3) {
         errors.push(tag + ": sources 는 URL 1~3개여야 함");
       } else {
