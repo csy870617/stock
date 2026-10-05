@@ -167,7 +167,7 @@
 
 ## 8. 가드레일 (코드로 강제)
 `update-reco.js`·`validate-reco.js` 가 거부하는 것: 신뢰 출처 2개 미만(서로 다른 신뢰 도메인, 커뮤니티·블로그·SNS 금지) · 목표가 ±50% 급변(같은 패치 내 체이닝 포함) · 분석 변경에 근거 URL 없음 · techNote 등급 ↔ 같은 거래일 엔진 등급 2단계 이상 불일치 · (주제×국가) 9종목·tier 3/3/3 위반(개인 목록 면제) · **하루(UTC) 편입+편출 20건 초과**(`data/reco-ops.json` 레저 — 함께 커밋).
-- **`chartUrl` 형식(경고)**: 한국 `https://m.stock.naver.com/fchart/domestic/stock/<코드>`, 미국 `https://m.stock.naver.com/fchart/foreign/stock/<네이버 코드>` — 네이버 미국 코드는 나스닥 `AAPL.O`, 뉴욕거래소 **접미사 없음** `KO`(`KO.N` 은 없는 코드라 빈 화면), 예외 `BRKb`·`UBER.K`. 신규 편입 시 `curl -s -o /dev/null -w '%{http_code}' https://api.stock.naver.com/stock/<코드>/basic` 이 200 인 코드를 쓴다(node fetch 는 이 도메인이 egress 차단).
+- **`chartUrl` 형식(경고)**: 한국 `https://m.stock.naver.com/domestic/stock/<코드>/total`, 미국 `https://m.stock.naver.com/worldstock/stock/<네이버 코드>/total`(전체화면 `fchart/…` 는 일부 휴대폰에서 네이버 증권 홈으로 튕겨 쓰지 않는다) — 네이버 미국 코드는 나스닥 `AAPL.O`, 뉴욕거래소 **접미사 없음** `KO`(`KO.N` 은 없는 코드라 빈 화면), 예외 `BRKb`·`UBER.K`. 신규 편입 시 `curl -s -o /dev/null -w '%{http_code}' https://api.stock.naver.com/stock/<코드>/basic` 이 200 인 코드를 쓴다(node fetch 는 이 도메인이 egress 차단).
 
 ### 경합 충돌 해소 (★ 필수)
 다른 세션이 먼저 push 해 rebase 가 충돌하면 **원격 변경을 절대 버리지 않는다**(`--ours/--theirs` 통째 선택·덮어쓰기 금지). `git rebase --abort` → `git reset --hard origin/<배포브랜치>` → 이번 세션의 패치 JSON 을 `update-reco.js` 로 재적용 → validate → push. 패치를 안 남겼으면 양쪽 종목을 모두 살리도록 수동 병합. 해소 후 종목 수와 `watch`·`hold` 종목 유실 여부를 확인한다.

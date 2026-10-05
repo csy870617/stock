@@ -1591,8 +1591,9 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   var TA_SIG_COL = { "적극매수": "var(--up)", "매수": "var(--tier2)", "중립": "var(--tier3)", "매도": "#eb6834", "적극매도": "var(--down)" };
   function stTa(ticker) { var T = window.STOCK_TA; return (T && T.ta && T.ta[ticker]) || null; }
 
-  // 네이버 차트 URL — 한국은 네이버 모바일 차트(fchart/domestic), 미국은 추천 데이터에 저장된 네이버 차트 주소(fchart/foreign,
-  //   네이버 코드: 나스닥 'AAPL.O'·뉴욕거래소 접미사 없음 'KO')를 우선 쓰고,
+  // 네이버 차트 URL — 네이버 증권 모바일 종목 페이지(상단에 차트). 한국 domestic/stock/<코드>/total, 미국은 추천 데이터에
+  //   저장된 worldstock/stock/<네이버 코드>/total(나스닥 'AAPL.O'·뉴욕거래소 접미사 없음 'KO')을 우선 쓴다.
+  //   전체화면 차트(fchart/…)는 일부 휴대폰에서 네이버 증권 홈으로 튕겨 쓰지 않는다(2026-10-05 사용자 제보).
   //   추천 편성에 없는 미국 종목은 네이버 통합검색(주가 카드)으로 — 관심종목도 모두 네이버로 연결.
   var NAVER_US_MAP = (function () {
     var m = {};
@@ -1602,7 +1603,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     return m;
   })();
   function naverChartUrl(ticker, country) {
-    if (country === "korea") return "https://m.stock.naver.com/fchart/domestic/stock/" + encodeURIComponent(ticker);
+    if (country === "korea") return "https://m.stock.naver.com/domestic/stock/" + encodeURIComponent(ticker) + "/total";
     if (NAVER_US_MAP[ticker]) return NAVER_US_MAP[ticker];
     return "https://search.naver.com/search.naver?query=" + encodeURIComponent(ticker + " 주가");
   }
