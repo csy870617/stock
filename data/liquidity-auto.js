@@ -7,10 +7,10 @@ window.LIQUIDITY_AUTO = {
  "inputs": {
   "us10y": "5.28",
   "curve": "1.24",
-  "vix": "15.7",
-  "hyg20": "-1.8",
+  "vix": "15.5",
+  "hyg20": "-1.5",
   "dxy": "102.3",
-  "usdkrw": "1340"
+  "usdkrw": "1342"
  },
  "us": {
   "shortTerm": "부정",
@@ -21,7 +21,7 @@ window.LIQUIDITY_AUTO = {
    "10Y 추세 (−2)",
    "달러 추세 (−2)",
    "일드커브 (+2)",
-   "VIX 15.7 (+1)"
+   "VIX 15.5 (+1)"
   ]
  },
  "korea": {
