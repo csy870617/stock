@@ -16,11 +16,15 @@
 
 const fs = require("fs");
 const path = require("path");
+// 시세 1건 조회(현재가 + 마지막으로 끝난 정규장 종가) — daily-maintenance 와 공용.
+// 7일 넘은 시세(거래정지·상장폐지 심볼)는 lib-quote 가 'stale quote' 로 거부해 폴백시킨다.
+const { yahooQuote } = require("./lib-quote");
 
 const ROOT = path.join(__dirname, "..");
 const RECO = path.join(ROOT, "data", "recommendations.js");
 const QUOTES = path.join(ROOT, "data", "quotes.js");
-const STALE_QUOTE_DAYS = 7;   // 야후 시세 날짜가 이보다 오래되면(거래정지·상장폐지 심볼) 폴백 처리
+// 성과 기준 지수 — 스냅샷(history.js)이 종목 종가와 '같은 조회'의 지수 종가를 쓰도록 함께 받는다
+const INDEX_SYMBOLS = { kospi: "^KS11", sp500: "^GSPC", rsp: "RSP" };
 
 function argVal(name) {
   const i = process.argv.indexOf("--" + name);
@@ -44,10 +48,10 @@ if (!D || (!Array.isArray(D.korea) && !Array.isArray(D.us))) {
 }
 
 // ── 기존 quotes.js 로드(폴백용) ──
-let prev = {};
+let prev = {}, prevIdx = {};
 if (fs.existsSync(QUOTES)) {
-  try { prev = (loadGlobalScript(QUOTES, "STOCK_QUOTES") || {}).quotes || {}; }
-  catch (_e) { prev = {}; }
+  try { const pq = loadGlobalScript(QUOTES, "STOCK_QUOTES") || {}; prev = pq.quotes || {}; prevIdx = pq.indices || {}; }
+  catch (_e) { prev = {}; prevIdx = {}; }
 }
 
 // Yahoo 심볼 규칙 — index.html 의 symbolFor 와 동일하게 유지
@@ -68,47 +72,16 @@ const seen = {};
   });
 });
 
-async function oneQuote(symbol) {
-  const url = "https://query1.finance.yahoo.com/v8/finance/chart/" +
-    encodeURIComponent(symbol) + "?interval=1d&range=1d";
-  // 요청당 타임아웃 — Yahoo 가 응답을 지연할 때 워커가 무한정 매달려 전체 갱신이
-  // 멈추는 것을 막는다(index.html 실시간 조회와 동일한 방어). 실패는 폴백으로 처리된다.
-  const ctrl = new AbortController();
-  const to = setTimeout(function () { ctrl.abort(); }, 8000);
-  let j;
-  try {
-    const r = await fetch(url, { signal: ctrl.signal, headers: { "User-Agent": "Mozilla/5.0", "Accept": "application/json" } });
-    if (!r.ok) throw new Error("HTTP " + r.status);
-    j = await r.json();   // 본문 수신도 8초 타임아웃 안에서 — 스톨된 body 로 워커가 매달리지 않게
-  } finally {
-    clearTimeout(to);
-  }
-  const m = j && j.chart && j.chart.result && j.chart.result[0] && j.chart.result[0].meta;
-  if (!m || typeof m.regularMarketPrice !== "number" || !isFinite(m.regularMarketPrice)) {
-    throw new Error("no price");
-  }
-  let date = null;
-  // regularMarketTime 이 없으면 신선도를 판정할 수 없다 — 가드가 막으려던 바로 그
-  // 대상(폐지·정지 심볼의 옛 시세)이 필드 하나 빠졌다고 통과하지 않도록 거부한다.
-  if (!m.regularMarketTime) throw new Error("no regularMarketTime (신선도 판정 불가)");
-  if (m.regularMarketTime) {
-    const off = (m.gmtoffset || 0) * 1000;               // 거래소 현지시각 기준 날짜
-    date = new Date(m.regularMarketTime * 1000 + off).toISOString().slice(0, 10);
-    // 가드: 거래정지·상장폐지 심볼은 야후가 수개월~수년 전 시세를 그대로 반환한다.
-    // 이런 옛 값을 '실시간'으로 채택하면 상승여력이 크게 왜곡되므로, 오래된 시세는
-    // 거부해 이전 quotes.js 값 → recommendations.js 종가 순으로 폴백시킨다.
-    const ageDays = (Date.now() - m.regularMarketTime * 1000) / 86400000;
-    if (isFinite(ageDays) && ageDays > STALE_QUOTE_DAYS) {
-      throw new Error("stale quote (" + date + ", " + Math.round(ageDays) + "일 경과)");
-    }
-  }
-  // 일간 등락률 — 전일 종가 대비. 야후 meta 의 previousClose(정규장 기준) 를 우선 쓰고,
-  // 없으면 chartPreviousClose 로 대체한다. 둘 다 없으면 null(앱이 등락률을 숨김).
-  const prev = typeof m.previousClose === "number" && isFinite(m.previousClose) ? m.previousClose
-    : (typeof m.chartPreviousClose === "number" && isFinite(m.chartPreviousClose) ? m.chartPreviousClose : null);
-  let changePct = null;
-  if (prev && prev > 0) changePct = Math.round(((m.regularMarketPrice - prev) / prev) * 1000) / 10;
-  return { price: m.regularMarketPrice, date, prevClose: prev, changePct };
+// 시세 1건 — 가드(7일 넘은 시세 거부)·등락률(직전 거래일 종가 대비)·끝난 장 종가는 lib-quote 가 처리한다.
+//   price/date   : 화면용 현재가(장중이면 장중가) — 앱 표시·상승여력 계산
+//   close/closeDate: 마지막으로 끝난 정규장 종가 — 스냅샷(history.js) 성과 기록 전용
+function oneQuote(symbol) { return yahooQuote(symbol); }
+
+// 저장 형태 — close 가 있으면 함께 남긴다(장중 조회면 전 거래일 종가)
+function entryOf(q) {
+  const e = { price: q.price, date: q.date, changePct: q.changePct };
+  if (typeof q.close === "number" && isFinite(q.close) && q.closeDate) { e.close = q.close; e.closeDate = q.closeDate; }
+  return e;
 }
 
 // 동시 요청 수 제한(야후 부하·차단 방지)
@@ -150,12 +123,14 @@ async function mapLimit(items, limit, fn) {
 
   results.forEach(({ t, q, ok }) => {
     if (ok) {
-      quotes[t.ticker] = { price: q.price, date: q.date, changePct: q.changePct };
+      quotes[t.ticker] = entryOf(q);
       live++;
     } else if (prev[t.ticker] && prev[t.ticker].price != null) {
       // 이전 시세 유지 — 단 changePct 는 '그날' 등락률이라 구식 값을 넘기면
       // 앱 배지가 이틀 전 등락률을 오늘 것처럼 표시하므로 null 로 지운다(앱은 null 이면 숨김).
-      quotes[t.ticker] = { price: prev[t.ticker].price, date: prev[t.ticker].date || null, changePct: null };
+      const pq = prev[t.ticker];
+      quotes[t.ticker] = { price: pq.price, date: pq.date || null, changePct: null };
+      if (pq.close != null && pq.closeDate) { quotes[t.ticker].close = pq.close; quotes[t.ticker].closeDate = pq.closeDate; }
       fellBack++;
     } else if (t.baked.price != null) {
       quotes[t.ticker] = { price: t.baked.price, date: t.baked.date || null };  // 종가 seed
@@ -163,17 +138,33 @@ async function mapLimit(items, limit, fn) {
     }
   });
 
+  // 성과 기준 지수 — 같은 조회 시점의 종가를 스냅샷이 종목 종가와 짝지어 쓴다. 실패하면 이전 값 유지.
+  const indices = {};
+  for (const [k, sym] of Object.entries(INDEX_SYMBOLS)) {
+    let q = null;
+    if (canFetch) {
+      for (let att = 0; att < 3 && !q; att++) {
+        try { q = await oneQuote(sym); } catch (_e) { if (att < 2) await new Promise((r) => setTimeout(r, 400 * Math.pow(2, att))); }
+      }
+    }
+    if (q) indices[k] = Object.assign({ symbol: sym }, entryOf(q));
+    else if (prevIdx[k]) indices[k] = Object.assign({}, prevIdx[k], { changePct: null });
+  }
+
   const generatedAt = argVal("date") || new Date().toISOString().slice(0, 10);
   const body =
     "// 시세 스냅샷 — scripts/update-quotes.js 가 자동 생성 (LLM 토큰 0, 순수 스크립트)\n" +
     "// 분석(recommendations.js) 과 분리되어 시세만 매일 저비용으로 갱신된다.\n" +
     "// 페이지 가격 우선순위: 실시간 API(config.js) > 이 스냅샷 > recommendations.js 종가(폴백)\n" +
-    "// 각 항목: ticker → { price, date }\n" +
+    "// 각 항목: ticker → { price, date, changePct, close, closeDate }\n" +
+    "//   price·date 는 조회 시각의 현재가(장중이면 장중가), close·closeDate 는 마지막으로 끝난 정규장 종가(스냅샷 기록용)\n" +
+    "// indices: 성과 기준 지수(kospi ^KS11·sp500 ^GSPC·rsp RSP) — 같은 형식, snapshot.js 가 종목 종가와 짝지어 기록\n" +
     "window.STOCK_QUOTES = " +
-    JSON.stringify({ generatedAt, quotes }, null, 1) + ";\n";
+    JSON.stringify({ generatedAt, quotes, indices }, null, 1) + ";\n";
   fs.writeFileSync(QUOTES, body);
 
   console.log("quotes.js 갱신: " + Object.keys(quotes).length + "종목 (" +
     generatedAt + ") — 실시간 " + live + " · 폴백 " + fellBack +
+    " · 지수 " + Object.keys(indices).map((k) => k + "=" + (indices[k].close != null ? indices[k].close + "(" + indices[k].closeDate + ")" : indices[k].price)).join(" ") +
     (SEED_ONLY ? " [seed 모드]" : ""));
 })();

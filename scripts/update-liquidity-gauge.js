@@ -18,6 +18,7 @@
 
 const fs = require("fs");
 const path = require("path");
+const { settleDailyBars } = require("./lib-quote");   // 일봉을 끝난 장 기준으로 정리(장중 미완성 봉 제외·빈 종가 채움)
 
 const ROOT = path.join(__dirname, "..");
 const OUT = path.join(ROOT, "data", "liquidity-auto.js");
@@ -55,6 +56,7 @@ async function seriesOnce(sym) {
   } catch (_e) { return null; }
   finally { clearTimeout(to); }
   const res = j && j.chart && j.chart.result && j.chart.result[0];
+  if (res) settleDailyBars(res);   // 장중 실행이면 미완성 봉 제외 — 끝난 장 기준 변화율(lib-quote 참고)
   // quote[0] 까지 가드 — 야후가 indicators:{} 또는 quote:[] 를 돌려주면 TypeError 로
   // 프로세스가 죽고, refresh-quotes 워크플로우의 후속 스텝(screen-watch·commit)까지 전멸한다.
   let c = res && res.indicators && res.indicators.quote &&

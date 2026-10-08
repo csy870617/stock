@@ -34,39 +34,41 @@ if (/generatedAtTs:\s*"[^"]*"/.test(src)) {
 }
 if (src !== before) fs.writeFileSync(RECO, src);
 
-// 2) 지수(KOSPI ^KS11, S&P500 ^GSPC) 조회 — 실패 시 생략(스냅샷이 기존 지수값 보존)
-async function indexPrice(sym) {
-  if (typeof fetch !== "function") return null;
-  // 요청당 타임아웃 — 지수 조회가 지연돼 매일 유지보수가 멈추는 것을 막는다.
-  // 실패 시 null 반환 → snapshot 이 기존 지수값을 보존하므로 안전하다.
-  const ctrl = new AbortController();
-  const to = setTimeout(function () { ctrl.abort(); }, 8000);
+// 2) 지수(KOSPI ^KS11, S&P500 ^GSPC, 동일비중 S&P500 RSP) — 스냅샷의 성과 기준선.
+//    종목 가격과 '같은 조회'여야 짝이 맞으므로 기본은 quotes.js 의 지수 종가(update-quotes 가 직전 단계에서 함께 받음)를
+//    snapshot.js 가 직접 읽는다. quotes.js 에 지수가 없을 때(옛 형식·조회 전부 실패)만 여기서 받아 인자로 넘긴다.
+//    ★ regularMarketPrice 를 그대로 쓰면 안 된다: 예약 실행이 지연돼 장중(한국 00~06시·미국 13~20시 UTC)에 돌면
+//      장중 지수가 기록된다(2026-10-08 KOSPI 6,763 기록 vs 종가 6,626). lib-quote 의 close 는 끝난 장의 종가다.
+const { yahooQuote } = require("./lib-quote");
+function quotesIndices() {
   try {
-    const r = await fetch(
-      "https://query1.finance.yahoo.com/v8/finance/chart/" + encodeURIComponent(sym) + "?interval=1d&range=1d",
-      { signal: ctrl.signal, headers: { "User-Agent": "Mozilla/5.0", "Accept": "application/json" } }
-    );
-    if (!r.ok) return null;
-    const j = await r.json();
-    const m = j && j.chart && j.chart.result && j.chart.result[0] && j.chart.result[0].meta;
-    const p = m && m.regularMarketPrice;
-    return (typeof p === "number" && isFinite(p)) ? p : null;
-  } catch (_e) { return null; }
-  finally { clearTimeout(to); }
+    global.window = {};
+    const f = path.join(ROOT, "data", "quotes.js");
+    delete require.cache[require.resolve(f)];
+    require(f);
+    return (global.window.STOCK_QUOTES || {}).indices || {};
+  } catch (_e) { return {}; }
+}
+async function indexClose(sym) {
+  if (typeof fetch !== "function") return null;
+  try { const q = await yahooQuote(sym); return q.close != null ? q.close : null; }
+  catch (_e) { return null; }   // 실패 시 snapshot 이 기존 지수값을 보존
 }
 
 (async () => {
-  const kospi = await indexPrice("^KS11");
-  const sp500 = await indexPrice("^GSPC");
-  // 동일비중 S&P500(RSP) — 소수 초대형주 쏠림을 뺀 '평균 종목' 기준선. 성과 탭이 시가총액 지수와 함께 비교한다.
-  const rsp = await indexPrice("RSP");
-  // 3) 스냅샷 축적 (snapshot.js 가 generatedAt 기준일로 기록, 시세는 quotes.js 사용)
+  const QI = quotesIndices();
+  const SYM = { kospi: "^KS11", sp500: "^GSPC", rsp: "RSP" };
   const args = [path.join("scripts", "snapshot.js")];
-  if (kospi != null) args.push("--kospi", String(kospi));
-  if (sp500 != null) args.push("--sp500", String(sp500));
-  if (rsp != null) args.push("--rsp", String(rsp));
+  const shown = {};
+  for (const k of Object.keys(SYM)) {
+    const q = QI[k];
+    if (q && (q.close != null || q.price != null)) { shown[k] = (q.close != null ? q.close : q.price) + "(quotes.js)"; continue; }
+    const v = await indexClose(SYM[k]);
+    if (v != null) { args.push("--" + k, String(v)); shown[k] = v + "(직접 조회)"; }
+    else shown[k] = "-";
+  }
+  // 3) 스냅샷 축적 (snapshot.js 가 generatedAt 기준일로 기록, 시세·지수는 quotes.js 종가 사용)
   execFileSync("node", args, { cwd: ROOT, stdio: "inherit" });
   console.log("daily-maintenance: generatedAt=" + TODAY +
-    " kospi=" + (kospi == null ? "-" : kospi) + " sp500=" + (sp500 == null ? "-" : sp500) +
-    " rsp=" + (rsp == null ? "-" : rsp));
+    " kospi=" + shown.kospi + " sp500=" + shown.sp500 + " rsp=" + shown.rsp);
 })();

@@ -9,7 +9,8 @@
 `refresh-quotes` GitHub Action 이 **평일 07:00·21:00 UTC** 에 순수 스크립트로 처리한다(주말·휴장일은 A 루틴 세션의 backbone 재실행이 대신한다). 아래 파일과 `price`·`priceDate`·`upside`·`generatedAt` 은 이 Action 몫이다 — **직접 조사·수정하지 않는다.**
 - `data/quotes.js`(시세) · `data/indices.js`(나스닥·다우·코스피·코스닥) · `data/stock-ta.js`(전 종목) — Yahoo **10년** 일봉에서 단기(일봉)·중기(주봉)·장기(월봉) 3기간 계산(`scripts/update-indices.js`·`update-stock-ta.js`, 공유 `lib-ta.js`). 10년인 이유: 월봉 일목 선행스팬B(52)+선행(26)=78개월이 필요.
 - **신호 엔진 `mtf`**: 기간별로 이동평균 30%·일목균형표 30%·매물대 25%·오실레이터(RSI·스토캐스틱·MACD·ADX) 15% 가중(=`flow` 점수) 후 상위 기간 추세를 섞는다(단기=일·주·월 5:3:2, 중기=주·월 7:3, 장기=월봉). 중립 밴드 안이면 그 축은 기권하고, 결측은 재정규화한다. 5단계 신호.
-- **`data/consensus.js` + 각 종목 `targetPrice`·`tpSource`·`tpAsOf`·`tpHigh`·`tpLow`·`tpStale`**(`update-consensus.js`): 네이버 증권 컨센서스(한국 FnGuide·미국 LSEG 집계)를 매일 받아 목표가에 반영. 집계 기준일 30일 초과는 반영하지 않고 `tpStale:true`, ±50% 초과 변화는 미반영·경고, 0.5% 미만 변화는 무시. 한국은 평균만, 미국은 최저·최고 범위도 제공.
+- **`data/consensus.js` + 각 종목 `targetPrice`·`tpSource`·`tpAsOf`·`tpHigh`·`tpLow`·`tpStale`**(`update-consensus.js`): 네이버 증권 컨센서스(한국 FnGuide·미국 LSEG 집계)를 매일 받아 목표가에 반영. 집계 기준일 30일 초과는 반영하지 않고 `tpStale:true`, ±50% 초과 변화는 미반영·경고, 0.5% 미만 변화는 무시. 한국은 평균만, 미국은 최저·최고 범위도 제공. **최고=최저(증권사 1곳 값)는 컨센서스가 아니라 미반영**하고 `tpSource:"naver-single"` 로 바꿔 웹 확인 큐로 보낸다. 반영은 `update-reco.js --consensus`(목표가만 바꾸는 네이버 집계 항목은 신뢰 도메인 2개 대신 집계 1곳 인정)로 하며, 그래도 거부되면 종목별로 나눠 적용한다(한 종목의 출처 문제로 전 종목 동기화가 취소되지 않게). 네이버 종목 페이지는 매일 `sources` 맨 앞에 되살린다.
+- **스냅샷·지표는 '끝난 장' 기준**: 예약 실행은 GitHub 지연으로 장중(한국 00~06시·미국 13~20시 UTC)에 자주 돈다. `quotes.js` 의 `price` 는 화면용 현재가(장중이면 장중가), `close`·`closeDate` 는 마지막으로 끝난 정규장 종가, `indices` 는 같은 조회의 KOSPI·S&P500·RSP 종가이며, `snapshot.js` 는 이 종가끼리 짝지어 `history.js` 에 쓴다(세션은 인자 없이 돌린다). `update-stock-ta`·`update-indices`·`screen-watch`·`update-liquidity-gauge` 는 `lib-quote.js` 의 `settleDailyBars` 로 진행 중인 장의 미완성 일봉을 버리고, 끝난 장의 종가가 야후 장기 일봉에 비어 있으면(한국 종목에서 잦다) 확정 시세로 채운다 — 장중 실행이 같은 asOf 아래 신호를 바꿔 techNote 와 어긋나지 않게.
 - `data/liquidity-auto.js`(유동성 baseline, `update-liquidity-gauge.js`) · `data/watch-candidates.js`(관심 차트 후보, `screen-watch.js`) · `data/history.js`(스냅샷, `rsp` 포함) · `data/coverage-status.js`(앱 '데이터 신선도' 패널, `coverage.js --emit`) · `data/tickers.js`(검색 사전, `gen-tickers.js` — 월요일 주 1회, KRX 실패 시 네이버 폴백).
 
 ### 1-2. 온디맨드 분석(LLM) — "업데이트" 요청 시
@@ -99,6 +100,7 @@
 ## 4. 작업 기준
 
 **공통**: WebSearch 만 사용(WebFetch·금융 API 직접 호출은 403). 수치는 검색 스니펫에 실제로 적힌 값만, 확인 못 한 값은 기존값 유지. 패치는 `node scripts/update-reco.js <patch.json>` 증분 적용(시세 필드는 넣지 않는다).
+**작업 경위는 화면 필드에 쓰지 않는다**: `thesis`·`earnings`·`valueNote`·`risks` 는 앱 카드에 그대로 보인다 — '재검증 결과 기존값 유지'·'스니펫으로 확인 못 함'·'다음 회전에서 재확인' 같은 처리 메모를 넣지 말고, 확인 못 했으면 기존 문장을 그대로 두고 경위는 WATCHLIST·이슈 코멘트에 남긴다(2026-10-08 점검에서 13종목 정리). `valueNote` 의 목표가·상승여력·AI적정가 수치는 카드 상단 값과 같아야 한다 — 네이버 목표가가 매일 바뀌므로 수치를 쓰면 쓴 날 값으로 맞추고, 아니면 수치 없이 쓴다.
 
 ### 4-1. 목표가·논거 (`recommendations.js`)
 - **목표가는 네이버 컨센서스 자동 갱신값이 기본**(`tpSource:"naver"`, §1-1) — 세션은 이 값을 손으로 덮어쓰지 않는다(다음 Action 이 되돌린다). 2026-10-05 도입: 웹 검색 스니펫으로 맞춘 한국 목표가가 네이버 컨센서스와 중간값 4.6%·15/53종목 10% 넘게 어긋났다(미국 1.6%).

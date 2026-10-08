@@ -24,6 +24,7 @@
 
 const fs = require("fs");
 const path = require("path");
+const { settleDailyBars } = require("./lib-quote");   // 일봉을 끝난 장 기준으로 정리(장중 미완성 봉 제외·빈 종가 채움)
 
 const ROOT = path.join(__dirname, "..");
 const RECO = path.join(ROOT, "data", "recommendations.js");
@@ -190,9 +191,9 @@ async function fetchClosesOnce(symbol) {
     j = await r.json();   // 본문 수신도 타임아웃 범위 안에서(스톨 방지)
   } catch (_e) { return null; }
   finally { clearTimeout(to); }
-  const q = j && j.chart && j.chart.result && j.chart.result[0] &&
-            j.chart.result[0].indicators && j.chart.result[0].indicators.quote &&
-            j.chart.result[0].indicators.quote[0];
+  const res = j && j.chart && j.chart.result && j.chart.result[0];
+  if (res) settleDailyBars(res);   // 장중 실행이면 미완성 봉 제외 — 끝난 장 종가로만 스크리닝(lib-quote 참고)
+  const q = res && res.indicators && res.indicators.quote && res.indicators.quote[0];
   if (!q || !q.close) return null;
   const cl = q.close.filter((v) => typeof v === "number" && isFinite(v));
   return cl.length >= 130 ? cl : null;

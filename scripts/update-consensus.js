@@ -14,11 +14,15 @@
 //  - 네이버 createDate 가 30일 이내인 값만 쓴다(오래된 값은 반영하지 않고 tpStale 로 표시 → 세션 재검증 우선).
 //  - 변화가 0.5% 미만이면 건드리지 않는다(매일 미세 변동으로 diff·원장이 불어나는 것 방지).
 //  - 기존 대비 ±50% 를 넘는 변화는 반영하지 않고 경고만 낸다(update-reco 가드레일과 동일 — 세션이 확인).
-//  - 반영 시 tpSource:"naver"·tpAsOf(집계 기준일)·tpHigh·tpLow 를 함께 기록하고, sources 맨 앞에 네이버 종목 페이지를 둔다.
+//  - 최고 = 최저(미국)면 증권사 1곳의 값이라 컨센서스로 보지 않는다 — 반영하지 않고 tpSource 를 'naver-single' 로 바꿔
+//    세션 웹 확인 큐로 보낸다(2026-10-08 LLY: 평균·최고·최저 모두 $1,156).
+//  - 반영 시 tpSource:"naver"·tpAsOf(집계 기준일)·tpHigh·tpLow 를 함께 기록하고, sources 맨 앞에 네이버 종목 페이지를 둔다
+//    (세션 재검증이 sources 를 바꿔 빠졌으면 목표가 변화가 없어도 되살린다).
 //  - 저장은 update-reco.js 패치로 한다(가드레일·직렬화·원장 공유).
 const fs = require("fs");
 const path = require("path");
 const { execFileSync } = require("child_process");
+const { isBlockedSource } = require("./validate-reco");
 
 const ROOT = path.join(__dirname, "..");
 const OUT = path.join(ROOT, "data", "consensus.js");
@@ -108,7 +112,7 @@ const daysSince = (d) => Math.round((Date.parse(today) - Date.parse(d)) / 864000
     "window.STOCK_CONSENSUS = " + JSON.stringify(outObj, null, 1) + ";\n");
 
   // recommendations.js 반영 패치
-  const stocks = [], skipBig = [], stale = [], changed = [];
+  const stocks = [], skipBig = [], stale = [], changed = [], single = [];
   targets.forEach((t) => {
     const k = t.c + ":" + t.s.ticker, it = items[k];
     if (!it) return;
@@ -116,18 +120,31 @@ const daysSince = (d) => Math.round((Date.parse(today) - Date.parse(d)) / 864000
     const isStale = !it.date || daysSince(it.date) > STALE_DAYS;
     const meta = { tpAsOf: it.date, tpHigh: it.high, tpLow: it.low };
     if (isStale) { stale.push(k + " (" + it.date + ")"); stocks.push(Object.assign({ country: t.c, ticker: t.s.ticker, tpStale: true }, meta)); return; }
+    // 최고 = 최저(미국만 범위 제공) — 증권사 1곳의 값이지 컨센서스가 아니다(2026-10-08 LLY: 평균·최고·최저 모두 $1,156,
+    // 투자의견은 다수 평균). 반영하지 않고, 지금 네이버 값을 쓰고 있으면 tpSource 를 'naver-single' 로 바꿔
+    // coverage 재검증 큐 맨 앞(웹 검색 확인)으로 보낸다(§4-1 — 단일 증권사 값으로 목표가를 정하지 않는다).
+    if (it.high != null && it.low != null && it.high === it.low) {
+      single.push(k + " " + it.mean);
+      if (t.s.tpSource === "naver") stocks.push({ country: t.c, ticker: t.s.ticker, tpSource: "naver-single" });
+      return;
+    }
     const rel = typeof old === "number" && old > 0 ? (it.mean - old) / old : null;
     if (rel != null && Math.abs(rel) > MAX_CHANGE) { skipBig.push(k + " " + old + "→" + it.mean + " (" + (rel * 100).toFixed(1) + "%)"); return; }
     const entry = Object.assign({ country: t.c, ticker: t.s.ticker, tpSource: "naver", tpStale: false }, meta);
+    // 목표가 근거(네이버 종목 페이지)는 출처 맨 앞에 둔다 — 세션 재검증이 sources 를 통째로 바꾸면 빠지므로 매일 되살린다
+    const page = pageUrl(t.c, it.code);
+    // 차단 출처(블로그·커뮤니티)는 옮겨 싣지 않는다 — 하나라도 섞이면 update-reco 가 패치 전체를 거부한다
+    const withPage = () => [page].concat((t.s.sources || []).filter((u) => u.indexOf("m.stock.naver.com") < 0 && !isBlockedSource(u))).slice(0, 3);
     if (rel == null || Math.abs(rel) >= MIN_CHANGE) {
       // 소수 자릿수 — 한국은 원 단위 정수, 미국은 센트까지
       entry.targetPrice = t.c === "korea" ? Math.round(it.mean) : Math.round(it.mean * 100) / 100;
-      const src = [pageUrl(t.c, it.code)].concat((t.s.sources || []).filter((u) => u.indexOf("m.stock.naver.com") < 0)).slice(0, 3);
-      entry.sources = src;
+      entry.sources = withPage();
       changed.push(k + " " + old + "→" + entry.targetPrice + (rel == null ? "" : " (" + (rel >= 0 ? "+" : "") + (rel * 100).toFixed(1) + "%)"));
+    } else if (!(t.s.sources || []).some((u) => u === page)) {
+      entry.sources = withPage();
     }
     // 메타만 바뀐 경우에도 기록은 남긴다(기준일·범위 표시용)
-    const same = !entry.targetPrice && t.s.tpSource === "naver" && t.s.tpAsOf === it.date && t.s.tpHigh === it.high && t.s.tpLow === it.low && !t.s.tpStale;
+    const same = !entry.targetPrice && !entry.sources && t.s.tpSource === "naver" && t.s.tpAsOf === it.date && t.s.tpHigh === it.high && t.s.tpLow === it.low && !t.s.tpStale;
     if (!same) stocks.push(entry);
   });
 
@@ -135,11 +152,31 @@ const daysSince = (d) => Math.round((Date.parse(today) - Date.parse(d)) / 864000
   console.log("목표가 변경 " + changed.length + "건" + (changed.length ? ":\n  " + changed.join("\n  ") : ""));
   if (skipBig.length) console.log("::warning::±50% 초과로 미반영(세션 확인 필요) " + skipBig.length + "건:\n  " + skipBig.join("\n  "));
   if (stale.length) console.log("집계 기준일 " + STALE_DAYS + "일 초과(미반영·재검증 우선) " + stale.length + "건: " + stale.join(", "));
+  if (single.length) console.log("::warning::최고=최저(단일 증권사 값)라 미반영(세션 웹 확인) " + single.length + "건: " + single.join(", "));
   if (DRY || !stocks.length) { if (DRY) console.log("(dry-run — recommendations.js 미반영)"); return; }
 
-  const patchPath = path.join(require("os").tmpdir(), "consensus-patch-" + process.pid + ".json");
-  fs.writeFileSync(patchPath, JSON.stringify({ stocks }));
-  try {
-    execFileSync("node", [path.join(ROOT, "scripts", "update-reco.js"), patchPath], { cwd: ROOT, stdio: "inherit" });
-  } finally { try { fs.unlinkSync(patchPath); } catch (_e) { /* 무시 */ } }
+  // 한 번에 적용하고(--consensus: 목표가만 바꾸는 네이버 집계 항목은 신뢰 도메인 2개 규칙 대신 집계 1곳으로 인정),
+  // 그래도 거부되면 종목별로 나눠 적용한다 — 한 종목의 출처·가드 문제로 전 종목 동기화가 통째로 취소되지 않게
+  // (2026-10-08: 세션이 바꾼 출처 2종목 때문에 107종목 변경 21건이 모두 저장 취소되던 문제).
+  const tmp = require("os").tmpdir();
+  const apply = (list, tag) => {
+    const p = path.join(tmp, "consensus-patch-" + process.pid + "-" + tag + ".json");
+    fs.writeFileSync(p, JSON.stringify({ stocks: list }));
+    try {
+      const out = execFileSync("node", [path.join(ROOT, "scripts", "update-reco.js"), p, "--consensus"], { cwd: ROOT, stdio: "pipe", encoding: "utf8" });
+      if (tag === "all" && out) process.stdout.write(out);
+      return null;
+    } catch (e) { return String((e.stdout || "") + (e.stderr || "")).trim() || e.message; }
+    finally { try { fs.unlinkSync(p); } catch (_e) { /* 무시 */ } }
+  };
+  const err = apply(stocks, "all");
+  if (!err) { console.log("recommendations.js 반영: " + stocks.length + "건"); return; }
+  console.log("::warning::일괄 반영 거부 — 종목별로 나눠 적용합니다:\n" + err.split("\n").filter((l) => /✗|-\s/.test(l)).slice(0, 6).join("\n"));
+  let ok = 0; const bad = [];
+  stocks.forEach((e, i) => {
+    const r = apply([e], "s" + i);
+    if (!r) ok++;
+    else bad.push(e.country + ":" + e.ticker + " — " + (r.split("\n").find((l) => /^\s*-\s/.test(l)) || r.split("\n")[0]).trim());
+  });
+  console.log("recommendations.js 반영: " + ok + "/" + stocks.length + "건" + (bad.length ? "\n::warning::반영 실패 " + bad.length + "건(세션 확인):\n  " + bad.join("\n  ") : ""));
 })();

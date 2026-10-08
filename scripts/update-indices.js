@@ -21,6 +21,7 @@ const fs = require("fs");
 const path = require("path");
 
 const TA = require("./lib-ta.js");   // 공유 기술적 분석 라이브러리(단기/중기/장기)
+const { settleDailyBars } = require("./lib-quote");   // 일봉을 끝난 장 기준으로 정리(장중 미완성 봉 제외·빈 종가 채움)
 
 const ROOT = path.join(__dirname, "..");
 const OUT = path.join(ROOT, "data", "indices.js");
@@ -89,6 +90,8 @@ async function fetchSeriesOnce(symbol, bustCache) {
   finally { clearTimeout(to); }
   const res = j && j.chart && j.chart.result && j.chart.result[0];
   if (!res || !res.indicators || !res.indicators.quote || !res.indicators.quote[0]) return null;
+  // 장중 실행이면 진행 중인 장의 미완성 봉은 버린다 — 지수 카드·신호는 끝난 장 종가 기준(lib-quote 참고)
+  settleDailyBars(res);
   const q = res.indicators.quote[0];
   const ts = res.timestamp || [];
   const rows = [];

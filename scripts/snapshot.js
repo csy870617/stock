@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 // 일별 스냅샷 축적 스크립트
-// 사용법: node scripts/snapshot.js --kospi 8088.34 --sp500 7483.24
+// 사용법: node scripts/snapshot.js            # 지수는 quotes.js 의 지수 종가(update-quotes 가 함께 받음)
+//         node scripts/snapshot.js --kospi 8088.34 --sp500 7483.24 --rsp 210.5   # 지수 직접 지정
 // data/recommendations.js 의 현재 데이터를 data/history.js 에 스냅샷으로 추가한다.
+// 가격·지수는 모두 '마지막으로 끝난 정규장 종가'다(quotes.js close) — 장중에 돌아도 장중가가 섞이지 않는다.
 // 같은 날짜(generatedAt)의 스냅샷이 이미 있으면 교체한다(멱등).
 // 스냅샷은 (국가,티커) 기준으로 중복 제거하며, 여러 주제에 등장하면 가장 높은 확신(tier 최소값) 항목을 기록한다.
 
@@ -35,18 +37,29 @@ if (fs.existsSync(HIST)) {
 // recommendations.js 의 price 는 quotes.js 미보유 종목용 폴백일 뿐이므로,
 // 성과 히스토리도 quotes.js 값으로 기록해야 정확하다.
 const QUOTES = path.join(ROOT, "data", "quotes.js");
-let quotes = {};
+let quotes = {}, qIdx = {};
 if (fs.existsSync(QUOTES)) {
-  try { require(QUOTES); quotes = (global.window.STOCK_QUOTES || {}).quotes || {}; }
-  catch (_e) { quotes = {}; }
+  try { require(QUOTES); const Q = global.window.STOCK_QUOTES || {}; quotes = Q.quotes || {}; qIdx = Q.indices || {}; }
+  catch (_e) { quotes = {}; qIdx = {}; }
 }
+// 성과 기록은 '마지막으로 끝난 정규장 종가'(close)로 한다 — 장중에 돈 실행이 장중가를 남기지 않게(2026-10-08).
+// close 가 없는 옛 형식·폴백 항목만 price 를 쓴다.
 function priceOf(s) {
   const q = quotes[s.ticker];
+  if (q && typeof q.close === "number" && isFinite(q.close)) return q.close;
   return (q && typeof q.price === "number") ? q.price : s.price;
 }
 function priceDateOf(s) {
   const q = quotes[s.ticker];
+  if (q && typeof q.close === "number" && q.closeDate) return q.closeDate;
   return (q && q.date) ? q.date : s.priceDate;
+}
+// 지수 — 인자(--kospi 등)가 없으면 quotes.js 의 같은 조회 시점 지수 종가를 쓴다(종목 종가와 짝이 맞게)
+function idxClose(k) {
+  const v = qIdx[k];
+  if (!v) return null;
+  const c = typeof v.close === "number" && isFinite(v.close) ? v.close : (typeof v.price === "number" ? v.price : null);
+  return c;
 }
 
 // (국가,티커) 중복 제거 — tier 최소(=확신 최고) 항목 우선
@@ -81,9 +94,9 @@ const pickTickers = (arr) => (Array.isArray(arr) ? arr.map((x) => x.ticker).filt
 
 const snap = {
   date: D.generatedAt,
-  kospi: arg("kospi"),
-  sp500: arg("sp500"),
-  rsp: arg("rsp"),
+  kospi: arg("kospi") ?? idxClose("kospi"),
+  sp500: arg("sp500") ?? idxClose("sp500"),
+  rsp: arg("rsp") ?? idxClose("rsp"),
   note: D.marketNote || null,
   noteUS: D.marketNoteUS || null,
   noteKR: D.marketNoteKR || null,
@@ -171,7 +184,8 @@ const TPH = path.join(ROOT, "data", "tp-history.json");
 
 const out = "// 일별 추천 스냅샷 히스토리 — scripts/snapshot.js 가 자동 생성/추가\n" +
   "// 각 항목: {date, kospi, sp500, rsp(동일비중 S&P500 ETF), note·noteUS·noteKR 시황, liq 유동성{us,korea,headline}, picks Top Pick{korea[],us[]},\n" +
-  "//           stocks:[{t 티커, n 이름, c 국가, th 주제, tier, p 가격, pd 가격기준일, tp 목표가, ss 단기신호, sl 장기신호}]}\n" +
+  "//           stocks:[{t 티커, n 이름, c 국가, th 주제, tier, p 종가(마지막으로 끝난 정규장), pd 그 거래일, tp 목표가, ss 단기신호, sl 장기신호}]}\n" +
+  "// kospi·sp500·rsp 도 같은 조회 시점의 끝난 장 종가다(장중 실행이어도 장중가를 기록하지 않음).\n" +
   "window.STOCK_HISTORY = " + JSON.stringify(history, null, 1) + ";\n";
 fs.writeFileSync(HIST, out);
 console.log("스냅샷 저장: " + snap.date + " (" + snap.stocks.length + "종목, KOSPI " +

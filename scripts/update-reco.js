@@ -30,6 +30,9 @@
 //   2) 기존 종목의 targetPrice 를 ±50% 초과 변경 → --force 없이 거부, ±25% 초과는 경고
 //      (단일 증권사 최고치를 컨센서스로 착각하는 실수 차단)
 //   3) targetPrice/thesis/earnings 를 바꾸는 stocks 항목은 sources(근거 URL) 필수
+//      (--consensus: update-consensus.js 전용 — 목표가'만' 바꾸고 출처 맨 앞이 네이버 컨센서스 페이지인 항목은
+//       '신뢰 도메인 2개' 대신 그 집계 1곳으로 인정한다. 집계값 자체가 다수 증권사 평균이라 교차확인 규칙의
+//       대상이 아니고, 세션이 바꾼 다른 출처 때문에 107종목 동기화 전체가 취소되던 문제(2026-10-08) 방지)
 //   4) 적용 결과가 validate-reco.js 전체 검증(구조 9·3×3, 형식, 계산 정합성)을 통과해야 저장
 
 const fs = require("fs");
@@ -50,6 +53,8 @@ const outIdx = process.argv.indexOf("--out");
 const OUT = outIdx >= 0 ? path.resolve(process.argv[outIdx + 1]) : RECO;
 const IS_REAL_SAVE = OUT === path.resolve(RECO);
 const FORCE = process.argv.includes("--force");
+const CONSENSUS = process.argv.includes("--consensus");
+const NAVER_PAGE = /^https:\/\/m\.stock\.naver\.com\/(domestic|worldstock)\/stock\/[^/]+\/total$/;
 
 const patch = JSON.parse(fs.readFileSync(patchPath, "utf8"));
 
@@ -137,7 +142,9 @@ const origTp = {};
     }
     // 신뢰 출처는 '서로 다른 도메인' 기준으로 센다(동일 도메인·동일 URL 2개로 '교차확인' 우회 방지)
     const trustedN = new Set(fields.sources.map(trustedDomainOf).filter(Boolean)).size;
-    if (changesAnalysis && trustedN < 2 && !FORCE) {
+    const consensusSync = CONSENSUS && fields.thesis === undefined && fields.earnings === undefined &&
+      fields.tpSource === "naver" && NAVER_PAGE.test(fields.sources[0]);
+    if (changesAnalysis && trustedN < 2 && !FORCE && !consensusSync) {
       guardErrors.push(country + ":" + ticker + " — targetPrice/thesis/earnings 변경엔 서로 다른 신뢰 출처(FnGuide·WiseReport·TipRanks·MarketBeat·공시·주요 언론·증권사 등) 2개 이상 필수 (현재 신뢰 도메인 " +
         trustedN + "개: " + fields.sources.map(sourceHost).join(", ") + ")");
       return;

@@ -13,6 +13,7 @@
 const fs = require("fs");
 const path = require("path");
 const TA = require("./lib-ta.js");
+const { settleDailyBars } = require("./lib-quote");   // 일봉을 끝난 장 기준으로 정리(장중 미완성 봉 제외·빈 종가 채움)
 
 const ROOT = path.join(__dirname, "..");
 const RECO = path.join(ROOT, "data", "recommendations.js");
@@ -91,6 +92,8 @@ async function fetchRowsOnce(symbol) {
   finally { clearTimeout(to); }
   const res = j && j.chart && j.chart.result && j.chart.result[0];
   if (!res || !res.indicators || !res.indicators.quote || !res.indicators.quote[0]) return null;
+  // 장중 실행이면 진행 중인 장의 미완성 봉은 버린다 — 끝난 장 기준으로만 신호를 낸다(lib-quote 참고)
+  settleDailyBars(res);
   const q = res.indicators.quote[0], ts = res.timestamp || [], rows = [];
   for (let i = 0; i < (q.close || []).length; i++) {
     if (q.close[i] == null) continue;
