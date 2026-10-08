@@ -45,11 +45,6 @@ window.STOCK_QUOTES = {
    "date": "2026-10-08",
    "changePct": -3.5
   },
-  "298040": {
-   "price": 2494000,
-   "date": "2026-10-08",
-   "changePct": -3.6
-  },
   "316140": {
    "price": 32350,
    "date": "2026-10-08",
@@ -475,11 +470,6 @@ window.STOCK_QUOTES = {
    "date": "2026-10-07",
    "changePct": 2.4
   },
-  "ADI": {
-   "price": 410.08,
-   "date": "2026-10-07",
-   "changePct": -2.5
-  },
   "GILD": {
    "price": 146.85,
    "date": "2026-10-07",
@@ -544,6 +534,11 @@ window.STOCK_QUOTES = {
    "price": 288.98,
    "date": "2026-10-07",
    "changePct": -2.8
+  },
+  "MSI": {
+   "price": 448.33,
+   "date": "2026-10-07",
+   "changePct": -1.7
   }
  }
 };
