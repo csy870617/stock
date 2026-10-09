@@ -71,7 +71,7 @@ window.COVERAGE_STATUS = {
    "fresh": 10,
    "total": 10,
    "unit": "그룹",
-   "oldestDays": 5,
+   "oldestDays": 4,
    "ok": true
   },
   {
@@ -79,7 +79,7 @@ window.COVERAGE_STATUS = {
    "label": "AI 적정가 재시도",
    "fresh": 116,
    "total": 116,
-   "oldestDays": 5,
+   "oldestDays": 4,
    "ok": true
   },
   {
@@ -88,7 +88,7 @@ window.COVERAGE_STATUS = {
    "fresh": 10,
    "total": 10,
    "unit": "그룹",
-   "oldestDays": 6,
+   "oldestDays": 2,
    "ok": true
   }
  ],
