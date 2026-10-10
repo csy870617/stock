@@ -3,7 +3,7 @@
 // 거시 유동성 '게이지 등급'은 판단 영역이라 data/liquidity.js 에서 온디맨드로 남는다.
 window.INDEX_TA = {
  "asOf": "2026-10-09",
- "builtAt": "2026-10-10T00:32:23Z",
+ "builtAt": "2026-10-10T08:14:11Z",
  "note": "기술적 지표는 Yahoo 일봉에서 매일 자동 계산(LLM 토큰 0). 이동평균(SMA·EMA)과 오실레이터(RSI·MACD·스토캐스틱·CCI·Williams %R·ADX·모멘텀)를 종합 투표한 5단계 신호 — 단기=일봉, 중기=주봉, 장기=월봉 3기간.",
  "indices": [
   {
@@ -20,12 +20,12 @@ window.INDEX_TA = {
     "signal": "적극매수",
     "sigFlow": "적극매수",
     "sigMtf": "적극매수",
-    "scoreMtf": 0.8519118817005771,
-    "scoreFlow": 0.8579721249914419,
+    "scoreMtf": 0.8518680251054491,
+    "scoreFlow": 0.8579578742639774,
     "flow": {
      "ma": 0.9333333333333333,
      "ichimoku": 1,
-     "volume": 0.9618884999657682,
+     "volume": 0.9618314970559099,
      "osc": 0.25
     },
     "metrics": [
@@ -57,12 +57,12 @@ window.INDEX_TA = {
     "signal": "적극매수",
     "sigFlow": "적극매수",
     "sigMtf": "적극매수",
-    "scoreMtf": 0.8394818398729803,
-    "scoreFlow": 0.8203724442627848,
+    "scoreMtf": 0.8393972011166346,
+    "scoreFlow": 0.8202542766257764,
     "flow": {
      "ma": 1,
      "ichimoku": 1,
-     "volume": 0.8814897770511391,
+     "volume": 0.8810171065031057,
      "osc": 0
     },
     "metrics": [
@@ -94,12 +94,12 @@ window.INDEX_TA = {
     "signal": "적극매수",
     "sigFlow": "적극매수",
     "sigMtf": "적극매수",
-    "scoreMtf": 0.8840704296301035,
-    "scoreFlow": 0.8840704296301035,
+    "scoreMtf": 0.8840640249286374,
+    "scoreFlow": 0.8840640249286374,
     "flow": {
      "ma": 1,
      "ichimoku": 1,
-     "volume": 0.9862817185204144,
+     "volume": 0.9862560997145501,
      "osc": 0.25
     },
     "metrics": [
@@ -141,12 +141,12 @@ window.INDEX_TA = {
     "signal": "매수",
     "sigFlow": "매도",
     "sigMtf": "매수",
-    "scoreMtf": 0.237794075198635,
-    "scoreFlow": -0.1502996229540687,
+    "scoreMtf": 0.23779407687094803,
+    "scoreFlow": -0.15029962080971987,
     "flow": {
      "ma": -0.08000000000000002,
      "ichimoku": -0.7000000000000001,
-     "volume": 0.3348015081837252,
+     "volume": 0.3348015167611205,
      "osc": 0
     },
     "metrics": [
@@ -178,12 +178,12 @@ window.INDEX_TA = {
     "signal": "적극매수",
     "sigFlow": "적극매수",
     "sigMtf": "적극매수",
-    "scoreMtf": 0.6029741554421288,
-    "scoreFlow": 0.5342333017145,
+    "scoreMtf": 0.6029741567118387,
+    "scoreFlow": 0.5342333031925074,
     "flow": {
      "ma": 0.56,
      "ichimoku": 1,
-     "volume": 0.5649332068579999,
+     "volume": 0.5649332127700296,
      "osc": -0.5
     },
     "metrics": [
@@ -215,12 +215,12 @@ window.INDEX_TA = {
     "signal": "적극매수",
     "sigFlow": "적극매수",
     "sigMtf": "적극매수",
-    "scoreMtf": 0.7633694808065965,
-    "scoreFlow": 0.7633694808065965,
+    "scoreMtf": 0.7633694815902787,
+    "scoreFlow": 0.7633694815902787,
     "flow": {
      "ma": 0.8799999999999999,
      "ichimoku": 1,
-     "volume": 0.4974779232263866,
+     "volume": 0.4974779263611152,
      "osc": 0.5
     },
     "metrics": [
