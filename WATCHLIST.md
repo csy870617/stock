@@ -119,6 +119,12 @@ CLAUDE.md '신규 후보 탐색 프로토콜'이 참조하는 작업 메모. 매
 
 # 최근 회차 기록 (7일 보존, 최신이 위)
 
+## 2026-10-11 B 회차 (회전 전용, 전부 선행분)
+- 큐: 재검증 15·aiTarget 16·tier 3그룹(탐색 큐 비어 있음). 이슈 없음(열린 업데이트 요청 0).
+- **목표가 재검증 15종목**: earnings 갱신 3(TSLA 3Q 인도량·실적일 10/21, AAPL 4Q 실적일 11/2, C 3Q 실적일 10/13), 나머지 12 변경 없음(verifiedAt 만 갱신). 목표가는 전부 네이버 값 유지. 관찰: HD현대중공업 파업·NAVER-두나무 합병 승인 대기. TSLA/AAPL/BRK.B 목표가 소진은 10월 컨센서스 신규 값이 없어 유지.
+- **aiTarget**: 신규 POWL 175, GOOGL 356.4→326.5·AMZN 207.9→251.3(일회성 이익 섞인 2026E 대신 2027E EPS), KR 신한·모비스·하나·SK이노·US NVT·FSS·AAON·NVMI 불변(aiCheckedAt 갱신). MKSI 실패(FY26 EPS 검증 불가, 기존 217 유지·failCount 1). KB금융·삼성바이오·삼성물산은 이번 회차 미검색이라 큐에 남음.
+- **tier 3그룹**(korea|core, us|core, korea|growth): 변경 없음, tierAsOf 갱신. 신규 탐색 0, 교체 0.
+
 ## 2026-10-11 A 회차 (일요일, T=2026-10-09 유지, 이슈 #127)
 - backbone 재실행(quotes·stock-ta·indices·liquidity-gauge·screen-watch) 후 매 거래일 항목은 이미 통과 상태라 techNote·시황·유동성·지수·Top Pick 은 다시 쓰지 않음(carry 이월 0).
 - 회전 큐는 전부 선행분(만료 0). 목표가 소진 5종목(PLTR·LLY·TSLA·AAPL·BRK.B) 검색은 10월 자료가 없어(최신 7~9월 컨센서스) 확인된 변경이 없으므로 재검증 미기록, 기존값 유지. aiTarget·tier 선행분은 이번 회차 미집행.
