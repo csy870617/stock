@@ -38,7 +38,9 @@ self.addEventListener("install", function (e) {
 self.addEventListener("activate", function (e) {
   e.waitUntil(
     caches.keys().then(function (keys) {
-      return Promise.all(keys.filter(function (k) { return k !== CACHE; }).map(function (k) { return caches.delete(k); }));
+      // 같은 주소(csy870617.github.io)의 다른 앱들과 저장소를 함께 쓰므로 이 앱의 옛 캐시(mystock-…)만 지운다
+      // (남의 캐시를 지우면 그 앱이 받아 둔 음성·자료가 사라진다)
+      return Promise.all(keys.filter(function (k) { return k !== CACHE && k.indexOf("mystock-") === 0; }).map(function (k) { return caches.delete(k); }));
     }).then(function () { return self.clients.claim(); })
   );
 });
