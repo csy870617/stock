@@ -273,6 +273,30 @@ if (ledgerOps + added + removed > MAX_DAILY_OPS && !FORCE) {
   process.exit(1);
 }
 
+// ── 폴백 시세 동기화 — quotes.js 에 시세가 있는 종목은 price·priceDate 를 그 값(앱 표시가와 같은 값)으로 맞춘다 ──
+// 폴백 price 가 7월 값으로 남아 있어, 파일을 직접 읽은 세션이 저장 upside 로 '거짓 목표가 소진'(삼성물산 저장 -9.8%,
+// 실제 +58%)을 판정하거나 실제 소진(PLTR 저장 +55%, 실제 -4%)을 놓쳤다(2026-10-12). 이 스크립트는 Action 의
+// update-consensus 가 매일 부르므로 폴백값도 매일 따라온다.
+let quotes = {};
+{
+  const QUOTES = path.join(ROOT, "data", "quotes.js");
+  if (fs.existsSync(QUOTES)) {
+    try {
+      global.window = {};
+      delete require.cache[require.resolve(QUOTES)];
+      require(QUOTES);
+      quotes = (global.window.STOCK_QUOTES || {}).quotes || {};
+    } catch (_e) {}
+  }
+}
+["korea", "us"].forEach((c) => (D[c] || []).forEach((s) => {
+  const q = quotes[s.ticker];
+  if (q && typeof q.price === "number" && q.price > 0 && /^\d{4}-\d{2}-\d{2}$/.test(q.date || "")) {
+    s.price = q.price;
+    s.priceDate = q.date;
+  }
+}));
+
 // ── 파생 필드 재계산 — upside 는 price·targetPrice 에서 유도 (수기 값 불일치 방지) ──
 ["korea", "us"].forEach((c) => (D[c] || []).forEach((s) => {
   if (typeof s.price === "number" && s.price > 0 && typeof s.targetPrice === "number") {
@@ -350,16 +374,6 @@ try {
 
 // ── 전체 데이터 검증 (구조 9·3×3, 티커/시장/출처 형식, upside 정합성) — 실패 시 저장 취소 ──
 {
-  let quotes = {};
-  const QUOTES = path.join(ROOT, "data", "quotes.js");
-  if (fs.existsSync(QUOTES)) {
-    try {
-      global.window = {};
-      delete require.cache[require.resolve(QUOTES)];
-      require(QUOTES);
-      quotes = (global.window.STOCK_QUOTES || {}).quotes || {};
-    } catch (_e) {}
-  }
   const res = validate(D, { quotes, ta: loadTa() });
   if (res.warnings.length) {
     console.log("⚠ 검증 경고 " + res.warnings.length + "건:");

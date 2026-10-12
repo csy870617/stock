@@ -770,7 +770,29 @@
    "korea:001120": 59000
   },
   "2026-10-12": {
-   "us:DE": null
+   "korea:062040": 288000,
+   "us:MSFT": 583.5,
+   "us:NVDA": 324.55,
+   "us:META": 794.09,
+   "us:TSM": 550.2,
+   "us:C": 152.27,
+   "us:O": 65.87,
+   "us:NXT": 137.22,
+   "us:CVX": 223.54,
+   "us:ALGN": 200.96,
+   "us:NOW": 150.78,
+   "us:MU": 1501.74,
+   "us:TMO": 668.92,
+   "us:APH": 101.21,
+   "us:NVMI": 510.8,
+   "us:SNY": 54.38,
+   "us:DVN": 60.19,
+   "us:RBC": 641.88,
+   "korea:214150": null,
+   "us:PLTR": null,
+   "us:PEP": null,
+   "us:DE": null,
+   "us:MPWR": null
   }
  },
  "lastRun": "2026-10-12"

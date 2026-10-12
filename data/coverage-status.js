@@ -71,16 +71,25 @@ window.COVERAGE_STATUS = {
    "fresh": 10,
    "total": 10,
    "unit": "그룹",
-   "oldestDays": 3,
+   "oldestDays": 0,
+   "ok": true
+  },
+  {
+   "key": "deepDiscovery",
+   "label": "주간 심층 발굴",
+   "fresh": 1,
+   "total": 1,
+   "unit": "회",
+   "oldestDays": 0,
    "ok": true
   },
   {
    "key": "aiTarget",
    "label": "AI 적정가 재시도",
-   "fresh": 115,
+   "fresh": 111,
    "total": 115,
-   "oldestDays": 4,
-   "ok": true
+   "oldestDays": null,
+   "ok": false
   },
   {
    "key": "tier",
@@ -92,5 +101,5 @@ window.COVERAGE_STATUS = {
    "ok": true
   }
  ],
- "ok": true
+ "ok": false
 };
