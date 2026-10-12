@@ -15,6 +15,8 @@
 //     "marketNote":  "...",
 //     "disclaimer":  "...",
 //     "themes":      [ ... ],                    // 주제 정의 교체(있을 때만)
+//     "discovery":   { "korea|core": "2026-10-12" },   // 그룹별 탐색일 — 기존 지도에 '병합'(일부 그룹만 보내도 됨)
+//     "deepDiscovery": { "asOf": "2026-10-12", ... },  // 주간 심층 발굴(C 모드) 기록 — 통째 교체
 //     "stocks": [                                 // (국가+티커[+주제])로 찾아 필드만 merge
 //       { "country": "korea", "ticker": "005930", "targetPrice": 450000, "thesis": "..." }
 //     ],
@@ -94,9 +96,16 @@ const warnings = [];
 let merged = 0, added = 0, removed = 0;
 
 // ── 상단 필드 ──
-["generatedAt", "generatedAtTs", "marketNote", "marketNoteUS", "marketNoteKR", "marketNoteAsOf", "discovery", "disclaimer", "topPicks"].forEach((k) => {
+["generatedAt", "generatedAtTs", "marketNote", "marketNoteUS", "marketNoteKR", "marketNoteAsOf", "disclaimer", "topPicks", "deepDiscovery"].forEach((k) => {
   if (patch[k] !== undefined) D[k] = patch[k];
 });
+// discovery 는 그룹별 날짜 지도라 '병합'한다 — 통째 교체였을 때 일부 그룹만 담은 패치가 나머지 그룹 기록을
+// 지워 8개 그룹이 '기록 없음'이 된 적이 있다(2026-10-01). 그룹을 지우려면 값을 null 로 보낸다.
+if (patch.discovery !== undefined && patch.discovery !== null) {
+  const merged = Object.assign({}, D.discovery || {}, patch.discovery);
+  Object.keys(merged).forEach((g) => { if (merged[g] === null) delete merged[g]; });
+  D.discovery = merged;
+}
 // generatedAt 만 패치하고 정확한 시각을 안 준 경우 지금 시각으로 채운다 —
 // 앱의 '기준일 (한국 …)' 병기가 이 타임스탬프로 KST 달력일을 계산한다.
 if (patch.generatedAt !== undefined && patch.generatedAtTs === undefined) {
@@ -290,7 +299,7 @@ function serialize(D) {
   L.push("//  5. 근거가 약하면 그날은 바꾸지 않는다(변경 0건이 정상). 하루 최대 10교체.");
   L.push("//  6. 판단 전 scripts/performance-report.js 와 scripts/validate-reco.js 실행 — 목표가 소진·성과 부진·'신뢰 출처 0개' 경고 종목이 재평가 우선 대상.");
   L.push("window.STOCK_DATA = {");
-  ["generatedAt", "generatedAtTs", "marketNote", "marketNoteUS", "marketNoteKR", "marketNoteAsOf", "discovery", "disclaimer"].forEach((k) => {
+  ["generatedAt", "generatedAtTs", "marketNote", "marketNoteUS", "marketNoteKR", "marketNoteAsOf", "discovery", "deepDiscovery", "disclaimer"].forEach((k) => {
     if (D[k] !== undefined) L.push("  " + k + ": " + JSON.stringify(D[k]) + ",");
   });
   if (D.topPicks !== undefined) {
@@ -318,7 +327,7 @@ function serialize(D) {
     D[c].forEach((s) => L.push("    " + JSON.stringify(s) + ","));
     L.push("  ],");
   });
-  const known = ["generatedAt", "generatedAtTs", "marketNote", "marketNoteUS", "marketNoteKR", "marketNoteAsOf", "discovery", "disclaimer", "topPicks", "themes", "korea", "us"];
+  const known = ["generatedAt", "generatedAtTs", "marketNote", "marketNoteUS", "marketNoteKR", "marketNoteAsOf", "discovery", "deepDiscovery", "disclaimer", "topPicks", "themes", "korea", "us"];
   Object.keys(D).forEach((k) => {
     if (known.includes(k)) return;
     L.push("  " + k + ": " + JSON.stringify(D[k]) + ",");

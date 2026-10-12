@@ -216,11 +216,17 @@ const discMap = D.discovery || {};
 const byDiscAge = (a, b) => daysAgo(discMap[b]) - daysAgo(discMap[a]);
 const staleDisc = DISC_GROUPS.filter((g) => daysAgo(discMap[g]) > VERIF_CYCLE_DAYS).sort(byDiscAge);
 const missDisc = staleDisc.map((g) => g + "(" + (discMap[g] || "기록 없음") + ")");
-// 그룹도 같은 날 몰려 만료되므로(10그룹이 09-29~30 에 탐색됨) 선행 채움을 쓴다.
+// 2026-10-12: 매주 C 모드(주간 심층 발굴)가 10그룹을 한꺼번에 깊게 훑으므로 평일 회차의 '선행' 얕은 탐색은 없앴다
+// (B 회차가 그룹당 검색 몇 번으로 4그룹씩 훑어 같은 7월 후보만 돌려 막던 문제). 여기 큐는 C 를 놓쳐
+// 7일을 넘긴 그룹만 담는 안전망이다.
 const DISC_QUOTA = Number(argVal("discQuota") || 4);
-const discQueue = staleDisc.slice(0, DISC_QUOTA).concat(
-  DISC_GROUPS.filter((g) => !staleDisc.includes(g) && daysAgo(discMap[g]) >= LOOKAHEAD_DAYS)
-    .sort(byDiscAge)).slice(0, DISC_QUOTA);
+const discQueue = staleDisc.slice(0, DISC_QUOTA);
+
+// 주간 심층 발굴(C 모드) — 일요일 A 회차(또는 사용자 요청)가 스크린(screen-discovery.js) 후보와 10그룹 편성을
+// 함께 검증하고 D.deepDiscovery = {asOf, …} 를 남긴다. 7일을 넘기면 미완료 — 다음 A 회차가 C 모드를 돈다.
+const DEEP = D.deepDiscovery || {};
+const deepAge = daysAgo(DEEP.asOf);
+const missDeep = deepAge > VERIF_CYCLE_DAYS ? ["마지막 " + (DEEP.asOf || "기록 없음") + " — 다음 A 회차에 C 모드(주간 심층 발굴) 수행"] : [];
 
 // aiTarget — '산출됐는가'가 아니라 '최근에 재시도했는가'를 본다. 입력값 검증 실패로 값이
 // 없는 건 정상이지만, 몇 주째 재시도조차 안 하는 건 갱신 누락이다. 그래서 시도한 날을
@@ -262,6 +268,13 @@ if (!(D.marketNoteAsOf >= T)) missMarket.push("marketNoteAsOf " + (D.marketNoteA
 const REMAIN = {
   techNote: missTech, valueNote: missValue, verified: verifQueue, tier: tierQueue, aiTarget: aiQueue,
 };
+// deep: 주간 심층 발굴이 필요한가(오늘이 일요일이거나 7일 경과) — 필요하면 exit 1
+if (argVal("remaining") === "deep") {
+  const sunday = new Date(today + "T00:00:00Z").getUTCDay() === 0;
+  const need = missDeep.length > 0 || (sunday && DEEP.asOf !== today);
+  console.log(need ? "C 모드 필요 — 마지막 " + (DEEP.asOf || "기록 없음") + (sunday ? " · 오늘 일요일" : " · 7일 경과") : "C 모드 불필요 — 마지막 " + DEEP.asOf);
+  process.exit(need ? 1 : 0);
+}
 // discovery 는 종목이 아니라 그룹 목록이라 따로 처리한다.
 if (argVal("remaining") === "discovery") {
   discQueue.forEach((g) => console.log(g.replace("|", " "), discMap[g] || "기록없음",
@@ -272,7 +285,7 @@ const which = argVal("remaining");
 if (which) {
   const list = REMAIN[which];
   if (!list) {
-    console.error("--remaining 값은 " + Object.keys(REMAIN).join("|") + "|discovery 중 하나여야 합니다.");
+    console.error("--remaining 값은 " + Object.keys(REMAIN).join("|") + "|discovery|deep 중 하나여야 합니다.");
     process.exit(2);
   }
   // 선행 채움 종목은 끝에 '(선행)'을 붙인다 — 만료분이 먼저, 선행분이 뒤에 온다.
@@ -317,6 +330,8 @@ if (process.argv.includes("--emit")) {
       { key: "discovery", label: "신규 후보 탐색", fresh: DISC_GROUPS.length - staleDisc.length,
         total: DISC_GROUPS.length, unit: "그룹",
         oldestDays: finite(oldest(DISC_GROUPS, (g) => discMap[g])) },
+      { key: "deepDiscovery", label: "주간 심층 발굴", fresh: missDeep.length ? 0 : 1, total: 1, unit: "회",
+        oldestDays: finite(deepAge) },
       { key: "aiTarget", label: "AI 적정가 재시도", fresh: N - staleAi.length, total: N,
         oldestDays: finite(oldest(all, (s) => s.aiCheckedAt)) },
       { key: "tier", label: "tier 재평가", fresh: Object.keys(tierGroups).length - staleTierGroups.length,
@@ -355,6 +370,7 @@ rows.forEach(([name, done, total, miss]) => {
 [["index-notes", missIdx], ["topPicks", missTop], ["liquidity", missLiq],
  ["backbone 최신화 (오늘 재실행)", missBackbone],
  ["신규 후보 탐색 (전 " + DISC_GROUPS.length + "그룹 " + VERIF_CYCLE_DAYS + "일 이내)", missDisc],
+ ["주간 심층 발굴 (C 모드 " + VERIF_CYCLE_DAYS + "일 이내)", missDeep],
  ["aiTarget 재시도 (전 종목 " + VERIF_CYCLE_DAYS + "일 이내)",
    staleAi.length ? [staleAi.length + "종목 경과: " + staleAi.slice(0, 6).map(label).join(", ") +
      (staleAi.length > 6 ? " 외 " + (staleAi.length - 6) : "")] : []],
@@ -385,7 +401,7 @@ console.log("  ℹ️  tier 회전(참고): " + Object.keys(tierGroups).length +
   (exhausted.length ? " · 목표가 우선 재검증(소진·컨센서스 없음/낡음) " + exhausted.length + "종목: " + exhausted.slice(0, 5).map(label).join(", ") : ""));
 
 const blockers = missTech.length + missValue.length + missVerif.length + missTier.length +
-  missIdx.length + missTop.length + missLiq.length + missDisc.length + staleAi.length +
+  missIdx.length + missTop.length + missLiq.length + missDisc.length + missDeep.length + staleAi.length +
   missBackbone.length + missMarket.length;
 
 console.log("");
@@ -394,5 +410,5 @@ if (blockers === 0) {
   process.exit(0);
 }
 console.log("✗ 미완료 " + blockers + "건 — 남은 종목만 재배치해 100% 까지 반복할 것");
-console.log("  (남은 티커 목록: node scripts/coverage.js --remaining techNote|valueNote|verified|tier|aiTarget|discovery)");
+console.log("  (남은 티커 목록: node scripts/coverage.js --remaining techNote|valueNote|verified|tier|aiTarget|discovery|deep)");
 process.exit(1);

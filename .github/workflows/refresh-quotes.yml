@@ -80,6 +80,12 @@ jobs:
         run: node scripts/screen-watch.js
         continue-on-error: true
 
+      # 주간 심층 발굴(C 모드) 후보 스크린 — 6일 이내 생성본이 있으면 건너뛴다(주 1회, 2~3분, 토큰 0).
+      # 시장 전체(한국 400·미국 600)를 같은 잣대로 훑어 세션이 검색 예산을 '후보 검증'에만 쓰게 한다.
+      - name: Screen discovery candidates (weekly, → data/discovery-candidates.js, token-free)
+        run: node scripts/screen-discovery.js --if-stale
+        continue-on-error: true
+
       # 관심종목 검색 사전(이름→코드) — 신규 상장 반영용, 월요일 아침 실행에서만 주 1회.
       # KRX 가 막히면 네이버로 폴백하고, 둘 다 실패한 국가는 기존 값을 유지한다(스크립트 내부 처리).
       - name: Refresh ticker dictionary (weekly, → data/tickers.js, token-free)
@@ -104,14 +110,14 @@ jobs:
       - name: Commit & push if changed
         id: commit
         run: |
-          if git diff --quiet -- data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/liquidity-auto.js data/watch-candidates.js data/coverage-status.js data/tickers.js data/consensus.js data/reco-ops.json; then
+          if git diff --quiet -- data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/liquidity-auto.js data/watch-candidates.js data/discovery-candidates.js data/coverage-status.js data/tickers.js data/consensus.js data/reco-ops.json; then
             echo "변화 없음 — 커밋 생략"
             echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/liquidity-auto.js data/watch-candidates.js data/coverage-status.js data/tickers.js data/consensus.js data/reco-ops.json
+          git add data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/liquidity-auto.js data/watch-candidates.js data/discovery-candidates.js data/coverage-status.js data/tickers.js data/consensus.js data/reco-ops.json
           git commit -m "매일 데이터 갱신 (자동) — 시세·기준일·스냅샷 (update-quotes + daily-maintenance)"
           # 다른 자동 커밋(LLM 재평가 Routine 등)과 경합해 push 가 거부될 수 있으므로,
           # 거부되면 원격 변경을 rebase 로 얹어 1회 재시도한다(그날 갱신이 조용히 유실되지 않도록).
@@ -125,13 +131,13 @@ jobs:
               git rebase --abort
               echo "::warning::rebase 충돌 — 원격 최신 위에 이번 실행 산출물을 다시 얹습니다"
               GEN="$RUNNER_TEMP/gen"; mkdir -p "$GEN"
-              cp data/quotes.js data/indices.js data/stock-ta.js data/liquidity-auto.js data/watch-candidates.js data/tickers.js "$GEN/"
+              cp data/quotes.js data/indices.js data/stock-ta.js data/liquidity-auto.js data/watch-candidates.js data/discovery-candidates.js data/tickers.js "$GEN/"
               git reset --hard FETCH_HEAD
               cp "$GEN"/* data/
               node scripts/update-consensus.js || true
               node scripts/daily-maintenance.js || true
               node scripts/coverage.js --emit || true
-              git add data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/liquidity-auto.js data/watch-candidates.js data/coverage-status.js data/tickers.js data/consensus.js data/reco-ops.json
+              git add data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/liquidity-auto.js data/watch-candidates.js data/discovery-candidates.js data/coverage-status.js data/tickers.js data/consensus.js data/reco-ops.json
               git diff --cached --quiet || git commit -m "매일 데이터 갱신 (자동) — 시세·기준일·스냅샷 (update-quotes + daily-maintenance)"
             fi
             # 원격 변경과 합쳐진 결과도 커밋 전과 같은 게이트를 통과해야 push 한다

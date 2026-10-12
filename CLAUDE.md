@@ -12,6 +12,7 @@
 - **`data/consensus.js` + 각 종목 `targetPrice`·`tpSource`·`tpAsOf`·`tpHigh`·`tpLow`·`tpStale`**(`update-consensus.js`): 네이버 증권 컨센서스(한국 FnGuide·미국 LSEG 집계)를 매일 받아 목표가에 반영. 집계 기준일 30일 초과는 반영하지 않고 `tpStale:true`, ±50% 초과 변화는 미반영·경고, 0.5% 미만 변화는 무시. 한국은 평균만, 미국은 최저·최고 범위도 제공. **최고=최저(증권사 1곳 값)는 컨센서스가 아니라 미반영**하고 `tpSource:"naver-single"` 로 바꿔 웹 확인 큐로 보낸다. 반영은 `update-reco.js --consensus`(목표가만 바꾸는 네이버 집계 항목은 신뢰 도메인 2개 대신 집계 1곳 인정)로 하며, 그래도 거부되면 종목별로 나눠 적용한다(한 종목의 출처 문제로 전 종목 동기화가 취소되지 않게). 네이버 종목 페이지는 매일 `sources` 맨 앞에 되살린다.
 - **스냅샷·지표는 '끝난 장' 기준**: 예약 실행은 GitHub 지연으로 장중(한국 00~06시·미국 13~20시 UTC)에 자주 돈다. `quotes.js` 의 `price` 는 화면용 현재가(장중이면 장중가), `close`·`closeDate` 는 마지막으로 끝난 정규장 종가, `indices` 는 같은 조회의 KOSPI·S&P500·RSP 종가이며, `snapshot.js` 는 이 종가끼리 짝지어 `history.js` 에 쓴다(세션은 인자 없이 돌린다). `update-stock-ta`·`update-indices`·`screen-watch`·`update-liquidity-gauge` 는 `lib-quote.js` 의 `settleDailyBars` 로 진행 중인 장의 미완성 일봉을 버리고, 끝난 장의 종가가 야후 장기 일봉에 비어 있으면(한국 종목에서 잦다) 확정 시세로 채운다 — 장중 실행이 같은 asOf 아래 신호를 바꿔 techNote 와 어긋나지 않게.
 - `data/liquidity-auto.js`(유동성 baseline, `update-liquidity-gauge.js`) · `data/watch-candidates.js`(관심 차트 후보, `screen-watch.js`) · `data/history.js`(스냅샷, `rsp` 포함) · `data/coverage-status.js`(앱 '데이터 신선도' 패널, `coverage.js --emit`) · `data/tickers.js`(검색 사전, `gen-tickers.js` — 월요일 주 1회, KRX 실패 시 네이버 폴백).
+- `data/discovery-candidates.js`(주간 심층 발굴 후보 스크린, `screen-discovery.js --if-stale` — 6일 지나면 재생성, 앱은 로드하지 않음): 네이버 시총 순위(한국 KOSPI 250·KOSDAQ 150, 미국 NASDAQ 250·NYSE 350)의 연간·분기 재무·컨센서스로 (국가×주제)별 후보 10개와 같은 잣대로 잰 현 편성을 기록. **후보 생성용이지 선정 규칙이 아니다**(편입·교체는 §3-6·§5 검증으로만, 한국 점수엔 상승여력 미반영).
 
 ### 1-2. 온디맨드 분석(LLM) — "업데이트" 요청 시
 `data/recommendations.js`(분석·추천·`topPicks`·시황)·`data/liquidity.js`(유동성 판단)·`data/index-notes.js`(지수 대응)·`techNote` 는 **"업데이트" 요청**이 들어올 때 갱신한다. 요청 = 사용자 채팅 또는 아래 루틴 발화. **지시는 루틴 프롬프트가 아니라 이 파일에만 둔다**(루틴은 한 줄만 발화 — 긴 프롬프트 루틴이 조용히 실패한 이력 때문).
@@ -25,6 +26,7 @@
 - **서머타임(DST)은 신경 쓰지 않는다**: cron 은 UTC 고정이고 전환 때 옮기지 않는다(2026-10-03 사용자 결정). 한국시간은 연중 같고 LA 시각만 1시간 바뀐다. 앱 안내 문구(`#routineTime`)·'약 N시간 뒤' ETA 는 `index.html` 의 `ROUTINE_UTC_HOUR = 8` 기준으로 자동 계산된다 — cron 을 바꾸면 이 상수도 함께 바꾼다.
 - 08:00 UTC 는 한국 마감(06:30) 뒤라 한국은 당일 종가, 미국은 직전 정규장 종가 기준이다.
 - **주말·휴장일**: T 가 그대로라 매 거래일 항목은 이미 통과 상태다(§3-1) — 그날 A 는 회전 큐와 D절만 처리하고 날짜만 바꿔 다시 쓰지 않는다.
+- **일요일(UTC) A = C 모드(주간 심층 발굴, §3-6) 포함** — 새 루틴을 만들지 않고 A 발화가 겸한다(일요일은 매 거래일 항목이 이미 통과라 검색 예산을 발굴에 몰 수 있다). 일요일을 놓쳤으면 `coverage.js --remaining deep` 이 exit 1 이 되어 다음 A 회차가 이어받는다.
 - **새 루틴을 만들면 `sources`(저장소)를 반드시 `csy870617/stock` 으로 지정**한다(MCP `create_trigger` 는 비워 둔다 → 저장소 없이 떠서 흔적 없이 실패). 루틴이 아무 흔적 없이 실패하면 프롬프트보다 `sources` 부터 본다(`mcp__Claude_Code_Remote__list_triggers` 의 `job_config.ccr.session_context.sources`).
 
 ### 1-4. 브랜치
@@ -57,7 +59,8 @@
 | 시황 `marketNote`/US/KR | 매 거래일 | `marketNoteAsOf ≥ T` | — |
 | backbone 재생성 | 매 실행 | `builtAt` 오늘, 또는 T 21:00Z 이후(주말·휴장일) | — |
 | **목표가 재검증**(`targetPrice`·`thesis`·`risks`·배당·실적) | 7일 회전 | 전 종목 `verifiedAt` 7일 이내 | `--remaining verified`(최대 15 — **목표가 소진 종목 우선** → 만료 → 선행) |
-| **신규 후보 탐색** 10그룹 | 7일 회전 | 전 그룹 `discovery["<country>\|<theme>"]` 7일 이내 | `--remaining discovery`(최대 4, 선행 포함) |
+| **주간 심층 발굴**(C 모드) | 주 1회(일요일) | `deepDiscovery.asOf` 7일 이내 | `--remaining deep`(필요하면 exit 1) |
+| **신규 후보 탐색** 10그룹 | 7일 회전 | 전 그룹 `discovery["<country>\|<theme>"]` 7일 이내 | `--remaining discovery`(C 를 놓쳐 7일 넘긴 그룹만, 최대 4 — 안전망) |
 | **aiTarget 재시도** | 7일 회전(값 없이 2회 연속 실패면 14일) | 전 종목 `aiCheckedAt` 주기 이내 | `--remaining aiTarget`(최대 20, 선행 포함) |
 | **tier 재평가** 10그룹 | 7일 회전 | 전 그룹 `tierAsOf` 7일 이내 | `--remaining tier`(만료+선행 그룹 최대 3, 주제 포함 출력) |
 
@@ -67,12 +70,13 @@
 - **목표가 소진 우선**: 현재가 ≥ 목표가이고 3일 이상 재검증하지 않은 종목은 주기와 무관하게 재검증 큐 맨 앞에 온다.
 
 ### 3-2. A 회차 순서
+0. **C 모드 판정**: `node scripts/coverage.js --remaining deep` 이 exit 1(일요일이거나 7일 경과)이면 아래 순서에 더해 §3-6 을 수행한다(평일이면 매 거래일 항목을 먼저 끝내고, 일요일이면 발굴에 예산을 몬다).
 1. **backbone 최신화**: `update-quotes.js`·`update-stock-ta.js`·`update-indices.js`·`update-liquidity-gauge.js`·`screen-watch.js` 실행 → T 확정. 건너뛰면 구식 T 로 techNote 를 써서 다음 Action 직후 통째로 무효가 된다.
 2. **techNote**: 먼저 `node scripts/carry-technote.js` — 엔진 등급 3종이 그대로이고 가격이 ±3% 이내이며 문장을 쓴 지 6일 이내인 종목은 `asOf` 만 T 로 이월한다(`writtenAt`·`basePrice` 기록). 남은 종목(`--remaining techNote`)만 재작성한다. valueNote 누락분도 채운다. **무검색**(quotes·stock-ta 숫자만).
 3. **목표가 재검증** 큐(§4-1).
 4. **tier 재평가** 큐 그룹(§4-4). 실적 발표·가이던스 급변·대형 M&A 가 있었던 그룹은 큐와 무관하게 즉시 재평가.
 5. **aiTarget 재시도** 큐(§4-5).
-6. **신규 후보 탐색** 큐(§5) — 예산을 재검증보다 **먼저** 떼어 둔다.
+6. **신규 후보 탐색** 큐(§5 — C 를 놓친 그룹만) — 예산을 재검증보다 **먼저** 떼어 둔다.
 7. **관심종목 D절**(§4-7).
 8. **시황·유동성**(§4-3): `marketNote`·`marketNoteUS`·`marketNoteKR`·`marketNoteAsOf`, `liquidity.js` 전체.
 9. **지수 대응** `index-notes.js`(§4-2).
@@ -86,7 +90,7 @@
 
 ### 3-4. B 모드 — 회전 전용 (`재검증 돌려줘` / `목표가 재검증만 해줘`)
 1. **먼저 이슈 정리**: 열린 `업데이트 요청` 이슈가 있으면(큐가 비었더라도) `node scripts/coverage.js` 를 돌려 exit 0 이면 결과 코멘트 후 닫는다 — 큐 확인보다 먼저 한다(큐가 비어 바로 끝나면 A 가 열어 둔 이슈가 '🔧 처리중'으로 남는다).
-2. 큐 4종을 받는다: `--remaining verified`·`aiTarget`·`discovery`·`tier`(만료분과 `(선행)` 분 모두 대상). **모두 비면 "전 항목 주기 내 — 할 일 없음"으로 끝낸다**(빈 커밋 금지).
+2. 큐 4종을 받는다: `--remaining verified`·`aiTarget`·`discovery`·`tier`(만료분과 `(선행)` 분 모두 대상 — `discovery` 는 C 모드를 놓친 그룹만 나온다). **모두 비면 "전 항목 주기 내 — 할 일 없음"으로 끝낸다**(빈 커밋 금지).
 3. 발굴 → 목표가 재검증 → aiTarget → tier 순으로 집행. `verifiedAt`·`aiCheckedAt`(+`aiFailCount`·`aiFailReason`)·`discovery[<그룹>]`·`tierAsOf` 를 merge.
 4. **하지 않는 것**: techNote·valueNote·시황·유동성·지수·Top Pick·D절·backbone.
 5. 새 이슈를 만들지 않는다. 열린 이슈가 있으면 결과를 코멘트로 남기고, 처리 후 `coverage.js` 가 **exit 0 이면 닫는다**(exit 1 이면 열어 둔다).
@@ -96,6 +100,18 @@
 - `validate-reco.js`(값이 올바른가)와 `coverage.js`(전부 했는가) **둘 다 통과해야 "완료"**. merge 할 때마다 `coverage.js` 로 진척을 보고, 미달분은 `--remaining <항목>` 으로 재배치한다.
 - 세션 한도로 끝내야 하면 진행분을 push 하고 **`coverage.js` 출력을 그대로** 보고한다(조용한 축소·낙관적 보고 금지).
 - 완료 보고 필수 항목: techNote(재작성/이월 수), valueNote, 목표가 재검증, tier 그룹, aiTarget(보유 X/전체·신규 Y·실패 사유), 탐색 그룹, 교체 건수, 못 한 항목과 이유.
+
+### 3-6. C 모드 — 주간 심층 발굴 (★ 최소 주 1회, 최선을 다해)
+**언제**: 일요일(UTC) A 회차 · `coverage.js --remaining deep` exit 1(7일 경과) · 사용자가 "종목 발굴 해줘"·"더 좋은 종목 찾아줘" 요청. 일요일엔 검색 예산 대부분(~150회)을 여기에 쓴다.
+1. **스크린**: `node scripts/screen-discovery.js`(토큰 0, 2~3분) → `data/discovery-candidates.js` — 시장 전체에서 주제 정의에 맞는 하드 조건+점수로 그룹별 후보 10개, 같은 잣대로 잰 현 편성 9종목(점수 낮은 순·조건 미달 표시). 웹 검색으로 후보를 '찾지' 말고 이 후보와 WATCHLIST 보류 후보를 '검증'하는 데 검색을 쓴다.
+2. **그룹별 서브에이전트 10개 병렬**(그룹당 검색 ~12회, 파일 수정 금지). 입력: 주제 정의, 현 편성 9종목(tier·논거 요약·목표가/상승여력·스크린 지표·validate 경고), 스크린 후보 10 + 그 그룹 보류 후보, 기각 후보(재조사 금지). 할 일:
+   - **후보 검증 3~4개**(스크린 상위·보류 후보 우선): 최근 분기·연간 실적(매출·영업이익 YoY), 컨센서스 목표가(신뢰 도메인 2개), 배당, 주제 적합성, 지배구조·리스크, (미국 히든) §6 품질 기준.
+   - **현 편성 하위 3종목 결격 점검**(스크린 점수 하위·조건 미달·목표가 소진 우선): §5-3 ④ 결격 목록을 증거와 함께 판정 — '결격 없음'도 근거를 적는다.
+   - **반환**: 후보별 {채택 가능·보류·기각, 사유, 검증 수치, 출처 URL}, 편성별 {결격 여부·근거}, 교체 제안(후보 ⇄ 결격 종목, §5 기준 충족 근거, β 영향).
+3. **반영(메인 단일 작성자)**: §5 기준을 모두 충족한 교체만 `add`/`remove` 로 적용 — 새 종목은 풀카드(thesis·risks·earnings·dividendYield·sources 신뢰 2·chartUrl §8 형식·tier 는 그룹 3/3/3 유지). 이어서 `update-quotes`·`update-consensus`·`update-stock-ta` 를 돌리고 새 종목 techNote·valueNote 를 쓴다. 마친 그룹은 `discovery[그룹]` = 오늘, 회차 끝에 `deepDiscovery = {asOf, screenBuiltAt, groups, reviewed, verified, swaps, note}`(전 그룹을 못 마쳤으면 `asOf` 를 남기지 않는다 — 다음 회차가 이어받는다).
+4. **WATCHLIST 상태 섹션을 새로 쓴다**: '주제별 마지막 깊은 탐색일' 표(그룹마다 날짜·검증 후보·결론 한 줄), '보류 후보'(이번에 검증한 것만 — 블로커·확인 조건 명시, 30일 넘게 진전 없으면 '기각'으로), '기각 후보'(사유·날짜, 90일 지나면 삭제). 회차 기록은 `# 최근 회차 기록` 맨 위.
+5. validate 오류 0 → `coverage.js --emit` → 커밋·push. 보고: 그룹별 스크린 적격 수·검증 후보·교체/보류/기각·결격 판정, 못 한 것과 이유.
+- 예산이 모자라면 '목표가 소진·결격 의심 종목이 있는 그룹 → 스크린 점수 격차(후보 상위 vs 편성 하위)가 큰 그룹 → 나머지' 순으로 하고, 못 마친 그룹은 `discovery` 를 갱신하지 않는다.
 
 ## 4. 작업 기준
 
@@ -152,7 +168,7 @@
 - **편성 제외**: title `편성 제외 요청:` 이슈 → `remove` 로 `{country, ticker, theme}` 제거(같은 티커의 다른 주제는 유지). 사용자가 직접 뺀 것이므로 재편입 판단 없이 그대로 제거. `remove` 도 하루 20건 레저를 소진한다.
 
 ## 5. 신규 후보 탐색·교체 (7일 회전)
-1. **대상**: `coverage.js --remaining discovery` 큐 그룹. 순서는 WATCHLIST 보류 후보 재검증 → 목표가 소진·성과 부진 그룹 → 나머지. 마친 그룹마다 top-level `discovery["<country>|<theme>"]` 에 오늘 날짜(안 남기면 게이트 미통과).
+1. **대상**: 주 1회 C 모드(§3-6)가 10그룹 전부를 스크린 후보와 함께 깊게 본다. 평일 `coverage.js --remaining discovery` 큐는 C 를 놓친 그룹만의 안전망이다. 순서는 WATCHLIST 보류 후보 재검증 → 목표가 소진·성과 부진 그룹 → 나머지. 마친 그룹마다 top-level `discovery["<country>|<theme>"]` 에 오늘 날짜(패치는 기존 지도에 병합 — 마친 그룹만 보내면 된다).
 2. **다각도 검색**: 그룹마다 서로 다른 각도로 최소 2회(컨센서스 상승여력 상위·실적 서프라이즈·신규 커버리지·주제별 유망주 리스트·낙폭 과대+촉매 등).
 3. **교체 기준(전부 충족)**: ①주제 정의 부합 ②신뢰 출처 2개 교차확인 ③목표가·배당 스니펫 확인 ④**편출 종목에 결격이 있어야 한다** — 목표가 소진·논거 훼손·가이던스 하향/역성장·지배구조 결격·주제 이탈·(미국 히든) 품질 기준 미달. **'후보가 더 좋아 보인다'만으로는 교체하지 않는다**(실측상 한국 교체는 편출 종목이 더 나았다 — 결격 없는 우월 후보는 WATCHLIST 대기) ⑤국가 정식 편성 β 를 1 에서 더 멀어지게 하지 않는다. 하루 최대 10교체, 0건이면 '교체 0건' 명시.
    - 현재가만 미확인이고 우월성이 가격 불확실성을 감안해도 성립하면 `priceUnverified: true` 로 편입 가능(quotes.js 가 시세를 잡으면 자동 해제).
