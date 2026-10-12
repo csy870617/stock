@@ -114,7 +114,7 @@
    - 이어서 `update-quotes`·`update-consensus`·`update-stock-ta` 를 돌리고 새 종목 techNote(엔진 등급 그대로)·valueNote 를 쓰고, aiTarget 을 같은 회차에 시도한다(서브에이전트 1개, 종목당 검색 4회 — 안 하면 coverage 가 red). 결격은 성립했지만 대체 후보가 없으면 WATCHLIST '결격 감시'에 올린다.
    - 마친 그룹은 `discovery[그룹]` = 오늘, 회차 끝에 `deepDiscovery = {asOf, screenBuiltAt, groups, reviewed, verified, incumbentChecks, defects, swaps, note}`(전 그룹을 못 마쳤으면 `asOf` 를 남기지 않는다 — 다음 회차가 이어받는다).
 4. **WATCHLIST 상태 섹션을 새로 쓴다**: '주제별 마지막 깊은 탐색일' 표(그룹마다 날짜·적격 수·검증 후보·결격 점검·결론), '보류 후보'(이번에 검증한 것과 30일 안 된 것만 — 블로커·확인 조건 명시, 30일 넘게 진전 없으면 '기각'으로), '기각 후보'(사유·날짜, 90일 지나면 삭제), '결격 감시'(결격 성립·의심, 소진 임박, 실적 일정, 카드 정정 대기). 회차 기록은 `# 최근 회차 기록` 맨 위.
-5. validate 오류 0 → `coverage.js --emit` → 커밋·push. 보고: 그룹별 스크린 적격 수·검증 후보·교체/보류/기각·결격 판정, 못 한 것과 이유.
+5. validate 오류 0 → `snapshot.js`(같은 날짜는 교체 — 새 편성을 그날 종가부터 성과에 반영) → `coverage.js --emit` → 커밋·push. 보고: 그룹별 스크린 적격 수·검증 후보·교체/보류/기각·결격 판정, 못 한 것과 이유, 그리고 `node scripts/swap-outcome.js` 의 국가별 교체 성과 한 줄(편입이 나은 교체일 수·평균 초과수익 — 발굴이 실제로 더 좋은 종목을 골랐는지의 누적 성적).
 - 예산이 모자라면 '목표가 소진·결격 의심 종목이 있는 그룹 → 스크린 점수 격차(후보 상위 vs 편성 하위)가 큰 그룹 → 나머지' 순으로 하고, 못 마친 그룹은 `discovery` 를 갱신하지 않는다.
 
 ## 4. 작업 기준
