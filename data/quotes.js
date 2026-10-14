@@ -336,13 +336,6 @@ window.STOCK_QUOTES = {
    "close": 57500,
    "closeDate": "2026-10-14"
   },
-  "010120": {
-   "price": 177200,
-   "date": "2026-10-14",
-   "changePct": -1.1,
-   "close": 177200,
-   "closeDate": "2026-10-14"
-  },
   "033780": {
    "price": 181800,
    "date": "2026-10-14",
@@ -628,13 +621,6 @@ window.STOCK_QUOTES = {
    "date": "2026-10-13",
    "changePct": 0.4,
    "close": 74.16,
-   "closeDate": "2026-10-13"
-  },
-  "ISRG": {
-   "price": 422.06,
-   "date": "2026-10-13",
-   "changePct": -1.3,
-   "close": 422.06,
    "closeDate": "2026-10-13"
   },
   "GILD": {
