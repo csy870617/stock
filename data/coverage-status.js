@@ -2,16 +2,16 @@
 // 앱 상단 '데이터 신선도' 패널이 읽는다. 직접 수정하지 말 것.
 window.COVERAGE_STATUS = {
  "asOf": "2026-10-14",
- "T": "2026-10-13",
+ "T": "2026-10-14",
  "total": 115,
  "cycleDays": 7,
  "daily": [
   {
    "key": "techNote",
    "label": "기술 대응",
-   "done": 0,
+   "done": 115,
    "total": 115,
-   "ok": false
+   "ok": true
   },
   {
    "key": "valueNote",
