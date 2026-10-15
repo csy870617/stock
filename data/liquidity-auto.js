@@ -7,7 +7,7 @@ window.LIQUIDITY_AUTO = {
  "inputs": {
   "us10y": "5.19",
   "curve": "1.11",
-  "vix": "17.4",
+  "vix": "16.9",
   "hyg20": "-1.6",
   "dxy": "102.6",
   "usdkrw": "1340"
