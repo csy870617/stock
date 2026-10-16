@@ -76,14 +76,57 @@ const signedNum = (s) => { const v = parseFloat(String(s == null ? "" : s).repla
 async function koreaFlow(code) {
   const j = await getJson("https://m.stock.naver.com/api/stock/" + code + "/trend?pageSize=30");
   if (!Array.isArray(j) || !j.length) return null;
-  const rows = j.map((x) => ({ d: String(x.bizdate || ""), f: signedNum(x.foreignerPureBuyQuant), o: signedNum(x.organPureBuyQuant), v: signedNum(x.accumulatedTradingVolume) }))
+  const all = j.map((x) => ({ d: String(x.bizdate || ""), f: signedNum(x.foreignerPureBuyQuant), o: signedNum(x.organPureBuyQuant),
+    p: signedNum(x.individualPureBuyQuant), v: signedNum(x.accumulatedTradingVolume), h: signedNum(String(x.foreignerHoldRatio || "").replace("%", "")) }))
     .filter((r) => /^\d{8}$/.test(r.d) && r.f != null && r.o != null && r.v > 0)
-    .sort((a, b) => (a.d < b.d ? 1 : -1)).slice(0, 20);   // 최신 20거래일(장 마감 뒤 공개분까지)
+    .sort((a, b) => (a.d < b.d ? 1 : -1));
+  const rows = all.slice(0, 20);   // 최신 20거래일(장 마감 뒤 공개분까지)
   if (rows.length < 14) return null;
-  const V = rows.reduce((s, r) => s + r.v, 0), F = rows.reduce((s, r) => s + r.f, 0), O = rows.reduce((s, r) => s + r.o, 0);
+  const sum = (a, k) => a.reduce((s, r) => s + (r[k] || 0), 0);
+  const V = sum(rows, "v"), F = sum(rows, "f"), O = sum(rows, "o"), P = sum(rows, "p");
+  const r5 = rows.slice(0, 5), V5 = sum(r5, "v");
   const fi20 = (F + O) / V, d = rows[0].d;
+  // 외국인 연속 순매수(+)·순매도(−) 일수 — 최신일부터 같은 부호가 이어진 날 수
+  let streak = 0;
+  for (const r of rows) { const sg = Math.sign(r.f); if (!sg) break; if (!streak || Math.sign(streak) === sg) streak += sg; else break; }
+  const h0 = rows[0].h, h20 = rows[rows.length - 1].h;
   return { asOf: d.slice(0, 4) + "-" + d.slice(4, 6) + "-" + d.slice(6), days: rows.length,
-    fi20: +fi20.toFixed(4), f20: +(F / V).toFixed(4), o20: +(O / V).toFixed(4), hot: fi20 >= FLOW_HOT };
+    fi20: +fi20.toFixed(4), f20: +(F / V).toFixed(4), o20: +(O / V).toFixed(4), p20: +(P / V).toFixed(4),
+    f5: V5 > 0 ? +(sum(r5, "f") / V5).toFixed(4) : null, o5: V5 > 0 ? +(sum(r5, "o") / V5).toFixed(4) : null,
+    fStreak: streak, fHold: h0 != null ? h0 : null, fHoldChg: h0 != null && h20 != null ? +(h0 - h20).toFixed(2) : null,
+    hot: fi20 >= FLOW_HOT };
+}
+
+// 미국 수급 — 공매도 잔고(FINRA 반월 집계, 나스닥 API)와 기관 보유(13F 분기 집계 요약).
+//   si: 최근 결제일 공매도 잔고·평균 거래량 대비 일수(dtc)·직전 집계 대비 변화율·발행주식 대비 비중
+//   inst: 기관 보유 비중·지난 분기 순증(증가 주식 − 감소 주식, 발행주식 대비 %)
+// 표시용 사실이다 — 방향 예측 규칙으로 쓰지 않는다(검증 결과는 docs/HISTORY.md 2026-10-16).
+async function usFlow(sym) {
+  const [a, b] = await Promise.all([
+    getJson("https://api.nasdaq.com/api/quote/" + sym + "/short-interest?assetClass=stocks"),
+    getJson("https://api.nasdaq.com/api/company/" + sym + "/institutional-holdings?limit=1&type=TOTAL&sortColumn=marketValue"),
+  ]);
+  const out = {};
+  const os = b && b.data && b.data.ownershipSummary, ap = b && b.data && b.data.activePositions && b.data.activePositions.rows;
+  const shOut = os ? numOr(os.ShareoutstandingTotal && os.ShareoutstandingTotal.value) : null;   // 백만 주
+  const rows = a && a.data && a.data.shortInterestTable && a.data.shortInterestTable.rows;
+  if (Array.isArray(rows) && rows.length) {
+    const r = rows.map((x) => ({ d: mdy(x.settlementDate), si: numOr(x.interest), dtc: numOr(x.daysToCover) })).filter((x) => x.d && x.si != null)
+      .sort((x, y) => (x.d < y.d ? 1 : -1));
+    if (r.length) {
+      out.si = { asOf: r[0].d, shares: r[0].si, dtc: r[0].dtc != null ? +r[0].dtc.toFixed(2) : null,
+        chg: r[1] && r[1].si > 0 ? +((r[0].si / r[1].si - 1) * 100).toFixed(1) : null,
+        pct: shOut > 0 ? +(r[0].si / (shOut * 1e6) * 100).toFixed(2) : null };
+    }
+  }
+  if (os) {
+    const inc = ap ? numOr((ap.find((x) => /Increased/.test(x.positions)) || {}).shares) : null;
+    const dec = ap ? numOr((ap.find((x) => /Decreased/.test(x.positions)) || {}).shares) : null;
+    out.inst = { pct: numOr(String((os.SharesOutstandingPCT && os.SharesOutstandingPCT.value) || "").replace("%", "")),
+      net: inc != null && dec != null && shOut > 0 ? +((inc - dec) / (shOut * 1e6) * 100).toFixed(2) : null };
+    if (out.inst.pct == null && out.inst.net == null) delete out.inst;
+  }
+  return Object.keys(out).length ? out : null;
 }
 
 async function korea(code) {
@@ -97,13 +140,15 @@ async function korea(code) {
 }
 
 async function us(ticker) {
-  const sym = encodeURIComponent(ticker);
-  const [d, s] = await Promise.all([
+  const sym = encodeURIComponent(ticker.replace("-", "."));
+  const [d, s, fl] = await Promise.all([
     getJson("https://api.nasdaq.com/api/analyst/" + sym + "/earnings-date"),
     getJson("https://api.nasdaq.com/api/company/" + sym + "/earnings-surprise"),
+    usFlow(sym),
   ]);
-  if (!d && !s) return undefined;
+  if (!d && !s && !fl) return undefined;
   const out = {};
+  if (fl) out.flow = fl;
   const txt = d && d.data && d.data.reportText;
   const date = txt && mdy((txt.match(/report earnings on\s+([\d/]+)/) || [])[1]);
   if (date) {
@@ -143,6 +188,8 @@ async function us(ticker) {
     if (r === undefined) { v = prev[x.t] || null; if (v) kept++; }
     else if (r) fresh++;
     else none++;
+    // 일부 조회만 실패했으면(예: 수급만 실패) 그 항목은 이전 값을 잇는다 — 각 항목에 자체 asOf 가 있어 신선도는 화면에서 보인다
+    if (v && r && prev[x.t] && prev[x.t].flow && !v.flow) v = Object.assign({}, v, { flow: prev[x.t].flow });
     // 지난 일정은 '다음 실적'이 아니다 — 날짜가 오늘(UTC)보다 이르면 버린다
     if (v && v.next && v.next.date && v.next.date < today) { v = Object.assign({}, v); delete v.next; }
     if (v && Object.keys(v).length) items[x.t] = v;
@@ -150,12 +197,14 @@ async function us(ticker) {
   const E = {
     asOf: today,
     builtAt: new Date().toISOString().slice(0, 19) + "Z",
-    note: "다음 실적 일정 — 한국: 네이버 증권 irScheduleInfo(회사 공지 IR 일정, 공지 전이면 없음)·투자자별 매매동향(20일 외국인·기관 순매수, 수급 과열 판정), 미국: 나스닥(Zacks) 예정일·분기 컨센서스 EPS·최근 4분기 서프라이즈. 매일 자동 갱신(LLM 토큰 0).",
+    note: "다음 실적 일정·수급 — 한국: 네이버 증권 irScheduleInfo(회사 공지 IR 일정, 공지 전이면 없음)·투자자별 매매동향(20일 외국인·기관·개인 순매수, 수급 과열 판정, 외국인 보유율), 미국: 나스닥(Zacks) 예정일·분기 컨센서스 EPS·최근 4분기 서프라이즈·공매도 잔고(FINRA 반월)·기관 보유(13F 분기). 매일 자동 갱신(LLM 토큰 0).",
     items,
   };
   fs.writeFileSync(OUT, "// 다음 실적 일정·직전 서프라이즈 — scripts/update-events.js 가 자동 생성 (LLM 토큰 0)\n" +
     "// ticker → { next:{date, title(한국)|tentative(추정일 여부)·when·qtr·epsEst·epsPrev·analysts(미국)}, hist:[{date,qtr,eps,est,pct}](미국 최근 4분기),\n" +
-    "//            flow:{asOf, days, fi20·f20·o20(20일 외국인+기관·외국인·기관 순매수 / 거래량), hot(fi20 ≥ 6.33% — 수급 과열)}(한국) }\n" +
+    "//            flow(한국):{asOf, days, fi20·f20·o20·p20(20일 외국인+기관·외국인·기관·개인 순매수 / 거래량), f5·o5(5일), fStreak(외국인 연속 순매수+/순매도− 일수),\n" +
+    "//                        fHold(외국인 보유율 %), fHoldChg(20일 변화 %p), hot(fi20 ≥ 6.33% — 수급 과열)}\n" +
+    "//            flow(미국):{si:{asOf, shares, dtc(평균 거래량 대비 일수), chg(직전 집계 대비 %), pct(발행주식 대비 %)}, inst:{pct(기관 보유 %), net(지난 분기 순증 / 발행주식 %)}} }\n" +
     "window.STOCK_EVENTS = " + JSON.stringify(E) + ";\n");
   console.log("events.js 갱신: " + Object.keys(items).length + "/" + list.length + "종목 (신규 " + fresh + " · 이전 유지 " + kept + " · 일정 없음 " + none + ")");
 })();

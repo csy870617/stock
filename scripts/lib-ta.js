@@ -242,6 +242,55 @@ function volumeProfile(bars, lookback, bins) {
   return { poc, aboveRatio, local, score, lo, hi, pocIdx, bins };
 }
 
+// ── 매물대 지도(표시용) — '어느 가격대에서 얼마나 거래됐나'를 카드에 그대로 보여주기 위한 요약 ──
+// volumeProfile 과 같은 배분 방식(봉 거래량을 저가~고가에 균등)으로 bins 구간의 거래 비중을 내고,
+//   · above: 현재가보다 위에서 거래된 비중(그 가격에 산 보유자는 지금 손실 구간)
+//   · poc: 가장 많이 거래된 구간의 중앙 가격 · pocShare: 그 구간 비중
+//   · below/upper: 현재가 아래·위에서 가장 가까운 '거래 집중 구간'(평균의 1.3배 이상 연속 구간) {lo, hi, share}
+// ★표시용 사실이지 예측이 아니다 — 2016~2026 한·미 991종목 검증에서 거래 집중 가격대가 거래 희박 가격대보다
+//   지지·저항으로 더 잘 버티지 않았다(터치 후 10일 반응 동일·오히려 약함, docs/HISTORY.md 2026-10-16).
+function vpMap(bars, lookback, bins) {
+  lookback = lookback || 250; bins = bins || 24;
+  const w = bars.slice(-lookback).filter((b) => b && b.vol != null && isFinite(b.vol) && b.vol > 0);
+  if (w.length < 40) return null;
+  let lo = Infinity, hi = -Infinity;
+  w.forEach((b) => { if (b.low < lo) lo = b.low; if (b.high > hi) hi = b.high; });
+  if (!(hi > lo)) return null;
+  const step = (hi - lo) / bins, vol = new Array(bins).fill(0);
+  w.forEach((b) => {
+    const a = Math.max(0, Math.min(bins - 1, Math.floor((b.low - lo) / step)));
+    const z = Math.max(0, Math.min(bins - 1, Math.floor((b.high - lo) / step)));
+    const share = b.vol / (z - a + 1);
+    for (let k = a; k <= z; k++) vol[k] += share;
+  });
+  const total = vol.reduce((x, y) => x + y, 0);
+  if (!total) return null;
+  const sh = vol.map((v) => v / total), avg = 1 / bins;
+  const price = bars[bars.length - 1].close;
+  let above = 0;
+  for (let k = 0; k < bins; k++) {
+    const bLo = lo + step * k, bHi = bLo + step;
+    if (bLo >= price) above += sh[k];
+    else if (bHi > price) above += sh[k] * (bHi - price) / step;
+  }
+  let pocIdx = 0; for (let k = 1; k < bins; k++) if (sh[k] > sh[pocIdx]) pocIdx = k;
+  // 거래 집중 구간 — 평균의 1.3배 이상인 연속 구간. 현재가가 걸친 구간은 '지금 자리'라 위·아래 어느 쪽에도 넣지 않는다.
+  const cur = Math.max(0, Math.min(bins - 1, Math.floor((price - lo) / step)));
+  const HOT = 1.3 * avg;
+  const zone = (from, dir) => {
+    let k = from;
+    while (k >= 0 && k < bins && sh[k] < HOT) k += dir;          // 가장 가까운 집중 구간의 첫 칸
+    if (k < 0 || k >= bins) return null;
+    let a = k, z = k;
+    if (dir < 0) { while (a - 1 >= 0 && sh[a - 1] >= HOT) a--; }   // 아래쪽: 더 아래로 이어진 칸까지
+    else { while (z + 1 < bins && sh[z + 1] >= HOT) z++; }         // 위쪽: 더 위로 이어진 칸까지
+    let s = 0; for (let q = a; q <= z; q++) s += sh[q];
+    return { lo: lo + step * a, hi: lo + step * (z + 1), share: s };
+  };
+  return { lo, hi, bins, sh, above, poc: lo + step * (pocIdx + 0.5), pocShare: sh[pocIdx],
+    below: zone(cur - 1, -1), upper: zone(cur + 1, 1) };
+}
+
 // 현재가 기준 가장 가까운 아래/위 레벨(이평선·최근 저·고점 후보 중)
 function levels(level, cands, lo, hi) {
   const below = cands.filter((v) => v != null && v < level);
@@ -484,6 +533,20 @@ function analyzeTimeframes(rows, opts) {
       " · 주변 " + (V.local > 0.15 ? "지지 우위" : V.local < -0.15 ? "저항 우위" : "균형");
   };
 
+  // 구조화된 사실(숫자) — 자동 기술 요약(gen-technote.js)이 문장을 만들 때 쓴다. 문자열(metrics)을 다시 파싱하지 않게.
+  //   ma: 20·60·120봉 이동평균(그 기간의 봉 단위 — 일봉=일, 주봉=주, 월봉=월) · ichi: 구름 위치·상단·하단·전환·기준
+  //   sr: 지지·저항(이평·최근 저/고점 중 가장 가까운 것) · vpAbove: 그 기간 매물대에서 현재가 위 거래 비중
+  const factsOf = (X, sr, unit) => ({
+    unit: unit,
+    ma: { m20: X.sma20, m60: X.sma60, m120: X.sma120 },
+    ichi: X.ichi ? { where: X.ichi.where, top: X.ichi.cloudTop, bot: X.ichi.cloudBot, tenkan: X.ichi.tenkan, kijun: X.ichi.kijun,
+      cloudDir: X.ichi.cloudDir, chikou: X.ichi.chikou } : null,
+    sr: { sup: sr.support, res: sr.resistance },
+    rsi: X.rsi,
+    vpAbove: X.vprof ? X.vprof.aboveRatio : null,
+  });
+  const unitOf = (name) => (name === "주간" ? "주" : name === "월간" ? "개월" : "일");
+
   // 지표 표시 순서 = 판단 가중 순서(일목·매물대·이평 → 보조). 카드에서 근거가 바로 읽히도록.
   const short = {
     trend: trendFromSignal(pick(S, "S")),
@@ -497,7 +560,8 @@ function analyzeTimeframes(rows, opts) {
       ["지지 / 저항", fmtNum(srS.support, srDp) + " / " + fmtNum(srS.resistance, srDp)]
     ],
     read: tally(S, "단기", "S") + adxText(S.adx) +
-      (S.stoch ? ", 스토캐스틱 " + S.stoch.k.toFixed(0) : "") + "."
+      (S.stoch ? ", 스토캐스틱 " + S.stoch.k.toFixed(0) : "") + ".",
+    facts: factsOf(S, srS, "일")
   };
   const mid = {
     trend: trendFromSignal(pick(M, "M")),
@@ -511,7 +575,8 @@ function analyzeTimeframes(rows, opts) {
       ["지지 / 저항", fmtNum(srM.support, srDp) + " / " + fmtNum(srM.resistance, srDp)]
     ],
     read: tally(M, "중기", "M") + mdName + " 기준 " +
-      (M.macd ? "MACD " + macdText(M.macd, M.level).split(" ·")[0] : "") + "."
+      (M.macd ? "MACD " + macdText(M.macd, M.level).split(" ·")[0] : "") + ".",
+    facts: factsOf(M, srM, unitOf(mdName))
   };
   const long = {
     trend: trendFromSignal(pick(L, "L")),
@@ -524,7 +589,8 @@ function analyzeTimeframes(rows, opts) {
       [lgName + " RSI(14)", (L.rsi == null ? "–" : L.rsi.toFixed(1)) + (rsL ? " · " + rsL : "")],
       ["지지 / 저항", fmtNum(srL.support, srDp) + " / " + fmtNum(srL.resistance, srDp)]
     ],
-    read: tally(L, "장기", "L") + lgName + " 기준, " + cross + "."
+    read: tally(L, "장기", "L") + lgName + " 기준, " + cross + ".",
+    facts: Object.assign(factsOf(L, srL, unitOf(lgName)), { cross: cross, vs200: vs200 })
   };
 
   return {
@@ -571,6 +637,6 @@ function analyzeTimeframes(rows, opts) {
 // 한계: IC 절대값은 여전히 작다(0.02~0.06). 등급은 '참고 지표'이며, 앱 푸터 고지도 이 수치로 고쳤다.
 var DEFAULT_ENGINE = "mtf";
 var MIN_BARS = 35;   // computeSuite 최소 봉수(MACD 26+9) — 호출부 게이트도 이 상수를 쓸 것
-var _LIB_TA = { MIN_BARS, sma, ema, rsi, rsiState, macd, stochastic, cci, williamsR, adx, momentum, chgN, fmtNum, levels, toWeekly, toMonthly, ichimoku, volumeProfile, grade, computeSuite, analyzeTimeframes };
+var _LIB_TA = { MIN_BARS, sma, ema, rsi, rsiState, macd, stochastic, cci, williamsR, adx, momentum, chgN, fmtNum, levels, toWeekly, toMonthly, ichimoku, volumeProfile, vpMap, grade, computeSuite, analyzeTimeframes };
 if (typeof module !== "undefined" && module.exports) module.exports = _LIB_TA;   // Node (update 스크립트)
 if (typeof window !== "undefined") window.LIB_TA = _LIB_TA;                       // 브라우저(관심종목 라이트 분석)

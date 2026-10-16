@@ -103,6 +103,26 @@ const UPSIDE_TOL = 1.5;           // upside 필드 vs (target-price)/price*100 �
 const STALE_PRICE_DAYS = 45;      // priceDate 가 이보다 오래되면 경고
 const TIER_STALE_DAYS = 14;       // tierAsOf(티어 품질 평가일)가 이보다 오래되면 경고 — 티어를 최신 데이터로 유지
 
+// 화면 문장(thesis·valueNote·risks·earnings·Top Pick 이유)에 '그날 가격에 따라 바뀌는 수치'가 박혔는지 — 있으면 그 조각을 반환.
+// 왜(2026-10-16): valueNote 110/113·thesis 17·risks 8 이 '목표가 X원 대비 상승여력 Y%'·'목표주가 상향' 같은 수치를 담아
+//   다음 날부터 카드 상단 값(네이버 목표가·현재가 매일 갱신)과 어긋났고, 큰 상승여력을 문장으로 한 번 더 강조했다.
+//   이런 수치는 카드 상단 칸(목표가·현재가 대비·PER·PBR·배당 — 자동)이 맡고, 문장은 그 수치를 '어떻게 읽는지'만 쓴다.
+//   회사 고유 수치(매출·이익 성장률·배당성향·ROE·순현금 등)는 가격과 무관해 허용한다.
+const PRICE_NUM_RES = [
+  /상승\s*여력[도은이을를의]?\s*(?:약|최대|기준|이)?\s*[+\-−]?\s*\d+(?:\.\d+)?\s*%/,
+  /(?:목표\s*주?가|목표가격|적정\s*주가|AI\s*적정가)[^.。\n]{0,14}?[$₩]?\s*\d[\d,.]*\s*(?:만\s*원|원|달러|\$)/,
+  /(?:목표\s*주?가|AI\s*적정가)[^.。\n]{0,10}?\$\s*\d/,
+  /\b(?:P\/?E|PER|PBR|P\/B)\b[^.。\n]{0,8}?\d+(?:\.\d+)?\s*배/,
+  /(?:주가수익비율|주가순자산비율)[^.。\n]{0,8}?\d+(?:\.\d+)?\s*배/,
+  /배당(?!성향)(?:수익률)?\s*(?:은|는|이|률)?\s*(?:약\s*)?\d+(?:\.\d+)?\s*%/,
+];
+function priceNumberIn(text) {
+  if (!text) return null;
+  const t = String(text);
+  for (const re of PRICE_NUM_RES) { const m = t.match(re); if (m) return m[0]; }
+  return null;
+}
+
 function validate(D, opts) {
   opts = opts || {};
   const quotes = opts.quotes || {};
@@ -247,7 +267,7 @@ function validate(D, opts) {
           }
           // 형식 v2(2026-10-16~, CLAUDE.md §4-2): 추격형 매매 지시 금지 — 등급 전환은 이미 움직인 뒤에 나온다
           // (진단: 전환 직후 1개월 지수 대비 평균 -1.1~+0.9%, 전환 전 20일에 이미 ±2.5~6%). v2 를 표방한 문장에
-          // '돌파 시 비중을 늘린다'·'이탈 시 비중을 줄인다' 류가 있으면 막는다(v1 은 carry-technote 가 이월하지 않아 재작성된다).
+          // '돌파 시 비중을 늘린다'·'이탈 시 비중을 줄인다' 류가 있으면 막는다(v3 부터는 gen-technote.js 가 쓰므로 템플릿을 고칠 때의 안전장치).
           const CHASE = /비중을?\s*(늘|줄)|비중\s*(확대|축소)|추격\s*(매수|매도)/;
           if ((n.v || 1) >= 2) ["short", "mid", "long"].forEach((k) => {
             const m = n[k] && String(n[k]).match(CHASE);
@@ -264,6 +284,9 @@ function validate(D, opts) {
         const vg = narrativeUpsideGap(s.valueNote, s);
         if (vg && vg.gap > 15) warnings.push(tag + ": valueNote 속 상승여력 " + vg.said + "% 가 실계산 " + vg.real + "% 와 " + vg.gap.toFixed(1) + "%p 괴리 — 다음 회전에서 수치 갱신 필요");
       }
+      // 화면 문장 속 가격 의존 수치(§4 공통) — 기존 데이터는 경고(다음 회전에서 수치 없이 재작성), 새로 쓰는 패치는 update-reco 가 거부
+      ["valueNote", "thesis", "earnings"].forEach((k) => { const hit = priceNumberIn(s[k]); if (hit) warnings.push(tag + ": " + k + " 에 가격 의존 수치('" + hit + "') — 카드 상단 칸이 맡는다, 수치 없이 재작성"); });
+      (Array.isArray(s.risks) ? s.risks : []).forEach((r, i) => { const hit = priceNumberIn(r); if (hit) warnings.push(tag + ": risks[" + i + "] 에 가격 의존 수치('" + hit + "') — 수치 없이 재작성"); });
 
       // 컨센서스 신선도 — 네이버 집계 기준일이 30일을 넘었거나(tpStale) 수기 목표가인데 재확인이 14일 넘게 없으면 경고
       {
@@ -385,6 +408,8 @@ function validate(D, opts) {
           // 수치를 하드코딩하면 가격이 움직인 뒤 카드 표시값과 모순돼 사용자를 오도한다.
           const ng = narrativeUpsideGap(it.reason, tpByTicker[it.ticker]);
           if (ng && ng.gap > 10) warnings.push(tag + ": 이유 속 상승여력 " + ng.said + "% 가 실계산 " + ng.real + "% 와 " + ng.gap.toFixed(1) + "%p 괴리 — 최신가 기준으로 다시 쓸 것");
+          const pn = priceNumberIn(it.reason);
+          if (pn) warnings.push(tag + ": 이유에 가격 의존 수치('" + pn + "') — 상승여력 크기로 고르지 않는다(§4-6), 수치 없이 쓸 것");
         });
         Object.keys(seen).forEach((t) => { if (seen[t] > 1) errors.push("topPicks." + g + ": '" + t + "' 중복 선정"); });
       });
@@ -431,4 +456,4 @@ if (require.main === module) {
   console.log("✓ 검증 통과: " + total + "종목, 오류 0건, 경고 " + warnings.length + "건 (" + path.relative(ROOT, file) + ")");
 }
 
-module.exports = { validate, loadTa, isTrustedSource, isBlockedSource, sourceHost, trustedDomainOf, PERSONAL_THEMES, isPersonalTheme };
+module.exports = { validate, loadTa, isTrustedSource, isBlockedSource, sourceHost, trustedDomainOf, PERSONAL_THEMES, isPersonalTheme, priceNumberIn };

@@ -36,10 +36,13 @@
 //       '신뢰 도메인 2개' 대신 그 집계 1곳으로 인정한다. 집계값 자체가 다수 증권사 평균이라 교차확인 규칙의
 //       대상이 아니고, 세션이 바꾼 다른 출처 때문에 107종목 동기화 전체가 취소되던 문제(2026-10-08) 방지)
 //   4) 적용 결과가 validate-reco.js 전체 검증(구조 9·3×3, 형식, 계산 정합성)을 통과해야 저장
+//   5) thesis·valueNote·risks·earnings·topPicks 이유에 가격 의존 수치(상승여력·목표가·AI적정가·PER·PBR·배당수익률) → 거부
+//      (다음 날부터 카드 상단 자동 값과 어긋나고 상승여력 착시를 키운다 — 2026-10-16, validate-reco.js priceNumberIn)
+//   6) techNote 는 gen-technote.js(auto:true)만 쓴다 — 세션이 쓴 techNote 패치는 거부(신규 편입 add 의 techNote 는 버린다)
 
 const fs = require("fs");
 const path = require("path");
-const { validate, loadTa, isTrustedSource, isBlockedSource, sourceHost, trustedDomainOf } = require("./validate-reco");
+const { validate, loadTa, isTrustedSource, isBlockedSource, sourceHost, trustedDomainOf, priceNumberIn } = require("./validate-reco");
 
 const ROOT = path.join(__dirname, "..");
 const RECO = path.join(ROOT, "data", "recommendations.js");
@@ -113,8 +116,27 @@ if (patch.generatedAt !== undefined && patch.generatedAtTs === undefined) {
 }
 if (patch.themes !== undefined) D.themes = patch.themes;
 
+function narrativeNumberErrors(f, who) {
+  const out = [];
+  ["valueNote", "thesis", "earnings"].forEach((k) => {
+    const hit = typeof f[k] === "string" ? priceNumberIn(f[k]) : null;
+    if (hit) out.push(who + " — " + k + " 에 가격 의존 수치('" + hit + "') 금지: 수치는 카드 상단 칸(목표가·현재가 대비·PER·PBR·배당, 자동)이 맡는다 — 수치 없이 다시 쓸 것");
+  });
+  if (Array.isArray(f.risks)) f.risks.forEach((r, i) => {
+    const hit = priceNumberIn(r);
+    if (hit) out.push(who + " — risks[" + i + "] 에 가격 의존 수치('" + hit + "') 금지 — 수치 없이 다시 쓸 것");
+  });
+  return out;
+}
 // ── 종목 필드 merge (국가+티커[+주제]) ──
 const guardErrors = [];
+// Top Pick 이유도 같은 규칙 — 상승여력 크기로 고르지 않으므로(§4-6) 이유에 그 수치를 쓰지 않는다
+if (patch.topPicks && typeof patch.topPicks === "object" && !FORCE) {
+  ["korea", "us"].forEach((g) => (Array.isArray(patch.topPicks[g]) ? patch.topPicks[g] : []).forEach((it, i) => {
+    const hit = it && priceNumberIn(it.reason);
+    if (hit) guardErrors.push("topPicks." + g + "[" + i + "] — 이유에 가격 의존 수치('" + hit + "') 금지(§4-6) — 품질·실적·밸류 근거로 수치 없이 쓸 것");
+  }));
+}
 const tpChanged = {};   // 이번 실행으로 목표가가 바뀐 카드의 "변경 전 값" — 레저 기준선 기록용
 // 목표가 급변 검사는 '패치 적용 전 원본값' 기준 — 같은 패치에 동일 티커 entry 를 2개 넣어
 // +49% × 2 = +122% 로 체이닝하는 우회를 막는다.
@@ -129,6 +151,16 @@ const origTp = {};
   delete fields.country; delete fields.ticker; delete fields.theme;   // theme 은 대상 지정용(값 변경 안 함)
   const matches = D[country].filter((s) => s.ticker === ticker && (theme == null || s.theme === theme));
   if (!matches.length) { warnings.push("merge 대상 없음: " + country + ":" + ticker + (theme ? "/" + theme : "")); return; }
+
+  // 가드레일: 화면 문장에 가격 의존 수치(상승여력·목표가·AI적정가·PER·PBR·배당수익률) 금지 — 다음 날부터 카드 상단 값과
+  // 어긋나고 큰 상승여력을 한 번 더 강조한다(2026-10-16). 그런 수치는 카드 상단 칸(자동)이 맡는다.
+  const pnErr = narrativeNumberErrors(fields, country + ":" + ticker);
+  if (pnErr.length && !FORCE) { pnErr.forEach((e) => guardErrors.push(e)); return; }
+  // techNote 는 gen-technote.js(auto:true)만 쓴다 — 세션이 손으로 쓴 문장이 자동 문장을 덮으면 같은 날 숫자와 어긋난다(§4-2)
+  if (fields.techNote !== undefined && !(fields.techNote && fields.techNote.auto === true) && !FORCE) {
+    guardErrors.push(country + ":" + ticker + " — techNote 는 scripts/gen-technote.js 가 자동 생성한다(세션 작성 금지, §4-2)");
+    return;
+  }
 
   // 가드레일: 분석 필드 변경엔 근거 URL 필수
   const changesAnalysis = ["targetPrice", "thesis", "earnings"].some((k) => fields[k] !== undefined);
@@ -217,6 +249,9 @@ const origTp = {};
   if (!country || !D[country]) { warnings.push("add 국가 오류: " + JSON.stringify(s).slice(0, 80)); return; }
   const obj = Object.assign({}, s); delete obj.country;
   if (!obj.ticker || !obj.name) { warnings.push("add 에 ticker/name 필요: " + JSON.stringify(s).slice(0, 80)); return; }
+  const pnAdd = narrativeNumberErrors(obj, "add " + country + ":" + obj.ticker);
+  if (pnAdd.length && !FORCE) { pnAdd.forEach((e) => guardErrors.push(e)); return; }
+  if (obj.techNote !== undefined && !(obj.techNote && obj.techNote.auto === true)) delete obj.techNote;   // 신규 편입 뒤 gen-technote.js 가 채운다
 
   // 가드레일: 신규 편입은 근거 전체가 새로 만들어지므로 출처 신뢰도를 가장 엄격히 본다
   const srcs = Array.isArray(obj.sources) ? obj.sources : [];

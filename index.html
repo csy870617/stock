@@ -359,8 +359,8 @@ a { color: inherit; }
   background: var(--chip-bg); border-radius: 999px; padding: 3px 9px; width: fit-content; }
 .pick .nm { font-weight: 700; font-size: 0.98rem; }
 .pick .nm .tk { color: var(--muted); font-weight: 400; font-size: 0.75rem; margin-left: 5px; }
-.pick .up-big { font-size: 1.35rem; font-weight: 800; color: var(--up); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
-.pick .up-big.down { color: var(--down); }
+.pick .px-big { font-size: 1.22rem; font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.pick .pk-rng { white-space: nowrap; }
 .pick .sub { color: var(--ink-2); font-size: 0.8rem; }
 /* Top Pick 배너 확장: 시장 배지·신호 배지·선정 이유 */
 .pick .mkt { display: inline-flex; align-items: center; gap: 4px; font-size: 0.68rem; font-weight: 700; color: var(--ink-2);
@@ -462,9 +462,13 @@ a { color: inherit; }
 .c-hv.down { color: var(--down); }
 .c-hk { color: var(--muted); font-size: 0.74rem; margin-top: 4px; }
 .c-live { color: var(--up); font-weight: 600; }
+/* 히어로 오른쪽 — 1개월 80% 예상 범위(현재가 대비 %). 상승여력 큰 숫자를 대신한다(색은 범위 양 끝을 구분할 뿐 전망 아님) */
+.c-rng { font-size: 1.08rem; font-weight: 700; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; line-height: 1.2; white-space: nowrap; }
+.c-rng .down { color: var(--down); }
+.c-rng .up { color: var(--up); }
+.c-rng .c-rs { color: var(--muted); margin: 0 3px; font-weight: 500; }
+.c-q { display: inline-grid; place-items: center; width: 13px; height: 13px; border-radius: 50%; font-size: 0.6rem; font-weight: 700; color: var(--muted); border: 1px solid var(--grid); vertical-align: 1px; }
 
-.meter { height: 6px; border-radius: 4px; background: var(--meter-track); overflow: hidden; }
-.meter > i { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg, var(--meter-lo), var(--meter-hi)); }
 
 /* 카드 보조 지표: 목표가·AI적정가·배당 3열 정렬 그리드 */
 /* 가격 두 칸(목표가·AI적정가)에 폭을 더 주고 배당 칸은 좁힌다 — 7자리 원화(₩3,286,250)가 360~390px 폭에서
@@ -700,6 +704,26 @@ a.idx-tile:hover { background: color-mix(in srgb, var(--ink) 5%, var(--inset)); 
 .ol-ev { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: baseline; margin-top: 7px; padding-top: 7px; border-top: 1px solid var(--grid); }
 .ol-evt { font-size: 0.8rem; line-height: 1.5; color: var(--ink); overflow-wrap: anywhere; }
 .ol-dd { display: inline-block; font-size: 0.68rem; font-weight: 700; color: var(--accent); background: color-mix(in srgb, var(--accent) 13%, transparent); padding: 0 7px; border-radius: 999px; }
+/* 기술 대응 — 매물대 막대(최근 1년 거래 분포)·수급 줄 */
+.tn-vp .tn-v, .tn-flow .tn-v { font-size: 0.8rem; }
+.vp-chart { position: relative; height: 34px; margin-top: 2px; }
+.vp-bars { position: absolute; inset: 0; display: flex; align-items: flex-end; gap: 1px; }
+.vp-bars i { flex: 1 1 0; min-width: 0; border-radius: 2px 2px 0 0; }
+.vp-bars i.vp-b { background: color-mix(in srgb, var(--accent) 45%, transparent); }
+.vp-bars i.vp-a { background: color-mix(in srgb, var(--muted) 45%, transparent); }
+.vp-band { position: absolute; top: 0; bottom: 0; background: color-mix(in srgb, var(--accent) 10%, transparent); border-left: 1px dashed color-mix(in srgb, var(--accent) 55%, transparent); border-right: 1px dashed color-mix(in srgb, var(--accent) 55%, transparent); }
+.vp-now { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--ink); transform: translateX(-1px); border-radius: 1px; }
+.vp-ax { display: flex; justify-content: space-between; gap: 6px; margin-top: 3px; font-size: 0.66rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.vp-ax span:nth-child(2) { text-align: center; }
+.vp-cap { margin-top: 2px; font-size: 0.74rem; color: var(--ink-2); }
+.fl-sub { margin-top: 2px; font-size: 0.74rem; color: var(--ink-2); }
+.fl-sub0 { height: 3px; }
+/* 최근 분기 실적(자동) */
+.qline { font-size: 0.8rem; line-height: 1.55; color: var(--ink); font-variant-numeric: tabular-nums; }
+.qline .q-k { font-weight: 700; color: var(--muted); font-size: 0.74rem; }
+.qline .up { color: var(--up); font-weight: 600; }
+.qline .down { color: var(--down); font-weight: 600; }
+.qline .q-next { color: var(--muted); font-size: 0.72rem; }
 .ol-hot { margin-top: 5px; font-size: 0.76rem; line-height: 1.5; color: var(--ink); background: color-mix(in srgb, var(--down) 10%, transparent); border-left: 3px solid var(--down); border-radius: 0 6px 6px 0; padding: 5px 9px; }
 .ol-leg { margin-top: 7px; font-size: 0.68rem; color: var(--muted); display: flex; align-items: center; gap: 5px; }
 .ol-leg .ol-now, .ol-leg .ol-tgt { position: static; display: inline-block; transform: none; height: 10px; vertical-align: -1px; }
@@ -856,7 +880,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   <footer class="site">
     <p id="disclaimer"></p>
     <p style="margin-top:6px;"><span id="routineTime">매일 한국시간 오후 5시(LA 오전 1시)</span> 자동 갱신 · 현재가에 '실시간' 표기가 있으면 장중 시세, 없으면 종가</p>
-    <p style="margin-top:6px;">기술 신호 등급(적극매수~적극매도)은 이동평균선·일목균형표·매물대 가중 종합에 상위 기간 추세를 반영한 값으로(단기=일·주·월봉 5:3:2, 중기=주·월봉 7:3), <b>이미 일어난 움직임을 요약한 '현재 상태'이지 예측이 아닙니다</b> — 편성 종목 검증에서 등급이 매수 쪽으로 바뀌기 전 20거래일에 이미 지수 대비 평균 +2.5~4.3% 올랐고, 바뀐 뒤 1개월 초과수익은 평균 -1.1~-0.2%였습니다. 시장 대비 선별력이 기간 전·후반 모두 일관된 것은 장기(월봉) 신호뿐입니다(순위상관 +0.03~+0.06). 그래서 카드의 <b>전망</b>은 방향 대신 검증된 것만 보여 줍니다: 다음 1·3개월 <b>80% 예상 범위</b>(60일 변동성 기반 — 한·미 991종목 10년 검증에서 표본 밖 적중 79.8~81.3%)와 공지된 <b>실적 일정</b>. 가격·거래량 기반 선행 신호와 미국 실적 서프라이즈 드리프트도 같은 기준으로 검증했으나 다음 1개월 방향을 믿을 만하게 맞히지 못해 쓰지 않습니다. 유일하게 일관된 방향 신호는 한국 <b>수급 과열</b>(외국인+기관 20일 순매수가 거래량의 6.3% 이상)으로, 통념과 반대로 이후 1·3개월 지수 대비 성과가 나머지보다 약했습니다(2016~2026 세 구간 모두). 컨센서스 목표가 기준 상승여력은 최근 검증에서 미국 종목에서만 이후 수익률과 양(+)의 관계를 보였습니다. 매매 트리거가 아닌 참고 지표로만 활용하세요.</p>
+    <p style="margin-top:6px;">기술 신호 등급(적극매수~적극매도)은 이동평균선·일목균형표·매물대 가중 종합에 상위 기간 추세를 반영한 값으로(단기=일·주·월봉 5:3:2, 중기=주·월봉 7:3), <b>이미 일어난 움직임을 요약한 '현재 상태'이지 예측이 아닙니다</b> — 등급이 매수 쪽으로 바뀌기 전 20거래일에 이미 지수 대비 평균 +2.5~4.3% 올랐고 바뀐 뒤 1개월 초과수익은 평균 -1.1~-0.2%였으며, 한·미 881종목(2023~2026)에 적용하면 일·주·월봉 어느 등급도 시장 대비 종목 선별력이 0에 가까웠습니다. 기술 대응 문장은 이 숫자(이평·구름·지지/저항·매물대·수급·예상 범위)로 매일 자동 작성합니다. <b>매물대</b>는 '어느 가격에서 거래가 많았나'를 보여 주는 지도입니다 — 2016~2026년 991종목 검증에서 거래가 몰린 가격대가 다른 가격대보다 지지·저항으로 더 잘 버티지는 않았습니다. 카드의 <b>전망</b>은 방향 대신 검증된 것만 보여 줍니다: 다음 1·3개월 <b>80% 예상 범위</b>(60일 변동성 기반 — 표본 밖 적중 79.8~81.3%)와 공지된 <b>실적 일정</b>. 유일하게 일관된 방향 신호는 한국 <b>수급 과열</b>(외국인+기관 20일 순매수가 거래량의 6.3% 이상)로, 통념과 반대로 이후 1·3개월 지수 대비 성과가 나머지보다 약했습니다(2016~2026 세 구간 모두). <b>증권사 목표가</b>는 체계적으로 높게 나옵니다 — 한국 리포트 1.8만 건(2020~2026) 기준 제시 상승여력 중앙값 +32%, 12개월 뒤 주가가 목표가 이상이었던 경우 36%, 실제 12개월 수익 중앙값 +13%. 그래서 상승여력을 큰 숫자로 내세우지 않고 목표가 칸에 '현재가 대비'로만 적습니다. PER·PBR·배당·분기 실적은 네이버 증권·나스닥 출처 값을 매일 그대로 옮긴 것입니다. 매매 트리거가 아닌 참고 정보로만 활용하세요.</p>
   </footer>
 </div>
 
@@ -881,6 +905,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
 <script src="data/index-notes.js"></script>
 <script src="data/stock-ta.js"></script>
 <script src="data/events.js"></script>
+<script src="data/fundamentals.js"></script>
 <script src="data/recommendations.js"></script>
 <script src="data/coverage-status.js"></script>
 <script src="data/quotes.js"></script>
@@ -1466,15 +1491,82 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   function svHtml(text, extraCls) {
     return '<div class="c-sv' + (extraCls ? " " + extraCls : "") + (String(text).length >= 10 ? " sv-long" : "") + '">' + esc(text) + "</div>";
   }
+  // 목표가 현실 점검 — 증권사 목표가는 체계적으로 높게 나온다(한국 리포트 1.8만 건 2020-10~2026-10, 131종목: 제시 상승여력
+  //   중앙 +32%·매수 의견 94%, 12개월 안에 한 번이라도 닿은 비율 57%, 12개월 뒤 목표가 이상 36%, 실현 수익 중앙 +13%,
+  //   상승여력 5분위 모두 12개월 실현 중앙 +10~17%로 비슷 — 지수 대비 평균은 최하위 5분위만 -9%로 약했다).
+  //   목표가 칸에 이 맥락을 붙여 '그만큼 오른다'는 착시를 줄인다.
+  var TP_REALITY = "참고: 증권사 목표가는 체계적으로 높게 제시됩니다 — 한국 리포트 1.8만 건(2020~2026) 기준 제시 상승여력 중앙값 +32%, 12개월 뒤 주가가 목표가 이상이었던 경우 36%, 실제 12개월 수익 중앙값 +13%였습니다. 상승여력 크기별(5분위) 12개월 실현 수익 중앙값도 +10~17%로 큰 차이가 없었습니다.";
   function tpVerifiedTitle(s) {
     if (s.tpSource === "naver" && s.tpAsOf) {
       var disp = tpDispersion(s);
       return ' title="' + esc("네이버 증권 컨센서스(다수 증권사 평균 — 한국 FnGuide·미국 LSEG 집계) · 기준일 " + s.tpAsOf +
         (s.tpLow != null ? " · 최저 " + s.tpLow + " ~ 최고 " + s.tpHigh : "") +
-        (disp != null && disp >= 0.6 ? " · 증권사 간 의견 차이가 커 평균값의 신뢰도가 낮습니다" : "") + "") + '"';
+        (disp != null && disp >= 0.6 ? " · 증권사 간 의견 차이가 커 평균값의 신뢰도가 낮습니다" : "") + "\n\n" + TP_REALITY) + '"';
     }
-    if (!s.verifiedAt) return "";
-    return ' title="' + esc("컨센서스 목표가(다수 증권사 평균, 신뢰 출처 2곳 교차확인) · 최근 재확인 " + s.verifiedAt) + '"';
+    if (!s.verifiedAt) return ' title="' + esc(TP_REALITY) + '"';
+    return ' title="' + esc("컨센서스 목표가(다수 증권사 평균, 신뢰 출처 2곳 교차확인) · 최근 재확인 " + s.verifiedAt + "\n\n" + TP_REALITY) + '"';
+  }
+  // 목표가 칸 둘째 줄 — 현재가 대비 괴리(작은 글씨). 큰 숫자로 강조하지 않는다.
+  function tgtGapLine(s, e) {
+    if (s.targetPrice == null || e.price == null || !(e.price > 0)) return "";
+    var g = (s.targetPrice / e.price - 1) * 100;
+    return '<div class="c-vd"><span class="nw">현재가 대비 ' + esc(fmtPct(g)) + "</span></div>";
+  }
+
+  // ── 밸류에이션·최근 분기 실적(data/fundamentals.js — 네이버·나스닥 출처 값 그대로 매일 자동 갱신) ──
+  function fundOf(t) { var F = window.STOCK_FUND; return (F && F.items && F.items[t]) || null; }
+  // 배당수익률 — 출처 자동값(최근 결산 주당배당금 ÷ 현재가) 우선. 출처 값이 카드 값과 크게 어긋나 의심(dyFlag)이면 카드 값.
+  function divOf(s) {
+    var f = fundOf(s.ticker);
+    if (f && f.dy != null && !f.dyFlag) return f.dy;
+    return s.dividendYield != null ? s.dividendYield : null;
+  }
+  function fmtDiv(v) { return v == null ? "–" : Number(v).toFixed(v > 0 && v < 0.1 ? 2 : 1) + "%"; }
+  // 유효숫자 3자리 — 매물대 구간·최다 거래 가격처럼 '대략 어디쯤'을 말하는 값의 계산 잔여 자릿수를 줄인다
+  function sig3(v) { if (!v || !isFinite(v)) return v; var k = Math.pow(10, Math.max(0, Math.floor(Math.log10(Math.abs(v))) - 2)); return Math.round(v / k) * k; }
+  function divTitle(s) {
+    var f = fundOf(s.ticker);
+    if (f && f.dy != null && !f.dyFlag) return "최근 결산 주당배당금" + (f.dps != null ? "(" + f.dps + ")" : "") + " ÷ 현재가 — 네이버 증권, 매일 자동 갱신";
+    return "세션이 신뢰 출처 2곳으로 확인한 값" + (f && f.dyFlag ? "(자동 출처 값 " + f.dy + "%는 " + f.dyFlag + "이라 표시하지 않음)" : "");
+  }
+  function multStats(s, country) {
+    var f = fundOf(s.ticker);
+    if (!f || (f.per == null && f.fper == null && f.pbr == null)) return "";
+    var x = function (v) { return v == null ? "–" : (v >= 100 ? Math.round(v) : v.toFixed(1)) + "배"; };
+    var perT = "PER(주가수익비율) = 주가 ÷ 최근 4분기 주당순이익" + (f.eps != null && f.eps < 0 ? " — 적자라 표시하지 않음" : "");
+    var fperT = country === "korea" ? "선행 PER = 주가 ÷ 올해 추정 EPS(FnGuide 컨센서스, 네이버 증권)" : "선행 PER = 주가 ÷ 다음 4개 분기 컨센서스 EPS 합(Zacks, 나스닥)" +
+      (f.rev4w ? " · 최근 4주 EPS 추정 상향 " + f.rev4w.up + "건·하향 " + f.rev4w.down + "건" : "");
+    return '<div class="c-stat" title="' + esc(perT) + '"><div class="c-sk">PER</div><div class="c-sv">' + x(f.per) + "</div></div>" +
+      '<div class="c-stat" title="' + esc(fperT) + '"><div class="c-sk">선행 PER</div><div class="c-sv">' + x(f.fper) + "</div></div>" +
+      '<div class="c-stat" title="PBR(주가순자산비율) = 주가 ÷ 주당순자산"><div class="c-sk">PBR</div><div class="c-sv">' + x(f.pbr) + "</div></div>";
+  }
+  // 재무 금액 표기 — 한국 억원 → 조/억, 미국 백만 달러 → $B/$M
+  function money(v, country) {
+    if (v == null) return "–";
+    var a = Math.abs(v), sg = v < 0 ? "-" : "";
+    if (country === "korea") return sg + (a >= 10000 ? (a / 10000).toFixed(a >= 100000 ? 0 : 1) + "조" : Math.round(a).toLocaleString("ko-KR") + "억");
+    return sg + "$" + (a >= 1000 ? (a / 1000).toFixed(1) + "B" : Math.round(a) + "M");
+  }
+  function chgTxt(x) {
+    if (!x) return "";
+    if (x.turn) return x.turn;
+    if (x.yoy == null) return "";
+    return x.yoy >= 300 ? (x.yoy / 100 + 1).toFixed(1) + "배" : (x.yoy > 0 ? "+" : "") + x.yoy.toFixed(0) + "%";
+  }
+  function qLine(s, country) {
+    var f = fundOf(s.ticker), q = f && f.q;
+    if (!q) return "";
+    var it = function (k, x) {
+      if (!x || x.v == null) return "";
+      var c = chgTxt(x), cls = x.turn === "흑자전환" || (x.yoy != null && x.yoy > 0) ? "up" : (x.turn || (x.yoy != null && x.yoy < 0)) ? "down" : "";
+      return k + " " + money(x.v, country) + (c ? '(<span class="' + cls + '">' + esc(c) + "</span>)" : "");
+    };
+    var parts = [it("매출", q.rev), it(q.opLabel === "EBIT" ? "EBIT" : "영업이익", q.op), it("순이익", q.np)].filter(Boolean);
+    if (!parts.length) return "";
+    var nx = q.next && (q.next.op != null || q.next.rev != null)
+      ? '<div class="q-next">' + esc(q.next.period) + " 컨센서스 — 매출 " + esc(money(q.next.rev, country)) + " · 영업이익 " + esc(money(q.next.op, country)) + "</div>" : "";
+    return '<div class="qline" title="네이버 증권 분기 재무(출처 값 그대로, 매일 자동 갱신) — 괄호는 1년 전 같은 분기(' + esc(q.base) + ') 대비"><span class="q-k">' + esc(q.period) + " 분기</span> " +
+      parts.join(" · ") + nx + "</div>";
   }
 
   // ── 실시간 가격 레이어 (전용 시세 서버 경유 Yahoo 시세) ──
@@ -1674,9 +1766,6 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     return "https://search.naver.com/search.naver?query=" + encodeURIComponent(ticker + " 주가");
   }
 
-  // 밸류(컨센서스 상승여력·장기 펀더멘털) × 타이밍(기술 추세·단기) 종합 해석 —
-  // Tier(펀더멘털 확신)와 기술신호(모멘텀)가 어긋날 때 어떻게 읽는지 안내한다(급락 우량주=분할매수·눌림목 등).
-  // 밸류×타이밍 종합 해석(템플릿) — 종목별 valueNote 가 없을 때의 폴백. {text, cls} 반환.
   // 가치함정(낙폭발 상승여력) 판정 — 상승여력이 큰데 장기(월봉) 신호가 매도 이하인 조합.
   // 상승여력은 목표가가 아직 안 내려온 급락 종목에서 기계적으로 커지므로, 이 조합은
   // '기회'가 아니라 '많이 떨어졌고 추세도 꺾였다'는 경고로 읽어야 한다(2026-08-11 감사:
@@ -1687,45 +1776,17 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   }
   var VT_TIP = "상승여력이 커 보이지만 장기(월봉) 신호가 매도 이하입니다. 급락으로 커진 상승여력(목표가 미조정)일 수 있어 주의가 필요합니다.";
 
-  function vtRead(upside, ticker) {
-    var t = stTa(ticker);
-    if (upside == null || !t || !t.short) return null;
-    var sig = t.short.signal;
-    var techBull = sig === "매수" || sig === "적극매수";
-    var techBear = sig === "매도" || sig === "적극매도";
-    var lsig = t.long && t.long.signal;
-    var longBull = lsig === "매수" || lsig === "적극매수";
-    var vHigh = upside >= 8, vFull = upside <= 0, vMid = upside > 0 && upside < 8;
-    var text, cls;
-    if (vHigh && techBull) { text = "밸류·타이밍 동반 우호 — 장기 상승여력에 단기 추세도 매수 우위"; cls = "vt-good"; }
-    else if (vHigh && techBear) { text = "장기 상승여력 충분하나 단기 기술 약세 — 분할매수·눌림목 대응" + (longBull ? "(장기 추세 유지)" : ""); cls = "vt-mix"; }
-    else if (vHigh) { text = "장기 상승여력 충분, 단기는 관망 — 진입 시점 대기"; cls = "vt-mix"; }
-    else if (vFull && techBear) { text = "컨센서스 목표가 도달 + 단기 약세 — 차익실현·비중조절 검토"; cls = "vt-warn"; }
-    else if (vFull && techBull) { text = "컨센서스 목표가 도달했으나 단기 모멘텀 강세 — 추격 신중"; cls = "vt-warn"; }
-    else if (vFull) { text = "컨센서스 목표가 도달 — 신규 진입 매력 제한"; cls = "vt-warn"; }
-    else if (vMid && techBull) { text = "단기 추세는 매수 우위이나 장기 상승여력은 제한적"; cls = "vt-mix"; }
-    else if (vMid && techBear) { text = "장기 상승여력 제한 + 단기 약세 — 신중"; cls = "vt-warn"; }
-    else { text = "밸류·타이밍 모두 뚜렷한 우위 없음 — 관망"; cls = "vt-neutral"; }
-    return { text: text, cls: cls };
-  }
-  // 밸류 설명 — 종목별 LLM 서술(valueNote, 그 종목의 멀티플·저평가/고평가·상승여력 해석) 우선,
-  //   없으면 밸류×타이밍 종합 해석(템플릿)으로 폴백. 점 색은 밸류·기술 관계로 계산.
-  function valueCells(s, upside) {
-    var r = vtRead(upside, s.ticker);
-    var hasNote = s.valueNote && /[가-힣]/.test(s.valueNote);
-    var text = hasNote ? s.valueNote : (r ? r.text : null);
-    if (!text) return "";
-    var cls = r ? r.cls : "vt-neutral";
-    var title = hasNote
-      ? "이 종목의 밸류에이션(멀티플·저평가/고평가)과 상승여력을 함께 읽은 설명입니다."
-      : "밸류(컨센서스 상승여력·장기 펀더멘털)와 타이밍(기술 추세·단기)을 함께 읽는 종합 해석입니다. 새 예측이 아니라 두 신호의 관계를 설명합니다.";
-    return '<span class="sig-k vt-k" title="' + esc(title) + '">밸류</span>' +
-      '<div class="sig-body sig-txt"><span class="vt-dot ' + cls + '"></span>' + esc(text) + "</div>";
+  // 밸류 설명 — 종목별 세션 서술(valueNote: 그 종목의 밸류에이션이 왜 싸다/비싸다는 해석)만 보여준다.
+  //   종전의 '밸류×타이밍' 템플릿 폴백('분할매수·눌림목 대응'·'차익실현 검토' 등)은 검증 없는 매매 지시라 2026-10-16 폐기했다.
+  function valueCells(s) {
+    if (!(s.valueNote && /[가-힣]/.test(s.valueNote))) return "";
+    return '<span class="sig-k" title="이 종목의 밸류에이션(멀티플·저평가/고평가) 해석입니다. 배수 숫자는 위 PER·PBR 칸(출처 값 자동 갱신)을 보세요.">밸류</span>' +
+      '<div class="sig-body sig-txt">' + esc(s.valueNote) + "</div>";
   }
 
-  // 기술 대응(techNote) — 매일 LLM 루틴이 생성한 단기(일봉)/중기(주봉)/장기(월봉) 대응 +
-  //   신호 등급(적극매도~적극매수). 오늘자(stock-ta.js asOf) 로 갱신되지 않았으면 '미갱신' 표시.
-  function techNoteBlock(s) {
+  // 기술 대응(techNote) — gen-technote.js 가 매일 자동 생성하는 단기(일봉)/중기(주봉)/장기(월봉) 상태 요약 +
+  //   신호 등급(적극매도~적극매수, 엔진 그대로). 오늘자(stock-ta.js asOf) 로 갱신되지 않았으면 '미갱신' 표시.
+  function techNoteBlock(s, country, e) {
     var n = s.techNote;
     if (!n || (!n.short && !n.mid && !n.long)) return "";
     var T = window.STOCK_TA, taAsOf = T && T.asOf;
@@ -1739,23 +1800,70 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     }
     var staleBadge = stale
       ? '<span class="tn-stale" title="오늘 데이터(' + esc(taAsOf) + ')로 아직 갱신되지 않았습니다. 표시는 ' + esc(n.asOf) + ' 기준입니다.">⚠ 미갱신</span>' : "";
-    // 대응 문구(techNote)는 LLM 이 쓰지만, 그 근거가 된 결정론 지표(stock-ta.js)의 두 축 —
-    // 일목균형표·매물대 — 을 일봉 기준으로 함께 보여줘 판단을 검증할 수 있게 한다.
-    var tb = stTa(s.ticker), sh = tb && tb.short, ms = (sh && sh.metrics) || [];
-    function mv(label) {
-      for (var i = 0; i < ms.length; i++) if (ms[i][0] === label && ms[i][1] && ms[i][1] !== "–") return ms[i][1];
-      return null;
-    }
-    var ichi = mv("일목균형표"), vpv = mv("매물대");
-    var indLine = (ichi || vpv)
-      ? '<div class="tn-line tn-ind"><span class="tn-k">지표</span><span class="tn-v">' +
-        (ichi ? "일목 " + esc(ichi) : "") + (ichi && vpv ? '<span class="tn-sep">|</span>' : "") +
-        (vpv ? "매물대 " + esc(vpv) : "") + "</span></div>"
-      : "";
+    // 문장(v3)은 gen-technote.js 가 엔진 숫자(이평·구름·지지/저항·매물대·수급·예상 범위)로 매일 자동 생성한다.
+    // 아래에 그 근거인 매물대 막대와 수급 숫자를 함께 보여준다(엔진 내부 부분점수는 보여주지 않는다).
     return '<div class="tech-note' + (stale ? " stale" : "") + '">' +
-      '<div class="tn-head">기술 대응' + (n.asOf ? '<span class="tn-as">' + esc(n.asOf) + "</span>" : "") + staleBadge + "</div>" +
+      '<div class="tn-head">기술 대응' + (n.asOf ? '<span class="tn-as">' + esc(n.asOf) + " 종가 기준" + (n.auto ? " · 자동 산출" : "") + "</span>" : "") + staleBadge + "</div>" +
       line("단기", n.short, n.sigShort) + line("중기", n.mid, n.sigMid) +
-      line("장기", n.long, n.sigLong) + indLine + "</div>";
+      line("장기", n.long, n.sigLong) + vpRow(s, country, e) + flowRow(s, country) + "</div>";
+  }
+
+  // 매물대 — 최근 1년 일봉 거래량을 가격 24구간에 나눈 막대(stock-ta.js vp). 현재가 세로선·1개월 80% 범위 띠를 겹쳐
+  //   '지금 가격 위·아래에 얼마나 거래가 쌓였나'와 '한 달 안에 닿을 만한 가격대'를 한눈에 본다.
+  //   ★사실 표시일 뿐 예측이 아니다 — 2016~2026 한·미 991종목 검증에서 거래가 몰린 가격대가 다른 가격대보다
+  //   지지·저항으로 더 잘 버티지 않았다(docs/HISTORY.md 2026-10-16).
+  var VP_TIP = "최근 1년 동안 어느 가격대에서 거래가 많았는지(매물대)입니다. 현재가 위 거래 비중은 그 가격에 산 보유자가 지금 손실 구간이라는 뜻입니다. 2016~2026년 한·미 991종목 검증에서 거래가 몰린 가격대가 다른 가격대보다 지지·저항으로 더 잘 버티지는 않았습니다 — 위치를 보는 지도로만 쓰세요.";
+  function vpRow(s, country, e) {
+    var tb = stTa(s.ticker), vp = tb && tb.vp, ol = tb && tb.outlook;
+    if (!vp || !Array.isArray(vp.sh) || !vp.sh.length || !(vp.hi > vp.lo)) return "";
+    var cur = e && e.price != null ? e.price : (ol && ol.base);
+    if (cur == null) return "";
+    var n = vp.sh.length, span = vp.hi - vp.lo, mx = Math.max.apply(null, vp.sh) || 1;
+    var pos = function (v) { return Math.max(0, Math.min(100, (v - vp.lo) / span * 100)); };
+    var bars = vp.sh.map(function (v, i) {
+      var lo = vp.lo + span * i / n;
+      return '<i class="' + (lo >= cur ? "vp-a" : "vp-b") + '" style="height:' + Math.max(4, Math.round(v / mx * 100)) + '%"></i>';
+    }).join("");
+    var band = ol && ol.m1 ? '<b class="vp-band" style="left:' + pos(ol.m1[0]).toFixed(1) + "%;width:" + (pos(ol.m1[1]) - pos(ol.m1[0])).toFixed(1) + '%"></b>' : "";
+    var cap = "현재가 위 거래 " + Math.round(vp.above * 100) + "%" +
+      (vp.poc != null ? " · 가장 많이 거래된 가격대 " + fmtPrice(country === "korea" ? sig3(vp.poc) : Math.round(vp.poc * 10) / 10, country) + " 부근(" + Math.round(vp.pocShare * 100) + "%)" : "");
+    return '<div class="tn-line tn-vp"><span class="tn-k" title="' + esc(VP_TIP) + '" style="cursor:help">매물대</span><div class="tn-v">' +
+      '<div class="vp-chart">' + band + '<div class="vp-bars">' + bars + "</div>" +
+      '<b class="vp-now" style="left:' + pos(cur).toFixed(1) + '%"></b></div>' +
+      '<div class="vp-ax"><span>' + fmtPrice(vp.lo, country) + "</span><span>1년 거래 분포 · 띠=1개월 범위</span><span>" + fmtPrice(vp.hi, country) + "</span></div>" +
+      '<div class="vp-cap">' + esc(cap) + "</div></div></div>";
+  }
+
+  // 수급 — 한국: 20일 외국인·기관·개인 순매수(거래량 대비)·외국인 연속 매매·보유율, 미국: 공매도 잔고·기관 보유.
+  //   한국 '수급 과열'(외국인+기관 20일 순매수 ≥ 거래량의 6.33%, 상위 20%)만 검증된 경고를 붙인다 — 2016~2026 한국 391종목:
+  //   과열 종목의 다음 1개월 지수 대비 평균 -0.3%(나머지 +0.8%), 3개월 -0.7%(나머지 +2.8%), 세 구간 모두 같은 방향.
+  //   미국 공매도 잔고는 1년 표본에서 이후 수익과 일관된 관계가 없어 사실만 보여준다(docs/HISTORY.md 2026-10-16).
+  var FLOW_TIP_KR = "최근 20거래일 순매수 수량 ÷ 같은 기간 거래량입니다. 외국인·기관이 사면 오른다는 통념과 달리, 외국인+기관이 거래량의 6.3% 이상 순매수한 '수급 과열' 종목은 2016~2026년 이후 1·3개월 지수보다 약했습니다. 그 밖의 순매수 크기는 이후 수익과 일관된 관계가 없었습니다.";
+  var FLOW_TIP_US = "공매도 잔고는 나스닥 상장 종목만 제공됩니다(FINRA 반월 집계). 기관 보유는 13F 분기 집계입니다. 1년 표본 검증에서 공매도 잔고 수준·변화는 이후 1~3개월 수익과 일관된 관계가 없었습니다 — 현재 상태를 보는 사실로만 쓰세요.";
+  function flowRow(s, country) {
+    var E = window.STOCK_EVENTS, ev = E && E.items && E.items[s.ticker], f = ev && ev.flow;
+    if (!f) return "";
+    var pc = function (v, dp) { return (v > 0 ? "+" : "") + (v * 100).toFixed(dp == null ? 1 : dp) + "%"; };
+    var body = "", tip;
+    if (country === "korea") {
+      if (f.fi20 == null) return "";
+      tip = FLOW_TIP_KR;
+      body = "20일 순매수(거래량 대비) 외국인 <b>" + pc(f.f20) + "</b> · 기관 <b>" + pc(f.o20) + "</b>" + (f.p20 != null ? " · 개인 " + pc(f.p20) : "");
+      var sub = [];
+      if (f.fStreak && Math.abs(f.fStreak) >= 3) sub.push("외국인 " + Math.abs(f.fStreak) + "일 연속 순" + (f.fStreak > 0 ? "매수" : "매도"));
+      if (f.fHold != null) sub.push("외국인 보유율 " + f.fHold.toFixed(1) + "%" + (f.fHoldChg ? "(20일 " + (f.fHoldChg > 0 ? "+" : "") + f.fHoldChg.toFixed(2) + "%p)" : ""));
+      if (sub.length) body += '<div class="fl-sub">' + esc(sub.join(" · ")) + "</div>";
+      if (f.hot) body += '<div class="ol-hot">수급 과열 — 외국인+기관 ' + pc(f.fi20) + "(상위 20% 구간). 2016~2026년 이 구간 종목은 다음 1개월 지수 대비 평균 -0.3%(나머지 +0.8%), 3개월 -0.7%(나머지 +2.8%)로 오히려 약했습니다 — 따라 사기엔 늦은 경우가 많았습니다.</div>";
+    } else {
+      tip = FLOW_TIP_US;
+      var parts = [];
+      if (f.si && f.si.dtc != null) parts.push("공매도 잔고 <b>" + f.si.dtc.toFixed(1) + "일치</b>" + (f.si.pct != null ? "(발행주식의 " + f.si.pct.toFixed(1) + "%)" : "") +
+        (f.si.chg != null ? " · 직전 대비 " + (f.si.chg > 0 ? "+" : "") + f.si.chg.toFixed(1) + "%" : "") + (f.si.asOf ? ' <span class="ol-pct">' + esc(mdOf(f.si.asOf)) + " 기준</span>" : ""));
+      if (f.inst && f.inst.pct != null) parts.push("기관 보유 <b>" + f.inst.pct.toFixed(1) + "%</b>" + (f.inst.net != null ? " · 지난 분기 순" + (f.inst.net >= 0 ? "매수 " : "매도 ") + Math.abs(f.inst.net).toFixed(2) + "%(발행주식 대비)" : ""));
+      if (!parts.length) return "";
+      body = parts.join('<div class="fl-sub0"></div>');
+    }
+    return '<div class="tn-line tn-flow"><span class="tn-k" title="' + esc(tip) + '" style="cursor:help">수급</span><span class="tn-v">' + body + "</span></div>";
   }
 
   // 전망 — '앞으로'의 정보만 모은다. 신호 등급은 이미 일어난 움직임을 설명할 뿐 다음 방향을 맞히지 못해
@@ -1784,21 +1892,9 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     }
     return '<div class="ol-ev"><span class="ol-k">다음 실적</span><span class="ol-evt"><b>' + day.md + (n.tentative ? "경" : "") + '</b> <span class="ol-dd">' + dTxt + "</span> · " + parts.join(" · ") + "</span></div>";
   }
-  // 한국 수급(20일 외국인·기관 순매수 / 거래량) — 과열(≥6.33%, 상위 20%)이면 검증된 경고를 붙인다.
-  //   2016~2026 한국 391종목: 과열 종목의 다음 1개월 지수 대비 평균 -0.3%(나머지 +0.8%), 3개월 -0.7%(나머지 +2.8%) —
-  //   보류 표본·전반·후반 세 구간 모두 같은 방향(docs/HISTORY.md 2026-10-16). '수급 따라 사기'가 대개 늦다는 정보다.
-  function flowLine(s, country) {
-    if (country !== "korea") return "";
-    var E = window.STOCK_EVENTS, ev = E && E.items && E.items[s.ticker], f = ev && ev.flow;
-    if (!f || f.fi20 == null) return "";
-    var pct = function (v) { return (v > 0 ? "+" : "") + (v * 100).toFixed(1) + "%"; };
-    var body = "외국인 " + pct(f.f20) + " · 기관 " + pct(f.o20) + ' <span class="ol-pct">(20일 순매수 ÷ 거래량)</span>';
-    if (f.hot) body += '<div class="ol-hot">수급 과열 — 외국인+기관 ' + pct(f.fi20) + "(상위 20% 구간). 2016~2026년 이 구간 종목은 다음 1개월 지수 대비 평균 -0.3%(나머지 +0.8%), 3개월 -0.7%(나머지 +2.8%)로 오히려 약했습니다 — 따라 사기엔 늦은 경우가 많았습니다.</div>";
-    return '<div class="ol-ev"><span class="ol-k">수급</span><span class="ol-evt">' + body + "</span></div>";
-  }
   function outlookBlock(s, country, e) {
     var tb = stTa(s.ticker), ol = tb && tb.outlook;
-    var evHtml = eventLine(s, country) + flowLine(s, country);
+    var evHtml = eventLine(s, country);
     if (!(ol && ol.m1 && ol.m3) && !evHtml) return "";
     var body = "", legTgt = false;
     if (ol && ol.m1 && ol.m3) {
@@ -1832,13 +1928,25 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       (ol ? '<div class="ol-leg"><b class="ol-now"></b>현재가' + (legTgt ? ' <b class="ol-tgt"></b>목표가' : "") + "</div>" : "") + "</div>";
   }
 
+  // 히어로 오른쪽 — 상승여력 대신 '다음 1개월 80% 예상 범위'(현재가 대비 %). 목표가 상승여력은 증권사 낙관이 섞인 값이라
+  //   큰 글씨로 두면 '그만큼 오를 것'처럼 읽혔다(2026-10-16 사용자 지적 · 한국 리포트 1.8만 건 검증: 제시 상승여력 중앙 +32%,
+  //   12개월 뒤 실제 목표가 이상 36%, 실현 수익 중앙 +13%). 이 범위는 표본 밖 적중 약 80%로 검증된 값이다(방향 예측 아님).
+  function rangeHero(s, e) {
+    var tb = stTa(s.ticker), ol = tb && tb.outlook;
+    if (!ol || !ol.m1) return "";
+    var cur = e.price != null ? e.price : ol.base;
+    if (!(cur > 0)) return "";
+    var lo = (ol.m1[0] / cur - 1) * 100, hi = (ol.m1[1] / cur - 1) * 100;
+    return '<div class="c-hcell c-r" title="다음 1개월(21거래일) 동안 주가가 80% 확률로 머물 것으로 보는 범위입니다. 최근 60일 변동성으로 계산하며 오를지 내릴지는 예측하지 않습니다(2016~2026 한·미 991종목 표본 밖 적중 약 80%).">' +
+      '<div class="c-rng"><span class="down">' + fmtPct(lo) + '</span><span class="c-rs">~</span><span class="up">' + fmtPct(hi) + "</span></div>" +
+      '<div class="c-hk">1개월 예상 범위(80%)</div></div>';
+  }
+
   // delKey: 개인 목록 탭에서 렌더할 때 그 목록 키("watch"|"hold") — ✕(제거) 버튼을 붙이고
   //         추천 카드용 담기 토글은 감춘다. 추천 탭에서는 falsy.
   function card(s, country, showTheme, delKey) {
     var tm = tierMeta(s.tier);
     var e = effective(s);
-    var upCls = e.upside == null ? "" : e.upside >= 0 ? "up" : "down";
-    var meterW = e.upside == null ? 0 : Math.max(0, Math.min(100, e.upside * 2));
     var risks = (s.risks || []).map(esc).join(" · ");
     var srcs = (s.sources || []).slice(0, 3).map(function (u, i) {
       return '<a href="' + esc(safeUrl(u)) + '" target="_blank" rel="noopener">출처' + (i + 1) + "</a>";
@@ -1860,16 +1968,16 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     var priceSub = e.live
       ? '현재가 · <span class="c-live">실시간</span>'
       : "현재가 · " + esc(e.priceDate || D.generatedAt) + (sd >= 7 ? " (" + sd + "일 전)" : "");
-    var upLabel = (e.upside != null && e.upside < 0) ? "목표가 대비" : "상승여력";
-    var divVal = s.dividendYield == null ? "–" : Number(s.dividendYield).toFixed(1) + "%";
+    var divVal = fmtDiv(divOf(s));
     var aiStat = s.aiTarget != null
       ? '<div class="c-stat" title="' + esc(s.aiBasis || "") + '" data-basis="' + esc(s.aiBasis || "") + '" style="cursor:help"><div class="c-sk">AI적정가</div>' + svHtml(fmtPrice(s.aiTarget, country)) + "</div>"
       : '<div class="c-stat" title="' + esc(aiPendingText(s)) + '" data-basis="' + esc(aiPendingText(s)) + '" style="cursor:help"><div class="c-sk">AI적정가</div><div class="c-sv c-muted">추정중</div></div>';
-    // 밸류×타이밍 해석만 신호 박스에 둔다(기술 단·장기 신호는 아래 '기술 대응' 블록으로 대체·제거).
-    var vtCells = valueCells(s, e.upside);
+    // 밸류 설명(valueNote) — 세션이 쓴 밸류에이션 해석. 숫자 배수는 위 PER·PBR 칸(자동)이 맡는다.
+    var vtCells = valueCells(s);
     var sigBox = vtCells ? '<div class="sig-box">' + vtCells + "</div>" : "";
-    // 분석(실적·논거·리스크)은 접지 않고 바로 표시
+    // 분석(실적·논거·리스크)은 접지 않고 바로 표시 — 최근 분기 숫자(자동)를 먼저, 세션의 실적 해석을 그다음에
     var analysis =
+      qLine(s, country) +
       (s.earnings ? '<div class="earn">' + esc(s.earnings) + "</div>" : "") +
       '<div class="thesis">' + esc(s.thesis) + "</div>" +
       (risks ? '<div class="risks"><b>리스크</b> — ' + risks + "</div>" : "");
@@ -1887,17 +1995,17 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       '<span class="badges">' + newBadge + themeBadge + warnBadge + trapBadge + unvBadge + tierBadge + delBtn + "</span></div>" +
       '<div class="c-hero">' +
         '<div class="c-hcell"><div class="c-hv">' + fmtPrice(e.price, country) + '</div><div class="c-hk">' + (s.changePct != null ? chgBadge(s.changePct, "sm") + " " : "") + priceSub + "</div></div>" +
-        '<div class="c-hcell c-r"><div class="c-hv ' + upCls + '">' + fmtPct(e.upside) + '</div><div class="c-hk">' + upLabel + "</div></div>" +
+        rangeHero(s, e) +
       "</div>" +
-      '<div class="meter"><i style="width:' + meterW + '%"></i></div>' +
       '<div class="c-stats">' +
-        '<div class="c-stat"' + tpVerifiedTitle(s) + '><div class="c-sk">목표가</div>' + svHtml(fmtPrice(s.targetPrice, country)) + tpVerifiedLine(s) + "</div>" +
+        '<div class="c-stat"' + tpVerifiedTitle(s) + ' style="cursor:help"><div class="c-sk">목표가 <span class="c-q">?</span></div>' + svHtml(fmtPrice(s.targetPrice, country)) + tgtGapLine(s, e) + tpVerifiedLine(s) + "</div>" +
         aiStat +
-        '<div class="c-stat"><div class="c-sk">배당수익률</div><div class="c-sv">' + divVal + "</div></div>" +
+        '<div class="c-stat" title="' + esc(divTitle(s)) + '"><div class="c-sk">배당수익률</div><div class="c-sv">' + divVal + "</div></div>" +
+        multStats(s, country) +
       "</div>" +
       outlookBlock(s, country, e) +
       sigBox +
-      techNoteBlock(s) +
+      techNoteBlock(s, country, e) +
       analysis +
       '<div class="links"><a href="' + esc(safeUrl(s.chartUrl)) + '" target="_blank" rel="noopener">차트 보기</a>' +
       (!isPersonal(s.theme) && !delKey ? favBtn(s, country) : "") +
@@ -1961,11 +2069,11 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     render();
   }
 
-  // 정렬: Tier 오름차순 → 상승여력 내림차순 (표 뷰에서 사용)
+  // 정렬: Tier 오름차순 → 이름. 종전의 '상승여력 큰 순'은 목표가가 아직 안 내려온 급락 종목을 맨 위로 올려
+  // '많이 오를 종목' 순위처럼 읽혔다(2026-10-16 — 증권사 목표가 낙관 편향, TP_REALITY 참조).
+  function byName(a, b) { return String(a.name || "").localeCompare(String(b.name || ""), "ko"); }
   function sortList(list) {
-    return list.slice().sort(function (a, b) {
-      return (a.tier - b.tier) || (numOr(b.upside, -Infinity) - numOr(a.upside, -Infinity));
-    });
+    return list.slice().sort(function (a, b) { return (a.tier - b.tier) || byName(a, b); });
   }
 
   // 거시 국면 신호 — Top Picks 선정에 시장 국면을 반영한다(지금까지 종합한 유동성·지수 분석 연동).
@@ -1994,50 +2102,37 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     return Math.max(0, Math.min(idxSignal(grw) - idxSignal(val), 1));
   }
 
-  // 종합 선정 점수 — '순수하게 안전하면서 수익성도 좋은' 종목을 상위로.
-  //   안전 = 저리스크(가중 큼) + 우량/저평가 테마.  수익성 = 상승여력(가중 큼).  배당은 부수 요소(가중 최소).
-  //   테마 선호는 상시 적용(기본 0.08)하되, 위험회피(gauge)·방어 로테이션(성장지수<가치지수)일수록 증폭 →
-  //   반도체 셀오프 같은 국면에서 고베타(성장) 회피가 강해진다. 데이터 없으면 국면항이 0이 되어 안전 폴백.
-  // 국가별 upside 중앙값 — pickScore 의 상대화 기준. 절대 upside 레벨은 국면에 오염된다는
-  // 것이 2026-08-11 upside 백테스트로 확인됐다(pooled IC raw -0.104 vs 중앙값 차감 -0.004).
-  var upMedCache = {};
-  function upsideMedian(country) {
-    if (upMedCache[country] != null) return upMedCache[country];
-    var v = (D[country] || []).filter(function (s) { return !isPersonal(s.theme) && typeof s.upside === "number"; })
-      .map(function (s) { return s.upside; }).sort(function (a, b) { return a - b; });
-    upMedCache[country] = v.length ? v[Math.floor(v.length / 2)] : 0;
-    return upMedCache[country];
-  }
+  // 폴백 선정 점수 — 큐레이션(topPicks)이 없거나 일부가 빠졌을 때만 쓴다. CLAUDE.md §4-6 과 같은 잣대:
+  //   품질(tier) + 실측 변동성·낙폭(risk) + 최근 분기 영업이익 모멘텀(fundamentals.js). 상승여력 크기는 쓰지 않는다 —
+  //   증권사 목표가는 체계적으로 높고(TP_REALITY) 상승여력 순 정렬이 급락 종목을 위로 올렸다(2026-10-16).
+  //   테마 선호는 상시 적용(기본 0.08)하되, 위험회피(gauge)·방어 로테이션(성장지수<가치지수)일수록 증폭.
   function pickScore(s) {
     var g = gaugeTilt(state.country), rot = rotationTilt(state.country);
-    var wUp = 0.50 - 0.06 * Math.max(0, g), wRisk = 0.30 + 0.06 * Math.max(0, g), wDiv = 0.08, wSrc = 0.12;
-    if (g < 0) { wUp += 0.06 * (-g); }
-    var sum = wUp + wRisk + wDiv + wSrc; wUp /= sum; wRisk /= sum; wDiv /= sum; wSrc /= sum;
-    // upside 는 절대값이 아니라 '같은 국가 편성 대비 상대' 로 본다. 종전의 min(upside,60)/60 은
-    // 급락장에서 전 종목이 상한에 몰려 동점(구분력 0)이 됐고, 백테스트에서 상한 포화가 top3 를
-    // 최대 13%p 악화시켰다(한국 +21일 raw -1.95% vs capped -15.60%). 중앙값 ±30%p 를 0~1 로.
-    var upScore   = Math.max(0, Math.min(0.5 + (numOr(s.upside, 0) - upsideMedian(state.country)) / 60, 1));
-    var divScore  = Math.max(0, Math.min(numOr(s.dividendYield, 0), 6)) / 6;
-    // riskScore 는 실측(stock-ta.js 의 60일 실현변동성·120일 최대낙폭)으로 계산한다.
-    // 종전의 '리스크 불릿 개수' 감점은 내생 변수라 성실한 리스크 공시를 벌점화하는
-    // 역인센티브가 있었다(2026-08 감사 지적). 밴드는 휴리스틱: vol 20~70%(연율화),
-    // mdd 10~50% 를 0~1 로 정규화하고 vol 0.6 : mdd 0.4 가중. 실측치가 없으면 종전 공식 폴백.
-    var riskScore;
+    var tierScore = s.tier === 1 ? 1 : s.tier === 2 ? 0.5 : 0;
+    // riskScore — stock-ta.js 의 60일 실현변동성·120일 최대낙폭(vol 20~70%·mdd 10~50% 정규화, 6:4). 없으면 0.5.
+    var riskScore = 0.5;
     var taR = stTa(s.ticker); taR = taR && taR.risk;
     if (taR && typeof taR.vol === "number" && typeof taR.mdd === "number") {
       var volN = Math.max(0, Math.min((taR.vol - 20) / 50, 1));
       var mddN = Math.max(0, Math.min((taR.mdd - 10) / 40, 1));
       riskScore = 1 - Math.max(0, Math.min(0.6 * volN + 0.4 * mddN, 1));
-    } else {
-      riskScore = 1 - Math.max(0, Math.min(((s.risks || []).length) - 2, 3)) * 0.15;
     }
-    var srcScore  = Math.max(0, Math.min((s.sources || []).length, 3)) / 3;
-    var base = wUp * upScore + wRisk * riskScore + wDiv * divScore + wSrc * srcScore;
+    // 실적 모멘텀 — 최근 분기 영업이익(미국 EBIT) 전년 대비: -50%→0, 0→0.5, +50% 이상→1. 흑자전환 1, 적자 0.
+    var f = fundOf(s.ticker), op = f && f.q && f.q.op, growth = 0.5;
+    if (op) growth = op.turn === "흑자전환" ? 1 : op.turn ? 0 : op.yoy == null ? 0.5 : Math.max(0, Math.min(1, 0.5 + op.yoy / 100));
+    var base = 0.45 * tierScore + 0.30 * riskScore + 0.25 * growth;
     var defense = Math.max(Math.max(0, g), rot);
     var tilt = 0.08 + 0.12 * defense;   // 상시 품질 선호 + 국면 증폭
-    // 가치함정 감점 — 낙폭으로 커진 upside 가 upScore 50% 가중을 타고 상위로 올라오는 것을 상쇄
-    var trap = isValueTrap(s, numOr(s.upside, null)) ? 0.15 : 0;
-    return base + tilt * (THEME_QUALITY[s.theme] || 0) - trap;
+    return base + tilt * (THEME_QUALITY[s.theme] || 0);
+  }
+  // 폴백 후보에서 빼는 종목 — 단기·중기 적극매도(falling knife), 한국 수급 과열(검증된 약세 경고), 목표가 소진
+  function pickExcluded(s, cc) {
+    var n = s.techNote || {};
+    if (n.sigShort === "적극매도" || n.sigMid === "적극매도") return true;
+    var E = window.STOCK_EVENTS, ev = E && E.items && E.items[s.ticker];
+    if (cc === "korea" && ev && ev.flow && ev.flow.hot) return true;
+    var up = effective(s).upside;
+    return up == null || up <= 0;
   }
 
   // 종목 업데이트(편입·제외) 섹션 — 날짜 드롭다운으로 과거 변경도 조회. 스냅샷쌍이 없으면 숨김.
@@ -2113,19 +2208,22 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     return '<div class="psigs">' + one("단기", n.sigShort) + one("중기", n.sigMid) + one("장기", n.sigLong) + "</div>";
   }
   // 한 종목 → Top Pick 카드 HTML (cc=국가, rankNum=순위, reason=선정 이유·선택)
+  // 상승여력을 큰 숫자로 내세우지 않는다(증권사 목표가의 낙관 편향 — TP_REALITY). 현재가·1개월 예상 범위를 보이고
+  // 목표가는 작은 글씨로만 둔다.
   function pickCard(s, cc, rankNum, reason) {
     var e = effective(s);
-    var upCls = (e.upside != null && e.upside < 0) ? " down" : "";
     var flag = cc === "korea" ? "🇰🇷" : "🇺🇸";
     var rz = reason ? '<div class="reason">' + esc(reason) + "</div>" : "";
+    var tb = stTa(s.ticker), ol = tb && tb.outlook, cur = e.price != null ? e.price : (ol && ol.base);
+    var rng = ol && ol.m1 && cur > 0 ? '<span class="pk-rng" title="다음 1개월 80% 예상 범위(변동성 기반, 방향 예측 아님)">1개월 ' +
+      fmtPct((ol.m1[0] / cur - 1) * 100) + " ~ " + fmtPct((ol.m1[1] / cur - 1) * 100) + "</span>" : "";
+    var dv = divOf(s);
     return '<div class="pick" data-ticker="' + esc(s.ticker) + '" data-theme="' + esc(s.theme) + '" data-country="' + cc + '"><span class="rank">' + rankNum + "</span>" +
       '<span class="mkt">' + flag + " " + esc(s.market || "") + "</span>" +
       '<div class="nm">' + esc(s.name) + '<span class="tk">' + esc(s.ticker) + "</span></div>" +
-      '<div class="up-big' + upCls + '">' + fmtPct(e.upside) + "</div>" +
-      '<div class="sub">' + fmtPrice(e.price, cc) +
-      (s.changePct != null ? " " + chgBadge(s.changePct, "md") : "") +
-      " → 목표 " + fmtPrice(s.targetPrice, cc) +
-      (s.dividendYield ? " · 배당 " + Number(s.dividendYield).toFixed(1) + "%" : "") + "</div>" +
+      '<div class="px-big">' + fmtPrice(e.price, cc) + (s.changePct != null ? " " + chgBadge(s.changePct, "md") : "") + "</div>" +
+      '<div class="sub">' + rng + (s.targetPrice != null ? (rng ? " · " : "") + "목표 " + fmtPrice(s.targetPrice, cc) : "") +
+      (dv != null && dv >= 0.1 ? " · 배당 " + fmtDiv(dv) : "") + "</div>" +
       pickSigBadges(s) + rz + "</div>";
   }
   // 국가별 상위 3 폴백(큐레이션 데이터 없을 때) — 그 국가 정식 추천 중 종합점수 상위 3
@@ -2133,18 +2231,17 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     var seen = {}, picks = [];
     (D[cc] || []).forEach(function (s) {
       if (seen[s.ticker] || isPersonal(s.theme)) return;   // 관심·보유는 추천이 아니므로 Top Pick 후보에서 제외
-      var up = effective(s).upside;
-      if (up == null || up <= 0) return;
+      if (pickExcluded(s, cc)) return;
       seen[s.ticker] = true; picks.push(s);
     });
-    picks.sort(function (a, b) { return (pickScore(b) - pickScore(a)) || (numOr(b.upside, 0) - numOr(a.upside, 0)); });
+    picks.sort(function (a, b) { return (pickScore(b) - pickScore(a)) || byName(a, b); });
     return picks.slice(0, n || 3);
   }
   function renderTopPicks() {
     var box = document.getElementById("picksBox");
     if (window.__pastActive) return;   // 과거 보기 중엔 오늘 배너를 그리지 않는다(시세 도착 콜백 경합)
     var crit = document.getElementById("picksCrit");
-    var DEFAULT_CRIT = "전 종목(정식 추천) 중 밸류·기술·유동성을 종합한 국가별 최선 3종목";
+    var DEFAULT_CRIT = "정식 추천 중 품질(tier)·최근 실적·변동성을 종합한 국가별 3종목(예측 아님 — 상승여력 크기로 고르지 않음)";
     var TP = D.topPicks || {};
     var live = [];
 
@@ -2238,7 +2335,8 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
               esc((tm.label || "").split(" · ")[0]) + "</span>") +
           (function () {
             var noBadge = s.theme === "watch" && !s.watchTag;   // 관심인데 태그가 없으면 앞 배지가 비어 구분점이 필요 없다
-            if (s.dividendYield != null) return (noBadge ? "배당 " : " · 배당 ") + Number(s.dividendYield).toFixed(1) + "%";
+            var dv = divOf(s);
+            if (dv != null) return (noBadge ? "배당 " : " · 배당 ") + fmtDiv(dv);
             return noBadge ? "관심종목" : "";
           })() + "</div>" +
       "</div>" +
@@ -2985,7 +3083,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       var isTblT = state.view === "table", htmlT = "";
       orderedThemes().forEach(function (th) {
         var g = list.filter(function (s) { return s.theme === th.key; })
-                    .sort(function (a, b) { return numOr(effective(b).upside, -Infinity) - numOr(effective(a).upside, -Infinity); });
+                    .sort(function (a, b) { return (a.tier - b.tier) || byName(a, b); });
         if (!g.length) return;
         htmlT += '<div class="tier-group"><div class="tier-head">' + (th.emoji ? esc(th.emoji) + " " : "") + esc(th.label) +
           ' <span class="tier-n">' + g.length + "종목</span></div>" +
@@ -3017,7 +3115,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
         if (recoByTicker[w.t]) { fullStocks.push(recoByTicker[w.t]); shown[w.t] = 1; }  // 등록한 추천종목 → 풀카드
         else mineLight.push(w);                        // 그 외 → 라이트 카드
       });
-      fullStocks.sort(function (a, b) { return numOr(effective(b).upside, -Infinity) - numOr(effective(a).upside, -Infinity); });
+      fullStocks.sort(byName);
 
       // 풀카드와 라이트 카드를 한 목록으로 합친다 — 사용자가 드래그로 정한 순서는 둘을 가리지
       // 않으므로, 두 그룹을 나눠 그리면 그 순서를 표현할 수 없다. 기본 순서는 (풀카드 상승여력
@@ -3101,8 +3199,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     // 카드 뷰 — Tier 그룹 유지(상승여력 내림차순)
     var html = "";
     [1, 2, 3].forEach(function (t) {
-      var group = fl.filter(function (s) { return s.tier === t; })
-                    .sort(function (a, b) { return numOr(effective(b).upside, -Infinity) - numOr(effective(a).upside, -Infinity); });
+      var group = fl.filter(function (s) { return s.tier === t; }).sort(byName);
       if (!group.length) return;
       var tm = tierMeta(t);
       html += '<div class="tier-group"><div class="tier-head">' +

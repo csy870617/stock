@@ -153,6 +153,27 @@ function outlookOf(rows, dp) {
   return { base: rnd(base), sd: +(sd * 100).toFixed(2), m1: band(21), m3: band(63) };
 }
 
+// 저장용 반올림 — 한국 정수, 미국 소수 2자리. 비율은 소수 3자리.
+const rndP = (v, dp) => (v == null || !isFinite(v) ? null : dp ? +v.toFixed(dp) : Math.round(v));
+const rndR = (v) => (v == null || !isFinite(v) ? null : +v.toFixed(3));
+function factsSlim(f, dp) {
+  if (!f) return null;
+  const o = { unit: f.unit, ma: { m20: rndP(f.ma.m20, dp), m60: rndP(f.ma.m60, dp), m120: rndP(f.ma.m120, dp) },
+    sr: { sup: rndP(f.sr.sup, dp), res: rndP(f.sr.res, dp) }, rsi: f.rsi == null ? null : +f.rsi.toFixed(1), vpAbove: rndR(f.vpAbove) };
+  if (f.ichi) o.ichi = { where: f.ichi.where, top: rndP(f.ichi.top, dp), bot: rndP(f.ichi.bot, dp), tenkan: rndP(f.ichi.tenkan, dp),
+    kijun: rndP(f.ichi.kijun, dp), cloudDir: f.ichi.cloudDir, chikou: f.ichi.chikou };
+  if (f.cross) o.cross = f.cross;
+  if (f.vs200 != null) o.vs200 = +f.vs200.toFixed(1);
+  return o;
+}
+// 매물대 지도(최근 1년 일봉 24구간) — 카드의 매물대 막대와 자동 기술 요약이 쓴다. sh 는 구간별 거래 비중(천분율 정수).
+function vpSlim(v, dp) {
+  if (!v) return null;
+  const z = (x) => (x ? { lo: rndP(x.lo, dp), hi: rndP(x.hi, dp), share: rndR(x.share) } : null);
+  return { lo: rndP(v.lo, dp), hi: rndP(v.hi, dp), sh: v.sh.map((x) => Math.round(x * 1000)), above: rndR(v.above),
+    poc: rndP(v.poc, dp), pocShare: rndR(v.pocShare), below: z(v.below), upper: z(v.upper) };
+}
+
 // 동시성 제한 실행
 async function mapLimit(items, limit, fn) {
   const out = new Array(items.length); let i = 0;
@@ -174,8 +195,13 @@ async function mapLimit(items, limit, fn) {
     if (a) {
       // 앱이 실제로 쓰는 필드만 남긴다(화이트리스트) — sigLegacy/sigBlock/sigFlow·blocks·flow 는
       // 엔진 비교(backtest)용이라 저장하면 파일만 커진다. 새 필드가 생겨도 자동으로 새지 않는다.
-      const slim = (x) => ({ trend: x.trend, signal: x.signal, metrics: x.metrics, read: x.read });
+      // f = 구조화된 사실(이평·일목·지지/저항·매물대 비중) — gen-technote.js 가 자동 기술 요약을 만드는 입력.
+      // metrics·read(엔진 내부 부분점수 문자열)는 2026-10-16 부터 저장하지 않는다 — 카드에 '이평(-0.72)' 같은 내부 점수가
+      // 그대로 옮겨 적혀 읽는 사람에게 의미가 없었다. 판단 근거는 f 의 관측 가능한 가격(이평·구름·매물대)으로 쓴다.
+      const slim = (x) => ({ trend: x.trend, signal: x.signal, f: factsSlim(x.facts, dp) });
       ta[s.ticker] = { short: slim(a.short), mid: slim(a.mid), long: slim(a.long) };
+      const vp = vpSlim(TA.vpMap(rows, 250, 24), dp);
+      if (vp) ta[s.ticker].vp = vp;
       const risk = riskOf(rows) || (prev[s.ticker] && prev[s.ticker].risk) || null;
       if (risk) ta[s.ticker].risk = risk;
       const ol = outlookOf(rows, dp);
@@ -201,8 +227,10 @@ async function mapLimit(items, limit, fn) {
   };
   const body =
     "// 개별 종목 기술적 분석 스냅샷 — scripts/update-stock-ta.js 가 자동 생성 (LLM 토큰 0, 순수 스크립트)\n" +
-    "// ticker → { short:{trend,signal,metrics,read}, mid:{...}, long:{...}, risk:{vol 60일 실현변동성(연율화%), mdd 120일 최대낙폭%},\n" +
-    "//            outlook:{base 기준 종가, sd 일간 σ60(%), m1:[하단,상단] 다음 21거래일 80% 범위, m3:[…] 63거래일} }. 단기(일봉)/중기(주봉)/장기(월봉) 분리.\n" +
+    "// ticker → { short:{trend,signal,f:{unit,ma:{m20,m60,m120},ichi:{where,top,bot,tenkan,kijun},sr:{sup,res},rsi,vpAbove}}, mid:{...}, long:{...,f:{…,cross,vs200}},\n" +
+    "//            risk:{vol 60일 실현변동성(연율화%), mdd 120일 최대낙폭%}, outlook:{base 기준 종가, sd 일간 σ60(%), m1:[하단,상단] 다음 21거래일 80% 범위, m3:[…] 63거래일},\n" +
+    "//            vp:{lo,hi 최근 1년 가격 범위, sh[24] 구간별 거래 비중(‰), above 현재가 위 거래 비중, poc, pocShare, below/upper:{lo,hi,share} 가장 가까운 거래 집중 구간} }.\n" +
+    "// 단기(일봉)/중기(주봉)/장기(월봉) 분리.\n" +
     "window.STOCK_TA = " + JSON.stringify(T) + ";\n";
   fs.writeFileSync(OUT, body);
 
