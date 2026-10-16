@@ -139,6 +139,10 @@ function riskOf(rows) {
 //     예측된다: 이 대칭 범위가 2016~2026 한·미 991종목에서 표본 밖 79.8~81.3% 적중했다(docs/HISTORY.md).
 //     드리프트를 넣지 않는다 — 현재 시총 상위 표본의 상승 편향(생존편향)을 예측에 섞지 않기 위해서다.
 const RANGE_Z = 1.28;
+// 50% 핵심 범위(z 0.674) — 80% 범위의 절반 폭. 표본 밖 적중 한국 54~55%·미국 50~51%(1개월)로 보정이 맞았다(range-sharp.js).
+// '80% 범위는 넓어서 맞는 것 아니냐'(2026-10-16 사용자 지적)에 대한 답: 폭은 그 종목의 실제 변동성이라 크게 줄일 수 없지만
+// (변동성 추정법 9가지 중 최선도 6~10% 좁아지는 대신 적중률이 76~78%로 떨어짐), 절반 확률 구간은 폭이 절반이라 더 구체적이다.
+const CORE_Z = 0.674;
 function outlookOf(rows, dp) {
   const c = rows.map((r) => r.close), n = c.length;
   if (n < 61) return null;
@@ -149,9 +153,11 @@ function outlookOf(rows, dp) {
   const sd = Math.sqrt(lr.reduce((a, b) => a + (b - mu) * (b - mu), 0) / (lr.length - 1));
   const base = c[n - 1];
   const rnd = (v) => (dp ? +v.toFixed(dp) : Math.round(v));
-  const band = (h) => [rnd(base * Math.exp(-RANGE_Z * sd * Math.sqrt(h))), rnd(base * Math.exp(RANGE_Z * sd * Math.sqrt(h)))];
-  return { base: rnd(base), sd: +(sd * 100).toFixed(2), m1: band(21), m3: band(63) };
+  const band = (h, z) => [rnd(base * Math.exp(-z * sd * Math.sqrt(h))), rnd(base * Math.exp(z * sd * Math.sqrt(h)))];
+  return { base: rnd(base), sd: +(sd * 100).toFixed(2), m1: band(21, RANGE_Z), m3: band(63, RANGE_Z), c1: band(21, CORE_Z), c3: band(63, CORE_Z) };
 }
+// 시장 기준 변동성 — 종목 범위가 넓은지 좁은지 읽을 잣대(코스피·S&P500 의 같은 σ60). 카드에 '시장의 N배'로 보인다.
+const BENCH = { korea: { sym: "^KS11", name: "코스피" }, us: { sym: "^GSPC", name: "S&P500" } };
 
 // 저장용 반올림 — 한국 정수, 미국 소수 2자리. 비율은 소수 3자리.
 const rndP = (v, dp) => (v == null || !isFinite(v) ? null : dp ? +v.toFixed(dp) : Math.round(v));
@@ -213,6 +219,16 @@ async function mapLimit(items, limit, fn) {
     else fellBack++;   // 최초 실패는 생략(렌더가 해당 종목 TA를 숨김)
   });
 
+  // 시장 기준 변동성 — 조회 실패면 이전 값 유지
+  const prevBench = (() => { try { global.window = {}; delete require.cache[require.resolve(OUT)]; require(OUT); return (global.window.STOCK_TA && global.window.STOCK_TA.bench) || {}; } catch (_e) { return {}; } })();
+  const bench = {};
+  for (const c of Object.keys(BENCH)) {
+    const rows = await fetchRows(BENCH[c].sym);
+    const ol = rows ? outlookOf(rows, 2) : null;
+    if (ol) bench[c] = { sym: BENCH[c].sym, name: BENCH[c].name, sd: ol.sd };
+    else if (prevBench[c]) bench[c] = prevBench[c];
+  }
+
   // 폴백만 남은 경우(전 종목 조회 실패)엔 이전 asOf 를 유지해 신선도 오판을 막는다.
   const asOf = argVal("date") || lastBar || loadPrevAsOf() || new Date().toISOString().slice(0, 10);
 
@@ -223,14 +239,15 @@ async function mapLimit(items, limit, fn) {
     // 뒤늦게 backbone 이 T 를 올리면서 방금 쓴 techNote 가 통째로 구식이 된다.
     builtAt: new Date().toISOString().slice(0, 19) + "Z",
     note: "개별 종목 기술적 분석 — 이동평균(30%)·일목균형표(30%)·매물대(25%)·오실레이터(15%) 가중 종합에 상위 기간 추세 반영(단기=일·주·월 5:3:2, 중기=주·월 7:3). 단기=일봉, 중기=주봉, 장기=월봉 3기간. Yahoo 10년 일봉에서 매일 자동 계산(LLM 토큰 0).",
+    bench: bench,
     ta: ta
   };
   const body =
     "// 개별 종목 기술적 분석 스냅샷 — scripts/update-stock-ta.js 가 자동 생성 (LLM 토큰 0, 순수 스크립트)\n" +
     "// ticker → { short:{trend,signal,f:{unit,ma:{m20,m60,m120},ichi:{where,top,bot,tenkan,kijun},sr:{sup,res},rsi,vpAbove}}, mid:{...}, long:{...,f:{…,cross,vs200}},\n" +
-    "//            risk:{vol 60일 실현변동성(연율화%), mdd 120일 최대낙폭%}, outlook:{base 기준 종가, sd 일간 σ60(%), m1:[하단,상단] 다음 21거래일 80% 범위, m3:[…] 63거래일},\n" +
+    "//            risk:{vol 60일 실현변동성(연율화%), mdd 120일 최대낙폭%}, outlook:{base 기준 종가, sd 일간 σ60(%), m1:[하단,상단] 다음 21거래일 80% 범위, m3:[…] 63거래일, c1·c3: 같은 기간 50% 핵심 범위},\n" +
     "//            vp:{lo,hi 최근 1년 가격 범위, sh[24] 구간별 거래 비중(‰), above 현재가 위 거래 비중, poc, pocShare, below/upper:{lo,hi,share} 가장 가까운 거래 집중 구간} }.\n" +
-    "// 단기(일봉)/중기(주봉)/장기(월봉) 분리.\n" +
+    "// bench:{korea|us:{sym,name,sd}} 시장 지수 σ60(일간 %) — 종목 변동폭을 '시장의 N배'로 읽는 잣대. 단기(일봉)/중기(주봉)/장기(월봉) 분리.\n" +
     "window.STOCK_TA = " + JSON.stringify(T) + ";\n";
   fs.writeFileSync(OUT, body);
 

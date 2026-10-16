@@ -82,8 +82,8 @@ function srSentence(c, f, g, range, cc) {
   const sIn = s != null && s < c ? inR(s, range) : null, rIn = r != null && r > c ? inR(r, range) : null;
   let rg = "";
   if (range) {
-    if (sIn != null && rIn != null) rg = sIn && rIn ? "둘 다 1개월 예상 범위 안" : !sIn && !rIn ? "둘 다 1개월 예상 범위 밖" : (sIn ? "지지만" : "저항만") + " 1개월 예상 범위 안";
-    else rg = (sIn != null ? "지지" : "저항") + "는 1개월 예상 범위 " + ((sIn != null ? sIn : rIn) ? "안" : "밖");
+    if (sIn != null && rIn != null) rg = sIn && rIn ? "둘 다 1개월 80% 범위 안" : !sIn && !rIn ? "둘 다 1개월 80% 범위 밖" : (sIn ? "지지만" : "저항만") + " 1개월 80% 범위 안";
+    else rg = (sIn != null ? "지지" : "저항") + "는 1개월 80% 범위 " + ((sIn != null ? sIn : rIn) ? "안" : "밖");
   }
   const v = GV[g] || 0;
   const cond = v >= 1 && s != null && s < c ? "지지 이탈 시 상승 근거 약화" : v <= -1 && r != null && r > c ? "저항 회복 전까지 약세 흐름" : "";
@@ -93,7 +93,7 @@ function srSentence(c, f, g, range, cc) {
 function trendLine(c, f, u, label, range, cc) {
   const m = f.ma && f.ma.m20;
   if (m == null) return "";
-  const rg = range ? (inR(m, range) ? ", 3개월 예상 범위 안" : ", 3개월 예상 범위 밖") : "";
+  const rg = range ? (inR(m, range) ? ", 3개월 80% 범위 안" : ", 3개월 80% 범위 밖") : "";
   return label + "(20" + u + "선) " + P(m, cc) + "(" + dist(m, c) + ") — 현재가 " + (c >= m ? "아래" : "위") + rg + ".";
 }
 function ichiTail(f) {
