@@ -154,10 +154,6 @@ a { color: inherit; }
 
 .wrap { max-width: 1080px; margin: 0 auto; padding: 30px 22px 80px; }
 
-/* ── 시황 리드 ── */
-.market-note { font-size: 1.02rem; color: var(--ink); line-height: 1.62; margin: 6px 0 28px; letter-spacing: -0.016em; }
-.market-note .mn-p { margin: 0 0 10px; }
-.market-note .mn-p:last-child { margin-bottom: 0; }
 .upd-status { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; font-size: 0.76rem; color: var(--muted); margin: 2px 0 16px; }
 .upd-status a { color: var(--ink-2); }
 /* 기준일 선택 — 헤더 드롭다운. 과거 날짜를 고르면 아래 .past 패널이 그날 스냅샷을 읽기 전용으로 보여준다. */
@@ -345,7 +341,7 @@ a { color: inherit; }
   box-shadow: var(--shadow-sm);
   transition: transform .18s ease, box-shadow .18s ease;
 }
-.pick:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+.pick:hover { border-color: color-mix(in srgb, var(--accent) 35%, var(--line)); }
 
 /* Top Pick 클릭 시 대상 카드 강조 */
 .card.flash { animation: cardflash 1.8s ease; }
@@ -355,20 +351,10 @@ a { color: inherit; }
 }
 .pick .rank { position: absolute; top: 13px; right: 14px; width: 22px; height: 22px; display: grid; place-items: center;
   font-size: 0.78rem; font-weight: 700; color: var(--muted); background: var(--surface-2); border-radius: 50%; font-variant-numeric: tabular-nums; }
-.pick .thm { display: inline-flex; align-items: center; gap: 4px; font-size: 0.71rem; color: var(--ink-2);
-  background: var(--chip-bg); border-radius: 999px; padding: 3px 9px; width: fit-content; }
 .pick .nm { font-weight: 700; font-size: 0.98rem; }
 .pick .nm .tk { color: var(--muted); font-weight: 400; font-size: 0.75rem; margin-left: 5px; }
-.pick .px-big { font-size: 1.22rem; font-weight: 800; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
 .pick .pk-rng { white-space: nowrap; }
 .pick .sub { color: var(--ink-2); font-size: 0.8rem; }
-/* Top Pick 배너 확장: 시장 배지·신호 배지·선정 이유 */
-.pick .mkt { display: inline-flex; align-items: center; gap: 4px; font-size: 0.68rem; font-weight: 700; color: var(--ink-2);
-  background: var(--chip-bg); border-radius: 999px; padding: 3px 9px; width: fit-content; }
-.pick .psigs { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 1px; }
-.pick .psig { display: inline-flex; align-items: center; gap: 4px; font-size: 0.68rem; font-weight: 700; color: #fff;
-  padding: 1px 8px; border-radius: 999px; white-space: nowrap; }
-.pick .psig .psig-k { font-weight: 600; opacity: 0.85; font-size: 0.64rem; }
 .pick .reason { color: var(--ink-2); font-size: 0.8rem; line-height: 1.5; margin-top: 2px; }
 .picks-head .crit .pk-stale { display: inline-block; margin-left: 8px; font-weight: 700; color: var(--down);
   background: color-mix(in srgb, var(--down) 14%, transparent); padding: 1px 8px; border-radius: 999px; }
@@ -487,8 +473,6 @@ a { color: inherit; }
 
 .earn { color: var(--ink-2); font-size: 0.84rem; line-height: 1.55; border-left: 3px solid var(--grid); padding-left: 11px; }
 .thesis { font-size: 0.9rem; line-height: 1.6; }
-.risks { color: var(--ink-2); font-size: 0.84rem; line-height: 1.55; }
-.risks b { color: var(--ink); font-weight: 600; }
 .links { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-top: auto; padding-top: 4px; }
 .links a { color: var(--accent); font-size: 0.84rem; font-weight: 500; text-decoration: none; }
 .links a:hover { text-decoration: underline; }
@@ -590,74 +574,12 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 0.86rem; min-widt
 .tbl a { color: var(--accent); text-decoration: none; }
 .tbl .mini-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; }
 
-/* ── 유동성 게이지 ── */
-.liq { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 22px 24px; margin-bottom: 26px; box-shadow: var(--shadow-sm); }
-.liq .liq-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
-.liq .liq-head h2 { font-size: 1.18rem; font-weight: 700; letter-spacing: -0.024em; }
-.liq .liq-head-r { display: flex; align-items: center; gap: 10px; }
-.liq .liq-as { color: var(--muted); font-size: 0.78rem; }
-.liq-refresh { font-size: 0.75rem; font-weight: 600; color: var(--ink-2); background: var(--surface-2); border: 1px solid transparent; border-radius: 999px; padding: 4px 12px; text-decoration: none; white-space: nowrap; }
-.liq-refresh:hover { background: color-mix(in srgb, var(--ink) 9%, var(--surface-2)); }
-.liq .liq-headline { font-size: 0.98rem; color: var(--ink); line-height: 1.6; margin-bottom: 18px; letter-spacing: -0.014em; }
-.liq-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-@media (max-width: 620px) { .liq-grid { grid-template-columns: 1fr; } }
-.liq-col { background: var(--inset); border: 1px solid transparent; border-radius: var(--r-sm); padding: 16px 18px; }
-.liq-col h3 { font-size: 0.92rem; font-weight: 700; margin-bottom: 12px; letter-spacing: -0.01em; }
-.liq-term { display: flex; align-items: center; gap: 10px; margin-bottom: 9px; }
-.liq-term .lbl { color: var(--muted); font-size: 0.78rem; min-width: 72px; }
+/* ── 유동성 게이지(시장 카드 한 줄)·근거 목록 ── */
 .gauge { display: flex; gap: 4px; flex: 1; }
 .gauge .seg5 { flex: 1; height: 8px; border-radius: 4px; background: var(--meter-track); }
-.liq-term .rank { font-size: 0.82rem; font-weight: 700; min-width: 64px; text-align: right; }
 .liq-drivers { margin: 10px 0 0; padding-left: 16px; }
 .liq-drivers li { font-size: 0.82rem; color: var(--ink-2); margin-bottom: 4px; line-height: 1.5; }
-.liq-foot { color: var(--muted); font-size: 0.78rem; margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-.liq-foot .nc { color: var(--ink-2); }
-.liq-foot a { color: var(--muted); }
-.liq-auto { margin-top: 10px; padding-top: 9px; border-top: 1px dashed var(--grid); font-size: 0.78rem; color: var(--muted); line-height: 1.5; }
-.liq-auto b { font-weight: 700; }
-.liq-auto .ttl { color: var(--ink-2); font-weight: 600; }
-/* 유동성 근거·지표 접기 */
-.liq-more { width: 100%; }
-.liq-more > summary { cursor: pointer; font-size: 0.8rem; font-weight: 600; color: var(--accent); list-style: none; padding: 4px 0; user-select: none; }
-.liq-more > summary::-webkit-details-marker { display: none; }
-.liq-more > summary::before { content: "▸ "; }
-.liq-more[open] > summary::before { content: "▾ "; }
-.liq-more-body { padding-top: 10px; }
-.liq-dgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-@media (max-width: 620px) { .liq-dgrid { grid-template-columns: 1fr; } }
-.liq-dcol h4 { font-size: 0.82rem; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.01em; }
-.liq-dcol .liq-drivers { margin: 0; }
-.liq-footbits { margin-top: 14px; padding-top: 11px; border-top: 1px solid var(--grid); display: flex; flex-direction: column; gap: 6px; }
-.liq-footbits .nc { color: var(--muted); font-size: 0.78rem; line-height: 1.5; }
-.liq-footbits a { color: var(--muted); }
 
-/* ── 주요 지수 기술적 분석 ── */
-.idx { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 22px 24px; margin-bottom: 26px; box-shadow: var(--shadow-sm); }
-.idx .idx-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
-.idx .idx-head h2 { font-size: 1.18rem; font-weight: 700; letter-spacing: -0.024em; }
-.idx .idx-as { color: var(--muted); font-size: 0.78rem; }
-.idx .idx-note { color: var(--muted); font-size: 0.8rem; line-height: 1.55; margin-bottom: 16px; }
-/* 지수: 단기/중기/장기 대응 카드 — 모바일 1열, 넓은 화면 2열 */
-.idx-grid { display: grid; grid-template-columns: 1fr; gap: 12px; }
-@media (min-width: 640px) { .idx-grid { grid-template-columns: 1fr 1fr; } }
-.idx-tile { display: block; background: var(--inset); border-radius: var(--r-sm); padding: 14px 16px; text-decoration: none; color: inherit; transition: background .15s; }
-a.idx-tile:hover { background: color-mix(in srgb, var(--ink) 5%, var(--inset)); }
-.idx-tile .it-top { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; margin-bottom: 7px; flex-wrap: nowrap; }
-.idx-tile .it-nm { font-size: 0.9rem; font-weight: 700; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
-.idx-tile .it-pd { color: var(--muted); font-size: 0.67rem; white-space: nowrap; flex: 0 0 auto; }
-.idx-tile .it-px { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 11px; }
-.idx-tile .it-lv { font-size: 1.4rem; font-weight: 800; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; line-height: 1; }
-.idx-tile .it-ch { font-size: 0.86rem; font-weight: 700; }
-.idx-tile .it-ch.up { color: var(--up); }
-.idx-tile .it-ch.down { color: var(--down); }
-.idx-tile .it-ch.na { color: var(--muted); font-weight: 600; }
-.idx-tile .it-note { border-top: 1px solid var(--grid); padding-top: 9px; }
-.idx-tile .it-note .tn-line { display: grid; grid-template-columns: auto 1fr; gap: 9px; align-items: baseline; padding: 3px 0; }
-.idx-tile .it-note .tn-line + .tn-line { border-top: 1px solid var(--grid); padding-top: 7px; margin-top: 3px; }
-.idx-tile .it-note .tn-k { color: var(--muted); font-size: 0.74rem; font-weight: 600; white-space: nowrap; }
-.idx-tile .it-note .tn-v { font-size: 0.82rem; line-height: 1.5; color: var(--ink); }
-.idx-tile .it-liq { font-size: 0.68rem; font-weight: 700; border: 1px solid currentColor; border-radius: 999px; padding: 1px 7px; margin-right: 6px; white-space: nowrap; vertical-align: 1px; }
-.idx-tile .it-sigs { display: flex; flex-wrap: wrap; }
 /* 통합 신호 박스 — 기술(단·장기 알약) + 밸류×타이밍(해석)을 한 카드에 정렬 */
 .sig-box { display: grid; grid-template-columns: auto 1fr; gap: 9px 12px; align-items: baseline;
   background: var(--inset); border-radius: var(--r-sm); padding: 12px 14px; }
@@ -675,8 +597,6 @@ a.idx-tile:hover { background: color-mix(in srgb, var(--ink) 5%, var(--inset)); 
 .vt-dot.vt-neutral { background: var(--muted); }
 /* 기술 대응(techNote) — 단기(일봉)/중기(주봉)/장기(월봉) 대응만 간결히 */
 .tech-note { margin: 2px 0 4px; background: var(--inset); border-radius: var(--r-sm); padding: 11px 13px; }
-.tn-head { display: flex; align-items: baseline; gap: 8px; font-size: 0.76rem; font-weight: 700; color: var(--muted); margin-bottom: 7px; }
-.tn-as { color: var(--muted); font-size: 0.7rem; font-weight: 400; }
 .tn-line { display: grid; grid-template-columns: auto 1fr; gap: 9px; align-items: baseline; padding: 3px 0; }
 .tn-line + .tn-line { border-top: 1px solid var(--grid); padding-top: 7px; margin-top: 4px; }
 .tn-k { color: var(--muted); font-size: 0.76rem; font-weight: 600; white-space: nowrap; }
@@ -688,7 +608,6 @@ a.idx-tile:hover { background: color-mix(in srgb, var(--ink) 5%, var(--inset)); 
 .tech-note.stale { box-shadow: inset 3px 0 0 var(--down); }
 /* 변동 범위 — 1·3개월 50%(진한 띠)·80%(옅은 띠) 범위 막대(현재가·목표가 표시) + 시장 대비 변동성 + 다음 실적 */
 .outlook { margin: 2px 0 4px; background: var(--inset); border-radius: var(--r-sm); padding: 11px 13px; }
-.outlook .tn-head { flex-wrap: wrap; }
 .ol-row { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: start; padding: 3px 0; }
 .ol-row + .ol-row { margin-top: 3px; }
 .ol-k { color: var(--muted); font-size: 0.76rem; font-weight: 600; white-space: nowrap; min-width: 3.6em; }
@@ -795,6 +714,112 @@ a.idx-tile:hover { background: color-mix(in srgb, var(--ink) 5%, var(--inset)); 
 .pl-list.pl-reorder > [data-pkey] { max-height: 88px; overflow: hidden; }
 .links .src { margin-left: auto; }
 
+
+/* ════ 화면 간소화(2026-10-16) — 요약 먼저, 자세히는 접어서 ════ */
+/* 접기 문단: 몇 줄만 보이고 탭하면 전문. 실제로 잘린 경우에만 '더보기'(markClamps) */
+.clamp1, .clamp2, .clamp3 { overflow: hidden; }
+.clamp1 { max-height: calc(1 * var(--lh, 1.55) * 1em); white-space: nowrap; text-overflow: ellipsis; }
+.clamp2 { max-height: calc(2 * var(--lh, 1.55) * 1em); }
+.clamp3 { max-height: calc(3 * var(--lh, 1.55) * 1em); }
+[data-ck] { cursor: pointer; position: relative; line-height: var(--lh, 1.55); }
+[data-ck].has-more::after { content: "더보기"; position: absolute; right: 0; bottom: 0; padding-left: 30px; line-height: var(--lh, 1.55);
+  background: linear-gradient(90deg, transparent, var(--clamp-bg, var(--surface)) 28px); color: var(--accent); font-size: 0.74rem; font-weight: 600; }
+[data-ck].clamp1.has-more::after { background: var(--clamp-bg, var(--surface)); padding-left: 6px; }
+[data-ck].has-less::after { content: "접기"; display: block; text-align: right; color: var(--accent); font-size: 0.72rem; font-weight: 600; }
+
+/* 오늘의 시장 — 지수 2칸·유동성 한 줄·시황 3줄, 나머지는 '시장 자세히' */
+.mkt-box { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px 16px 4px; margin: 0 0 22px; box-shadow: var(--shadow-sm); --clamp-bg: var(--surface); }
+.mkt-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.mkt-head h2 { font-size: 1.04rem; font-weight: 700; letter-spacing: -0.02em; }
+.mkt-as { color: var(--muted); font-size: 0.72rem; }
+.mkt-idx { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.mi { display: grid; grid-template-columns: 1fr auto; grid-template-areas: "nm ch" "lv lv" "sig sig"; gap: 1px 6px; background: var(--inset);
+  border-radius: var(--r-sm); padding: 9px 11px 8px; text-decoration: none; color: inherit; min-width: 0; }
+a.mi:hover { background: color-mix(in srgb, var(--ink) 5%, var(--inset)); }
+.mi-nm { grid-area: nm; font-size: 0.76rem; font-weight: 700; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mi-ch { grid-area: ch; font-size: 0.76rem; font-weight: 700; text-align: right; white-space: nowrap; }
+.mi-ch.up { color: var(--up); } .mi-ch.down { color: var(--down); } .mi-ch.na { color: var(--muted); }
+.mi-lv { grid-area: lv; font-size: 1.14rem; font-weight: 800; letter-spacing: -0.025em; font-variant-numeric: tabular-nums; line-height: 1.25; }
+.mi .mi-sig { grid-area: sig; justify-content: flex-start; margin-top: 2px; }
+.mkt-liq { display: flex; align-items: center; gap: 6px 14px; flex-wrap: wrap; margin: 10px 0 8px; font-size: 0.76rem; }
+.mkt-liq:empty { display: none; }
+.mkt-liq .ml-k { font-weight: 700; color: var(--ink-2); }
+.ml-term { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+.ml-term .ml-l { color: var(--muted); }
+.ml-term .gauge { display: inline-flex; gap: 2px; width: 50px; flex: none; }
+.ml-term .gauge .seg5 { height: 6px; flex: 1; border-radius: 3px; background: var(--meter-track); }
+.mkt-note { font-size: 0.86rem; color: var(--ink); }
+.mkt-note .mn-p { margin: 0 0 6px; }
+.mkt-note .mn-p:last-child { margin-bottom: 0; }
+.mkt-more { border-top: 1px solid var(--grid); margin-top: 10px; }
+.mkt-more > summary { list-style: none; cursor: pointer; padding: 9px 0; font-size: 0.8rem; font-weight: 600; color: var(--accent); display: flex; align-items: baseline; gap: 8px; }
+.mkt-more > summary::-webkit-details-marker { display: none; }
+.mkt-more > summary::after { content: "▾"; margin-left: auto; color: var(--muted); transition: transform .15s; }
+.mkt-more[open] > summary::after { transform: rotate(180deg); }
+.mkt-more .mm-sub { color: var(--muted); font-weight: 400; font-size: 0.72rem; }
+.mkt-more-body { padding: 0 0 12px; }
+.md-sec + .md-sec { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--grid); }
+.md-t { display: flex; align-items: baseline; gap: 8px; font-size: 0.86rem; font-weight: 700; margin-bottom: 6px; }
+.md-as { color: var(--muted); font-size: 0.7rem; font-weight: 400; }
+.md-head { font-size: 0.84rem; line-height: 1.55; font-weight: 600; margin-bottom: 4px; }
+.md-bits { color: var(--muted); font-size: 0.74rem; line-height: 1.5; display: flex; flex-direction: column; gap: 3px; margin-top: 8px; }
+.md-bits a { color: var(--muted); }
+.md-idx { background: var(--inset); border-radius: var(--r-sm); padding: 10px 12px; margin-top: 8px; }
+.md-in { font-size: 0.82rem; font-weight: 700; margin-bottom: 2px; }
+.md-idx .tn-v { font-size: 0.8rem; }
+.md-idx .it-liq { font-size: 0.66rem; font-weight: 700; border: 1px solid currentColor; border-radius: 999px; padding: 0 6px; margin-right: 6px; white-space: nowrap; }
+
+/* Top Pick — 행 형태 */
+.picks .picks-grid { gap: 8px; }
+.pick { padding: 11px 14px 11px 44px; gap: 4px; --clamp-bg: var(--surface); }
+.pick .rank { left: 13px; right: auto; top: 12px; color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.pick .pk-top { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+/* 이름이 우선 — 티커는 자리가 남을 때만(넘치면 둘째 줄로 밀려 가려진다), 이름도 넘치면 말줄임 */
+.pick .pk-top .nm { flex: 1 1 auto; min-width: 0; display: flex; flex-wrap: wrap; align-items: baseline; column-gap: 5px;
+  height: 1.45em; line-height: 1.45; overflow: hidden; }
+.pick .nm .nm-t { min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pick .nm .tk { margin-left: 0; white-space: nowrap; }
+.pick .pk-px { flex: 0 0 auto; font-size: 0.94rem; font-weight: 750; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pick .pk-mid { display: flex; align-items: center; justify-content: space-between; gap: 4px 10px; flex-wrap: wrap; }
+.pick .pk-mid .sub, .pick .pk-sub { font-size: 0.74rem; color: var(--ink-2); }
+.pick .pk-mid .tl-sig { margin-top: 0; }
+.pick .reason { font-size: 0.78rem; margin-top: 1px; }
+.picks-head { margin-bottom: 10px; }
+.picks-head h2 { font-size: 1.04rem; }
+.picks-head .crit { font-size: 0.74rem; --clamp-bg: var(--page); }
+.picks-sub { font-size: 0.84rem; margin-bottom: 7px; }
+
+/* 종목 카드 — 칩 줄·접이식 섹션 */
+.c-chips { display: flex; flex-wrap: wrap; gap: 5px; }
+.c-chips .cc-sig { display: inline-flex; align-items: baseline; gap: 4px; font-size: 0.68rem; font-weight: 700; color: #fff; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.c-chips .cc-sig i { font-style: normal; font-weight: 600; opacity: 0.85; font-size: 0.62rem; }
+.c-chips .cc { font-size: 0.68rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: var(--chip-bg); color: var(--ink-2); white-space: nowrap; }
+.c-chips .cc-warn { color: var(--down); background: color-mix(in srgb, var(--down) 12%, transparent); }
+.c-chips .cc-ev { color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, transparent); }
+.card .c-stats { padding: 9px 0; gap: 8px 12px; }
+.card .thesis { font-size: 0.86rem; --clamp-bg: var(--surface); }
+.secs { display: flex; flex-direction: column; border-top: 1px solid var(--grid); }
+.sec { border-bottom: 1px solid var(--grid); }
+.sec > summary { list-style: none; cursor: pointer; display: grid; grid-template-columns: auto 1fr auto; align-items: baseline; gap: 10px; padding: 10px 2px; }
+.sec > summary::-webkit-details-marker { display: none; }
+.sec > summary::after { content: "▾"; color: var(--muted); font-size: 0.78rem; transition: transform .15s; }
+.sec[open] > summary::after { transform: rotate(180deg); }
+.sec .sec-t { font-size: 0.82rem; font-weight: 700; color: var(--ink); white-space: nowrap; }
+.sec .sec-s { font-size: 0.76rem; color: var(--ink-2); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sec[open] .sec-s { visibility: hidden; }
+.sec .sec-b { padding: 0 0 12px; display: flex; flex-direction: column; gap: 10px; }
+.sec .sec-b > .outlook, .sec .sec-b > .tech-note { margin: 0; }
+.sec-note { color: var(--muted); font-size: 0.7rem; margin-bottom: 6px; }
+.risk-list { margin: 0; padding-left: 18px; color: var(--ink-2); font-size: 0.84rem; line-height: 1.55; }
+.risk-list li + li { margin-top: 3px; }
+
+/* 하단 안내 — 짧은 고지만 보이고 검증 설명은 접는다 */
+.foot-more > summary { list-style: none; cursor: pointer; color: var(--ink-2); font-weight: 600; margin-top: 8px; }
+.foot-more > summary::-webkit-details-marker { display: none; }
+.foot-more > summary::before { content: "▸ "; }
+.foot-more[open] > summary::before { content: "▾ "; }
+.foot-more p { margin-top: 6px; }
+
 footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--grid); color: var(--muted); font-size: 0.8rem; line-height: 1.6; }
 </style>
 </head>
@@ -825,25 +850,18 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     </div>
   </div>
 
-  <div class="market-note" id="marketNote"></div>
-
-  <div class="liq" id="liqBox" style="display:none">
-    <div class="liq-head">
-      <h2>거시 유동성</h2>
-      <span class="liq-as" id="liqAs"></span>
-    </div>
-    <div class="liq-headline" id="liqHeadline"></div>
-    <div class="liq-grid" id="liqGrid"></div>
-    <div class="liq-foot" id="liqFoot"></div>
-  </div>
-
-  <div class="idx" id="idxBox" style="display:none">
-    <div class="idx-head">
-      <h2>주요 지수</h2>
-      <span class="idx-as" id="idxAs"></span>
-    </div>
-    <div class="idx-grid" id="idxGrid"></div>
-  </div>
+  <!-- 오늘의 시장 — 지수·유동성·시황을 한 카드에 요약하고, 지수 대응·유동성 근거는 '자세히'에 접어 둔다(2026-10-16 —
+       세 블록이 휴대폰에서 1,870px 를 차지해 종목 목록이 세 번째 화면에서야 시작됐다). -->
+  <section class="mkt-box" id="mktBox">
+    <div class="mkt-head"><h2>오늘의 시장</h2><span class="mkt-as" id="mktAs"></span></div>
+    <div class="mkt-idx" id="idxGrid"></div>
+    <div class="mkt-liq" id="liqGrid"></div>
+    <div class="mkt-note" id="marketNote"></div>
+    <details class="mkt-more" data-sk="mkt-more">
+      <summary>시장 자세히 <span class="mm-sub">지수 대응 · 유동성 근거</span></summary>
+      <div class="mkt-more-body"><div id="idxNotes"></div><div id="liqDetail"></div></div>
+    </details>
+  </section>
 
   <section class="picks" id="picksBox" style="display:none">
     <div class="picks-head">
@@ -887,7 +905,16 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   <footer class="site">
     <p id="disclaimer"></p>
     <p style="margin-top:6px;"><span id="routineTime">매일 한국시간 오후 5시(LA 오전 1시)</span> 자동 갱신 · 현재가에 '실시간' 표기가 있으면 장중 시세, 없으면 종가</p>
-    <p style="margin-top:6px;">기술 신호 등급(적극매수~적극매도)은 이동평균선·일목균형표·매물대 가중 종합에 상위 기간 추세를 반영한 값으로(단기=일·주·월봉 5:3:2, 중기=주·월봉 7:3), <b>이미 일어난 움직임을 요약한 '현재 상태'이지 예측이 아닙니다</b> — 등급이 매수 쪽으로 바뀌기 전 20거래일에 이미 지수 대비 평균 +2.5~4.3% 올랐고 바뀐 뒤 1개월 초과수익은 평균 -1.1~-0.2%였으며, 한·미 881종목(2023~2026)에 적용하면 일·주·월봉 어느 등급도 시장 대비 종목 선별력이 0에 가까웠습니다. 기술 대응 문장은 이 숫자(이평·구름·지지/저항·매물대·수급·예상 범위)로 매일 자동 작성합니다. <b>매물대</b>는 '어느 가격에서 거래가 많았나'를 보여 주는 지도입니다 — 2016~2026년 991종목 검증에서 거래가 몰린 가격대가 다른 가격대보다 지지·저항으로 더 잘 버티지는 않았습니다. 카드의 <b>변동 범위</b>는 방향 대신 검증된 것만 보여 줍니다: 다음 1·3개월 <b>절반 확률(50%)·80% 범위</b>(60일 변동성 기반 — 표본 밖 적중 50~55%·78~82%)와 공지된 <b>실적 일정</b>. 범위의 폭은 그 종목이 실제로 흔들리는 정도라서, 모든 종목에 같은 폭을 쓰면 조용한 종목은 92~96%·변동이 큰 종목은 54~57%만 맞는 반면 이 범위는 변동성 수준과 관계없이 고르게 맞습니다(폭 자체가 위험 정보). 시장이 크게 흔들리는 구간에는 범위도 넓어지고, 가라앉으면 좁아집니다. 유일하게 일관된 방향 신호는 한국 <b>수급 과열</b>(외국인+기관 20일 순매수가 거래량의 6.3% 이상)로, 통념과 반대로 이후 1·3개월 지수 대비 성과가 나머지보다 약했습니다(2016~2026 세 구간 모두). <b>증권사 목표가</b>는 체계적으로 높게 나옵니다 — 한국 리포트 1.8만 건(2020~2026) 기준 제시 상승여력 중앙값 +32%, 12개월 뒤 주가가 목표가 이상이었던 경우 36%, 실제 12개월 수익 중앙값 +13%. 그래서 상승여력을 큰 숫자로 내세우지 않고 목표가 칸에 '현재가 대비'로만 적습니다. PER·PBR·배당·분기 실적은 네이버 증권·나스닥 출처 값을 매일 그대로 옮긴 것입니다. 매매 트리거가 아닌 참고 정보로만 활용하세요.</p>
+    <p style="margin-top:6px;"><b>기술 신호 등급(적극매수~적극매도)은 이미 일어난 움직임을 요약한 '현재 상태'이지 예측이 아닙니다.</b> 매매 트리거가 아닌 참고 정보로만 활용하세요.</p>
+    <details class="foot-more" data-sk="foot-more">
+      <summary>신호·범위·목표가를 읽는 법 (검증 결과)</summary>
+      <p><b>기술 신호 등급</b>은 이동평균선·일목균형표·매물대 가중 종합에 상위 기간 추세를 반영한 값입니다(단기=일·주·월봉 5:3:2, 중기=주·월봉 7:3). 등급이 매수 쪽으로 바뀌기 전 20거래일에 이미 지수 대비 평균 +2.5~4.3% 올랐고 바뀐 뒤 1개월 초과수익은 평균 -1.1~-0.2%였으며, 한·미 881종목(2023~2026)에 적용하면 일·주·월봉 어느 등급도 시장 대비 종목 선별력이 0에 가까웠습니다. 기술 대응 문장은 이 숫자(이평·구름·지지/저항·매물대·수급·예상 범위)로 매일 자동 작성합니다.</p>
+      <p><b>매물대</b>는 '어느 가격에서 거래가 많았나'를 보여 주는 지도입니다 — 2016~2026년 991종목 검증에서 거래가 몰린 가격대가 다른 가격대보다 지지·저항으로 더 잘 버티지는 않았습니다.</p>
+      <p>카드의 <b>변동 범위</b>는 방향 대신 검증된 것만 보여 줍니다: 다음 1·3개월 <b>절반 확률(50%)·80% 범위</b>(60일 변동성 기반 — 표본 밖 적중 50~55%·78~82%)와 공지된 <b>실적 일정</b>. 범위의 폭은 그 종목이 실제로 흔들리는 정도라서, 모든 종목에 같은 폭을 쓰면 조용한 종목은 92~96%·변동이 큰 종목은 54~57%만 맞는 반면 이 범위는 변동성 수준과 관계없이 고르게 맞습니다(폭 자체가 위험 정보). 시장이 크게 흔들리는 구간에는 범위도 넓어지고, 가라앉으면 좁아집니다.</p>
+      <p>유일하게 일관된 방향 신호는 한국 <b>수급 과열</b>(외국인+기관 20일 순매수가 거래량의 6.3% 이상)로, 통념과 반대로 이후 1·3개월 지수 대비 성과가 나머지보다 약했습니다(2016~2026 세 구간 모두).</p>
+      <p><b>증권사 목표가</b>는 체계적으로 높게 나옵니다 — 한국 리포트 1.8만 건(2020~2026) 기준 제시 상승여력 중앙값 +32%, 12개월 뒤 주가가 목표가 이상이었던 경우 36%, 실제 12개월 수익 중앙값 +13%. 그래서 상승여력을 큰 숫자로 내세우지 않고 목표가 칸에 '현재가 대비'로만 적습니다.</p>
+      <p>PER·PBR·배당·분기 실적은 네이버 증권·나스닥 출처 값을 매일 그대로 옮긴 것입니다.</p>
+    </details>
   </footer>
 </div>
 
@@ -1343,15 +1370,72 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   // 시황: 선택된 국가의 시황을 headline 처럼 자연스럽게 이어지는 산문으로 표시(국가 전환 시 갱신).
   // 문장마다 끊지 않고 실제 문단(빈 줄) 단위로만 나눠, 문단 안의 문장들은 흐르듯 이어 읽게 한다.
   // 국가별 시황(marketNoteUS·marketNoteKR)이 있으면 우선, 없으면 통합 marketNote 로 폴백.
+  // ── 접기 도구 — 요약을 먼저 보이고 자세한 내용은 눌러서 펼친다(2026-10-16 화면 간소화) ──
+  // 실시간 시세가 오면 목록·Top Pick 을 통째로 다시 그리므로(refreshLive) 사용자가 연 섹션·펼친 문단을 기억해 둔다.
+  //   <details data-sk="키"> — 접이식 섹션(열림 상태는 toggle 이벤트로 기록)
+  //   [data-ck="키"] + clamp 클래스(data-cl) — 몇 줄만 보이고 탭하면 전문
+  var OPEN = {};
+  document.addEventListener("toggle", function (e) {
+    var d = e.target, k = d && d.getAttribute && d.getAttribute("data-sk");
+    if (!k) return;
+    if (d.open) { OPEN[k] = 1; queueClamps(); } else delete OPEN[k];   // 열려서 보이게 된 접기 문단도 판정
+  }, true);   // toggle 은 버블링하지 않아 캡처 단계에서 받는다
+  document.addEventListener("click", function (e) {
+    var el = e.target.closest && e.target.closest("[data-ck]");
+    if (!el || e.target.closest("a, button, select, input")) return;
+    var k = el.getAttribute("data-ck"), cl = el.getAttribute("data-cl") || "clamp3";
+    if (el.classList.contains(cl) && !el.classList.contains("has-more")) return;   // 다 보이는 짧은 문단은 그대로
+    if (el.classList.contains(cl)) { el.classList.remove(cl); OPEN[k] = 1; }
+    else { el.classList.add(cl); delete OPEN[k]; }
+    markClamps(el.parentNode);
+  });
+  function secOpen(k) { return OPEN[k] ? " open" : ""; }
+  // 접힌 문단 중 실제로 잘린 것만 '더보기' 표시(짧으면 표시 안 함), 펼친 것은 '접기'
+  function markClamps(root) {
+    var els = (root || document).querySelectorAll ? (root || document).querySelectorAll("[data-ck]") : [];
+    Array.prototype.forEach.call(els, function (el) {
+      var cl = el.getAttribute("data-cl") || "clamp3", clamped = el.classList.contains(cl);
+      var over = clamped && (el.scrollHeight > el.clientHeight + 2 || el.scrollWidth > el.clientWidth + 2);   // 한 줄 접기는 가로로 잘린다
+      if (over) el.setAttribute("data-more", "1");
+      el.classList.toggle("has-more", over);
+      el.classList.toggle("has-less", !clamped && el.getAttribute("data-more") === "1");
+    });
+  }
+  function clampAttr(k, cl) { return ' data-ck="' + esc(k) + '" data-cl="' + cl + '"' + (OPEN[k] ? ' data-more="1"' : ""); }   // 펼쳐 둔 채 다시 그려도 '접기'가 남게
+  // 목록·Top Pick·시황은 여러 경로(표 행 펼침·상세 보기·실시간 재그리기·개인 목록 비동기 행)로 다시 그려진다 —
+  // 그릴 때마다 호출하는 대신 그 영역에 노드가 들어오면 다음 프레임에 한 번 '더보기'를 다시 판정한다.
+  var clampRaf = 0;
+  function queueClamps() { if (!clampRaf) clampRaf = requestAnimationFrame(function () { clampRaf = 0; markClamps(document); }); }
+  if (window.MutationObserver) {
+    var clampMO = new MutationObserver(queueClamps);
+    ["cards", "picksBox", "marketNote"].forEach(function (id) { var el = document.getElementById(id); if (el) clampMO.observe(el, { childList: true, subtree: true }); });
+  }
+  window.addEventListener("resize", queueClamps);   // 폭이 바뀌면(회전 등) 잘림 여부도 바뀐다
+  function clampCls(k, cl) { return OPEN[k] ? "" : " " + cl; }
+
   function renderMarketNote() {
     var c = state.country;
     var mn = String((c === "us" ? D.marketNoteUS : D.marketNoteKR) || D.marketNote || "").trim();
     var parts = mn.split(/\n\s*\n/).map(function (x) { return x.replace(/\s+/g, " ").trim(); }).filter(Boolean);
     if (!parts.length) parts = [mn];
-    var tag = "시황 · " + (c === "us" ? "🇺🇸 미국" : "🇰🇷 한국");
-    document.getElementById("marketNote").innerHTML = parts.map(function (p, i) {
-      return '<p class="mn-p">' + (i === 0 ? '<span class="mn-tag">' + tag + "</span> " : "") + esc(p) + "</p>";
-    }).join("");
+    var tag = "시황";
+    var k = "mn:" + c;
+    document.getElementById("marketNote").innerHTML = mn
+      ? '<div class="mn-body' + clampCls(k, "clamp3") + '"' + clampAttr(k, "clamp3") + ">" + parts.map(function (p, i) {
+          return '<p class="mn-p">' + (i === 0 ? '<span class="mn-tag">' + tag + "</span> " : "") + esc(p) + "</p>";
+        }).join("") + "</div>"
+      : "";
+    requestAnimationFrame(function () { markClamps(document.getElementById("marketNote")); });
+    syncMktBox();
+  }
+  // 시장 카드는 지수·유동성·시황 중 하나라도 있을 때만, '시장 자세히'는 펼칠 내용이 있을 때만 보인다(데이터 파일 누락 대비).
+  function syncMktBox() {
+    var box = document.getElementById("mktBox");
+    if (!box || window.__pastActive) return;   // 과거 보기 중엔 그쪽이 숨김·복원을 맡는다
+    function has(id) { var el = document.getElementById(id); return !!(el && el.innerHTML.trim()); }
+    box.style.display = has("idxGrid") || has("liqGrid") || has("marketNote") ? "" : "none";
+    var more = box.querySelector(".mkt-more");
+    if (more) more.style.display = has("idxNotes") || has("liqDetail") ? "" : "none";
   }
   renderMarketNote();
   document.getElementById("disclaimer").textContent = D.disclaimer || "";
@@ -1793,11 +1877,16 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
 
   // 기술 대응(techNote) — gen-technote.js 가 매일 자동 생성하는 단기(일봉)/중기(주봉)/장기(월봉) 상태 요약 +
   //   신호 등급(적극매도~적극매수, 엔진 그대로). 오늘자(stock-ta.js asOf) 로 갱신되지 않았으면 '미갱신' 표시.
-  function techNoteBlock(s, country, e) {
+  // 기술 대응 — 접이식 섹션 본문(단·중·장 문장 + 매물대 막대 + 수급 줄)과 접혔을 때 보이는 한 줄 요약.
+  //   문장(v3)은 gen-technote.js 가 엔진 숫자(이평·구름·지지/저항·매물대·수급·예상 범위)로 매일 자동 생성한다.
+  function techStale(s) {
+    var n = s.techNote, T = window.STOCK_TA, taAsOf = T && T.asOf;
+    return !!(n && n.asOf && taAsOf && n.asOf < taAsOf);
+  }
+  function techBody(s, country, e) {
     var n = s.techNote;
-    if (!n || (!n.short && !n.mid && !n.long)) return "";
+    if (!n || (!n.short && !n.mid && !n.long)) return vpRow(s, country, e) + flowRow(s, country);
     var T = window.STOCK_TA, taAsOf = T && T.asOf;
-    var stale = n.asOf && taAsOf && n.asOf < taAsOf;
     function sigBadge(g) {
       if (!g) return "";
       return '<span class="tn-sig" style="background:' + (TA_SIG_COL[g] || "var(--muted)") + '">' + esc(g) + "</span>";
@@ -1805,14 +1894,18 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     function line(k, v, g) {
       return v ? '<div class="tn-line"><span class="tn-k">' + k + '</span><span class="tn-v">' + sigBadge(g) + esc(v) + "</span></div>" : "";
     }
-    var staleBadge = stale
-      ? '<span class="tn-stale" title="오늘 데이터(' + esc(taAsOf) + ')로 아직 갱신되지 않았습니다. 표시는 ' + esc(n.asOf) + ' 기준입니다.">⚠ 미갱신</span>' : "";
-    // 문장(v3)은 gen-technote.js 가 엔진 숫자(이평·구름·지지/저항·매물대·수급·예상 범위)로 매일 자동 생성한다.
-    // 아래에 그 근거인 매물대 막대와 수급 숫자를 함께 보여준다(엔진 내부 부분점수는 보여주지 않는다).
+    var stale = techStale(s);
     return '<div class="tech-note' + (stale ? " stale" : "") + '">' +
-      '<div class="tn-head">기술 대응' + (n.asOf ? '<span class="tn-as">' + esc(n.asOf) + " 종가 기준" + (n.auto ? " · 자동 산출" : "") + "</span>" : "") + staleBadge + "</div>" +
+      (n.asOf ? '<div class="sec-note">' + esc(n.asOf) + " 종가 기준" + (n.auto ? " · 엔진 숫자로 자동 작성" : "") +
+        (stale ? ' · <span class="tn-stale" title="오늘 데이터(' + esc(taAsOf) + ')로 아직 갱신되지 않았습니다.">⚠ 미갱신</span>' : "") + "</div>" : "") +
       line("단기", n.short, n.sigShort) + line("중기", n.mid, n.sigMid) +
       line("장기", n.long, n.sigLong) + vpRow(s, country, e) + flowRow(s, country) + "</div>";
+  }
+  // 첫 문장(마침표까지)을 요약으로 — 너무 길면 자른다
+  function firstSentence(t, max) {
+    var x = String(t || ""), i = x.search(/\.(\s|$)/);   // 소수점(2.7%)은 뒤에 공백이 없어 문장 끝으로 안 본다
+    if (i >= 0) x = x.slice(0, i);
+    return x.length > max ? x.slice(0, max - 1) + "…" : x;
   }
 
   // 매물대 — 최근 1년 일봉 거래량을 가격 24구간에 나눈 막대(stock-ta.js vp). 현재가 세로선·1개월 80% 범위 띠를 겹쳐
@@ -1899,7 +1992,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     }
     return '<div class="ol-ev"><span class="ol-k">다음 실적</span><span class="ol-evt"><b>' + day.md + (n.tentative ? "경" : "") + '</b> <span class="ol-dd">' + dTxt + "</span> · " + parts.join(" · ") + "</span></div>";
   }
-  function outlookBlock(s, country, e) {
+  function rangeBody(s, country, e) {
     var tb = stTa(s.ticker), ol = tb && tb.outlook;
     var evHtml = eventLine(s, country);
     if (!(ol && ol.m1 && ol.m3) && !evHtml) return "";
@@ -1938,9 +2031,18 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       }
     }
     var T = window.STOCK_TA;
-    return '<div class="outlook"><div class="tn-head">변동 범위<span class="tn-as">' + (T && T.asOf ? esc(T.asOf) + " 종가 기준 · " : "") +
-      '변동성으로 본 폭 — 오를지 내릴지는 예측하지 않음</span></div>' + body + evHtml +
+    return '<div class="outlook"><div class="sec-note">' + (T && T.asOf ? esc(T.asOf) + " 종가 기준 · " : "") +
+      "변동성으로 본 폭 — 오를지 내릴지는 예측하지 않음</div>" + body + evHtml +
       (ol ? '<div class="ol-leg"><i class="ol-core-k"></i>절반 확률 <i class="ol-band-k"></i>80% 확률 <b class="ol-now"></b>현재가' + (legTgt ? ' <b class="ol-tgt"></b>목표가' : "") + "</div>" : "") + "</div>";
+  }
+  // 접혔을 때 보이는 요약 — 1개월 80% 범위와 3개월 절반 확률 범위(히어로의 1개월 절반 범위를 넓은 쪽으로 보완)
+  function rangeSummary(s, e) {
+    var tb = stTa(s.ticker), ol = tb && tb.outlook;
+    if (!ol || !ol.m1) return "";
+    var cur = e.price != null ? e.price : ol.base;
+    if (!(cur > 0)) return "";
+    var p = function (r) { return fmtPct((r[0] / cur - 1) * 100) + "~" + fmtPct((r[1] / cur - 1) * 100); };
+    return "1개월 80% " + p(ol.m1) + (ol.c3 ? " · 3개월 절반 " + p(ol.c3) : "");
   }
 
   // 히어로 오른쪽 — 상승여력 대신 '다음 1개월 절반 확률 범위'(50% 핵심 구간, 현재가 대비 %)와 시장 대비 변동 배수.
@@ -1975,7 +2077,6 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   function card(s, country, showTheme, delKey) {
     var tm = tierMeta(s.tier);
     var e = effective(s);
-    var risks = (s.risks || []).map(esc).join(" · ");
     var srcs = (s.sources || []).slice(0, 3).map(function (u, i) {
       return '<a href="' + esc(safeUrl(u)) + '" target="_blank" rel="noopener">출처' + (i + 1) + "</a>";
     }).join(" ");
@@ -2000,15 +2101,6 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     var aiStat = s.aiTarget != null
       ? '<div class="c-stat" title="' + esc(s.aiBasis || "") + '" data-basis="' + esc(s.aiBasis || "") + '" style="cursor:help"><div class="c-sk">AI적정가</div>' + svHtml(fmtPrice(s.aiTarget, country)) + "</div>"
       : '<div class="c-stat" title="' + esc(aiPendingText(s)) + '" data-basis="' + esc(aiPendingText(s)) + '" style="cursor:help"><div class="c-sk">AI적정가</div><div class="c-sv c-muted">추정중</div></div>';
-    // 밸류 설명(valueNote) — 세션이 쓴 밸류에이션 해석. 숫자 배수는 위 PER·PBR 칸(자동)이 맡는다.
-    var vtCells = valueCells(s);
-    var sigBox = vtCells ? '<div class="sig-box">' + vtCells + "</div>" : "";
-    // 분석(실적·논거·리스크)은 접지 않고 바로 표시 — 최근 분기 숫자(자동)를 먼저, 세션의 실적 해석을 그다음에
-    var analysis =
-      qLine(s, country) +
-      (s.earnings ? '<div class="earn">' + esc(s.earnings) + "</div>" : "") +
-      '<div class="thesis">' + esc(s.thesis) + "</div>" +
-      (risks ? '<div class="risks"><b>리스크</b> — ' + risks + "</div>" : "");
     var delBtn = delKey
       ? '<button class="wl-del" type="button" data-wl="' + esc(delKey + "|" + country + "|" + s.ticker) + '" title="' + esc(plist(delKey).label + " 목록에서 제거") + '" aria-label="제거">✕</button>' : "";
     // 관심·보유는 tier 개념(추천 그룹 내 상대 품질순위)이 적용되지 않으므로 tier 배지 대신
@@ -2018,6 +2110,18 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
           ? (s.watchTag ? '<span class="wtag ' + (s.watchTag === "신고가" ? "wtag-high" : "wtag-turn") + '">' + esc(s.watchTag) + "</span>" : "")
           : '<span class="badge hold-badge">' + esc(plist(s.theme).badge) + "</span>")
       : '<span class="badge"><span class="dot" style="background:' + tm.color + '"></span>' + tm.label + "</span>";
+    // ── 요약 먼저, 자세히는 접어서(2026-10-16 화면 간소화 — 펼친 카드 하나가 휴대폰에서 2,240px 였다) ──
+    //   항상 보임: 이름·배지 / 현재가·1개월 절반 확률 범위 / 신호·수급·실적 칩 / 숫자 칸 / 논거 3줄(탭하면 전문)
+    //   접이식(요약 한 줄 + 탭하면 펼침, 연 상태는 재렌더에도 유지): 변동 범위 · 기술 대응 · 실적·밸류 · 리스크
+    var kb = s.ticker + ":" + s.theme + ":";
+    var q = fundOf(s.ticker), qq = q && q.q;
+    var qSum = qq ? esc(qq.period) + " " + [["매출", qq.rev], [qq.opLabel === "EBIT" ? "EBIT" : "영업이익", qq.op]].map(function (p) {
+      var c = chgTxt(p[1]); return c ? p[0] + " " + c : ""; }).filter(Boolean).join(" · ") : "";
+    var valSum = qSum || esc(firstSentence(s.valueNote, 44));
+    var rk = s.risks || [];
+    var riskSum = rk.length ? rk.length + "가지 — " + esc(firstSentence(rk[0], 30)) : "";
+    var valBody = qLine(s, country) + (s.earnings ? '<div class="earn">' + esc(s.earnings) + "</div>" : "") +
+      (valueCells(s) ? '<div class="sig-box">' + valueCells(s) + "</div>" : "");
     return '<article class="card" data-ticker="' + esc(s.ticker) + '">' +
       '<div class="head"><h3>' + esc(s.name) + '<span class="tk">' + esc(s.ticker) + " · " + esc(s.market) + "</span></h3>" +
       '<span class="badges">' + newBadge + themeBadge + warnBadge + trapBadge + unvBadge + tierBadge + delBtn + "</span></div>" +
@@ -2025,20 +2129,46 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
         '<div class="c-hcell"><div class="c-hv">' + fmtPrice(e.price, country) + '</div><div class="c-hk">' + (s.changePct != null ? chgBadge(s.changePct, "sm") + " " : "") + priceSub + "</div></div>" +
         rangeHero(s, e, country) +
       "</div>" +
+      cardChips(s, country) +
       '<div class="c-stats">' +
         '<div class="c-stat"' + tpVerifiedTitle(s) + ' style="cursor:help"><div class="c-sk">목표가 <span class="c-q">?</span></div>' + svHtml(fmtPrice(s.targetPrice, country)) + tgtGapLine(s, e) + tpVerifiedLine(s) + "</div>" +
         aiStat +
         '<div class="c-stat" title="' + esc(divTitle(s)) + '"><div class="c-sk">배당수익률</div><div class="c-sv">' + divVal + "</div></div>" +
         multStats(s, country) +
       "</div>" +
-      outlookBlock(s, country, e) +
-      sigBox +
-      techNoteBlock(s, country, e) +
-      analysis +
+      (s.thesis ? '<div class="thesis' + clampCls(kb + "th", "clamp3") + '"' + clampAttr(kb + "th", "clamp3") + ">" + esc(s.thesis) + "</div>" : "") +
+      '<div class="secs">' +
+        secBlock(kb + "rng", "변동 범위", rangeSummary(s, e), rangeBody(s, country, e)) +
+        secBlock(kb + "ta", "기술 대응" + (techStale(s) ? ' <span class="tn-stale">⚠ 미갱신</span>' : ""), esc(firstSentence(s.techNote && s.techNote.short, 46)), techBody(s, country, e)) +
+        secBlock(kb + "val", "실적·밸류", valSum, valBody) +
+        secBlock(kb + "risk", "리스크", riskSum, rk.length ? '<ul class="risk-list">' + rk.map(function (r) { return "<li>" + esc(r) + "</li>"; }).join("") + "</ul>" : "") +
+      "</div>" +
       '<div class="links"><a href="' + esc(safeUrl(s.chartUrl)) + '" target="_blank" rel="noopener">차트 보기</a>' +
       (!isPersonal(s.theme) && !delKey ? favBtn(s, country) : "") +
       '<span class="src">' + srcs + "</span></div>" +
       "</article>";
+  }
+  // 접이식 섹션 — 제목 + 접혔을 때 보이는 한 줄 요약, 탭하면 본문. 본문이 없으면 그리지 않는다.
+  function secBlock(key, title, summary, body) {
+    if (!body) return "";
+    return '<details class="sec" data-sk="' + esc(key) + '"' + secOpen(key) + '><summary><span class="sec-t">' + title + "</span>" +
+      (summary ? '<span class="sec-s">' + summary + "</span>" : "") + '</summary><div class="sec-b">' + body + "</div></details>";
+  }
+  // 카드 칩 줄 — 단·중·장 신호(엔진 등급), 한국 수급(과열 경고·외국인 연속 매매), 다가오는 실적(30일 이내)
+  function cardChips(s, country) {
+    var n = s.techNote || {}, out = [];
+    [["단기", n.sigShort], ["중기", n.sigMid], ["장기", n.sigLong]].forEach(function (p) {
+      if (p[1]) out.push('<span class="cc-sig" style="background:' + (TA_SIG_COL[p[1]] || "var(--muted)") + '"><i>' + p[0] + "</i>" + esc(p[1]) + "</span>");
+    });
+    var E = window.STOCK_EVENTS, ev = E && E.items && E.items[s.ticker];
+    var f = ev && ev.flow;
+    if (country === "korea" && f) {
+      if (f.hot) out.push('<span class="cc cc-warn" title="외국인+기관 20일 순매수가 거래량의 6.3% 이상 — 2016~2026년 이 구간은 이후 1·3개월 지수보다 약했습니다">⚠ 수급 과열</span>');
+      else if (Math.abs(f.fStreak || 0) >= 5) out.push('<span class="cc">외국인 ' + Math.abs(f.fStreak) + "일 연속 순" + (f.fStreak > 0 ? "매수" : "매도") + "</span>");
+    }
+    var nx = ev && ev.next, day = nx && nx.date ? evDay(nx.date) : null;
+    if (day && day.dd >= 0 && day.dd <= 30) out.push('<span class="cc cc-ev" title="' + esc(nx.title || "실적 발표") + '">실적 ' + (day.dd === 0 ? "오늘" : "D-" + day.dd) + "</span>");
+    return out.length ? '<div class="c-chips">' + out.join("") + "</div>" : "";
   }
   // 추천 카드 → 관심·보유 등록/해제 토글 (두 목록은 독립 — 같은 종목을 양쪽에 담을 수 있다)
   function favOne(s, country, k) {
@@ -2226,34 +2356,24 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       '<div class="roster-empty">이 날짜에는 편입·제외 변경이 없습니다.</div>';
   }
 
-  // Top Pick 신호 배지 (단기/중기/장기 5단계) — techNote sig 기준
-  function pickSigBadges(s) {
-    var n = s.techNote || {};
-    if (!n.sigShort && !n.sigMid && !n.sigLong) return "";
-    function one(k, g) {
-      return g ? '<span class="psig" style="background:' + (TA_SIG_COL[g] || "var(--muted)") + '"><span class="psig-k">' + k + "</span>" + esc(g) + "</span>" : "";
-    }
-    return '<div class="psigs">' + one("단기", n.sigShort) + one("중기", n.sigMid) + one("장기", n.sigLong) + "</div>";
-  }
-  // 한 종목 → Top Pick 카드 HTML (cc=국가, rankNum=순위, reason=선정 이유·선택)
-  // 상승여력을 큰 숫자로 내세우지 않는다(증권사 목표가의 낙관 편향 — TP_REALITY). 현재가·1개월 예상 범위를 보이고
-  // 목표가는 작은 글씨로만 둔다.
+  // Top Pick 한 줄 카드(압축형) — 순위·이름·현재가 / 1개월 절반 확률 범위·목표가·배당 / 단·중·장 신호 기호 / 이유 2줄(탭하면 전문).
+  //   상승여력을 큰 숫자로 내세우지 않는다(증권사 목표가의 낙관 편향 — TP_REALITY). 카드 3장이 휴대폰에서 1,040px 를 차지해
+  //   행 형태로 줄였다(2026-10-16) — 정보는 같고, 신호는 표 보기와 같은 ▲▼ 기호로 압축했다.
   function pickCard(s, cc, rankNum, reason) {
     var e = effective(s);
-    var flag = cc === "korea" ? "🇰🇷" : "🇺🇸";
-    var rz = reason ? '<div class="reason">' + esc(reason) + "</div>" : "";
     var tb = stTa(s.ticker), ol = tb && tb.outlook, cur = e.price != null ? e.price : (ol && ol.base);
     var pr = ol && (ol.c1 || ol.m1);
-    var rng = pr && cur > 0 ? '<span class="pk-rng" title="' + (ol.c1 ? "다음 1개월 절반 확률 범위" : "다음 1개월 80% 범위") + '(변동성 기반, 방향 예측 아님)">1개월 ' + (ol.c1 ? "절반 확률 " : "") +
-      fmtPct((pr[0] / cur - 1) * 100) + " ~ " + fmtPct((pr[1] / cur - 1) * 100) + "</span>" : "";
+    var rng = pr && cur > 0 ? '<span class="pk-rng" title="' + (ol.c1 ? "다음 1개월 절반 확률 범위" : "다음 1개월 80% 범위") + '(변동성 기반, 방향 예측 아님)">1개월 ' + (ol.c1 ? "절반 " : "80% ") +
+      fmtPct((pr[0] / cur - 1) * 100) + "~" + fmtPct((pr[1] / cur - 1) * 100) + "</span>" : "";
     var dv = divOf(s);
+    var k = "pk:" + cc + ":" + s.ticker;
+    var subs = [s.targetPrice != null ? "목표 " + fmtPrice(s.targetPrice, cc) : "", dv != null && dv >= 0.1 ? "배당 " + fmtDiv(dv) : ""].filter(Boolean);
     return '<div class="pick" data-ticker="' + esc(s.ticker) + '" data-theme="' + esc(s.theme) + '" data-country="' + cc + '"><span class="rank">' + rankNum + "</span>" +
-      '<span class="mkt">' + flag + " " + esc(s.market || "") + "</span>" +
-      '<div class="nm">' + esc(s.name) + '<span class="tk">' + esc(s.ticker) + "</span></div>" +
-      '<div class="px-big">' + fmtPrice(e.price, cc) + (s.changePct != null ? " " + chgBadge(s.changePct, "md") : "") + "</div>" +
-      '<div class="sub">' + rng + (s.targetPrice != null ? (rng ? " · " : "") + "목표 " + fmtPrice(s.targetPrice, cc) : "") +
-      (dv != null && dv >= 0.1 ? " · 배당 " + fmtDiv(dv) : "") + "</div>" +
-      pickSigBadges(s) + rz + "</div>";
+      '<div class="pk-top"><div class="nm"><span class="nm-t">' + esc(s.name) + '</span><span class="tk">' + esc(s.ticker) + "</span></div>" +
+      '<div class="pk-px">' + fmtPrice(e.price, cc) + (s.changePct != null ? " " + chgBadge(s.changePct, "sm") : "") + "</div></div>" +
+      '<div class="pk-mid"><span class="sub">' + rng + "</span>" + tlSigStrip(s) + "</div>" +
+      (subs.length ? '<div class="sub pk-sub">' + subs.join(" · ") + "</div>" : "") +
+      (reason ? '<div class="reason' + clampCls(k, "clamp2") + '"' + clampAttr(k, "clamp2") + ">" + esc(reason) + "</div>" : "") + "</div>";
   }
   // 국가별 상위 3 폴백(큐레이션 데이터 없을 때) — 그 국가 정식 추천 중 종합점수 상위 3
   function fallbackPicks(cc, n) {
@@ -2325,6 +2445,10 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
         ? " · 자동 선정(큐레이션 일부가 편성에서 제외되어 상위 종목으로 대체)"
         : " · 자동 선정");
     }
+    // 선정 기준 문단은 한 줄만 보이고 탭하면 전문(접기 상태는 OPEN 으로 기억)
+    crit.setAttribute("data-ck", "pk-crit"); crit.setAttribute("data-cl", "clamp1");
+    crit.classList.toggle("clamp1", !OPEN["pk-crit"]);
+    requestAnimationFrame(function () { markClamps(box); });
     ensureLive(live, refreshLive);
   }
 
@@ -3587,6 +3711,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   });
   // Top Pick 클릭 → 해당 주제·카드 뷰로 전환하고 그 종목 카드로 스크롤·강조
   document.getElementById("picksBox").addEventListener("click", function (e) {
+    if (e.target.closest("[data-ck]")) return;   // 접힌 이유·기준 문단은 펼치기만(이동 안 함)
     var el = e.target.closest(".pick"); if (!el) return;
     var ticker = el.dataset.ticker, theme = el.dataset.theme, country = el.dataset.country;
     // 다른 국가 종목이면 국가 세그먼트도 전환하고 국가별 섹션을 갱신
@@ -3623,153 +3748,104 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     });
   });
 
+  // 오늘의 시장 — 유동성: 요약 줄(단기·중기 게이지)만 보이고, 판단 문장·근거·자동 지표는 '시장 자세히'에 둔다.
   function renderLiquidity() {
-    var box = document.getElementById("liqBox");
     var A = window.LIQUIDITY_AUTO;   // 시장지표 기반 자동 baseline (매일 갱신, 무토큰)
-    // 온디맨드(L, 판단 반영) 또는 자동 baseline(A) 중 하나라도 게이지 값이 있으면 섹션을 보인다.
     function hasTerm(c) { return c && (c.shortTerm != null || c.midTerm != null); }
     var hasL = L && (hasTerm(L.us) || hasTerm(L.korea));
     var hasA = A && (hasTerm(A.us) || hasTerm(A.korea));
-    if (!hasL && !hasA) { box.style.display = "none"; return; }
-    box.style.display = "";
+    var grid = document.getElementById("liqGrid"), det = document.getElementById("liqDetail");
+    if (!hasL && !hasA) { grid.innerHTML = ""; det.innerHTML = ""; syncMktBox(); return; }
 
     var RANKS = ["매우 부정", "부정", "신중", "우호", "매우 우호"];
     var RANK_COLORS = ["var(--down)", "#eb6834", "var(--tier3)", "var(--tier2)", "var(--up)"];
-
     function gauge(rank) {
       var idx = RANKS.indexOf(rank);
-      var cells = RANKS.map(function (_, i) {
-        var on = idx >= 0 && i <= idx;
-        return '<div class="seg5"' + (on ? ' style="background:' + RANK_COLORS[idx] + '"' : "") + "></div>";
-      }).join("");
-      return '<div class="gauge">' + cells + "</div>";
+      return '<span class="gauge">' + RANKS.map(function (_, i) {
+        return '<i class="seg5"' + (idx >= 0 && i <= idx ? ' style="background:' + RANK_COLORS[idx] + '"' : "") + "></i>";
+      }).join("") + "</span>";
     }
-    function termRow(label, rank) {
-      var idx = RANKS.indexOf(rank);
-      var color = idx >= 0 ? RANK_COLORS[idx] : "var(--muted)";
-      return '<div class="liq-term"><span class="lbl">' + label + "</span>" +
-             gauge(rank) +
-             '<span class="rank" style="color:' + color + '">' + esc(rank || "–") + "</span></div>";
+    function term(label, rank) {
+      var idx = RANKS.indexOf(rank), color = idx >= 0 ? RANK_COLORS[idx] : "var(--muted)";
+      return '<span class="ml-term"><span class="ml-l">' + label + "</span>" + gauge(rank) + '<b style="color:' + color + '">' + esc(rank || "–") + "</b></span>";
     }
-    // 자동 baseline 병기 라인 (온디맨드 게이지가 주인일 때 하단에 함께 보여준다)
     function autoChip(rank) {
       var i = RANKS.indexOf(rank), color = i >= 0 ? RANK_COLORS[i] : "var(--muted)";
       return '<b style="color:' + color + '">' + esc(rank || "–") + "</b>";
     }
-    function autoLine(a) {
-      if (!a) return "";
-      return '<div class="liq-auto"><span class="ttl">자동 baseline</span> · 단기 ' +
-             autoChip(a.shortTerm) + " · 중기 " + autoChip(a.midTerm) + "</div>";
-    }
-    // 게이지 열(항상 표시) — 국가명 + 단기/중기 게이지만. 근거·지표는 아래 접기로.
-    function col(title, c, a) {
-      c = c || a;
-      if (!c) return "";
-      return '<div class="liq-col"><h3>' + esc(title) + "</h3>" +
-             termRow("단기 1–3M", c.shortTerm) +
-             termRow("중기 6–12M", c.midTerm) + "</div>";
-    }
-    // 접힘 상세 열 — 국가별 판단 근거(drivers) + 자동 baseline 병기
-    function detailCol(title, c, a) {
-      var showAuto = !!(c && a && c !== a);
-      var s = c || a;
-      if (!s) return "";
-      var drivers = (s.drivers || []).map(function (d) { return "<li>" + esc(d) + "</li>"; }).join("");
-      if (!drivers && !showAuto) return "";
-      return '<div class="liq-dcol"><h4>' + esc(title) + "</h4>" +
-             (drivers ? '<ul class="liq-drivers">' + drivers + "</ul>" : "") +
-             (showAuto ? autoLine(a) : "") + "</div>";
-    }
+    var lqCC = state.country, src = hasL ? L : A;
+    var c = hasL ? (lqCC === "us" ? L.us : L.korea) : null, a = A ? (lqCC === "us" ? A.us : A.korea) : null;
+    var s0 = c || a;
+    grid.innerHTML = s0 ? '<span class="ml-k" title="거시 유동성(단기 1–3개월·중기 6–12개월) — 근거는 시장 자세히">유동성</span>' +
+      term("단기", s0.shortTerm) + term("중기", s0.midTerm) : "";
 
-    var src = hasL ? L : A;
-    var lqCC = state.country;   // 선택된 국가(미국=us, 한국=korea)
-    document.getElementById("liqAs").textContent = "기준일 " + esc(src.asOf) +
-      (hasL && A && A.asOf && A.asOf !== L.asOf ? " · 자동 " + esc(A.asOf) : "");
-    // 선택된 국가의 headline 우선 표시(없으면 통합 headline / 자동 note 폴백)
-    var lqHead = hasL
-      ? (lqCC === "us" ? (L.headlineUS || L.headline) : (L.headlineKR || L.headline))
-      : (A ? A.note : "");
-    document.getElementById("liqHeadline").innerHTML = "<strong>" + esc(lqHead) + "</strong>";
-    // 선택된 국가의 유동성만 표시(미국=us, 한국=korea)
-    document.getElementById("liqGrid").innerHTML = lqCC === "us"
-      ? col("미국", hasL ? L.us : null, A ? A.us : null)
-      : col("한국", hasL ? L.korea : null, A ? A.korea : null);
-
-    // 상세(근거·지표) — 한 번의 토글로 접는다
+    // 자세히 — 판단 문장(headline)·근거(drivers)·자동 baseline·지표·출처
+    var head = hasL ? (lqCC === "us" ? (L.headlineUS || L.headline) : (L.headlineKR || L.headline)) : (A ? A.note : "");
+    var drivers = ((s0 && s0.drivers) || []).map(function (d) { return "<li>" + esc(d) + "</li>"; }).join("");
+    var bits = [];
+    if (c && a && c !== a) bits.push("자동 baseline · 단기 " + autoChip(a.shortTerm) + " · 중기 " + autoChip(a.midTerm));
+    if (hasL && L.nextCheck) bits.push("다음 체크 — " + esc(L.nextCheck));
+    if (A && A.inputs) bits.push("자동 지표 · 10Y " + esc(A.inputs.us10y) + "% · 커브 " + esc(A.inputs.curve) + " · VIX " + esc(A.inputs.vix) + " · 원/달러 " + esc(A.inputs.usdkrw));
     var srcs = hasL ? (L.sources || []).slice(0, 3).map(function (u, i) {
       return '<a href="' + esc(safeUrl(u)) + '" target="_blank" rel="noopener">출처' + (i + 1) + "</a>";
     }).join(" ") : "";
-    var footBits = [];
-    if (hasL && L.nextCheck) footBits.push('<span class="nc">다음 체크 — ' + esc(L.nextCheck) + "</span>");
-    if (A && A.inputs) footBits.push('<span class="nc">자동 지표 · 10Y ' + esc(A.inputs.us10y) + "% · 커브 " +
-      esc(A.inputs.curve) + " · VIX " + esc(A.inputs.vix) + " · 원/달러 " + esc(A.inputs.usdkrw) + "</span>");
-    if (srcs) footBits.push('<span class="nc">' + srcs + "</span>");
-    var detailHtml = lqCC === "us"
-      ? detailCol("미국", hasL ? L.us : null, A ? A.us : null)
-      : detailCol("한국", hasL ? L.korea : null, A ? A.korea : null);
-    document.getElementById("liqFoot").innerHTML =
-      (detailHtml || footBits.length)
-        ? '<details class="liq-more"><summary>판단 근거 · 지표</summary><div class="liq-more-body">' +
-          (detailHtml ? '<div class="liq-dgrid">' + detailHtml + "</div>" : "") +
-          (footBits.length ? '<div class="liq-footbits">' + footBits.join("") + "</div>" : "") +
-          "</div></details>"
-        : "";
+    if (srcs) bits.push(srcs);
+    det.innerHTML = '<div class="md-sec"><div class="md-t">거시 유동성<span class="md-as">기준일 ' + esc(src.asOf) +
+      (hasL && A && A.asOf && A.asOf !== L.asOf ? " · 자동 " + esc(A.asOf) : "") + "</span></div>" +
+      (head ? '<div class="md-head">' + esc(head) + "</div>" : "") +
+      (drivers ? '<ul class="liq-drivers">' + drivers + "</ul>" : "") +
+      (bits.length ? '<div class="md-bits">' + bits.map(function (x) { return "<div>" + x + "</div>"; }).join("") + "</div>" : "") + "</div>";
+    syncMktBox();
   }
 
+  // 오늘의 시장 — 지수: 지수값·등락·단/중/장 신호(엔진)를 작은 칸으로, 세션의 지수 대응 문장은 '시장 자세히'에 둔다.
   function renderIndexTA() {
-    var box = document.getElementById("idxBox");
-    var T = window.INDEX_TA;
-    if (!T || !Array.isArray(T.indices) || !T.indices.length) { box.style.display = "none"; return; }
-    box.style.display = "";
-
+    var T = window.INDEX_TA, grid = document.getElementById("idxGrid"), notes = document.getElementById("idxNotes");
+    if (!T || !Array.isArray(T.indices) || !T.indices.length) { grid.innerHTML = ""; notes.innerHTML = ""; syncMktBox(); return; }
     var NT = (window.INDEX_NOTES && window.INDEX_NOTES.items) || {};
-    // 지수↔지역 유동성 매핑 + 게이지 색
     var IDX_REGION = { nasdaq: "us", dow: "us", kospi: "korea", kosdaq: "korea" };
     var LIQ_COL = { "매우 우호": "var(--up)", "우호": "var(--tier2)", "신중": "var(--tier3)", "부정": "#eb6834", "매우 부정": "var(--down)" };
     function idxLiqGrade(key) {
       var r = IDX_REGION[key]; if (!r) return "";
-      var L = window.LIQUIDITY_DATA, A = window.LIQUIDITY_AUTO, c = (L && L[r]) || (A && A[r]);
+      var L2 = window.LIQUIDITY_DATA, A = window.LIQUIDITY_AUTO, c = (L2 && L2[r]) || (A && A[r]);
       return (c && c.shortTerm) || "";
     }
-    // 지수 카드 — 이름·기준일 / 지수값·등락 / 밸류(유동성 포함) + 단·중·장기 대응. 탭 시 네이버 차트.
+    function sigBadge(gr) { return gr ? '<span class="tn-sig" style="background:' + (TA_SIG_COL[gr] || "var(--muted)") + '">' + esc(gr) + "</span>" : ""; }
     function noteLine(k, v, lead) {
       return v ? '<div class="tn-line"><span class="tn-k">' + k + '</span><span class="tn-v">' + (lead || "") + esc(v) + "</span></div>" : "";
     }
+    function marks(x) {
+      return [["단", x.short], ["중", x.mid], ["장", x.long]].map(function (p) {
+        var g = p[1] && p[1].signal;
+        return '<span class="ts-g" title="' + esc(p[0] + "기 " + (g || "–")) + '"><i>' + p[0] + '</i><b style="color:' + (g ? (TA_SIG_COL[g] || "var(--muted)") : "var(--muted)") + '">' + (g ? (SIG_MARK[g] || "–") : "–") + "</b></span>";
+      }).join("");
+    }
+    var nnAsOf = window.INDEX_NOTES && window.INDEX_NOTES.asOf;
+    var stale = nnAsOf && T.asOf && nnAsOf < T.asOf;
     function tile(x) {
-      // 등락률이 '–' 인 경우(시리즈에 구멍이 나 update-indices 가 값을 감춘 상태)는
-      // 상승·하락 색을 칠하지 않는다 — 빨간 '–' 가 하락으로 오독된다.
       var chNA = !x.change || x.change === "–";
       var chDir = chNA ? "na" : (x.changeDir === "up" ? "up" : "down");
+      var inner = '<span class="mi-nm">' + esc(x.name) + '</span><span class="mi-lv">' + esc(x.level) + "</span>" +
+        '<span class="mi-ch ' + chDir + '">' + esc(x.change) + '</span><span class="mi-sig tl-sig">' + marks(x) + "</span>";
+      return x.chartUrl ? '<a class="mi" href="' + esc(safeUrl(x.chartUrl)) + '" target="_blank" rel="noopener" title="' + esc(x.name) + ' 차트(네이버)">' + inner + "</a>"
+        : '<div class="mi">' + inner + "</div>";
+    }
+    function noteBlock(x) {
       var n = NT[x.key];
+      if (!(n && (n.value || n.short || n.mid || n.long))) return "";
       var g = idxLiqGrade(x.key);
       var liqChip = g ? '<span class="it-liq" style="color:' + (LIQ_COL[g] || "var(--muted)") + '">유동성 ' + esc(g) + "</span>" : "";
-      function sigBadge(gr) { return gr ? '<span class="tn-sig" style="background:' + (TA_SIG_COL[gr] || "var(--muted)") + '">' + esc(gr) + "</span>" : ""; }
-      var nnAsOf = window.INDEX_NOTES && window.INDEX_NOTES.asOf;
-      var stale = nnAsOf && T.asOf && nnAsOf < T.asOf;
-      var staleBadge = stale ? '<span class="tn-stale" title="오늘 데이터(' + esc(T.asOf) + ')로 아직 갱신되지 않았습니다. 표시는 ' + esc(nnAsOf) + ' 기준입니다.">⚠ 미갱신</span>' : "";
-      var body = (n && (n.value || n.short || n.mid || n.long))
-        ? '<div class="it-note">' + noteLine("밸류", n.value, liqChip) +
-          noteLine("단기", n.short, sigBadge(n.sigShort)) +
-          noteLine("중기", n.mid, sigBadge(n.sigMid)) +
-          noteLine("장기", n.long, sigBadge(n.sigLong)) + "</div>" : "";
-      var inner =
-        '<div class="it-top"><span class="it-nm">' + esc(x.name) + "</span>" +
-          (x.period ? '<span class="it-pd">' + esc(x.period) + "</span>" : "") + staleBadge + "</div>" +
-        '<div class="it-px"><span class="it-lv">' + esc(x.level) + "</span>" +
-          '<span class="it-ch ' + chDir + '">' + esc(x.change) + "</span></div>" + body;
-      var cls = "idx-tile" + (stale ? " stale" : "");
-      return x.chartUrl
-        ? '<a class="' + cls + '" href="' + esc(safeUrl(x.chartUrl)) + '" target="_blank" rel="noopener">' + inner + "</a>"
-        : '<div class="' + cls + '">' + inner + "</div>";
+      return '<div class="md-idx"><div class="md-in">' + esc(x.name) + "</div>" + noteLine("밸류", n.value, liqChip) +
+        noteLine("단기", n.short, sigBadge(n.sigShort)) + noteLine("중기", n.mid, sigBadge(n.sigMid)) + noteLine("장기", n.long, sigBadge(n.sigLong)) + "</div>";
     }
-
-    var NN = window.INDEX_NOTES;
-    document.getElementById("idxAs").textContent = "기준일 " + esc(T.asOf) +
-      (NN && NN.asOf && NN.asOf !== T.asOf ? " · 대응 " + esc(NN.asOf) : "");
-    // 선택된 국가의 지수만 표시(미국=나스닥·다우, 한국=코스피·코스닥)
     var shown = T.indices.filter(function (x) { return IDX_REGION[x.key] === state.country; });
     if (!shown.length) shown = T.indices;   // 매핑 밖이면 전체 폴백
-    document.getElementById("idxGrid").innerHTML = shown.map(tile).join("");
+    document.getElementById("mktAs").textContent = (T.asOf ? T.asOf.slice(5).replace("-", "/") + " 종가 기준" : "");
+    grid.innerHTML = shown.map(tile).join("");
+    var nb = shown.map(noteBlock).join("");
+    notes.innerHTML = nb ? '<div class="md-sec"><div class="md-t">지수 대응<span class="md-as">' + (nnAsOf ? "작성 " + esc(nnAsOf) : "") + "</span>" +
+      (stale ? '<span class="tn-stale" title="오늘 데이터(' + esc(T.asOf) + ')로 아직 갱신되지 않았습니다. 표시는 ' + esc(nnAsOf) + ' 기준입니다.">⚠ 미갱신</span>' : "") + "</div>" + nb + "</div>" : "";
+    syncMktBox();
   }
 
   renderLiquidity();
