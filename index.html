@@ -3737,21 +3737,27 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       renderTopPicks();
     }
     if (theme) state.theme = theme;
-    state.view = "cards";
+    // 보기는 '표'를 기본으로 유지 — 표(또는 성과)였으면 표에서 그 종목 행을 펼치고, 상세 보기 중이면 상세 그대로
+    if (state.view !== "cards") {
+      state.view = "table";
+      tblExpanded = {};
+      if (ticker) tblExpanded[ticker] = "left";
+    }
     renderThemeChips();
     document.getElementById("viewSeg").querySelectorAll("button").forEach(function (x) {
-      x.classList.toggle("on", x.dataset.v === "cards");
+      x.classList.toggle("on", x.dataset.v === state.view);
     });
     render();
     if (!ticker) return;
     // 렌더 직후 해당 카드로 스크롤 + 잠깐 강조
     requestAnimationFrame(function () {
-      var target = null;
-      document.querySelectorAll("#cards .card").forEach(function (c) {
+      var target = state.view === "table" ? document.getElementById("tld-" + ticker) : null;
+      if (!target) document.querySelectorAll("#cards .card").forEach(function (c) {
         if (c.dataset.ticker === ticker) target = c;
       });
       if (!target) return;
-      target.scrollIntoView({ behavior: "smooth", block: "center" });
+      var row = state.view === "table" && target.previousElementSibling;   // 표: 종목 행부터 보이게
+      (row || target).scrollIntoView({ behavior: "smooth", block: row ? "start" : "center" });
       target.classList.remove("flash");
       void target.offsetWidth;                 // 애니메이션 재시작
       target.classList.add("flash");
