@@ -41,9 +41,9 @@ const INDICES = [
   { key: "dow", name: "다우존스", flag: "🇺🇸", symbol: "^DJI",
     chartUrl: "https://m.stock.naver.com/worldstock/index/.DJI/total" },
   { key: "kospi", name: "코스피", flag: "🇰🇷", symbol: "^KS11",
-    chartUrl: "https://finance.naver.com/sise/sise_index.naver?code=KOSPI" },
+    chartUrl: "https://m.stock.naver.com/domestic/index/KOSPI/total" },
   { key: "kosdaq", name: "코스닥", flag: "🇰🇷", symbol: "^KQ11",
-    chartUrl: "https://finance.naver.com/sise/sise_index.naver?code=KOSDAQ" }
+    chartUrl: "https://m.stock.naver.com/domestic/index/KOSDAQ/total" }
 ];
 
 
