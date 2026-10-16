@@ -25,6 +25,10 @@ const ROOT = path.join(__dirname, "..");
 
 const MAX_MOVE = 3;   // %
 const MAX_AGE = 6;    // 일(달력) — 주 5거래일 기준 최소 주 1회 재작성
+// 문장 형식 버전 — v2(2026-10-16~): '상태 → 확인·무효화 가격 → 그 가격이 다음 1·3개월 80% 범위 안/밖' 구조,
+// 추격형 매매 지시('돌파 시 비중 확대'·'이탈 시 비중 축소') 금지(CLAUDE.md §4-2). v1 문장은 이월하지 않아
+// 다음 회차가 반드시 새 형식으로 다시 쓴다(규칙만 바꾸면 이월로 옛 문장이 계속 남는다 — 2026-10-08 처리 메모 사례).
+const TECHNOTE_V = 2;
 const DRY = process.argv.includes("--dry");
 
 function load(rel, key) {
@@ -57,6 +61,7 @@ const note = (k) => (skip[k] = (skip[k] || 0) + 1);
 ["korea", "us"].forEach((c) => (D[c] || []).forEach((s) => {
   const n = s.techNote;
   if (!n || !n.asOf || n.asOf >= T) return;                     // 이미 최신이거나 없음 → 대상 아님
+  if ((n.v || 1) < TECHNOTE_V) return note("옛 형식(v" + (n.v || 1) + ")");
   const ta = TA.ta && TA.ta[s.ticker];
   if (!ta) return note("엔진 데이터 없음");
   if (!(ta.short && ta.mid && ta.long) ||

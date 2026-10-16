@@ -682,6 +682,28 @@ a.idx-tile:hover { background: color-mix(in srgb, var(--ink) 5%, var(--inset)); 
 .tn-ind .tn-v { color: var(--muted); font-size: 0.76rem; line-height: 1.45; }
 .tn-sep { margin: 0 7px; opacity: 0.45; }
 .tech-note.stale { box-shadow: inset 3px 0 0 var(--down); }
+/* 전망 — 1·3개월 80% 예상 범위 막대(현재가·목표가 표시) + 다음 실적 */
+.outlook { margin: 2px 0 4px; background: var(--inset); border-radius: var(--r-sm); padding: 11px 13px; }
+.outlook .tn-head { flex-wrap: wrap; }
+.ol-row { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: start; padding: 3px 0; }
+.ol-row + .ol-row { margin-top: 3px; }
+.ol-k { color: var(--muted); font-size: 0.76rem; font-weight: 600; white-space: nowrap; min-width: 3.6em; }
+.ol-main { min-width: 0; padding-top: 4px; }
+.ol-bar { position: relative; height: 8px; border-radius: 4px; background: var(--meter-track); }
+.ol-band { position: absolute; top: 0; bottom: 0; border-radius: 4px; background: color-mix(in srgb, var(--accent) 38%, transparent); }
+.ol-now, .ol-tgt { position: absolute; top: -3px; width: 3px; height: 14px; border-radius: 2px; transform: translateX(-1.5px); }
+.ol-now { background: var(--ink); }
+.ol-tgt { background: var(--up); }
+.ol-v { margin-top: 4px; font-size: 0.78rem; font-variant-numeric: tabular-nums; color: var(--ink); overflow-wrap: anywhere; }
+.ol-pct { color: var(--muted); font-size: 0.72rem; white-space: nowrap; }
+.ol-note { margin-top: 6px; font-size: 0.76rem; line-height: 1.5; color: var(--ink-2); }
+.ol-ev { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: baseline; margin-top: 7px; padding-top: 7px; border-top: 1px solid var(--grid); }
+.ol-evt { font-size: 0.8rem; line-height: 1.5; color: var(--ink); overflow-wrap: anywhere; }
+.ol-dd { display: inline-block; font-size: 0.68rem; font-weight: 700; color: var(--accent); background: color-mix(in srgb, var(--accent) 13%, transparent); padding: 0 7px; border-radius: 999px; }
+.ol-hot { margin-top: 5px; font-size: 0.76rem; line-height: 1.5; color: var(--ink); background: color-mix(in srgb, var(--down) 10%, transparent); border-left: 3px solid var(--down); border-radius: 0 6px 6px 0; padding: 5px 9px; }
+.ol-leg { margin-top: 7px; font-size: 0.68rem; color: var(--muted); display: flex; align-items: center; gap: 5px; }
+.ol-leg .ol-now, .ol-leg .ol-tgt { position: static; display: inline-block; transform: none; height: 10px; vertical-align: -1px; }
+.ol-leg .ol-tgt { margin-left: 8px; }
 .idx-tile.stale { box-shadow: inset 3px 0 0 var(--down); }
 .idx-tile .it-top .tn-stale { margin-left: auto; }
 
@@ -834,7 +856,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   <footer class="site">
     <p id="disclaimer"></p>
     <p style="margin-top:6px;"><span id="routineTime">매일 한국시간 오후 5시(LA 오전 1시)</span> 자동 갱신 · 현재가에 '실시간' 표기가 있으면 장중 시세, 없으면 종가</p>
-    <p style="margin-top:6px;">기술 신호 등급(적극매수~적극매도)은 이동평균선·일목균형표·매물대 가중 종합에 상위 기간 추세를 반영한 값입니다(단기=일·주·월봉 5:3:2, 중기=주·월봉 7:3). 시장(지수) 대비 초과수익으로 검증하면(96종목·10년·14,748회) <b>종목을 가려내는 힘이 기간 전·후반 모두 일관된 것은 장기(월봉) 신호뿐이고(순위상관 +0.03~+0.06), 단기·중기 신호의 선별력은 미약합니다</b>. 컨센서스 목표가 기준 상승여력도 최근 85일(단일 국면) 검증에서는 미국 종목에서만 이후 수익률과 뚜렷한 양(+)의 관계를 보였고 한국 종목은 뚜렷하지 않았습니다. 매매 트리거가 아닌 참고 지표로만 활용하세요.</p>
+    <p style="margin-top:6px;">기술 신호 등급(적극매수~적극매도)은 이동평균선·일목균형표·매물대 가중 종합에 상위 기간 추세를 반영한 값으로(단기=일·주·월봉 5:3:2, 중기=주·월봉 7:3), <b>이미 일어난 움직임을 요약한 '현재 상태'이지 예측이 아닙니다</b> — 편성 종목 검증에서 등급이 매수 쪽으로 바뀌기 전 20거래일에 이미 지수 대비 평균 +2.5~4.3% 올랐고, 바뀐 뒤 1개월 초과수익은 평균 -1.1~-0.2%였습니다. 시장 대비 선별력이 기간 전·후반 모두 일관된 것은 장기(월봉) 신호뿐입니다(순위상관 +0.03~+0.06). 그래서 카드의 <b>전망</b>은 방향 대신 검증된 것만 보여 줍니다: 다음 1·3개월 <b>80% 예상 범위</b>(60일 변동성 기반 — 한·미 991종목 10년 검증에서 표본 밖 적중 79.8~81.3%)와 공지된 <b>실적 일정</b>. 가격·거래량 기반 선행 신호와 미국 실적 서프라이즈 드리프트도 같은 기준으로 검증했으나 다음 1개월 방향을 믿을 만하게 맞히지 못해 쓰지 않습니다. 유일하게 일관된 방향 신호는 한국 <b>수급 과열</b>(외국인+기관 20일 순매수가 거래량의 6.3% 이상)으로, 통념과 반대로 이후 1·3개월 지수 대비 성과가 나머지보다 약했습니다(2016~2026 세 구간 모두). 컨센서스 목표가 기준 상승여력은 최근 검증에서 미국 종목에서만 이후 수익률과 양(+)의 관계를 보였습니다. 매매 트리거가 아닌 참고 지표로만 활용하세요.</p>
   </footer>
 </div>
 
@@ -858,6 +880,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
 <script src="data/indices.js"></script>
 <script src="data/index-notes.js"></script>
 <script src="data/stock-ta.js"></script>
+<script src="data/events.js"></script>
 <script src="data/recommendations.js"></script>
 <script src="data/coverage-status.js"></script>
 <script src="data/quotes.js"></script>
@@ -1735,6 +1758,80 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       line("장기", n.long, n.sigLong) + indLine + "</div>";
   }
 
+  // 전망 — '앞으로'의 정보만 모은다. 신호 등급은 이미 일어난 움직임을 설명할 뿐 다음 방향을 맞히지 못해
+  //   (2026-10-16 진단: 등급 전환 직후 1개월 지수 대비 평균 -1.1~+0.9%, 전환 전 20일에 이미 ±2.5~6% 움직임)
+  //   ①다음 1·3개월 80% 예상 범위(stock-ta.js outlook — 60일 변동성 기반, 2016~2026 한·미 991종목 표본 밖 적중 약 80%)
+  //   ②다음 실적 일정과 시장 기대치(events.js) ③목표가가 그 범위의 어디에 있는지를 보여준다. 방향 예측은 하지 않는다.
+  var WD = ["일", "월", "화", "수", "목", "금", "토"];
+  function evDay(iso) {
+    var p = String(iso || "").split("-"); if (p.length !== 3) return null;
+    var d = new Date(+p[0], +p[1] - 1, +p[2]), now = new Date();
+    var t0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    return { md: (+p[1]) + "/" + (+p[2]) + "(" + WD[d.getDay()] + ")", dd: Math.round((d - t0) / 86400000) };
+  }
+  function eventLine(s, country) {
+    var E = window.STOCK_EVENTS, ev = E && E.items && E.items[s.ticker], n = ev && ev.next;
+    if (!n || !n.date) return "";
+    var day = evDay(n.date); if (!day || day.dd < 0) return "";
+    var dTxt = day.dd === 0 ? "오늘" : "D-" + day.dd;
+    var parts = [];
+    if (country === "korea") parts.push(esc(n.title || "실적 발표"));
+    else {
+      parts.push((n.when ? esc(n.when) + " " : "") + "실적" + (n.tentative ? "(추정일)" : ""));
+      if (n.epsEst != null) parts.push("분기 EPS 예상 $" + esc(n.epsEst) + (n.epsPrev != null ? " (전년 $" + esc(n.epsPrev) + ")" : ""));
+      var h = (ev.hist || []).filter(function (r) { return r.eps != null && r.est != null; });
+      if (h.length) parts.push("최근 " + h.length + "분기 중 " + h.filter(function (r) { return r.eps > r.est; }).length + "회 예상 상회");
+    }
+    return '<div class="ol-ev"><span class="ol-k">다음 실적</span><span class="ol-evt"><b>' + day.md + (n.tentative ? "경" : "") + '</b> <span class="ol-dd">' + dTxt + "</span> · " + parts.join(" · ") + "</span></div>";
+  }
+  // 한국 수급(20일 외국인·기관 순매수 / 거래량) — 과열(≥6.33%, 상위 20%)이면 검증된 경고를 붙인다.
+  //   2016~2026 한국 391종목: 과열 종목의 다음 1개월 지수 대비 평균 -0.3%(나머지 +0.8%), 3개월 -0.7%(나머지 +2.8%) —
+  //   보류 표본·전반·후반 세 구간 모두 같은 방향(docs/HISTORY.md 2026-10-16). '수급 따라 사기'가 대개 늦다는 정보다.
+  function flowLine(s, country) {
+    if (country !== "korea") return "";
+    var E = window.STOCK_EVENTS, ev = E && E.items && E.items[s.ticker], f = ev && ev.flow;
+    if (!f || f.fi20 == null) return "";
+    var pct = function (v) { return (v > 0 ? "+" : "") + (v * 100).toFixed(1) + "%"; };
+    var body = "외국인 " + pct(f.f20) + " · 기관 " + pct(f.o20) + ' <span class="ol-pct">(20일 순매수 ÷ 거래량)</span>';
+    if (f.hot) body += '<div class="ol-hot">수급 과열 — 외국인+기관 ' + pct(f.fi20) + "(상위 20% 구간). 2016~2026년 이 구간 종목은 다음 1개월 지수 대비 평균 -0.3%(나머지 +0.8%), 3개월 -0.7%(나머지 +2.8%)로 오히려 약했습니다 — 따라 사기엔 늦은 경우가 많았습니다.</div>";
+    return '<div class="ol-ev"><span class="ol-k">수급</span><span class="ol-evt">' + body + "</span></div>";
+  }
+  function outlookBlock(s, country, e) {
+    var tb = stTa(s.ticker), ol = tb && tb.outlook;
+    var evHtml = eventLine(s, country) + flowLine(s, country);
+    if (!(ol && ol.m1 && ol.m3) && !evHtml) return "";
+    var body = "", legTgt = false;
+    if (ol && ol.m1 && ol.m3) {
+      var cur = e.price != null ? e.price : ol.base, tgt = s.targetPrice;
+      // 눈금: 3개월 범위에 현재가·목표가(가까우면)를 담는다 — 목표가가 범위 밖이면 막대 끝에 화살표로 알린다
+      var lo = Math.min(ol.m3[0], cur), hi = Math.max(ol.m3[1], cur);
+      var tgtNear = tgt != null && tgt <= hi * 1.15 && tgt >= lo * 0.87;
+      if (tgtNear) { lo = Math.min(lo, tgt); hi = Math.max(hi, tgt); legTgt = true; }
+      var span = hi - lo || 1;
+      var pos = function (v) { return Math.max(0, Math.min(100, (v - lo) / span * 100)).toFixed(1); };
+      var bar = function (r, k) {
+        return '<div class="ol-row"><span class="ol-k">' + k + '</span><div class="ol-main"><div class="ol-bar">' +
+          '<i class="ol-band" style="left:' + pos(r[0]) + "%;width:" + (pos(r[1]) - pos(r[0])).toFixed(1) + '%"></i>' +
+          (tgtNear ? '<b class="ol-tgt" style="left:' + pos(tgt) + '%" title="목표가"></b>' : "") +
+          '<b class="ol-now" style="left:' + pos(cur) + '%" title="현재가"></b></div>' +
+          '<div class="ol-v">' + fmtPrice(r[0], country) + " ~ " + fmtPrice(r[1], country) +
+          ' <span class="ol-pct">(' + fmtPct((r[0] / cur - 1) * 100) + " ~ " + fmtPct((r[1] / cur - 1) * 100) + ")</span></div></div></div>";
+      };
+      body += bar(ol.m1, "1개월") + bar(ol.m3, "3개월");
+      if (tgt != null && cur > 0) {
+        var tTxt = tgt <= cur ? "현재가가 이미 목표가(" + fmtPrice(tgt, country) + ") 위 — 남은 상승여력 없음"
+          : tgt > ol.m3[1] ? "목표가 " + fmtPrice(tgt, country) + "는 3개월 80% 범위 위쪽 — 3개월 안 도달은 평소 변동폭을 넘는 상승이 필요"
+          : tgt > ol.m1[1] ? "목표가 " + fmtPrice(tgt, country) + "는 1개월 범위 밖·3개월 범위 안"
+          : "목표가 " + fmtPrice(tgt, country) + "는 1개월 범위 안";
+        body += '<div class="ol-note">' + tTxt + "</div>";
+      }
+    }
+    var T = window.STOCK_TA;
+    return '<div class="outlook"><div class="tn-head">전망<span class="tn-as">' + (T && T.asOf ? esc(T.asOf) + " 종가 기준 · " : "") +
+      '80% 예상 범위(변동성 기반, 방향 예측 아님)</span></div>' + body + evHtml +
+      (ol ? '<div class="ol-leg"><b class="ol-now"></b>현재가' + (legTgt ? ' <b class="ol-tgt"></b>목표가' : "") + "</div>" : "") + "</div>";
+  }
+
   // delKey: 개인 목록 탭에서 렌더할 때 그 목록 키("watch"|"hold") — ✕(제거) 버튼을 붙이고
   //         추천 카드용 담기 토글은 감춘다. 추천 탭에서는 falsy.
   function card(s, country, showTheme, delKey) {
@@ -1798,6 +1895,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
         aiStat +
         '<div class="c-stat"><div class="c-sk">배당수익률</div><div class="c-sv">' + divVal + "</div></div>" +
       "</div>" +
+      outlookBlock(s, country, e) +
       sigBox +
       techNoteBlock(s) +
       analysis +

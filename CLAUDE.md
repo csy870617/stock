@@ -11,6 +11,7 @@
 - **신호 엔진 `mtf`**: 기간별로 이동평균 30%·일목균형표 30%·매물대 25%·오실레이터(RSI·스토캐스틱·MACD·ADX) 15% 가중(=`flow` 점수) 후 상위 기간 추세를 섞는다(단기=일·주·월 5:3:2, 중기=주·월 7:3, 장기=월봉). 중립 밴드 안이면 그 축은 기권하고, 결측은 재정규화한다. 5단계 신호.
 - **`data/consensus.js` + 각 종목 `targetPrice`·`tpSource`·`tpAsOf`·`tpHigh`·`tpLow`·`tpStale`**(`update-consensus.js`): 네이버 증권 컨센서스(한국 FnGuide·미국 LSEG 집계)를 매일 받아 목표가에 반영. 집계 기준일 30일 초과는 반영하지 않고 `tpStale:true`, ±50% 초과 변화는 미반영·경고, 0.5% 미만 변화는 무시. 한국은 평균만, 미국은 최저·최고 범위도 제공. **최고=최저(증권사 1곳 값)는 컨센서스가 아니라 미반영**하고 `tpSource:"naver-single"` 로 바꿔 웹 확인 큐로 보낸다. 반영은 `update-reco.js --consensus`(목표가만 바꾸는 네이버 집계 항목은 신뢰 도메인 2개 대신 집계 1곳 인정)로 하며, 그래도 거부되면 종목별로 나눠 적용한다(한 종목의 출처 문제로 전 종목 동기화가 취소되지 않게). 네이버 종목 페이지는 매일 `sources` 맨 앞에 되살린다.
 - **스냅샷·지표는 '끝난 장' 기준**: 예약 실행은 GitHub 지연으로 장중(한국 00~06시·미국 13~20시 UTC)에 자주 돈다. `quotes.js` 의 `price` 는 화면용 현재가(장중이면 장중가), `close`·`closeDate` 는 마지막으로 끝난 정규장 종가, `indices` 는 같은 조회의 KOSPI·S&P500·RSP 종가이며, `snapshot.js` 는 이 종가끼리 짝지어 `history.js` 에 쓴다(세션은 인자 없이 돌린다). `update-stock-ta`·`update-indices`·`screen-watch`·`update-liquidity-gauge` 는 `lib-quote.js` 의 `settleDailyBars` 로 진행 중인 장의 미완성 일봉을 버리고, 끝난 장의 종가가 야후 장기 일봉에 비어 있으면(한국 종목에서 잦다) 확정 시세로 채운다 — 장중 실행이 같은 asOf 아래 신호를 바꿔 techNote 와 어긋나지 않게.
+- **전망 데이터(앞으로의 정보, 토큰 0)**: `stock-ta.js` 의 종목별 `outlook`(다음 1·3개월 80% 예상 범위 = 종가×exp(±1.28·σ60·√h) — 방향 중립, 표본 밖 적중 약 80%)과 `data/events.js`(`update-events.js` — 한국 네이버 `irScheduleInfo` 공지 실적 일정·20일 외국인·기관 순매수(`flow`, 거래량 대비 6.33% 이상이면 `hot` = 수급 과열), 미국 나스닥 예정일·장 전/후·분기 컨센서스 EPS·최근 4분기 서프라이즈). 앱 카드 '전망' 블록이 이 둘을 그린다.
 - `data/liquidity-auto.js`(유동성 baseline, `update-liquidity-gauge.js`) · `data/watch-candidates.js`(관심 차트 후보, `screen-watch.js`) · `data/history.js`(스냅샷, `rsp` 포함) · `data/coverage-status.js`(앱 '데이터 신선도' 패널, `coverage.js --emit`) · `data/tickers.js`(검색 사전, `gen-tickers.js` — 월요일 주 1회, KRX 실패 시 네이버 폴백).
 - `data/discovery-candidates.js`(주간 심층 발굴 후보 스크린, `screen-discovery.js --if-stale` — 6일 지나면 재생성, 앱은 로드하지 않음): 네이버 시총 순위(한국 KOSPI 250·KOSDAQ 150, 미국 NASDAQ 250·NYSE 350)의 연간·분기 재무·컨센서스로 (국가×주제)별 후보 10개와 같은 잣대로 잰 현 편성을 기록. **후보 생성용이지 선정 규칙이 아니다**(편입·교체는 §3-6·§5 검증으로만, 한국 점수엔 상승여력 미반영).
 
@@ -71,7 +72,7 @@
 
 ### 3-2. A 회차 순서
 0. **C 모드 판정**: `node scripts/coverage.js --remaining deep` 이 exit 1(일요일이거나 7일 경과)이면 아래 순서에 더해 §3-6 을 수행한다(평일이면 매 거래일 항목을 먼저 끝내고, 일요일이면 발굴에 예산을 몬다).
-1. **backbone 최신화**: `update-quotes.js`·`update-stock-ta.js`·`update-indices.js`·`update-liquidity-gauge.js`·`screen-watch.js` 실행 → T 확정. 건너뛰면 구식 T 로 techNote 를 써서 다음 Action 직후 통째로 무효가 된다.
+1. **backbone 최신화**: `update-quotes.js`·`update-stock-ta.js`·`update-indices.js`·`update-liquidity-gauge.js`·`screen-watch.js`·`update-events.js` 실행 → T 확정. 건너뛰면 구식 T 로 techNote 를 써서 다음 Action 직후 통째로 무효가 된다.
 2. **techNote**: 먼저 `node scripts/carry-technote.js` — 엔진 등급 3종이 그대로이고 가격이 ±3% 이내이며 문장을 쓴 지 6일 이내인 종목은 `asOf` 만 T 로 이월한다(`writtenAt`·`basePrice` 기록). 남은 종목(`--remaining techNote`)만 재작성한다. valueNote 누락분도 채운다. **무검색**(quotes·stock-ta 숫자만).
 3. **목표가 재검증** 큐(§4-1).
 4. **tier 재평가** 큐 그룹(§4-4). 실적 발표·가이던스 급변·대형 M&A 가 있었던 그룹은 큐와 무관하게 즉시 재평가.
@@ -131,8 +132,9 @@
 - **내러티브 수치 신선도**: `reason`·`valueNote`·`thesis` 의 상승여력·목표가 수치는 **작성 시점 quotes.js 가격 기준**으로 계산한다(저장 `upside` 를 박지 말 것). validate 가 topPicks ±10%p·valueNote ±15%p 괴리를 경고하면 다음 회차에 우선 재작성. 수치 없이 써도 된다.
 
 ### 4-2. 기술 대응 (`techNote`) · 지수 대응 (`index-notes.js`)
-- 6단계(추세·위치·모멘텀·거래량·지지저항·변동성/손절)로 분석하되 저장은 간결히: `{asOf, short, mid, long(각 1~2문장, 핵심 숫자 포함), sigShort, sigMid, sigLong}`. 단기=일봉·중기=주봉·장기=월봉. 형식 예시는 삼성전자(005930).
-- 서술 순서 = 판단 가중 순서: **이평·일목·매물대 먼저, 오실레이터는 보조**. 지표 충돌을 양방향으로 얼버무리지 말 것(확률 높은 쪽), 하락추세면 '반등 시도'로만('추세 전환' 금지), 미확인 수치 금지.
+- 6단계(추세·위치·모멘텀·거래량·지지저항·변동성/손절)로 분석하되 저장은 간결히: `{v:2, asOf, short, mid, long(각 1~2문장, 핵심 숫자 포함), sigShort, sigMid, sigLong}`. 단기=일봉·중기=주봉·장기=월봉. 형식 예시는 삼성전자(005930).
+- **★형식 v2(2026-10-16~) — 지난 움직임이 아니라 앞으로 볼 가격**: 등급은 이미 일어난 움직임의 요약이지 예측이 아니다(진단: 등급 전환 직후 1개월 지수 대비 평균 -1.1~+0.9%인데 전환 전 20일에 이미 ±2.5~6% 움직였다 — 전환을 따라 사고팔면 늦다). 문장마다 ①상태(**이평·일목·매물대 먼저, 오실레이터는 보조** → 등급) ②**확인·무효화 가격**(넘거나 깨면 등급 근거가 바뀌는 가격 — `stock-ta.js` 의 지지/저항) ③그 가격이 다음 80% 예상 범위(`stock-ta.js` `outlook` — 단·중기는 `m1` 1개월, 장기는 `m3` 3개월) 안인지 밖인지를 쓴다. 실적 발표가 21일 안이면(`events.js`) 그날 변동이 커질 수 있음을, 한국 종목이 수급 과열(`events.js` `flow.hot`)이면 추격을 경계할 근거(검증: 다음 1개월 지수 대비 -1.05%p)를 덧붙인다.
+- **쓰지 않는 것**: '돌파 시 비중을 늘린다'·'이탈 시 비중을 줄인다'·추격 매수/매도 같은 매매 지시(v2 문장에선 validate 가 거부), 급등락 직후의 투매·추격 권유. 지표 충돌을 양방향으로 얼버무리지 말 것(확률 높은 쪽), 하락추세면 '반등 시도'로만('추세 전환' 금지), 미확인 수치 금지. v1(옛 형식) 문장은 `carry-technote.js` 가 이월하지 않으므로 다음 회차가 반드시 v2 로 다시 쓴다.
 - **sig 3종은 같은 거래일 `stock-ta.js` 의 `short/mid/long.signal`(최종 등급)을 그대로 쓴다** — 문구는 등급의 근거 설명이다. 2단계 이상 어긋나면 validate·update-reco 가 저장을 거부한다.
 - 기술 대응은 LLM techNote 만 표시한다(자동 폴백 없음). 구식 신호칩(taStrip)은 폐기됐다.
 - **지수**: `window.INDEX_NOTES = {asOf, items:{nasdaq|dow|kospi|kosdaq:{value,short,mid,long,sigShort,sigMid,sigLong}}}`. `value` = 지수 고유 밸류(멀티플 등)+해당 지역 유동성 국면(미국=nasdaq·dow, 한국=kospi·kosdaq), sig 는 `indices.js` 의 각 기간 signal 기준.
@@ -189,6 +191,7 @@
 - `scripts/backtest-signals.js` → `data/backtest-report.json`: 룩어헤드 없는 롤링 평가. **엔진 변경은 `validation` 기준(같은 나라 지수 초과수익의 날짜별 횡단면 IC, 전반·후반 모두 우위)으로만 채택**한다 — 절대수익 스프레드만으로 채택하지 말 것. 현재 결론: 단기·중기 선별력 미약, 장기(월봉)만 일관(그래서 앱 푸터에 '신호는 참고 지표' 고지 상시). `legacy`·`block`·`gate` 변형은 이미 기각됐다 — 새 가설 없이 재설계를 반복하지 말 것.
 - `scripts/backtest-upside.js` → `data/backtest-upside.json`: 미국 컨센서스 upside 는 양(+)의 IC, 한국은 선별력 없음(단일 국면 — 분기마다 재실행). pickScore 의 upScore 는 '국가 내 중앙값 ±30%p 상대 점수', riskScore 는 `stock-ta.js` 의 `risk{vol,mdd}` 실측(vol 20~70%·mdd 10~50% 정규화, 6:4).
 - `data/tp-history.json`: `snapshot.js` 가 목표가 변경분만 무기한 기록(앱은 로드하지 않음 — `sw.js` SHELL 에 넣지 말 것).
+- **선행(예측) 신호 연구(2026-10-16, `scripts/research/leading/`)**: 한·미 991종목·10년에서 사전 등록 기준(21일 IC 전·후반 양, t≥2.5)으로 '뒷북' 개선 후보를 검증했다 — 가격·거래량 팩터 6종(고거래량·정보충격 지속·상승추세 눌림목·매집·변동성 수축·초기 추세), 미국 실적 서프라이즈 드리프트(PEAD, 2,303건)는 **전부 기각**. 한국 외국인·기관 수급은 '사면 오른다' 가설이 기각되고 **반대 방향이 보류 표본(2016-17)까지 세 구간 모두 일관** — 20일 외국인+기관 순매수 ≥ 거래량의 6.33%(상위 20%)면 다음 1개월 지수 대비 -1.05%p(t -3.70)·3개월 -2.68%p(t -2.94) → **'수급 과열' 경고로만 채택**(표시용, 선정 규칙엔 아직 넣지 않는다). 그 밖의 방향은 이 데이터로 믿을 만하게 예측되지 않는다 — 대신 예측이 검증된 **변동 범위**(80% 범위 표본 밖 적중 79.8~81.3%)와 **확정된 일정**(실적 발표)을 '전망'으로 보여준다. 같은 가설을 다시 시험하지 말고, 다음 후보는 여전히 목표가·이익 전망 상향(revision — `tp-history.json` 6개월 후)이다.
 
 ## 8. 가드레일 (코드로 강제)
 `update-reco.js`·`validate-reco.js` 가 거부하는 것: 신뢰 출처 2개 미만(서로 다른 신뢰 도메인, 커뮤니티·블로그·SNS 금지) · 목표가 ±50% 급변(같은 패치 내 체이닝 포함) · 분석 변경에 근거 URL 없음 · techNote 등급 ↔ 같은 거래일 엔진 등급 2단계 이상 불일치 · (주제×국가) 9종목·tier 3/3/3 위반(개인 목록 면제) · **하루(UTC) 편입+편출 20건 초과**(`data/reco-ops.json` 레저 — 함께 커밋).

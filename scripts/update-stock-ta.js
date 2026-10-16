@@ -133,6 +133,26 @@ function riskOf(rows) {
   return { vol: Math.round(vol * 10) / 10, mdd: Math.round(mdd * 10) / 10 };
 }
 
+// 전망 범위 — 다음 1개월(21거래일)·3개월(63거래일) 80% 가격 범위(종가 × exp(±1.28·σ60·√h)).
+// 왜: 신호 등급은 이미 일어난 움직임을 설명할 뿐 다음 방향을 맞히지 못한다(2026-10-16 진단 — 등급 전환 직후
+//     1개월 지수 대비 초과수익 평균 -1.1~+0.9%, 전환 전 20일에 이미 ±2.5~6% 움직임). 대신 '얼마나 움직일 수 있나'는
+//     예측된다: 이 대칭 범위가 2016~2026 한·미 991종목에서 표본 밖 79.8~81.3% 적중했다(docs/HISTORY.md).
+//     드리프트를 넣지 않는다 — 현재 시총 상위 표본의 상승 편향(생존편향)을 예측에 섞지 않기 위해서다.
+const RANGE_Z = 1.28;
+function outlookOf(rows, dp) {
+  const c = rows.map((r) => r.close), n = c.length;
+  if (n < 61) return null;
+  const lr = [];
+  for (let i = n - 60; i < n; i++) if (c[i] > 0 && c[i - 1] > 0) lr.push(Math.log(c[i] / c[i - 1]));
+  if (lr.length < 40) return null;
+  const mu = lr.reduce((a, b) => a + b, 0) / lr.length;
+  const sd = Math.sqrt(lr.reduce((a, b) => a + (b - mu) * (b - mu), 0) / (lr.length - 1));
+  const base = c[n - 1];
+  const rnd = (v) => (dp ? +v.toFixed(dp) : Math.round(v));
+  const band = (h) => [rnd(base * Math.exp(-RANGE_Z * sd * Math.sqrt(h))), rnd(base * Math.exp(RANGE_Z * sd * Math.sqrt(h)))];
+  return { base: rnd(base), sd: +(sd * 100).toFixed(2), m1: band(21), m3: band(63) };
+}
+
 // 동시성 제한 실행
 async function mapLimit(items, limit, fn) {
   const out = new Array(items.length); let i = 0;
@@ -158,6 +178,8 @@ async function mapLimit(items, limit, fn) {
       ta[s.ticker] = { short: slim(a.short), mid: slim(a.mid), long: slim(a.long) };
       const risk = riskOf(rows) || (prev[s.ticker] && prev[s.ticker].risk) || null;
       if (risk) ta[s.ticker].risk = risk;
+      const ol = outlookOf(rows, dp);
+      if (ol) ta[s.ticker].outlook = ol;
       live++;
       if (rows.lastDate && (!lastBar || rows.lastDate > lastBar)) lastBar = rows.lastDate;
     }
@@ -179,7 +201,8 @@ async function mapLimit(items, limit, fn) {
   };
   const body =
     "// 개별 종목 기술적 분석 스냅샷 — scripts/update-stock-ta.js 가 자동 생성 (LLM 토큰 0, 순수 스크립트)\n" +
-    "// ticker → { short:{trend,signal,metrics,read}, mid:{...}, long:{...}, risk:{vol 60일 실현변동성(연율화%), mdd 120일 최대낙폭%} }. 단기(일봉)/중기(주봉)/장기(월봉) 분리.\n" +
+    "// ticker → { short:{trend,signal,metrics,read}, mid:{...}, long:{...}, risk:{vol 60일 실현변동성(연율화%), mdd 120일 최대낙폭%},\n" +
+    "//            outlook:{base 기준 종가, sd 일간 σ60(%), m1:[하단,상단] 다음 21거래일 80% 범위, m3:[…] 63거래일} }. 단기(일봉)/중기(주봉)/장기(월봉) 분리.\n" +
     "window.STOCK_TA = " + JSON.stringify(T) + ";\n";
   fs.writeFileSync(OUT, body);
 

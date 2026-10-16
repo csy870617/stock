@@ -245,6 +245,14 @@ function validate(D, opts) {
               else warnings.push(msg + " — 엔진 등급과 맞출 것");
             });
           }
+          // 형식 v2(2026-10-16~, CLAUDE.md §4-2): 추격형 매매 지시 금지 — 등급 전환은 이미 움직인 뒤에 나온다
+          // (진단: 전환 직후 1개월 지수 대비 평균 -1.1~+0.9%, 전환 전 20일에 이미 ±2.5~6%). v2 를 표방한 문장에
+          // '돌파 시 비중을 늘린다'·'이탈 시 비중을 줄인다' 류가 있으면 막는다(v1 은 carry-technote 가 이월하지 않아 재작성된다).
+          const CHASE = /비중을?\s*(늘|줄)|비중\s*(확대|축소)|추격\s*(매수|매도)/;
+          if ((n.v || 1) >= 2) ["short", "mid", "long"].forEach((k) => {
+            const m = n[k] && String(n[k]).match(CHASE);
+            if (m) errors.push(tag + ": techNote." + k + " 에 추격형 매매 지시('" + m[0] + "') — v2 는 확인·무효화 가격과 다음 1·3개월 범위로 쓴다(§4-2)");
+          });
         }
       }
 
