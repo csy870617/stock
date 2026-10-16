@@ -726,6 +726,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 0.86rem; min-widt
   background: linear-gradient(90deg, transparent, var(--clamp-bg, var(--surface)) 28px); color: var(--accent); font-size: 0.74rem; font-weight: 600; }
 [data-ck].clamp1.has-more::after { background: var(--clamp-bg, var(--surface)); padding-left: 6px; }
 [data-ck].has-less::after { content: "접기"; display: block; text-align: right; color: var(--accent); font-size: 0.72rem; font-weight: 600; }
+[data-ck]:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
 
 /* 오늘의 시장 — 지수 2칸·유동성 한 줄·시황 3줄, 나머지는 '시장 자세히' */
 .mkt-box { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px 16px 4px; margin: 0 0 22px; box-shadow: var(--shadow-sm); --clamp-bg: var(--surface); }
@@ -1383,12 +1384,20 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   document.addEventListener("click", function (e) {
     var el = e.target.closest && e.target.closest("[data-ck]");
     if (!el || e.target.closest("a, button, select, input")) return;
+    toggleClamp(el);
+  });
+  document.addEventListener("keydown", function (e) {   // 키보드로도(Enter·Space) 펼치고 접는다
+    var el = e.target;
+    if (!el || !el.hasAttribute || !el.hasAttribute("data-ck") || (e.key !== "Enter" && e.key !== " ")) return;
+    e.preventDefault(); toggleClamp(el);
+  });
+  function toggleClamp(el) {
     var k = el.getAttribute("data-ck"), cl = el.getAttribute("data-cl") || "clamp3";
     if (el.classList.contains(cl) && !el.classList.contains("has-more")) return;   // 다 보이는 짧은 문단은 그대로
     if (el.classList.contains(cl)) { el.classList.remove(cl); OPEN[k] = 1; }
     else { el.classList.add(cl); delete OPEN[k]; }
     markClamps(el.parentNode);
-  });
+  }
   function secOpen(k) { return OPEN[k] ? " open" : ""; }
   // 접힌 문단 중 실제로 잘린 것만 '더보기' 표시(짧으면 표시 안 함), 펼친 것은 '접기'
   function markClamps(root) {
@@ -1399,6 +1408,8 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
       if (over) el.setAttribute("data-more", "1");
       el.classList.toggle("has-more", over);
       el.classList.toggle("has-less", !clamped && el.getAttribute("data-more") === "1");
+      if (over || el.classList.contains("has-less")) el.setAttribute("tabindex", "0");   // 펼칠 게 있을 때만 키보드 초점
+      else el.removeAttribute("tabindex");
     });
   }
   function clampAttr(k, cl) { return ' data-ck="' + esc(k) + '" data-cl="' + cl + '"' + (OPEN[k] ? ' data-more="1"' : ""); }   // 펼쳐 둔 채 다시 그려도 '접기'가 남게
