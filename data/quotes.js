@@ -5,13 +5,20 @@
 //   price·date 는 조회 시각의 현재가(장중이면 장중가), close·closeDate 는 마지막으로 끝난 정규장 종가(스냅샷 기록용)
 // indices: 성과 기준 지수(kospi ^KS11·sp500 ^GSPC·rsp RSP) — 같은 형식, snapshot.js 가 종목 종가와 짝지어 기록
 window.STOCK_QUOTES = {
- "generatedAt": "2026-10-16",
+ "generatedAt": "2026-10-17",
  "quotes": {
   "105560": {
    "price": 160000,
    "date": "2026-10-16",
    "changePct": 2.1,
    "close": 160000,
+   "closeDate": "2026-10-16"
+  },
+  "119850": {
+   "price": 41400,
+   "date": "2026-10-16",
+   "changePct": 4.5,
+   "close": 41400,
    "closeDate": "2026-10-16"
   },
   "139130": {
@@ -42,11 +49,11 @@ window.STOCK_QUOTES = {
    "close": 27100,
    "closeDate": "2026-10-16"
   },
-  "257720": {
-   "price": 34200,
+  "214450": {
+   "price": 278000,
    "date": "2026-10-16",
    "changePct": 7.5,
-   "close": 34200,
+   "close": 278000,
    "closeDate": "2026-10-16"
   },
   "267260": {
@@ -266,20 +273,6 @@ window.STOCK_QUOTES = {
    "close": 241500,
    "closeDate": "2026-10-16"
   },
-  "014680": {
-   "price": 232500,
-   "date": "2026-10-16",
-   "changePct": 0.4,
-   "close": 232500,
-   "closeDate": "2026-10-16"
-  },
-  "039030": {
-   "price": 448000,
-   "date": "2026-10-16",
-   "changePct": 5.9,
-   "close": 448000,
-   "closeDate": "2026-10-16"
-  },
   "011780": {
    "price": 113500,
    "date": "2026-10-16",
@@ -362,6 +355,13 @@ window.STOCK_QUOTES = {
    "date": "2026-10-16",
    "changePct": 2.6,
    "close": 182100,
+   "closeDate": "2026-10-16"
+  },
+  "041830": {
+   "price": 52300,
+   "date": "2026-10-16",
+   "changePct": 10,
+   "close": 52300,
    "closeDate": "2026-10-16"
   },
   "MSFT": {
