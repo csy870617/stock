@@ -277,15 +277,22 @@ async function frameShares(concept, period) {
   FRAME[k] = m;
   return m;
 }
+// 설비투자·차입금은 회사마다 다른 XBRL 태그를 쓴다(AAON: 리볼버를 LongTermLineOfCredit, CAPEX 는 표준 태그 밖 — 2026-10-17 검증에서 FCF·순차입을 놓쳤다).
+//   CAPEX 는 아래 중 처음 찾은 값(+ 자본화 소프트웨어). 하나도 없으면 FCF 를 '미확인'으로 두고 안전 조건에서 탈락시킨다(0 으로 보지 않는다).
+//   차입금은 겹치는 표현(합계·유동+비유동·리스 포함)은 최댓값으로 하나만, 신용한도 차입·단기차입은 더한다 — 겹쳐 세면 보수적(안전 쪽)이다.
+const CAPEX = ["PaymentsToAcquirePropertyPlantAndEquipment", "PaymentsToAcquireProductiveAssets", "PaymentsForCapitalImprovements",
+  "PaymentsToAcquireOtherPropertyPlantAndEquipment", "PaymentsToAcquireMachineryAndEquipment"];
+const DEBT = ["LongTermDebt", "LongTermDebtNoncurrent", "LongTermDebtCurrent", "DebtCurrent", "ShortTermBorrowings", "ConvertibleNotesPayable", "ConvertibleNotesPayableCurrent",
+  "LongTermDebtAndCapitalLeaseObligations", "LongTermDebtAndCapitalLeaseObligationsCurrent", "LongTermNotesPayable", "NotesPayableCurrent", "SeniorNotes",
+  "LongTermLineOfCredit", "LineOfCredit", "LinesOfCreditCurrent", "SecuredDebt", "UnsecuredDebt"];
 const YRS = ["CY2022", "CY2023", "CY2024", "CY2025"];
 const INST = ["CY2023Q4I", "CY2024Q4I", "CY2025Q4I", "CY2026Q2I"];
 async function loadFrames() {
   const jobs = [];
   const REV = ["RevenueFromContractWithCustomerExcludingAssessedTax", "Revenues", "RevenueFromContractWithCustomerIncludingAssessedTax", "SalesRevenueNet"];
-  const DUR = ["OperatingIncomeLoss", "NetIncomeLoss", "NetCashProvidedByUsedInOperatingActivities", "PaymentsToAcquirePropertyPlantAndEquipment", "PaymentsToAcquireProductiveAssets"];
+  const DUR = ["OperatingIncomeLoss", "NetIncomeLoss", "NetCashProvidedByUsedInOperatingActivities"].concat(CAPEX, ["PaymentsToDevelopSoftware"]);
   const BAL = ["CashAndCashEquivalentsAtCarryingValue", "CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents", "ShortTermInvestments", "MarketableSecuritiesCurrent",
-    "AvailableForSaleSecuritiesDebtSecuritiesCurrent", "LongTermDebt", "LongTermDebtNoncurrent", "LongTermDebtCurrent", "DebtCurrent", "ShortTermBorrowings", "ConvertibleNotesPayable",
-    "StockholdersEquity", "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest"];
+    "AvailableForSaleSecuritiesDebtSecuritiesCurrent", "StockholdersEquity", "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest"].concat(DEBT);
   REV.concat(DUR).forEach((c) => YRS.forEach((y) => jobs.push(() => frame(c, y))));
   BAL.forEach((c) => INST.forEach((y) => jobs.push(() => frame(c, y))));
   ["CY2023", "CY2025"].forEach((y) => jobs.push(() => frameShares("WeightedAverageNumberOfDilutedSharesOutstanding", y)));
@@ -303,10 +310,10 @@ function metricsUS(s) {
   const rev = best ? best.v : [null, null, null, null];
   const ser = (c) => YRS.map((y) => secVal(c, y, cik));
   const op = ser("OperatingIncomeLoss"), ni = ser("NetIncomeLoss"), ocf = ser("NetCashProvidedByUsedInOperatingActivities");
-  const cx1 = ser("PaymentsToAcquirePropertyPlantAndEquipment"), cx2 = ser("PaymentsToAcquireProductiveAssets");
-  const capex = cx1.map((v, i) => (v != null ? v : cx2[i]));
-  m.capexMissing = capex[3] == null;
-  const fcf = ocf.map((v, i) => (v == null ? null : v - (capex[i] || 0)));
+  const cxs = CAPEX.map(ser), sw = ser("PaymentsToDevelopSoftware");
+  const capex = YRS.map((_, i) => { const v = cxs.map((a) => a[i]).find((x) => x != null); return v == null ? null : v + (sw[i] || 0); });
+  m.capexMissing = capex.slice(1).some((v) => v == null);
+  const fcf = ocf.map((v, i) => (v == null || capex[i] == null ? null : v - capex[i]));
   m.revLast = rev[3];
   m.g3 = cagr(rev[0], rev[3], 3);
   m.gLast = rev[2] > 0 && rev[3] != null ? rev[3] / rev[2] - 1 : null;
@@ -319,10 +326,13 @@ function metricsUS(s) {
   const bal = (y) => {
     const cash = secVal("CashAndCashEquivalentsAtCarryingValue", y, cik) ?? secVal("CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents", y, cik);
     const sti = secVal("ShortTermInvestments", y, cik) ?? secVal("MarketableSecuritiesCurrent", y, cik) ?? secVal("AvailableForSaleSecuritiesDebtSecuritiesCurrent", y, cik) ?? 0;
-    const ltd = secVal("LongTermDebt", y, cik);
-    const debt = (ltd != null ? ltd : (secVal("LongTermDebtNoncurrent", y, cik) || 0) + (secVal("LongTermDebtCurrent", y, cik) || 0))
-      + (secVal("ShortTermBorrowings", y, cik) || 0) + (ltd == null && secVal("LongTermDebtCurrent", y, cik) == null ? (secVal("DebtCurrent", y, cik) || 0) : 0)
-      + (secVal("ConvertibleNotesPayable", y, cik) || 0);
+    const v = (c) => secVal(c, y, cik) || 0;
+    const lt = Math.max(v("LongTermDebt"), v("LongTermDebtNoncurrent") + v("LongTermDebtCurrent"),
+      v("LongTermDebtAndCapitalLeaseObligations") + v("LongTermDebtAndCapitalLeaseObligationsCurrent"), v("LongTermNotesPayable") + v("NotesPayableCurrent"),
+      v("SeniorNotes"), v("ConvertibleNotesPayable") + v("ConvertibleNotesPayableCurrent"), v("SecuredDebt") + v("UnsecuredDebt"));
+    const lines = Math.max(v("LongTermLineOfCredit"), v("LineOfCredit"), v("LinesOfCreditCurrent"));
+    const st = v("ShortTermBorrowings") + (v("LongTermDebtCurrent") === 0 && v("LongTermDebt") === 0 ? v("DebtCurrent") : 0);
+    const debt = lt + lines + st;
     const eq = secVal("StockholdersEquity", y, cik) ?? secVal("StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest", y, cik);
     return { cash, sti, debt, eq };
   };
@@ -365,7 +375,8 @@ function judgeUS(s, m, pegDone, T) {
   if (!s.cik) why.push("SEC 재무 없음(해외 공시 등)");
   if (!m.opPos3) why.push("영업이익 3년 연속 흑자 아님");
   if (!m.npPos) why.push("최근 연도 순이익 적자");
-  if (!(m.fcfLast > 0 && m.fcf3 > 0)) why.push("FCF 적자");
+  if (m.capexMissing && !(m.fcfLast < 0)) why.push("FCF 미확인(CAPEX 태그 없음)");
+  else if (!(m.fcfLast > 0 && m.fcf3 > 0)) why.push("FCF 적자");
   if (m.netCash != null && m.netCash < 0 && -m.netCash > Math.max(m.ocfLast || 0, 0)) why.push("순차입금 > 영업현금흐름");
   const gOK = (m.g3 >= T.growth && m.gLast >= T.growthFloor) || (m.gLast >= T.growth && m.g3 >= T.growthFloor);
   if (!gOK) why.push("매출 성장 미달(3년 " + (pct(m.g3) ?? "–") + "%·최근 " + (pct(m.gLast) ?? "–") + "%)");
@@ -391,7 +402,7 @@ function view(c, s, m, score, why) {
     revG3: pct(m.g3), revLast: pct(m.gLast), revFwd: pct(m.gFwd), roicAvg: pct(m.roicAvg), roic3: (m.roic3 || []).map(pct), roicNoCash: m.roicNoCash || undefined,
     fcfM: pct(m.fcfM), netCash: c === "korea" ? (m.netCash != null ? Math.round(m.netCash) : null) : (m.netCash != null ? r1(m.netCash / 1e6, 0) : null),
     netCashUnit: c === "korea" ? "억원" : "백만달러", cashToMcap: pct(m.cashM), per: r1(m.per), epsG: pct(m.epsG), peg: r1(m.peg, 2), pegBasis: m.pegBasis,
-    dilution: pct(m.dil), split: m.split || undefined, owner: m.owner != null ? r1(m.owner) : undefined, analysts: m.analysts, coverage: c === "korea" ? m.cover : undefined,
+    dilution: pct(m.dil), split: m.split || undefined, owner: m.owner != null ? r1(m.owner) : undefined, epsEstimates: m.analysts, coverage: c === "korea" ? m.cover : undefined,
     beta52w: m.beta != null ? m.beta : undefined, capexMissing: m.capexMissing || undefined, fails: why && why.length ? why : undefined };
 }
 function build(c, pool, members) {

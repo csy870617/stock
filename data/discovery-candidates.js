@@ -6234,19 +6234,20 @@ window.DISCOVERY_CANDIDATES = {
     "small": 0.1
    },
    "eligible": 3,
-   "nearMissCount": 9,
+   "nearMissCount": 7,
    "screened": 1369,
    "funnel": {
     "영업이익 3년 연속 흑자 아님": 812,
     "최근 연도 순이익 적자": 675,
-    "FCF 적자": 634,
-    "순차입금 > 영업현금흐름": 443,
+    "FCF 미확인": 281,
+    "순차입금 > 영업현금흐름": 523,
     "매출 성장 미달": 1171,
-    "ROIC 미달": 1030,
+    "ROIC 미달": 1055,
     "시총 범위 밖": 174,
+    "FCF 적자": 397,
     "희석 주식 수 증가": 309,
-    "PEG": 21,
-    "PEG 계산 불가": 8
+    "PEG": 20,
+    "PEG 계산 불가": 6
    },
    "incumbents": [
     {
@@ -6254,35 +6255,34 @@ window.DISCOVERY_CANDIDATES = {
      "name": "RBC Bearings Incorporated",
      "market": "Industrials",
      "industry": "Metal Fabrications",
-     "score": 0.134,
+     "score": 0.131,
      "price": 497.73,
      "mcap": 15.76,
      "mcapUnit": "십억달러",
      "revG3": 8.4,
      "revLast": 14.3,
      "revFwd": null,
-     "roicAvg": 7.4,
+     "roicAvg": 6.5,
      "roic3": [
-      6.9,
-      7.4,
-      7.9
+      5.7,
+      6.6,
+      7.1
      ],
-     "fcfM": 22.2,
-     "netCash": -682,
+     "fcfM": 18.3,
+     "netCash": -986,
      "netCashUnit": "백만달러",
-     "cashToMcap": -4.3,
+     "cashToMcap": -6.3,
      "per": 35.5,
      "epsG": 10.2,
      "peg": 3.48,
      "pegBasis": "추정 2년(Mar 2027→Mar 2029)",
      "dilution": 4.1,
-     "analysts": 7,
-     "capexMissing": true,
+     "epsEstimates": 7,
      "fails": [
       "시총 범위 밖",
       "순차입금 > 영업현금흐름",
       "매출 성장 미달(3년 8.4%·최근 14.3%)",
-      "ROIC 미달(3년 평균 7.4%)",
+      "ROIC 미달(3년 평균 6.5%)",
       "PEG 3.48",
       "희석 주식 수 연 4.1% 증가"
      ],
@@ -6294,32 +6294,34 @@ window.DISCOVERY_CANDIDATES = {
      "name": "Federal Signal Corporation",
      "market": "Industrials",
      "industry": "Auto Manufacturing",
-     "score": 0.239,
+     "score": 0.206,
      "price": 113.47,
      "mcap": 6.93,
      "mcapUnit": "십억달러",
      "revG3": 15,
      "revLast": 17.1,
      "revFwd": null,
-     "roicAvg": 17,
+     "roicAvg": 15,
      "roic3": [
       14.1,
-      16.8,
-      20.2
+      16.6,
+      14.1
      ],
      "fcfM": 10.4,
-     "netCash": 58,
+     "netCash": -391,
      "netCashUnit": "백만달러",
-     "cashToMcap": 0.8,
+     "cashToMcap": -5.6,
      "per": 21.7,
      "epsG": 9.9,
      "peg": 2.18,
      "pegBasis": "추정 1년(Dec 2026→Dec 2027)",
      "dilution": 0,
-     "analysts": 6,
+     "epsEstimates": 6,
      "fails": [
       "시총 범위 밖",
+      "순차입금 > 영업현금흐름",
       "매출 성장 미달(3년 15%·최근 17.1%)",
+      "ROIC 미달(3년 평균 15%)",
       "PEG 2.18"
      ],
      "tier": 1,
@@ -6330,16 +6332,16 @@ window.DISCOVERY_CANDIDATES = {
      "name": "MKS Inc.",
      "market": "Industrials",
      "industry": "Industrial Machinery/Components",
-     "score": 0.247,
+     "score": 0.256,
      "price": 228.52,
      "mcap": 15.45,
      "mcapUnit": "십억달러",
      "revG3": 3.5,
      "revLast": 9.6,
      "revFwd": null,
-     "roicAvg": -1.9,
+     "roicAvg": -1.6,
      "roic3": [
-      -17.9,
+      -17.3,
       6,
       6.3
      ],
@@ -6352,13 +6354,13 @@ window.DISCOVERY_CANDIDATES = {
      "peg": 0.65,
      "pegBasis": "추정 2년(Dec 2026→Dec 2028)",
      "dilution": 0.7,
-     "analysts": 9,
+     "epsEstimates": 9,
      "fails": [
       "시총 범위 밖",
       "영업이익 3년 연속 흑자 아님",
       "순차입금 > 영업현금흐름",
       "매출 성장 미달(3년 3.5%·최근 9.6%)",
-      "ROIC 미달(3년 평균 -1.9%)"
+      "ROIC 미달(3년 평균 -1.6%)"
      ],
      "tier": 3,
      "passesRule": false
@@ -6368,7 +6370,7 @@ window.DISCOVERY_CANDIDATES = {
      "name": "Axon Enterprise Inc.",
      "market": "Industrials",
      "industry": "Ordnance And Accessories",
-     "score": 0.274,
+     "score": 0.292,
      "price": 417.19,
      "mcap": 33.89,
      "mcapUnit": "십억달러",
@@ -6390,7 +6392,7 @@ window.DISCOVERY_CANDIDATES = {
      "peg": 2.32,
      "pegBasis": "추정 2년(Dec 2026→Dec 2028)",
      "dilution": 4.5,
-     "analysts": 6,
+     "epsEstimates": 6,
      "fails": [
       "시총 범위 밖",
       "영업이익 3년 연속 흑자 아님",
@@ -6407,7 +6409,7 @@ window.DISCOVERY_CANDIDATES = {
      "name": "nVent Electric plc",
      "market": "Industrials",
      "industry": "Industrial Machinery/Components",
-     "score": 0.339,
+     "score": 0.356,
      "price": 145.73,
      "mcap": 23.59,
      "mcapUnit": "십억달러",
@@ -6429,7 +6431,7 @@ window.DISCOVERY_CANDIDATES = {
      "peg": 1.29,
      "pegBasis": "추정 2년(Dec 2026→Dec 2028)",
      "dilution": -1.1,
-     "analysts": 5,
+     "epsEstimates": 5,
      "fails": [
       "시총 범위 밖",
       "순차입금 > 영업현금흐름",
@@ -6443,53 +6445,54 @@ window.DISCOVERY_CANDIDATES = {
      "name": "AAON Inc.",
      "market": "Industrials",
      "industry": "Industrial Machinery/Components",
-     "score": 0.413,
+     "score": 0.375,
      "price": 77.3,
      "mcap": 6.37,
      "mcapUnit": "십억달러",
      "revG3": 17.5,
      "revLast": 20.1,
      "revFwd": null,
-     "roicAvg": 18.8,
+     "roicAvg": 16.1,
      "roic3": [
-      24.1,
-      19.4,
-      12.7
+      22.9,
+      16.7,
+      8.8
      ],
-     "fcfM": 0,
-     "netCash": 0,
+     "fcfM": -13.2,
+     "netCash": -435,
      "netCashUnit": "백만달러",
-     "cashToMcap": 0,
+     "cashToMcap": -6.8,
      "per": 32.9,
      "epsG": 51.5,
      "peg": 0.64,
      "pegBasis": "추정 1년(Dec 2026→Dec 2027)",
      "dilution": -0.1,
-     "analysts": 4,
-     "capexMissing": true,
+     "epsEstimates": 4,
      "fails": [
-      "시총 범위 밖"
+      "시총 범위 밖",
+      "FCF 적자",
+      "순차입금 > 영업현금흐름",
+      "ROIC 미달(3년 평균 16.1%)"
      ],
      "tier": 3,
-     "passesRule": false,
-     "nearMiss": true
+     "passesRule": false
     },
     {
      "ticker": "NVMI",
      "name": "Nova Ltd.",
      "market": "Technology",
      "industry": "Electronic Components",
-     "score": 0.576,
+     "score": 0.569,
      "price": 329.44,
      "mcap": 10.47,
      "mcapUnit": "십억달러",
      "revG3": 15.6,
      "revLast": 31,
      "revFwd": null,
-     "roicAvg": 25.3,
+     "roicAvg": 20.6,
      "roic3": [
-      24.2,
-      26.4,
+      16.5,
+      19.9,
       25.3
      ],
      "fcfM": 24.7,
@@ -6501,7 +6504,7 @@ window.DISCOVERY_CANDIDATES = {
      "peg": 1.15,
      "pegBasis": "추정 1년(Dec 2026→Dec 2027)",
      "dilution": 1.1,
-     "analysts": 3,
+     "epsEstimates": 3,
      "fails": [
       "시총 범위 밖"
      ],
@@ -6513,7 +6516,7 @@ window.DISCOVERY_CANDIDATES = {
      "name": "Nextpower Inc.",
      "market": "Technology",
      "industry": "Semiconductors",
-     "score": 0.6,
+     "score": 0.594,
      "price": 83.45,
      "mcap": 12.66,
      "mcapUnit": "십억달러",
@@ -6535,7 +6538,7 @@ window.DISCOVERY_CANDIDATES = {
      "peg": 0.98,
      "pegBasis": "추정 2년(Mar 2027→Mar 2029)",
      "dilution": 1.8,
-     "analysts": 8,
+     "epsEstimates": 8,
      "fails": [
       "시총 범위 밖"
      ],
@@ -6547,7 +6550,7 @@ window.DISCOVERY_CANDIDATES = {
      "name": "Powell Industries Inc.",
      "market": "Energy",
      "industry": "Electrical Products",
-     "score": 0.613,
+     "score": 0.603,
      "price": 170.82,
      "mcap": 6.22,
      "mcapUnit": "십억달러",
@@ -6569,7 +6572,7 @@ window.DISCOVERY_CANDIDATES = {
      "peg": 1.35,
      "pegBasis": "추정 2년(Sep 2026→Sep 2028)",
      "dilution": 0.2,
-     "analysts": 4,
+     "epsEstimates": 4,
      "fails": [
       "시총 범위 밖",
       "매출 성장 미달(3년 27.5%·최근 9.1%)"
@@ -6584,7 +6587,7 @@ window.DISCOVERY_CANDIDATES = {
      "name": "Atour Lifestyle Holdings Limited",
      "market": "Consumer Discretionary",
      "industry": "Hotels/Resorts",
-     "score": 0.8,
+     "score": 0.806,
      "price": 33.51,
      "mcap": 4.56,
      "mcapUnit": "십억달러",
@@ -6606,14 +6609,14 @@ window.DISCOVERY_CANDIDATES = {
      "peg": 1.07,
      "pegBasis": "추정 2년(Dec 2026→Dec 2028)",
      "dilution": 0.5,
-     "analysts": 3
+     "epsEstimates": 3
     },
     {
      "ticker": "HRMY",
      "name": "Harmony Biosciences Holdings Inc.",
      "market": "Health Care",
      "industry": "Biotechnology: Pharmaceutical Preparations",
-     "score": 0.745,
+     "score": 0.742,
      "price": 38.27,
      "mcap": 2.23,
      "mcapUnit": "십억달러",
@@ -6635,14 +6638,14 @@ window.DISCOVERY_CANDIDATES = {
      "peg": 0.98,
      "pegBasis": "추정 2년(Dec 2026→Dec 2028)",
      "dilution": -1.5,
-     "analysts": 7
+     "epsEstimates": 7
     },
     {
      "ticker": "TPB",
      "name": "Turning Point Brands Inc.",
      "market": "Consumer Discretionary",
      "industry": "Tobacco",
-     "score": 0.539,
+     "score": 0.589,
      "price": 60.31,
      "mcap": 1.21,
      "mcapUnit": "십억달러",
@@ -6664,7 +6667,7 @@ window.DISCOVERY_CANDIDATES = {
      "peg": 0.73,
      "pegBasis": "추정 1년(Dec 2026→Dec 2027)",
      "dilution": -4.3,
-     "analysts": 2
+     "epsEstimates": 2
     }
    ],
    "nearMiss": [
@@ -6673,7 +6676,7 @@ window.DISCOVERY_CANDIDATES = {
      "name": "Clear Secure Inc.",
      "market": "Technology",
      "industry": "Computer Software: Prepackaged Software",
-     "score": 0.753,
+     "score": 0.75,
      "price": 45.02,
      "mcap": 6.09,
      "mcapUnit": "십억달러",
@@ -6695,7 +6698,7 @@ window.DISCOVERY_CANDIDATES = {
      "peg": 0.78,
      "pegBasis": "추정 1년(Dec 2026→Dec 2027)",
      "dilution": null,
-     "analysts": 1,
+     "epsEstimates": 1,
      "fails": [
       "시총 범위 밖"
      ]
@@ -6705,17 +6708,17 @@ window.DISCOVERY_CANDIDATES = {
      "name": "Mama's Creations Inc.",
      "market": "Consumer Staples",
      "industry": "Specialty Foods",
-     "score": 0.721,
+     "score": 0.703,
      "price": 13.27,
      "mcap": 0.63,
      "mcapUnit": "십억달러",
      "revG3": 22.6,
      "revLast": 39.2,
      "revFwd": null,
-     "roicAvg": 39,
+     "roicAvg": 29.3,
      "roic3": [
-      81,
-      21.4,
+      54.3,
+      19,
       14.5
      ],
      "fcfM": 5.7,
@@ -6727,7 +6730,7 @@ window.DISCOVERY_CANDIDATES = {
      "peg": 1.11,
      "pegBasis": "추정 1년(Jan 2027→Jan 2028)",
      "dilution": 3.8,
-     "analysts": 2,
+     "epsEstimates": 2,
      "fails": [
       "희석 주식 수 연 3.8% 증가"
      ]
@@ -6737,7 +6740,7 @@ window.DISCOVERY_CANDIDATES = {
      "name": "The Trade Desk Inc.",
      "market": "Technology",
      "industry": "Computer Software: Programming Data Processing",
-     "score": 0.613,
+     "score": 0.631,
      "price": 13.13,
      "mcap": 6.21,
      "mcapUnit": "십억달러",
@@ -6750,7 +6753,7 @@ window.DISCOVERY_CANDIDATES = {
       32.4,
       38.9
      ],
-     "fcfM": 27.5,
+     "fcfM": 27,
      "netCash": 1485,
      "netCashUnit": "백만달러",
      "cashToMcap": 23.9,
@@ -6759,7 +6762,7 @@ window.DISCOVERY_CANDIDATES = {
      "peg": 0.99,
      "pegBasis": "추정 2년(Dec 2026→Dec 2028)",
      "dilution": -0.7,
-     "analysts": 6,
+     "epsEstimates": 6,
      "fails": [
       "시총 범위 밖"
      ]
@@ -6769,63 +6772,31 @@ window.DISCOVERY_CANDIDATES = {
      "name": "Limbach Holdings Inc.",
      "market": "Consumer Discretionary",
      "industry": "Engineering & Construction",
-     "score": 0.558,
+     "score": 0.528,
      "price": 47.8,
      "mcap": 0.57,
      "mcapUnit": "십억달러",
      "revG3": 9.2,
      "revLast": 24.7,
      "revFwd": null,
-     "roicAvg": 27.7,
+     "roicAvg": 22.4,
      "roic3": [
-      35.8,
-      26.9,
-      20.4
+      27.4,
+      22.2,
+      17.5
      ],
      "fcfM": 6.5,
-     "netCash": 13,
+     "netCash": -23,
      "netCashUnit": "백만달러",
-     "cashToMcap": 2.2,
+     "cashToMcap": -4.1,
      "per": 11.1,
      "epsG": 11.2,
      "peg": 1,
      "pegBasis": "추정 1년(Dec 2026→Dec 2027)",
      "dilution": 1.1,
-     "analysts": 3,
+     "epsEstimates": 3,
      "fails": [
       "매출 성장 미달(3년 9.2%·최근 24.7%)"
-     ]
-    },
-    {
-     "ticker": "MOD",
-     "name": "Modine Manufacturing Company",
-     "market": "Consumer Discretionary",
-     "industry": "Auto Parts:O.E.M.",
-     "score": 0.539,
-     "price": 154.01,
-     "mcap": 8.19,
-     "mcapUnit": "십억달러",
-     "revG3": 11.5,
-     "revLast": 23.1,
-     "revFwd": null,
-     "roicAvg": 29.1,
-     "roic3": [
-      32.5,
-      28.6,
-      26.1
-     ],
-     "fcfM": 3.3,
-     "netCash": 87,
-     "netCashUnit": "백만달러",
-     "cashToMcap": 1.1,
-     "per": 20.6,
-     "epsG": 39.1,
-     "peg": 0.53,
-     "pegBasis": "추정 1년(Mar 2027→Mar 2028)",
-     "dilution": 0.4,
-     "analysts": 6,
-     "fails": [
-      "시총 범위 밖"
      ]
     },
     {
@@ -6833,7 +6804,7 @@ window.DISCOVERY_CANDIDATES = {
      "name": "Everus Construction Group Inc.",
      "market": "Consumer Discretionary",
      "industry": "Homebuilding",
-     "score": 0.461,
+     "score": 0.511,
      "price": 111.66,
      "mcap": 5.7,
      "mcapUnit": "십억달러",
@@ -6855,7 +6826,7 @@ window.DISCOVERY_CANDIDATES = {
      "peg": 1.55,
      "pegBasis": "추정 1년(Dec 2026→Dec 2027)",
      "dilution": 0.1,
-     "analysts": 3,
+     "epsEstimates": 3,
      "fails": [
       "PEG 1.55"
      ]
@@ -6865,7 +6836,7 @@ window.DISCOVERY_CANDIDATES = {
      "name": "KANZHUN LIMITED American Depository Shares",
      "market": "Technology",
      "industry": "Computer Software: Programming Data Processing",
-     "score": 0.455,
+     "score": 0.478,
      "price": 16.37,
      "mcap": 7.72,
      "mcapUnit": "십억달러",
@@ -6887,7 +6858,7 @@ window.DISCOVERY_CANDIDATES = {
      "peg": 1.17,
      "pegBasis": "추정 2년(Dec 2026→Dec 2028)",
      "dilution": 1.3,
-     "analysts": 3,
+     "epsEstimates": 3,
      "fails": [
       "시총 범위 밖"
      ]
@@ -6897,7 +6868,7 @@ window.DISCOVERY_CANDIDATES = {
      "name": "Boot Barn Holdings Inc.",
      "market": "Consumer Discretionary",
      "industry": "Clothing/Shoe/Accessory Stores",
-     "score": 0.339,
+     "score": 0.342,
      "price": 120.62,
      "mcap": 3.65,
      "mcapUnit": "십억달러",
@@ -6919,7 +6890,7 @@ window.DISCOVERY_CANDIDATES = {
      "peg": 1.44,
      "pegBasis": "추정 1년(Mar 2027→Mar 2028)",
      "dilution": 0.2,
-     "analysts": 5,
+     "epsEstimates": 5,
      "fails": [
       "매출 성장 미달(3년 10.8%·최근 17.9%)"
      ]
@@ -6928,5 +6899,5 @@ window.DISCOVERY_CANDIDATES = {
    "note": "히든 = 10배 가능성 + 영구 손실 위험 낮음(scripts/screen-hidden.js). candidates = 숫자 조건 모두 충족, nearMiss = 안전 조건은 충족하고 상방 조건(시총 상한·성장·ROIC·PEG·희석) 하나만 완화선 안에서 미달(fails 에 무엇이 모자란지). 해자·경영진 지분·집중 리스크·성장 활주로(시장 규모·침투율)는 숫자로 못 걸러 세션이 검증한다."
   }
  },
- "hiddenBuiltAt": "2026-10-17T13:25:58.975Z"
+ "hiddenBuiltAt": "2026-10-17T15:15:58.445Z"
 };
