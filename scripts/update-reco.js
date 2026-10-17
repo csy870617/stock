@@ -82,7 +82,7 @@ try {
   }
 } catch (_e) { /* 레저 없음/손상 → 0 부터 */ }
 const ops = (patch.add || []).length + (patch.remove || []).length;
-if (ledgerOps + ops > MAX_DAILY_OPS && !FORCE) {
+if (ops > 0 && ledgerOps + ops > MAX_DAILY_OPS && !FORCE) { // 편입·편출 없는 패치(목표가 동기화 등)는 막지 않는다 — --force 로 한도를 넘긴 날에도
   console.error("✗ 가드레일: 오늘 누적 편입+편출 " + ledgerOps + "건 + 이번 " + ops + "건 > 하루 허용 " + MAX_DAILY_OPS + "건.");
   console.error("  보수적 교체 원칙 위반 가능성 — 정말 의도한 대규모 개편이면 --force 로 재실행.");
   process.exit(1);
@@ -303,7 +303,7 @@ if (guardErrors.length) {
 
 // 하루 상한 재검사 — 사전 검사(ops)는 패치 항목 수 기준이라, theme 생략 remove 가 여러 카드를
 // 지우면 실제 반영 건수가 더 클 수 있다. 실측치(added+removed)로 한 번 더 막는다.
-if (ledgerOps + added + removed > MAX_DAILY_OPS && !FORCE) {
+if (added + removed > 0 && ledgerOps + added + removed > MAX_DAILY_OPS && !FORCE) {
   console.error("✗ 가드레일: 오늘 누적 " + ledgerOps + "건 + 이번 실제 반영 " + (added + removed) + "건 > 하루 허용 " + MAX_DAILY_OPS + "건.");
   process.exit(1);
 }

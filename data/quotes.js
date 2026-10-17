@@ -21,6 +21,13 @@ window.STOCK_QUOTES = {
    "close": 41400,
    "closeDate": "2026-10-16"
   },
+  "138040": {
+   "price": 129800,
+   "date": "2026-10-16",
+   "changePct": -0.7,
+   "close": 129800,
+   "closeDate": "2026-10-16"
+  },
   "139130": {
    "price": 17030,
    "date": "2026-10-16",
@@ -56,11 +63,32 @@ window.STOCK_QUOTES = {
    "close": 278000,
    "closeDate": "2026-10-16"
   },
+  "241560": {
+   "price": 50900,
+   "date": "2026-10-16",
+   "changePct": 0.8,
+   "close": 50900,
+   "closeDate": "2026-10-16"
+  },
+  "267250": {
+   "price": 157400,
+   "date": "2026-10-16",
+   "changePct": -0.3,
+   "close": 157400,
+   "closeDate": "2026-10-16"
+  },
   "267260": {
    "price": 516000,
    "date": "2026-10-16",
    "changePct": 6,
    "close": 516000,
+   "closeDate": "2026-10-16"
+  },
+  "267270": {
+   "price": 92100,
+   "date": "2026-10-16",
+   "changePct": -0.6,
+   "close": 92100,
    "closeDate": "2026-10-16"
   },
   "316140": {
@@ -168,13 +196,6 @@ window.STOCK_QUOTES = {
    "close": 194000,
    "closeDate": "2026-10-16"
   },
-  "035420": {
-   "price": 180000,
-   "date": "2026-10-16",
-   "changePct": 3.7,
-   "close": 180000,
-   "closeDate": "2026-10-16"
-  },
   "034020": {
    "price": 64600,
    "date": "2026-10-16",
@@ -187,13 +208,6 @@ window.STOCK_QUOTES = {
    "date": "2026-10-16",
    "changePct": 4.1,
    "close": 110200,
-   "closeDate": "2026-10-16"
-  },
-  "005490": {
-   "price": 296500,
-   "date": "2026-10-16",
-   "changePct": 1.5,
-   "close": 296500,
    "closeDate": "2026-10-16"
   },
   "015760": {
@@ -210,13 +224,6 @@ window.STOCK_QUOTES = {
    "close": 152000,
    "closeDate": "2026-10-16"
   },
-  "051910": {
-   "price": 254000,
-   "date": "2026-10-16",
-   "changePct": 0.8,
-   "close": 254000,
-   "closeDate": "2026-10-16"
-  },
   "003490": {
    "price": 26350,
    "date": "2026-10-16",
@@ -229,13 +236,6 @@ window.STOCK_QUOTES = {
    "date": "2026-10-16",
    "changePct": 2.9,
    "close": 15510,
-   "closeDate": "2026-10-16"
-  },
-  "088980": {
-   "price": 9670,
-   "date": "2026-10-16",
-   "changePct": 0.5,
-   "close": 9670,
    "closeDate": "2026-10-16"
   },
   "029780": {
@@ -271,13 +271,6 @@ window.STOCK_QUOTES = {
    "date": "2026-10-16",
    "changePct": 7.6,
    "close": 241500,
-   "closeDate": "2026-10-16"
-  },
-  "011780": {
-   "price": 113500,
-   "date": "2026-10-16",
-   "changePct": -0.7,
-   "close": 113500,
    "closeDate": "2026-10-16"
   },
   "035900": {
@@ -362,6 +355,13 @@ window.STOCK_QUOTES = {
    "date": "2026-10-16",
    "changePct": 10,
    "close": 52300,
+   "closeDate": "2026-10-16"
+  },
+  "005830": {
+   "price": 181400,
+   "date": "2026-10-16",
+   "changePct": -2.1,
+   "close": 181400,
    "closeDate": "2026-10-16"
   },
   "MSFT": {
@@ -462,13 +462,6 @@ window.STOCK_QUOTES = {
    "close": 124.26,
    "closeDate": "2026-10-16"
   },
-  "O": {
-   "price": 56.08,
-   "date": "2026-10-16",
-   "changePct": 1,
-   "close": 56.08,
-   "closeDate": "2026-10-16"
-  },
   "DUK": {
    "price": 121.47,
    "date": "2026-10-16",
@@ -511,13 +504,6 @@ window.STOCK_QUOTES = {
    "close": 80.04,
    "closeDate": "2026-10-16"
   },
-  "TCOM": {
-   "price": 40.01,
-   "date": "2026-10-16",
-   "changePct": 0.2,
-   "close": 40.01,
-   "closeDate": "2026-10-16"
-  },
   "LLY": {
    "price": 1257.03,
    "date": "2026-10-16",
@@ -537,13 +523,6 @@ window.STOCK_QUOTES = {
    "date": "2026-10-16",
    "changePct": 1.2,
    "close": 302.3,
-   "closeDate": "2026-10-16"
-  },
-  "ALGN": {
-   "price": 147.31,
-   "date": "2026-10-16",
-   "changePct": -1.4,
-   "close": 147.31,
    "closeDate": "2026-10-16"
   },
   "NOW": {
@@ -714,13 +693,6 @@ window.STOCK_QUOTES = {
    "close": 463.15,
    "closeDate": "2026-10-16"
   },
-  "SNY": {
-   "price": 40.61,
-   "date": "2026-10-16",
-   "changePct": 0.8,
-   "close": 40.61,
-   "closeDate": "2026-10-16"
-  },
   "DVN": {
    "price": 50.73,
    "date": "2026-10-16",
@@ -733,6 +705,34 @@ window.STOCK_QUOTES = {
    "date": "2026-10-16",
    "changePct": 0.2,
    "close": 498.52,
+   "closeDate": "2026-10-16"
+  },
+  "GS": {
+   "price": 881.26,
+   "date": "2026-10-16",
+   "changePct": -1.1,
+   "close": 881.26,
+   "closeDate": "2026-10-16"
+  },
+  "AMP": {
+   "price": 500.8,
+   "date": "2026-10-16",
+   "changePct": -0.4,
+   "close": 500.8,
+   "closeDate": "2026-10-16"
+  },
+  "PNC": {
+   "price": 217.39,
+   "date": "2026-10-16",
+   "changePct": 1.1,
+   "close": 217.39,
+   "closeDate": "2026-10-16"
+  },
+  "MTB": {
+   "price": 215.28,
+   "date": "2026-10-16",
+   "changePct": -1.5,
+   "close": 215.28,
    "closeDate": "2026-10-16"
   }
  },
