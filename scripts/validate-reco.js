@@ -378,6 +378,12 @@ function validate(D, opts) {
   });
 
   // ── 오늘의 Top Pick (선택) — 국가별(korea·us) 정식 추천(관심·보유 제외) 3종목씩 ──
+  // 추세 붕괴(2026-10-17 사용자 결정, CLAUDE.md §6): 엔진 단·중·장기 신호가 모두 '매도' 이하인 종목은 추천하지 않는다.
+  //   정식 편성에 있으면 경고(다음 C 모드·회차에서 검증된 대체 후보와 교체), Top Pick 이면 오류.
+  const trendBroken = (t) => { const x = opts.ta && opts.ta.ta && opts.ta.ta[t]; return !!(x && ["short", "mid", "long"].every((k) => x[k] && /매도/.test(x[k].signal || ""))); };
+  ["korea", "us"].forEach((c) => (D[c] || []).forEach((s) => {
+    if (!isPersonalTheme(s.theme) && trendBroken(s.ticker)) warnings.push(c + ":" + s.ticker + " " + s.name + "(" + s.theme + "): 추세 붕괴(단·중·장기 모두 매도 이하) — 정식 추천 결격, 검증된 대체 후보와 교체 대상");
+  }));
   if (D.topPicks != null) {
     const tp = D.topPicks;
     if (typeof tp !== "object" || Array.isArray(tp)) {
@@ -408,6 +414,7 @@ function validate(D, opts) {
           const tag = "topPicks." + g + "[" + i + "]";
           if (!it || typeof it !== "object") { errors.push(tag + ": 객체 아님"); return; }
           if (!it.ticker) errors.push(tag + ": ticker 누락");
+          else if (trendBroken(it.ticker)) errors.push(tag + ": " + it.ticker + " 추세 붕괴(단·중·장기 모두 매도 이하) — Top Pick 제외 대상");
           else {
             if (!pickable.has(it.ticker)) errors.push(tag + ": '" + it.ticker + "' 는 " + (g === "us" ? "미국" : g === "korea" ? "한국" : "") + " 정식 추천 종목이 아님 (관심·보유·타국·미편성 불가)");
             seen[it.ticker] = (seen[it.ticker] || 0) + 1;

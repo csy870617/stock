@@ -206,36 +206,38 @@ const EX = {   // 걸러지는 쪽이 전반·후반 모두 6개월 초과수익
   payout: { label: "배당성향 100% 초과", f: (s) => s.fx && s.fx.PAYOUT != null && s.fx.PAYOUT > 1 },
   agTop: { label: "자산 급증(주제 안 상위 10%)", dec: "AG" },
   sroaTop: { label: "이익 변동 큼(주제 안 상위 10%)", dec: "SROA" },
+  // 사용자 결정(2026-10-17) — 수익 개선이 검증된 필터가 아니라 '추세가 완전히 무너진 종목은 추천하지 않는다'는 위험 회피 규칙(CLAUDE.md §6)
+  trend: { label: "추세 붕괴(월봉 10·20개월선 아래·두 선 하락)", f: (s) => !!(s.fx && s.fx.trendBroken) },
 };
 const RULES = {
   korea: {
     core: { label: "KOSPI · 시총 상위 60 · 영업이익 2년 연속 흑자 · ROE ≥ 7% · 부채비율 ≤ 150%(금융 제외) — 점수: 주식 수 감소(희석 없음)·FCF 배당 커버리지·ROIC",
       ok: (s) => s.market === "KOSPI" && s.rank <= 60 && s.opPos && s.roe >= 7 && (s.fin || s.debt == null || s.debt <= 150),
-      ex: [], w: { iss: 0.4, cov: 0.4, roic: 0.2 } },
+      ex: ["trend"], w: { iss: 0.4, cov: 0.4, roic: 0.2 } },
     growth: { label: "시총 상위 150 · 금융 제외 · 매출 성장률(올해 추정 또는 최근 연도) ≥ 15% · 영업이익 흑자 · 순이익 흑자 · 자산 급증·이익 변동 상위 10% 제외 — 점수: FCF 배당 커버리지·주식 수 감소·ROIC(매출 성장 크기는 점수에서 뺌)",
       ok: (s) => s.rank <= 150 && !s.fin && Math.max(g0(s.revE), g0(s.revG)) >= 0.15 && s.opPos,
-      ex: ["loss", "agTop", "sroaTop"], w: { cov: 0.4, iss: 0.3, roic: 0.3 } },
+      ex: ["loss", "agTop", "sroaTop", "trend"], w: { cov: 0.4, iss: 0.3, roic: 0.3 } },
     value: { label: "PER ≤ 12 또는 PBR ≤ 0.9 · 순이익 흑자 · 이익 개선(올해 추정 영업이익 증가 또는 최근 분기 YoY 증가) · 시총 상위 200 · 매출 역성장·희석 5% 초과·자산 급증 상위 10% 제외 — 점수: 주식 수 감소",
       ok: (s) => s.rank <= 200 && ((s.per != null && s.per > 0 && s.per <= 12) || (s.pbr != null && s.pbr > 0 && s.pbr <= 0.9)) && s.npPos && (g0(s.opE) > 0 || g0(s.qOpYoY) > 0),
-      ex: ["agTop", "dil", "revDown"], w: { iss: 1 } },
+      ex: ["agTop", "dil", "revDown", "trend"], w: { iss: 1 } },
     dividend: { label: "배당수익률 ≥ 3.5% · 배당성향 ≤ 90% · 순이익 흑자 · 시총 상위 250 · 매출 역성장·희석 5% 초과·자산 급증 상위 10% 제외 — 점수: 이익 안정성·배당 연속 비감소·주식 수 감소(배당수익률 크기는 점수에서 뺌)",
       ok: (s) => s.rank <= 250 && s.divY >= 3.5 && s.npPos && (s.payout == null || s.payout <= 0.9),
-      ex: ["agTop", "dil", "payout", "revDown"], w: { sroa: 0.35, streak: 0.35, iss: 0.3 } },
+      ex: ["agTop", "dil", "payout", "revDown", "trend"], w: { sroa: 0.35, streak: 0.35, iss: 0.3 } },
     // rising(히든)은 scripts/screen-hidden.js — 시총 수천억~수조·성장 20%·ROIC 15%·PEG 1.5·순현금/FCF 기준이라 더 작은 종목·5년 재무가 필요하다(2026-10-17)
   },
   us: {
     core: { label: "시총 상위 120 · TTM EBIT 흑자 · EBIT 마진 ≥ 10% · ROA ≥ 5%(금융 제외) — 점수: 주식 수 감소·FCF 배당 커버리지·주주환원수익률·ROIC·상승여력",
       ok: (s) => s.rank <= 120 && s.ttmEbit > 0 && (s.fin || (s.ebitM >= 0.10 && s.roa >= 5)),
-      ex: [], w: { iss: 0.3, cov: 0.25, shy: 0.15, roic: 0.15, upside: 0.15 } },
+      ex: ["trend"], w: { iss: 0.3, cov: 0.25, shy: 0.15, roic: 0.15, upside: 0.15 } },
     growth: { label: "시총 상위 300 · 금융·원자재(금·광업·석유 탐사) 제외 · 최근 분기 매출 YoY ≥ 15%(또는 최근 연도) · TTM EBIT 흑자 · 순이익 흑자 · 자산 급증·이익 변동 상위 10% 제외 — 점수: FCF 배당 커버리지·주식 수 감소·주주환원·ROIC·상승여력(매출 성장 크기는 뺌)",
       ok: (s) => s.rank <= 300 && !s.fin && !s.cycl && Math.max(g0(s.qRevYoY), g0(s.revG)) >= 0.15 && s.ttmEbit > 0,
-      ex: ["loss", "agTop", "sroaTop"], w: { cov: 0.3, iss: 0.15, shy: 0.15, roic: 0.15, upside: 0.25 } },
+      ex: ["loss", "agTop", "sroaTop", "trend"], w: { cov: 0.3, iss: 0.15, shy: 0.15, roic: 0.15, upside: 0.25 } },
     value: { label: "PER ≤ 16 또는 PBR ≤ 2 · TTM 순이익 흑자 · 매출 또는 EBIT 증가 · 시총 상위 400 · 매출 역성장·희석 5% 초과·자산 급증 상위 10% 제외 — 점수: 주주환원수익률·주식 수 감소·상승여력",
       ok: (s) => s.rank <= 400 && ((s.per != null && s.per > 0 && s.per <= 16) || (s.pbr != null && s.pbr > 0 && s.pbr <= 2)) && s.ttmNi > 0 && (g0(s.qRevYoY) > 0 || g0(s.ebitYoY) > 0),
-      ex: ["agTop", "dil", "revDown"], w: { shy: 0.35, iss: 0.3, upside: 0.35 } },
+      ex: ["agTop", "dil", "revDown", "trend"], w: { shy: 0.35, iss: 0.3, upside: 0.35 } },
     dividend: { label: "배당수익률 ≥ 2.5% · 배당성향 ≤ 100% · TTM 순이익 흑자 · 시총 상위 450 · 합자회사(MLP) 제외 · 매출 역성장·희석 5% 초과·자산 급증 상위 10% 제외 — 점수: 이익 안정성·배당 연속 비감소·주식 수 감소·주주환원·상승여력",
       ok: (s) => s.rank <= 450 && !s.lp && s.divY >= 2.5 && s.ttmNi > 0 && (s.payout == null || s.payout <= 1.0),
-      ex: ["agTop", "dil", "payout", "revDown"], w: { sroa: 0.2, streak: 0.2, iss: 0.15, shy: 0.15, upside: 0.3 } },
+      ex: ["agTop", "dil", "payout", "revDown", "trend"], w: { sroa: 0.2, streak: 0.2, iss: 0.15, shy: 0.15, upside: 0.3 } },
     // rising(히든)은 scripts/screen-hidden.js (SEC XBRL·나스닥 EPS 컨센서스)
   },
 };
@@ -343,7 +345,8 @@ function view(s, score) {
       const inc = members.map((m) => {
         const row = pool.find((s) => s.ticker === m.ticker);
         const v = row ? view(row, score(row)) : { ticker: m.ticker, name: m.name, score: null };
-        const fails = row ? (rule.ok(row) ? [] : ["정체성 조건 미달"]).concat(whyEx(row)) : null;
+        // 편성 종목의 추세 붕괴는 엔진 세 신호(stock-ta.js)로 판정한다(CLAUDE.md §6) — 월봉 근사는 신호가 없는 후보용이라 여기선 뺀다
+        const fails = row ? (rule.ok(row) ? [] : ["정체성 조건 미달"]).concat(whyEx(row).filter((w0) => w0 !== EX.trend.label)) : null;
         return Object.assign(v, { tier: m.tier, passesRule: row ? !fails.length : null }, fails && fails.length ? { fails } : {});
       }).sort((a, b) => (a.score == null) - (b.score == null) || (a.score - b.score));
       groups[key] = { rule: rule.label, weights: rule.w, eligible: elig.length, filtered: base.length - elig.length, incumbents: inc, candidates: cands };

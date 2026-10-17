@@ -60,9 +60,13 @@ async function yahooExt(sym) {
     if (d0 > 0 && d0 >= dp * 0.99) streak++; else break;
   }
   const n = ad.length, mr = []; for (let k = n - 12; k < n; k++) if (k > 0) mr.push(ad[k] / ad[k - 1] - 1);
+  // 추세 붕괴(2026-10-17 사용자 결정, CLAUDE.md §6): 월말 종가가 10·20개월선 아래이고 두 선이 3개월 전보다 내려가는 중
+  const ma = (len, end) => (end - len + 1 >= 0 ? ad.slice(end - len + 1, end + 1).reduce((x, y) => x + y, 0) / len : null);
+  const m10 = ma(10, n - 1), m20 = ma(20, n - 1), m10p = ma(10, n - 4), m20p = ma(20, n - 4);
+  const trendBroken = m10 != null && m20 != null && m10p != null && m20p != null ? ad[n - 1] < m10 && ad[n - 1] < m20 && m10 < m10p && m20 < m20p : null;
   const m0 = mr.reduce((s, v) => s + v, 0) / mr.length;
   return { dy: c[n - 1] > 0 ? dTTM / c[n - 1] : null, dgr: dTTM > 0 && d36 > 0 ? Math.pow(dTTM / d36, 1 / 3) - 1 : null, streak: dTTM > 0 ? streak : null,
-    MOM: n >= 13 ? ad[n - 2] / ad[n - 13] - 1 : null, VOL: Math.sqrt(mr.reduce((s, v) => s + (v - m0) ** 2, 0) / (mr.length - 1)) };
+    trendBroken, MOM: n >= 13 ? ad[n - 2] / ad[n - 13] - 1 : null, VOL: Math.sqrt(mr.reduce((s, v) => s + (v - m0) ** 2, 0) / (mr.length - 1)) };
 }
 
 // ── 한국 ──
@@ -84,7 +88,7 @@ async function addKrFactors(list, log) {
     const fx = LF.krFactorsAt(fu, y, s.mcap / 1e8);
     if (!fx) return;
     const ext = await yahooExt(s.ticker + (s.market === "KOSDAQ" ? ".KQ" : ".KS"));
-    if (ext) { fx.MOM = ext.MOM; fx.VOL = ext.VOL; }
+    if (ext) { fx.MOM = ext.MOM; fx.VOL = ext.VOL; fx.trendBroken = ext.trendBroken; }
     s.fx = fx; s.fxYear = y; ok++;
   });
   log("  한국 팩터(기업현황) " + ok + "/" + list.length);
@@ -139,7 +143,7 @@ async function addUsFactors(list, log) {
     const ext = await yahooExt(String(s.ticker).replace(".", "-")) || {};
     const fx = LF.usFactorsAt(fu, y, s.mcap, ext);
     if (!fx) return;
-    fx.MOM = ext.MOM != null ? ext.MOM : null; fx.VOL = ext.VOL != null ? ext.VOL : null;
+    fx.MOM = ext.MOM != null ? ext.MOM : null; fx.VOL = ext.VOL != null ? ext.VOL : null; fx.trendBroken = ext.trendBroken != null ? ext.trendBroken : null;
     s.fx = fx; s.fxYear = y; ok++;
   });
   log("  미국 팩터(SEC·야후) " + ok + "/" + list.length + " (CIK " + list.filter((s) => s.cik).length + ", 재편 CIK 대체 " + moved + ")");
