@@ -20,12 +20,12 @@ const YEARS = []; for (let y = 2009; y <= 2025; y++) YEARS.push(y);
 const DUR = [
   "RevenueFromContractWithCustomerExcludingAssessedTax", "Revenues", "SalesRevenueNet", "RevenueFromContractWithCustomerIncludingAssessedTax", "SalesRevenueGoodsNet",
   "GrossProfit", "CostOfRevenue", "CostOfGoodsAndServicesSold", "CostOfGoodsSold",
-  "OperatingIncomeLoss", "NetIncomeLoss", "NetCashProvidedByUsedInOperatingActivities",
+  "OperatingIncomeLoss", "NetIncomeLoss", "ProfitLoss", "NetIncomeLossAvailableToCommonStockholdersBasic", "NetCashProvidedByUsedInOperatingActivities",
   "PaymentsToAcquirePropertyPlantAndEquipment", "PaymentsToAcquireProductiveAssets", "PaymentsForCapitalImprovements", "PaymentsToDevelopSoftware",
   "PaymentsOfDividends", "PaymentsOfDividendsCommonStock", "PaymentsForRepurchaseOfCommonStock", "ProceedsFromIssuanceOfCommonStock",
   "ResearchAndDevelopmentExpense",
 ];
-const SHARES = ["WeightedAverageNumberOfDilutedSharesOutstanding"];
+const SHARES = ["WeightedAverageNumberOfDilutedSharesOutstanding", "WeightedAverageNumberOfShareOutstandingBasicAndDiluted", "WeightedAverageNumberOfSharesOutstandingBasic"];
 const INST = [
   "Assets", "AssetsCurrent", "LiabilitiesCurrent", "Liabilities", "StockholdersEquity", "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest",
   "CashAndCashEquivalentsAtCarryingValue", "CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents", "ShortTermInvestments", "MarketableSecuritiesCurrent",
@@ -81,11 +81,24 @@ const INST = [
     await flim();
     const j = await L.getJson("https://data.sec.gov/api/xbrl/frames/us-gaap/" + jb.c + "/" + jb.u + "/" + jb.p + ".json", L.SEC_UA, null, 3);
     const m = {};
-    ((j && j.data) || []).forEach((d) => { m[d.cik] = [d.val, d.end || null]; });
+    ((j && j.data) || []).forEach((d) => { m[d.cik] = [d.val, d.end || null, d.accn || null]; });   // 접수번호 — 주식 수 분할 보정에 쓴다
     L.writeJson(f, m);
     if (++fdone % 50 === 0) log("frames " + fdone + "/" + jobs.length);
   });
   log("frames 완료 " + jobs.length);
+
+  // 회사명 → CIK (지주회사 재편으로 티커가 새 CIK 로 옮겨 간 경우 옛 CIK 를 이름으로 찾는다 — 예: XOM 2026 ExxonMobil Holdings)
+  const nFile = path.join(US, "names.json");
+  if (!fs.existsSync(nFile)) {
+    const names = {};
+    for (const p of ["CY2012Q4I", "CY2016Q4I", "CY2020Q4I", "CY2024Q4I"]) {
+      await flim();
+      const j = await L.getJson("https://data.sec.gov/api/xbrl/frames/us-gaap/Assets/USD/" + p + ".json", L.SEC_UA, null, 3);
+      ((j && j.data) || []).forEach((d) => { names[d.cik] = d.entityName; });
+    }
+    L.writeJson(nFile, names);
+    log("회사명 " + Object.keys(names).length);
+  }
 
   // 4) 야후 월봉 — CIK 가 있는 종목(같은 CIK 여러 티커는 모두 받고 패널에서 하나만 쓴다)
   const syms = uni.filter((u) => cik[u.t]).map((u) => u.t);

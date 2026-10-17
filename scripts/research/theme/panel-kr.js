@@ -32,7 +32,7 @@ const months = []; for (let k = "2022-04"; k <= "2026-09"; k = addM(k, 1)) month
 const sd = (a) => { const x = a.filter((v) => v != null && isFinite(v)); if (x.length < 3) return null; const m = x.reduce((p, v) => p + v, 0) / x.length; return Math.sqrt(x.reduce((p, v) => p + (v - m) ** 2, 0) / (x.length - 1)); };
 const splitAfter = (s, date) => s.px.splits.filter((x) => x[0] > date).reduce((p, x) => p * x[1], 1);
 
-const FAC = ["EP", "BP", "SP", "FCFP", "EBITEV", "DY", "ROE", "ROA", "OPA", "CFOA", "ROIC", "ACC", "LEV", "F", "SROA",
+const FAC = ["EP", "BP", "SP", "FCFP", "EBITEV", "DY", "ROE", "ROA", "OPA", "CFOA", "OPM", "ROIC", "ACC", "LEV", "F", "SROA",
   "SG1", "SG3", "OPG", "DROA", "DGM", "AG", "ISS", "PAYOUT", "DGR", "DSTREAK", "COV"];
 const FIELDS = ["t", "ym", "mcap", "rank", "fin", "opPos", "niPos"].concat(FAC, ["MOM", "VOL", "r1", "r3", "r6", "r12", "dcut"]);
 const rows = [];

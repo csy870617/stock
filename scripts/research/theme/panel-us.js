@@ -21,12 +21,38 @@ for (const f of fs.readdirSync(path.join(US, "frames"))) {
 }
 const fv = (c, p, cik) => { const m = F[c + "|" + p]; const x = m && m[cik]; return x ? x[0] : null; };
 const fe = (c, p, cik) => { const m = F[c + "|" + p]; const x = m && m[cik]; return x ? x[1] : null; };
+const fa = (c, p, cik) => { const m = F[c + "|" + p]; const x = m && m[cik]; return x ? x[2] || null : null; };
 log("frames " + Object.keys(F).length);
+// 주식 수를 현재 분할 기준으로: frames 값은 제출 시점(접수번호 연도, 회계연도 말 + 2개월 무렵)까지의 분할이 소급 반영된 값이다
+const splitAfterPx = (px, date) => px.splits.filter((x) => x[0] > date).reduce((p, x) => p * x[1], 1);
+function shNormFor(px) {
+  return (val, accn, end) => {
+    const yf = accn ? 2000 + Number(String(accn).split("-")[1]) : null;
+    let F0 = end || null;
+    if (yf && end) { const m = ((Number(end.slice(5, 7)) + 1) % 12) + 1; F0 = yf + "-" + String(m).padStart(2, "0") + "-15"; }
+    return F0 ? val * splitAfterPx(px, F0) : val;
+  };
+}
 
 // 종목: CIK 당 하나(가장 긴 가격 이력, 같으면 최근 거래량)
 const uni = L.readJson(path.join(US, "universe.json"), []);
 const cikMap = L.readJson(path.join(US, "cik.json"), {});
 const vol12 = (px) => px.v.slice(-12).reduce((s, x) => s + x, 0);
+// 지주회사 재편(새 CIK 가 티커를 넘겨받아 이력이 없는 경우 — 예: XOM 2026)은 같은 회사명의 옛 CIK 로 바꾼다(이름이 정확히 같을 때만)
+const names = L.readJson(path.join(US, "names.json"), {});
+const normName = (n) => String(n || "").toLowerCase().replace(/common stock|ordinary shares|class [a-z]\b|american depositary shares?.*$/g, " ")
+  .replace(/\b(inc|corp|corporation|co|company|ltd|limited|plc|holdings?|group|the|n\.?v|s\.?a)\b\.?/g, " ").replace(/[^a-z0-9]/g, "");
+const byName = {}; Object.entries(names).forEach(([c, n]) => { const k = normName(n); if (k) (byName[k] = byName[k] || []).push(Number(c)); });
+const hasYear = (cik, y) => ["NetIncomeLoss", "ProfitLoss", "Revenues", "RevenueFromContractWithCustomerExcludingAssessedTax"].some((c) => fv(c, "CY" + y, cik) != null);
+const yearsWith = (cik) => YEARS.filter((y) => hasYear(cik, y)).length;
+const recent = (cik) => [2023, 2024, 2025].some((y) => hasYear(cik, y));   // 옛 CIK 가 최근까지 공시했어야 같은 회사의 재편으로 본다(2016 년에 사라진 옛 SanDisk·IHS 오매칭 방지)
+let swapped = 0;
+for (const u of uni) {
+  const c0 = cikMap[u.t]; if (!c0 || yearsWith(c0) >= 3) continue;
+  const alt = (byName[normName(u.name)] || []).filter((c) => c !== c0).filter(recent).map((c) => [c, yearsWith(c)]).filter((x) => x[1] >= 5).sort((a, b) => b[1] - a[1])[0];
+  if (alt) { cikMap[u.t] = alt[0]; swapped++; if (swapped <= 15) log("CIK 대체 " + u.t + " " + c0 + " → " + alt[0] + " (" + names[alt[0]] + ")"); }
+}
+log("CIK 대체(재편·이름 일치) " + swapped);
 const byCik = {};
 for (const u of uni) {
   const c = cikMap[u.t]; if (!c) continue;
@@ -40,7 +66,7 @@ for (const u of uni) {
 const FIN = /^Finance$|Real Estate/i, FIN_IND = /(REIT|Real Estate|Banks|Savings Institutions|Insurance|Finance|Investment|Trusts)/i;
 const stocks = Object.keys(byCik).map((c) => {
   const { u, px } = byCik[c];
-  const fu = LF.usFundamentals(Number(c), YEARS, fv, fe);
+  const fu = LF.usFundamentals(Number(c), YEARS, fv, fe, { fa, shNorm: shNormFor(px) });
   return { cik: c, t: u.t, fin: FIN.test(u.sector || "") || FIN_IND.test(u.industry || ""), fu, px, idx: new Map(px.d.map((d, i) => [d, i])) };
 }).filter((s) => Object.keys(s.fu).length >= 2);
 log("종목 " + stocks.length);
@@ -54,10 +80,9 @@ for (const s of stocks) {
   s.avail = {}; s.ys.forEach((y) => { s.avail[y] = availYM(s.fu[y].end) || (y + 1) + "-06"; });
   s.divM = {}; s.px.divs.forEach(([d, a]) => { const k = d.slice(0, 7); s.divM[k] = (s.divM[k] || 0) + a; });
 }
-const splitAfter = (s, date) => s.px.splits.filter((x) => x[0] > date).reduce((p, x) => p * x[1], 1);
 const divSum = (s, fromYM, toYM) => { let t = 0; for (let k = addM(fromYM, 1); k <= toYM; k = addM(k, 1)) t += s.divM[k] || 0; return t; };   // (from, to]
 
-const FAC = ["EP", "BP", "SP", "FCFP", "EBITEV", "DY", "SHY", "ROE", "ROA", "GPA", "OPA", "CFOA", "ROIC", "ACC", "LEV", "F", "SROA",
+const FAC = ["EP", "BP", "SP", "FCFP", "EBITEV", "DY", "SHY", "ROE", "ROA", "GPA", "OPA", "CFOA", "OPM", "ROIC", "ACC", "LEV", "F", "SROA",
   "SG1", "SG3", "OPG", "DROA", "DGM", "AG", "ISS", "PAYOUT", "DGR", "DSTREAK", "COV"];
 const FIELDS = ["t", "ym", "mcap", "rank", "fin", "opPos", "niPos"].concat(FAC, ["MOM", "VOL", "r1", "r3", "r6", "r12", "dcut"]);
 const rows = [];
@@ -66,10 +91,10 @@ for (const ym of months) {
   for (const s of stocks) {
     const i = s.idx.get(ym); if (i == null) continue;
     let y = null; for (const yy of s.ys) if (s.avail[yy] <= ym) y = yy;
-    if (y == null) continue;
+    if (y == null || y < Number(ym.slice(0, 4)) - 2) continue;   // 2년 넘게 묵은 재무(공시 중단·매핑 오류)는 쓰지 않는다
     const f = s.fu[y];
     if (!f || f.sh == null || !(f.sh > 0)) continue;
-    const mcap = s.px.c[i] * f.sh * splitAfter(s, f.end || (y + "-12-31"));
+    const mcap = s.px.c[i] * f.sh;   // f.sh 는 현재 분할 기준(shNorm), 종가도 현재 분할 기준
     if (!(mcap > 0)) continue;
     cs.push({ s, i, y, mcap });
   }

@@ -48,7 +48,7 @@ function krFactorsAt(fu, y, mcap) {
     opPos: f.op != null ? (f.op > 0 ? 1 : 0) : null, niPos: f.np != null ? (f.np > 0 ? 1 : 0) : null,
     EP: ratio(f.np, mcap), BP: ratio(f.eq, mcap), SP: ratio(f.rev, mcap), FCFP: f.fcf != null ? f.fcf / mcap : null,
     EBITEV: f.op != null ? f.op / (mcap + (f.ibd || 0)) : null, DY: f.divTot != null ? f.divTot / mcap : null,
-    ROE: f.eq > 0 && f.np != null ? f.np / f.eq : null, ROA: roa, OPA: ratio(f.op, f.assets), CFOA: ratio(f.ocf, f.assets),
+    ROE: f.eq > 0 && f.np != null ? f.np / f.eq : null, ROA: roa, OPA: ratio(f.op, f.assets), CFOA: ratio(f.ocf, f.assets), OPM: opm,
     ROIC: f.op != null && (f.eq || 0) + (f.ibd || 0) > 0 ? f.op * 0.78 / ((f.eq || 0) + (f.ibd || 0)) : null,
     ACC: f.np != null && f.ocf != null && avgA > 0 ? (f.np - f.ocf) / avgA : null, LEV: lev,
     F: nOk >= 6 ? Math.round(sig.filter((v) => v === true).length * 9 / nOk) : null, SROA: sd(roas),
@@ -64,23 +64,28 @@ function krFactorsAt(fu, y, mcap) {
 const US_REV = ["RevenueFromContractWithCustomerExcludingAssessedTax", "Revenues", "SalesRevenueNet", "RevenueFromContractWithCustomerIncludingAssessedTax", "SalesRevenueGoodsNet"];
 const US_COGS = ["CostOfRevenue", "CostOfGoodsAndServicesSold", "CostOfGoodsSold"];
 const US_CAPEX = ["PaymentsToAcquirePropertyPlantAndEquipment", "PaymentsToAcquireProductiveAssets", "PaymentsForCapitalImprovements"];
-const US_DUR = US_REV.concat(US_COGS, US_CAPEX, ["GrossProfit", "OperatingIncomeLoss", "NetIncomeLoss", "NetCashProvidedByUsedInOperatingActivities", "PaymentsToDevelopSoftware",
+// 순이익: NetIncomeLoss(지배주주) → 보통주 귀속 → ProfitLoss(비지배 포함 — ITW 처럼 이 태그만 쓰는 회사가 있다)
+const US_NI = ["NetIncomeLoss", "NetIncomeLossAvailableToCommonStockholdersBasic", "ProfitLoss"];
+const US_DUR = US_REV.concat(US_COGS, US_CAPEX, US_NI, ["GrossProfit", "OperatingIncomeLoss", "NetCashProvidedByUsedInOperatingActivities", "PaymentsToDevelopSoftware",
   "PaymentsOfDividends", "PaymentsOfDividendsCommonStock", "PaymentsForRepurchaseOfCommonStock", "ProceedsFromIssuanceOfCommonStock"]);
-const US_SHARES = ["WeightedAverageNumberOfDilutedSharesOutstanding"];
+// 주식 수: 희석 가중 → '기본·희석 공통'(XOM 등) → 기본 순. frames 는 그 기간을 담은 '가장 나중 보고서' 값이라 그 사이 분할이 소급 반영돼 있다
+//   → 호출 쪽 shNorm(값, 접수번호, 회계연도 말)으로 현재 분할 기준에 맞춘다(접수번호의 연도 = 제출 연도).
+const US_SHARES = ["WeightedAverageNumberOfDilutedSharesOutstanding", "WeightedAverageNumberOfShareOutstandingBasicAndDiluted", "WeightedAverageNumberOfSharesOutstandingBasic"];
 const US_INST = ["Assets", "AssetsCurrent", "LiabilitiesCurrent", "Liabilities", "StockholdersEquity", "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest",
   "CashAndCashEquivalentsAtCarryingValue", "CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents", "ShortTermInvestments", "MarketableSecuritiesCurrent",
   "LongTermDebt", "LongTermDebtNoncurrent", "LongTermDebtCurrent", "DebtCurrent", "ShortTermBorrowings",
   "LongTermDebtAndCapitalLeaseObligations", "LongTermDebtAndCapitalLeaseObligationsCurrent", "LineOfCredit", "LongTermLineOfCredit", "SeniorNotes", "ConvertibleNotesPayable"];
 const first = (arr) => { for (const v of arr) if (v != null) return v; return null; };
-function usFundamentals(cik, years, fv, fe) {
+function usFundamentals(cik, years, fv, fe, opt) {
+  const fa = opt && opt.fa, shNorm = opt && opt.shNorm;
   let best = null;
   US_REV.forEach((c) => { const n = years.filter((y) => fv(c, "CY" + y, cik) != null).length; if (n && (!best || n > best.n)) best = { c, n }; });
   const out = {};
   for (const y of years) {
     const p = "CY" + y, pi = "CY" + y + "Q4I";
     const rev = best ? (fv(best.c, p, cik) ?? first(US_REV.map((c) => fv(c, p, cik)))) : null;
-    const ni = fv("NetIncomeLoss", p, cik), op = fv("OperatingIncomeLoss", p, cik);
-    const end = fe("NetIncomeLoss", p, cik) || (best && fe(best.c, p, cik)) || fe("OperatingIncomeLoss", p, cik);
+    const ni = first(US_NI.map((c) => fv(c, p, cik))), op = fv("OperatingIncomeLoss", p, cik);
+    const end = first(US_NI.map((c) => fe(c, p, cik))) || (best && fe(best.c, p, cik)) || fe("OperatingIncomeLoss", p, cik);
     if (rev == null && ni == null) continue;
     const cogs = first(US_COGS.map((c) => fv(c, p, cik)));
     const gp = fv("GrossProfit", p, cik) ?? (rev != null && cogs != null ? rev - cogs : null);
@@ -93,7 +98,7 @@ function usFundamentals(cik, years, fv, fe) {
       end, rev, gp, op, ni, ocf: fv("NetCashProvidedByUsedInOperatingActivities", p, cik), capex: cx == null ? null : cx + (fv("PaymentsToDevelopSoftware", p, cik) || 0),
       div: fv("PaymentsOfDividendsCommonStock", p, cik) ?? fv("PaymentsOfDividends", p, cik),
       buy: fv("PaymentsForRepurchaseOfCommonStock", p, cik), iss: fv("ProceedsFromIssuanceOfCommonStock", p, cik),
-      sh: fv("WeightedAverageNumberOfDilutedSharesOutstanding", p, cik),
+      sh: (() => { for (const c of US_SHARES) { const s0 = fv(c, p, cik); if (s0 != null && s0 > 0) return shNorm ? shNorm(s0, fa ? fa(c, p, cik) : null, end) : s0; } return null; })(),
       assets: fv("Assets", pi, cik), ca: fv("AssetsCurrent", pi, cik), cl: fv("LiabilitiesCurrent", pi, cik), liab: fv("Liabilities", pi, cik),
       eq: fv("StockholdersEquity", pi, cik) ?? fv("StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest", pi, cik),
       cash: fv("CashAndCashEquivalentsAtCarryingValue", pi, cik) ?? fv("CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents", pi, cik),
@@ -128,7 +133,7 @@ function usFactorsAt(fu, y, mcap, ext) {
     EP: ratio(f.ni, mcap), BP: ratio(f.eq, mcap), SP: ratio(f.rev, mcap), FCFP: fcf != null ? fcf / mcap : null,
     EBITEV: ev > 0 && f.op != null ? f.op / ev : null, DY: ext.dy != null ? ext.dy : null,
     SHY: ((f.div || 0) + (f.buy || 0) - (f.iss || 0)) / mcap,
-    ROE: f.eq > 0 && f.ni != null ? f.ni / f.eq : null, ROA: roa, GPA: ratio(f.gp, f.assets), OPA: ratio(f.op, f.assets), CFOA: ratio(f.ocf, f.assets),
+    ROE: f.eq > 0 && f.ni != null ? f.ni / f.eq : null, ROA: roa, GPA: ratio(f.gp, f.assets), OPA: ratio(f.op, f.assets), CFOA: ratio(f.ocf, f.assets), OPM: ratio(f.op, f.rev),
     ROIC: f.op != null && ic > 0 ? f.op * 0.78 / ic : null,
     ACC: f.ni != null && f.ocf != null && avgA > 0 ? (f.ni - f.ocf) / avgA : null, LEV: lev,
     F: nOk >= 7 ? Math.round(sig.filter((v) => v === true).length * 9 / nOk) : null, SROA: sd(roas),

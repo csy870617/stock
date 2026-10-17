@@ -188,54 +188,72 @@ async function enrichUS(s) {
   });
 }
 
-// ── 주제별 하드 조건과 점수(백분위 가중합) ──
-// 점수 항목은 tier 품질 축(§4-4: 재무 건전성·수익성·성장성·주주환원·밸류)에 맞췄다. pct = 적격 후보 안에서의 백분위(높을수록 좋게).
+// ── 주제별 하드 조건과 점수(백분위 가중합) — 2026-10-17 주제 기준 연구로 다시 짰다(scripts/research/theme · docs/HISTORY.md '주제 기준 연구') ──
+// ok = 주제의 정체성 조건(규모·흑자·배당수익률·저평가 등, 예전과 같음) · ex = 검증된 건전성 필터 · w = 검증된 점수 지표
+//   점수 지표는 '같은 주제 모집단에서 다음 6개월 초과수익을 미국 14년 전반·후반 모두 가른' 것만 남겼다(사전 등록 기준 통과 = 주 지표,
+//   넓은 유니버스 통과 + 주제 안 전반·후반 양(+) + 한국 반대 아님 = 보조 지표). 배당 주제의 이익 안정성·배당 연속성은 다음 해 배당 삭감 확률을 낮춘 지표.
+//   검증에서 떨어진 예전 항목(시총·매출/이익 성장·영업이익률·PER·PBR·ROE·배당수익률 크기)은 점수에서 뺐다:
+//   성장주 안에서 매출 성장이 가장 빠른 쪽은 이후 수익이 오히려 낮았고(미국 t −2.6·한국 t −2.9), 배당주 안에서 배당수익률 최상위는
+//   수익 우위 없이 다음 해 배당 삭감 확률만 5배였다(28% vs 5%). 미국 컨센서스 상승여력(upside)은 과거 이력이 없어 판정하지 않았다 — 예전 가중 유지(§7).
+// 팩터(s.fx)는 scripts/screen-factors.js 가 붙인다(한국 기업현황·미국 SEC/야후 — 정의는 scripts/lib-factors.js, 연구 패널과 같은 계산식).
 const g0 = (v) => (v == null ? -Infinity : v);
+const EX = {   // 걸러지는 쪽이 전반·후반 모두 6개월 초과수익이 낮고 12개월 −30% 대폭락 확률이 높았던 조건(미국 검증 — 데이터가 없으면 거르지 않는다)
+  loss: { label: "순이익 적자", f: (s) => s.fx && s.fx.niPos === 0 },
+  dil: { label: "주식 수 연 5% 초과 증가(희석)", f: (s) => s.fx && s.fx.ISS != null && s.fx.ISS > 0.05 },
+  revDown: { label: "매출 역성장(가치 함정)", f: (s) => s.fx && s.fx.SG1 != null && s.fx.SG1 < 0 },
+  payout: { label: "배당성향 100% 초과", f: (s) => s.fx && s.fx.PAYOUT != null && s.fx.PAYOUT > 1 },
+  agTop: { label: "자산 급증(주제 안 상위 10%)", dec: "AG" },
+  sroaTop: { label: "이익 변동 큼(주제 안 상위 10%)", dec: "SROA" },
+};
 const RULES = {
   korea: {
-    core: { label: "KOSPI · 시총 상위 60 · 영업이익 2년 연속 흑자 · ROE ≥ 7% · 부채비율 ≤ 150%(금융 제외) — 점수는 수익성·규모·주주환원 위주(성장 가중 낮음)",
+    core: { label: "KOSPI · 시총 상위 60 · 영업이익 2년 연속 흑자 · ROE ≥ 7% · 부채비율 ≤ 150%(금융 제외) — 점수: 주식 수 감소(희석 없음)·FCF 배당 커버리지·ROIC",
       ok: (s) => s.market === "KOSPI" && s.rank <= 60 && s.opPos && s.roe >= 7 && (s.fin || s.debt == null || s.debt <= 150),
-      w: { roe: 0.3, opm: 0.2, mcap: 0.3, divY: 0.1, perInv: 0.1 } },
-    growth: { label: "시총 상위 150 · 금융 제외 · 매출 성장률(올해 추정 또는 최근 연도) ≥ 15% · 영업이익 흑자",
+      ex: [], w: { iss: 0.4, cov: 0.4, roic: 0.2 } },
+    growth: { label: "시총 상위 150 · 금융 제외 · 매출 성장률(올해 추정 또는 최근 연도) ≥ 15% · 영업이익 흑자 · 순이익 흑자 · 자산 급증·이익 변동 상위 10% 제외 — 점수: FCF 배당 커버리지·주식 수 감소·ROIC(매출 성장 크기는 점수에서 뺌)",
       ok: (s) => s.rank <= 150 && !s.fin && Math.max(g0(s.revE), g0(s.revG)) >= 0.15 && s.opPos,
-      w: { revX: 0.35, opX: 0.3, opm: 0.2, mcap: 0.15 } },
-    value: { label: "PER ≤ 12 또는 PBR ≤ 0.9 · 순이익 흑자 · 이익 개선(올해 추정 영업이익 증가 또는 최근 분기 YoY 증가) · 시총 상위 200",
+      ex: ["loss", "agTop", "sroaTop"], w: { cov: 0.4, iss: 0.3, roic: 0.3 } },
+    value: { label: "PER ≤ 12 또는 PBR ≤ 0.9 · 순이익 흑자 · 이익 개선(올해 추정 영업이익 증가 또는 최근 분기 YoY 증가) · 시총 상위 200 · 매출 역성장·희석 5% 초과·자산 급증 상위 10% 제외 — 점수: 주식 수 감소",
       ok: (s) => s.rank <= 200 && ((s.per != null && s.per > 0 && s.per <= 12) || (s.pbr != null && s.pbr > 0 && s.pbr <= 0.9)) && s.npPos && (g0(s.opE) > 0 || g0(s.qOpYoY) > 0),
-      w: { perInv: 0.3, pbrInv: 0.2, opX: 0.3, roe: 0.2 } },
-    dividend: { label: "배당수익률 ≥ 3.5% · 배당성향 ≤ 90% · 순이익 흑자 · 시총 상위 250",
+      ex: ["agTop", "dil", "revDown"], w: { iss: 1 } },
+    dividend: { label: "배당수익률 ≥ 3.5% · 배당성향 ≤ 90% · 순이익 흑자 · 시총 상위 250 · 매출 역성장·희석 5% 초과·자산 급증 상위 10% 제외 — 점수: 이익 안정성·배당 연속 비감소·주식 수 감소(배당수익률 크기는 점수에서 뺌)",
       ok: (s) => s.rank <= 250 && s.divY >= 3.5 && s.npPos && (s.payout == null || s.payout <= 0.9),
-      w: { divY: 0.45, roe: 0.25, stab: 0.3 } },
+      ex: ["agTop", "dil", "payout", "revDown"], w: { sroa: 0.35, streak: 0.35, iss: 0.3 } },
     // rising(히든)은 scripts/screen-hidden.js — 시총 수천억~수조·성장 20%·ROIC 15%·PEG 1.5·순현금/FCF 기준이라 더 작은 종목·5년 재무가 필요하다(2026-10-17)
   },
   us: {
-    core: { label: "시총 상위 120 · TTM EBIT 흑자 · EBIT 마진 ≥ 10% · ROA ≥ 5%(금융 제외)",
+    core: { label: "시총 상위 120 · TTM EBIT 흑자 · EBIT 마진 ≥ 10% · ROA ≥ 5%(금융 제외) — 점수: 주식 수 감소·FCF 배당 커버리지·주주환원수익률·ROIC·상승여력",
       ok: (s) => s.rank <= 120 && s.ttmEbit > 0 && (s.fin || (s.ebitM >= 0.10 && s.roa >= 5)),
-      w: { ebitM: 0.25, roa: 0.2, mcap: 0.3, revX: 0.1, upside: 0.15 } },
-    growth: { label: "시총 상위 300 · 금융·원자재(금·광업·석유 탐사) 제외 · 최근 분기 매출 YoY ≥ 15%(또는 최근 연도) · TTM EBIT 흑자",
+      ex: [], w: { iss: 0.3, cov: 0.25, shy: 0.15, roic: 0.15, upside: 0.15 } },
+    growth: { label: "시총 상위 300 · 금융·원자재(금·광업·석유 탐사) 제외 · 최근 분기 매출 YoY ≥ 15%(또는 최근 연도) · TTM EBIT 흑자 · 순이익 흑자 · 자산 급증·이익 변동 상위 10% 제외 — 점수: FCF 배당 커버리지·주식 수 감소·주주환원·ROIC·상승여력(매출 성장 크기는 뺌)",
       ok: (s) => s.rank <= 300 && !s.fin && !s.cycl && Math.max(g0(s.qRevYoY), g0(s.revG)) >= 0.15 && s.ttmEbit > 0,
-      w: { revX: 0.35, ebitM: 0.25, mcap: 0.1, upside: 0.3 } },
-    value: { label: "PER ≤ 16 또는 PBR ≤ 2 · TTM 순이익 흑자 · 매출 또는 EBIT 증가 · 시총 상위 400",
+      ex: ["loss", "agTop", "sroaTop"], w: { cov: 0.3, iss: 0.15, shy: 0.15, roic: 0.15, upside: 0.25 } },
+    value: { label: "PER ≤ 16 또는 PBR ≤ 2 · TTM 순이익 흑자 · 매출 또는 EBIT 증가 · 시총 상위 400 · 매출 역성장·희석 5% 초과·자산 급증 상위 10% 제외 — 점수: 주주환원수익률·주식 수 감소·상승여력",
       ok: (s) => s.rank <= 400 && ((s.per != null && s.per > 0 && s.per <= 16) || (s.pbr != null && s.pbr > 0 && s.pbr <= 2)) && s.ttmNi > 0 && (g0(s.qRevYoY) > 0 || g0(s.ebitYoY) > 0),
-      w: { perInv: 0.3, pbrInv: 0.15, revX: 0.2, upside: 0.35 } },
-    dividend: { label: "배당수익률 ≥ 2.5% · 배당성향 ≤ 100% · TTM 순이익 흑자 · 시총 상위 450 · 합자회사(MLP) 제외",
+      ex: ["agTop", "dil", "revDown"], w: { shy: 0.35, iss: 0.3, upside: 0.35 } },
+    dividend: { label: "배당수익률 ≥ 2.5% · 배당성향 ≤ 100% · TTM 순이익 흑자 · 시총 상위 450 · 합자회사(MLP) 제외 · 매출 역성장·희석 5% 초과·자산 급증 상위 10% 제외 — 점수: 이익 안정성·배당 연속 비감소·주식 수 감소·주주환원·상승여력",
       ok: (s) => s.rank <= 450 && !s.lp && s.divY >= 2.5 && s.ttmNi > 0 && (s.payout == null || s.payout <= 1.0),
-      w: { divY: 0.4, stab: 0.25, upside: 0.35 } },
+      ex: ["agTop", "dil", "payout", "revDown"], w: { sroa: 0.2, streak: 0.2, iss: 0.15, shy: 0.15, upside: 0.3 } },
     // rising(히든)은 scripts/screen-hidden.js (SEC XBRL·나스닥 EPS 컨센서스)
   },
 };
-// 점수용 파생값
+// 점수용 파생값(높을수록 좋게) — 주제 기준 연구에서 검증된 지표만
 function feat(s) {
-  const kr = s.c === "korea";
+  const x = s.fx || {};
   return {
-    roe: s.roe, opm: s.opm, roa: s.roa, ebitM: s.ebitM, mcap: s.mcap, small: s.rank != null ? -s.rank : null,
-    revX: kr ? Math.max(g0(s.revE), g0(s.revG), g0(s.qRevYoY)) : Math.max(g0(s.qRevYoY), g0(s.revG)),
-    opX: Math.max(g0(s.opE), g0(s.qOpYoY), g0(s.opG)),
-    opE: s.opE != null ? s.opE : s.opG,
-    perInv: s.per > 0 ? -s.per : null, pbrInv: s.pbr > 0 ? -s.pbr : null,
-    divY: s.divY, upside: s.upside,
-    // 배당 안정성: 이익이 줄지 않는가(한국 영업이익 추정·미국 분기 EBIT YoY) — 감소폭이 작을수록 높게
-    stab: kr ? (s.opE != null ? Math.min(s.opE, 0.3) : (s.opG != null ? Math.min(s.opG, 0.3) : null)) : (s.ebitYoY != null ? Math.min(s.ebitYoY, 0.3) : null),
+    iss: x.ISS != null ? -x.ISS : null, shy: x.SHY != null ? x.SHY : null, cov: x.COV != null ? x.COV : null, roic: x.ROIC != null ? x.ROIC : null,
+    sroa: x.SROA != null ? -x.SROA : null, streak: x.DSTREAK != null ? x.DSTREAK : null, upside: s.upside,
   };
+}
+// 건전성 필터 적용: 상위 10% 필터는 그 주제 적격 후보 안의 분포로 문턱을 정한다
+function exFilter(rule, elig) {
+  const cut = {};
+  (rule.ex || []).forEach((k) => {
+    const e = EX[k]; if (!e.dec) return;
+    const xs = elig.map((s) => s.fx && s.fx[e.dec]).filter((v) => v != null && isFinite(v)).sort((a, b) => a - b);
+    cut[k] = xs.length >= 10 ? xs[Math.floor(xs.length * 0.9)] : null;
+  });
+  return (s) => (rule.ex || []).filter((k) => { const e = EX[k]; return e.dec ? cut[k] != null && s.fx && s.fx[e.dec] != null && s.fx[e.dec] >= cut[k] : e.f(s); }).map((k) => EX[k].label);
 }
 function pctRank(vals) {
   const xs = vals.filter((v) => v != null && isFinite(v)).sort((a, b) => a - b);
@@ -248,7 +266,9 @@ function view(s, score) {
     price: s.price, mcap: s.mcap, upside: pct(s.upside), tp: s.tp, tpDate: s.tpDate, recomm: s.recomm,
     revG: pct(s.revG), revE: pct(s.revE), qRevYoY: pct(s.qRevYoY), opG: pct(s.opG), opE: pct(s.opE), qOpYoY: pct(s.qOpYoY), ebitYoY: pct(s.ebitYoY),
     roe: r1(s.roe), opm: r1(s.opm), roa: r1(s.roa), ebitM: pct(s.ebitM), debt: r1(s.debt, 0), per: r1(s.per), cnsPer: r1(s.cnsPer), pbr: r1(s.pbr),
-    divY: r1(s.divY, 2), payout: pct(s.payout), fin: s.fin || undefined, industry: s.industry || undefined, tpSingle: s.tpSingle || undefined };
+    divY: r1(s.divY, 2), payout: pct(s.payout), fin: s.fin || undefined, industry: s.industry || undefined, tpSingle: s.tpSingle || undefined,
+    fx: s.fx ? { year: s.fxYear, iss: pct(s.fx.ISS), shy: pct(s.fx.SHY), cov: r1(s.fx.COV, 2), roic: pct(s.fx.ROIC), sroa: pct(s.fx.SROA), streak: s.fx.DSTREAK,
+      ag: pct(s.fx.AG), sg1: pct(s.fx.SG1), payoutFy: pct(s.fx.PAYOUT), niPos: s.fx.niPos } : undefined };
 }
 
 (async () => {
@@ -281,6 +301,11 @@ function view(s, score) {
   // 편성 보충 종목은 price 가 없을 수 있다 — 통합 시세로 채운 값 사용(한국), 미국은 순위 밖이면 순위 null
   console.log("지표 수집: 한국 " + done.korea + " · 미국 " + done.us + " · 실패 " + fail.length + (useCurl ? " (curl)" : ""));
 
+  // 주제 기준 팩터(검증된 점수·필터 지표) — 한국 기업현황·미국 SEC/야후
+  const { addKrFactors, addUsFactors } = require("./screen-factors");
+  await addKrFactors(all.filter((s) => s.c === "korea"), console.log);
+  await addUsFactors(all.filter((s) => s.c === "us"), console.log);
+
   const groups = {};
   ["korea", "us"].forEach((c) => {
     const pool = all.filter((s) => s.c === c);
@@ -289,7 +314,9 @@ function view(s, score) {
       const key = c + "|" + th;
       const members = (D[c] || []).filter((s) => s.theme === th);
       const inGroup = new Set(members.map((s) => s.ticker));
-      const elig = pool.filter((s) => !s.extra && rule.ok(s));
+      const base = pool.filter((s) => !s.extra && rule.ok(s));
+      const whyEx = exFilter(rule, base);
+      const elig = base.filter((s) => !whyEx(s).length);
       // 백분위는 '적격 후보 + 현 편성'을 한 모집단으로 — 편성 종목도 같은 잣대로 나란히 본다
       const memRows = pool.filter((s) => inGroup.has(s.ticker));
       const popn = elig.concat(memRows.filter((s) => !elig.includes(s)));
@@ -310,9 +337,10 @@ function view(s, score) {
       const inc = members.map((m) => {
         const row = pool.find((s) => s.ticker === m.ticker);
         const v = row ? view(row, score(row)) : { ticker: m.ticker, name: m.name, score: null };
-        return Object.assign(v, { tier: m.tier, passesRule: row ? !!rule.ok(row) : null });
+        const fails = row ? (rule.ok(row) ? [] : ["정체성 조건 미달"]).concat(whyEx(row)) : null;
+        return Object.assign(v, { tier: m.tier, passesRule: row ? !fails.length : null }, fails && fails.length ? { fails } : {});
       }).sort((a, b) => (a.score == null) - (b.score == null) || (a.score - b.score));
-      groups[key] = { rule: rule.label, weights: rule.w, eligible: elig.length, incumbents: inc, candidates: cands };
+      groups[key] = { rule: rule.label, weights: rule.w, eligible: elig.length, filtered: base.length - elig.length, incumbents: inc, candidates: cands };
     });
   });
 
