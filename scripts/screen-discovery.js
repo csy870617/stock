@@ -7,8 +7,9 @@
 //
 // 무엇을: 네이버 증권 시가총액 순위(한국 KOSPI 250·KOSDAQ 150, 미국 NASDAQ 250·NYSE 350)를 받아
 //   종목별 연간·분기 재무(매출·영업이익/EBIT·순이익·ROE/ROA·부채비율·배당)와 컨센서스·밸류(PER·PBR·배당수익률)를
-//   모은 뒤, 주제 정의(core 우량·growth 성장·value 저평가·dividend 배당·rising 히든)에 맞는 '하드 조건 + 점수'로
+//   모은 뒤, 주제 정의(core 우량·growth 성장·value 저평가·dividend 배당)에 맞는 '하드 조건 + 점수'로
 //   (국가×주제) 그룹마다 후보 상위 10개와, 같은 잣대로 잰 현 편성 9종목을 함께 data/discovery-candidates.js 에 쓴다.
+//   히든(rising) 두 그룹은 scripts/screen-hidden.js 가 채운다('10배 가능성 + 영구 손실 위험 낮음' 기준, CLAUDE.md §6).
 //
 // ★ 이것은 '후보 생성'이지 '선정 규칙'이 아니다(CLAUDE.md §6 — 검증 안 된 팩터를 선정에 쓰지 않는다).
 //   편입·교체는 세션이 웹 검색으로 검증하고 §5 교체 기준(편출 종목 결격 등)을 그대로 따른다.
@@ -204,9 +205,7 @@ const RULES = {
     dividend: { label: "배당수익률 ≥ 3.5% · 배당성향 ≤ 90% · 순이익 흑자 · 시총 상위 250",
       ok: (s) => s.rank <= 250 && s.divY >= 3.5 && s.npPos && (s.payout == null || s.payout <= 0.9),
       w: { divY: 0.45, roe: 0.25, stab: 0.3 } },
-    rising: { label: "시총 41~400위 · 금융 제외 · 영업이익 2년 연속 흑자 · 매출 성장 ≥ 10% · ROE ≥ 10% · 부채비율 ≤ 120%",
-      ok: (s) => s.rank > 40 && s.rank <= 400 && !s.fin && s.opPos && Math.max(g0(s.revE), g0(s.revG), g0(s.qRevYoY)) >= 0.10 && s.roe >= 10 && (s.debt == null || s.debt <= 120),
-      w: { revX: 0.3, roe: 0.25, opm: 0.25, small: 0.2 } },
+    // rising(히든)은 scripts/screen-hidden.js — 시총 수천억~수조·성장 20%·ROIC 15%·PEG 1.5·순현금/FCF 기준이라 더 작은 종목·5년 재무가 필요하다(2026-10-17)
   },
   us: {
     core: { label: "시총 상위 120 · TTM EBIT 흑자 · EBIT 마진 ≥ 10% · ROA ≥ 5%(금융 제외)",
@@ -221,9 +220,7 @@ const RULES = {
     dividend: { label: "배당수익률 ≥ 2.5% · 배당성향 ≤ 100% · TTM 순이익 흑자 · 시총 상위 450 · 합자회사(MLP) 제외",
       ok: (s) => s.rank <= 450 && !s.lp && s.divY >= 2.5 && s.ttmNi > 0 && (s.payout == null || s.payout <= 1.0),
       w: { divY: 0.4, stab: 0.25, upside: 0.35 } },
-    rising: { label: "시총 101~600위 · 금융·원자재 제외 · TTM EBIT 흑자 · 최근 분기 매출 YoY ≥ 10% · EBIT 마진 ≥ 8% · ROA ≥ 5%(§6 히든 품질 기준 근사 — 변동성 70% 이하는 세션 확인)",
-      ok: (s) => s.rank > 100 && s.rank <= 600 && !s.fin && !s.cycl && s.ttmEbit > 0 && g0(s.qRevYoY) >= 0.10 && s.ebitM >= 0.08 && s.roa >= 5,
-      w: { revX: 0.3, ebitM: 0.25, roa: 0.15, upside: 0.3 } },
+    // rising(히든)은 scripts/screen-hidden.js (SEC XBRL·나스닥 EPS 컨센서스)
   },
 };
 // 점수용 파생값
@@ -318,6 +315,15 @@ function view(s, score) {
       groups[key] = { rule: rule.label, weights: rule.w, eligible: elig.length, incumbents: inc, candidates: cands };
     });
   });
+
+  // 히든 두 그룹 — 별도 스크린(유니버스·지표가 다르다). 실패하면 이전 파일의 히든 그룹을 그대로 둔다.
+  try {
+    Object.assign(groups, await require("./screen-hidden").hiddenGroups(D, { log: (m) => console.log("  [히든] " + m) }));
+  } catch (e) {
+    console.error("히든 스크린 실패 — 이전 히든 그룹 유지:", e && e.message);
+    try { global.window = {}; delete require.cache[require.resolve(OUT)]; require(OUT); const old = (global.window.DISCOVERY_CANDIDATES || {}).groups || {};
+      ["korea|rising", "us|rising"].forEach((k) => { if (old[k]) groups[k] = Object.assign({ stale: true }, old[k]); }); } catch (_e) { /* 없음 */ }
+  }
 
   const outObj = { asOf: today, builtAt: new Date().toISOString(), source: "네이버 증권 시가총액 순위·재무(연간·분기)·컨센서스 — scripts/screen-discovery.js",
     universe: { korea: kr.length, us: us.length, failed: fail.length }, note: "후보 생성용 스크린 — 편입·교체 판단은 세션 검증과 CLAUDE.md §5 기준으로만", groups };

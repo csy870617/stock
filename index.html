@@ -402,6 +402,7 @@ a { color: inherit; }
   padding: 14px 17px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-sm); box-shadow: var(--shadow-sm);
 }
 .theme-desc strong { color: var(--ink); }
+.theme-desc .td-body { --lh: 1.65; --clamp-bg: var(--surface); }
 
 /* ── 티어 그룹 ── */
 .tier-group { margin-bottom: 30px; }
@@ -1419,7 +1420,7 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
   function queueClamps() { if (!clampRaf) clampRaf = requestAnimationFrame(function () { clampRaf = 0; markClamps(document); }); }
   if (window.MutationObserver) {
     var clampMO = new MutationObserver(queueClamps);
-    ["cards", "picksBox", "marketNote"].forEach(function (id) { var el = document.getElementById(id); if (el) clampMO.observe(el, { childList: true, subtree: true }); });
+    ["cards", "picksBox", "marketNote", "themeDesc"].forEach(function (id) { var el = document.getElementById(id); if (el) clampMO.observe(el, { childList: true, subtree: true }); });
   }
   window.addEventListener("resize", queueClamps);   // 폭이 바뀌면(회전 등) 잘림 여부도 바뀐다
   function clampCls(k, cl) { return OPEN[k] ? "" : " " + cl; }
@@ -3236,8 +3237,9 @@ footer.site { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--g
     }
 
     var tmeta = themeMeta(state.theme);
-    descEl.innerHTML =
-      "<strong>" + esc(tmeta.label) + "</strong> — " + esc(tmeta.desc || "");
+    var tdk = "td:" + state.theme;   // 긴 주제 설명(히든 기준 등)은 2줄만 — 탭하면 전문
+    descEl.innerHTML = '<div class="td-body' + clampCls(tdk, "clamp2") + '"' + clampAttr(tdk, "clamp2") + ">" +
+      "<strong>" + esc(tmeta.label) + "</strong> — " + esc(tmeta.desc || "") + "</div>";
 
     list = (D[state.country] || []).filter(function (s) { return inSel(state.theme, s.theme, s.tier); });
 
