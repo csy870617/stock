@@ -98,6 +98,7 @@ jobs:
 
       # 주간 심층 발굴(C 모드) 후보 스크린 — 6일 이내 생성본이 있으면 건너뛴다(주 1회, 토큰 0).
       # 시장 전체(한국 400·미국 600)를 같은 잣대로 훑어 세션이 검색 예산을 '후보 검증'에만 쓰게 한다.
+      # 우량·성장·저평가·배당은 2026-10-17 검증된 주제 팩터(screen-factors.js — 한국 기업현황·미국 SEC/야후, 약 5분 추가)로 거르고 점수를 매긴다.
       # 히든 두 그룹은 screen-hidden.js(한국 시총 3천억~12조 약 600종목의 5년 재무·현금, 미국 SEC XBRL·나스닥 EPS)를
       # 함께 돌려 15~20분이 더 걸린다 — 실패해도 이전 히든 그룹을 유지한다.
       - name: Screen discovery candidates (weekly, → data/discovery-candidates.js, token-free)

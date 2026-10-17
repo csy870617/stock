@@ -20,6 +20,8 @@ const SPLIT = C === "us" ? "2019-01" : "2024-04";
 const CFG = C === "us"
   ? { core: { rank: 150 }, growth: { rank: 600 }, value: { rank: 800 }, dividend: { rank: 900, dy: 0.025 }, all: { rank: 1000 } }
   : { core: { rank: 80 }, growth: { rank: 300 }, value: { rank: 400 }, dividend: { rank: 500, dy: 0.03 }, all: { rank: 600 } };
+// --nofin: 금융(은행·보험·리츠 등)을 뺀 부분집단으로 같은 평가 — 은행은 ROA 수준이 낮아 이익 변동이 작게 재지고 '매출'이 이자수익이라 해석이 다르다(사후 점검)
+const NOFIN = process.argv.includes("--nofin");
 const SIGN = { SIZE: 1, OPM: 1, EP: 1, BP: 1, SP: 1, FCFP: 1, EBITEV: 1, DY: 1, SHY: 1, ROE: 1, ROA: 1, GPA: 1, OPA: 1, CFOA: 1, ROIC: 1, ACC: -1, LEV: -1, F: 1, SROA: -1,
   SG1: 1, SG3: 1, OPG: 1, DROA: 1, DGM: 1, AG: -1, ISS: -1, PAYOUT: -1, DGR: 1, DSTREAK: 1, COV: 1, MOM: 1, VOL: -1 };
 // SIZE = log(시총) — 현재 스크린 점수의 '시총' 항목을 같은 잣대로 시험(README 채택 기준 4)
@@ -38,7 +40,7 @@ function pctRankMap(list, f) {
 }
 function population(theme, list) {
   const c = CFG[theme];
-  const base = list.filter((r) => get(r, "rank") <= c.rank);
+  const base = list.filter((r) => get(r, "rank") <= c.rank && (!NOFIN || !get(r, "fin")));
   if (theme === "core") return base.filter((r) => get(r, "opPos") === 1);
   if (theme === "growth") return base.filter((r) => get(r, "SG1") != null && get(r, "SG1") >= 0.15 && get(r, "opPos") === 1 && !get(r, "fin"));
   if (theme === "value") {

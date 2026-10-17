@@ -18,6 +18,7 @@
 // 사용법: node scripts/screen-discovery.js            # 받기 + 기록
 //         node scripts/screen-discovery.js --if-stale  # 6일 이내 생성본이 있으면 건너뜀(Action 주 1회용)
 //         node scripts/screen-discovery.js --limit 40  # 시험용(국가별 상위 N종목만)
+//         node scripts/screen-discovery.js --skip-hidden  # 히든 두 그룹은 이전 결과 유지(약 15분 절약 — 주제 기준만 다시 볼 때)
 const fs = require("fs");
 const path = require("path");
 const { execFile } = require("child_process");
@@ -200,7 +201,8 @@ const g0 = (v) => (v == null ? -Infinity : v);
 const EX = {   // 걸러지는 쪽이 전반·후반 모두 6개월 초과수익이 낮고 12개월 −30% 대폭락 확률이 높았던 조건(미국 검증 — 데이터가 없으면 거르지 않는다)
   loss: { label: "순이익 적자", f: (s) => s.fx && s.fx.niPos === 0 },
   dil: { label: "주식 수 연 5% 초과 증가(희석)", f: (s) => s.fx && s.fx.ISS != null && s.fx.ISS > 0.05 },
-  revDown: { label: "매출 역성장(가치 함정)", f: (s) => s.fx && s.fx.SG1 != null && s.fx.SG1 < 0 },
+  // 금융(은행·보험·카드 등)의 '매출'은 이자·보험 수익이라 금리·업황에 따라 움직인다 — 금융을 뺀 표본에서도 이 필터가 성립해(미국 전반·후반) 비금융에만 적용
+  revDown: { label: "매출 역성장(가치 함정)", f: (s) => !s.fin && s.fx && s.fx.SG1 != null && s.fx.SG1 < 0 },
   payout: { label: "배당성향 100% 초과", f: (s) => s.fx && s.fx.PAYOUT != null && s.fx.PAYOUT > 1 },
   agTop: { label: "자산 급증(주제 안 상위 10%)", dec: "AG" },
   sroaTop: { label: "이익 변동 큼(주제 안 상위 10%)", dec: "SROA" },
@@ -322,7 +324,11 @@ function view(s, score) {
       const popn = elig.concat(memRows.filter((s) => !elig.includes(s)));
       const F = new Map(popn.map((s) => [s, feat(s)]));
       const pr = {}; Object.keys(rule.w).forEach((k) => { pr[k] = pctRank(popn.map((s) => F.get(s)[k])); });
-      const score = (s) => Object.keys(rule.w).reduce((acc, k) => acc + rule.w[k] * pr[k](F.get(s)[k]), 0);
+      // 이익 안정성(5년 ROA 변동)은 금융·비금융을 따로 순위 매긴다 — 은행은 ROA 수준 자체가 1% 안팎이라 변동이 작게 재져 업종 간 비교가 안 된다
+      const prFin = {}, prNon = {};
+      ["sroa"].filter((k) => k in rule.w).forEach((k) => { prFin[k] = pctRank(popn.filter((s) => s.fin).map((s) => F.get(s)[k])); prNon[k] = pctRank(popn.filter((s) => !s.fin).map((s) => F.get(s)[k])); });
+      const rk = (k, s) => (k in prFin ? (s.fin ? prFin[k] : prNon[k])(F.get(s)[k]) : pr[k](F.get(s)[k]));
+      const score = (s) => Object.keys(rule.w).reduce((acc, k) => acc + rule.w[k] * rk(k, s), 0);
       const otherTheme = (t) => (roster[c + ":" + t] || []).map((x) => x.theme).filter((x) => x !== th);
       // 이미 정식 편성(어느 주제든)에 있는 종목·같은 회사(다른 주식 종류)는 '새 종목'이 아니라 뺀다.
       // 관심·보유(개인 목록) 종목은 후보로 남기되 alsoIn 으로 표시한다. 후보끼리도 같은 회사는 한 번만.
@@ -344,13 +350,15 @@ function view(s, score) {
     });
   });
 
-  // 히든 두 그룹 — 별도 스크린(유니버스·지표가 다르다). 실패하면 이전 파일의 히든 그룹을 그대로 둔다.
+  // 히든 두 그룹 — 별도 스크린(유니버스·지표가 다르다). 실패하면(또는 --skip-hidden) 이전 파일의 히든 그룹을 그대로 둔다.
   try {
+    if (process.argv.includes("--skip-hidden")) throw new Error("--skip-hidden");
     Object.assign(groups, await require("./screen-hidden").hiddenGroups(D, { log: (m) => console.log("  [히든] " + m) }));
   } catch (e) {
-    console.error("히든 스크린 실패 — 이전 히든 그룹 유지:", e && e.message);
+    if (!(e && e.message === "--skip-hidden")) console.error("히든 스크린 실패 — 이전 히든 그룹 유지:", e && e.message);
     try { global.window = {}; delete require.cache[require.resolve(OUT)]; require(OUT); const old = (global.window.DISCOVERY_CANDIDATES || {}).groups || {};
-      ["korea|rising", "us|rising"].forEach((k) => { if (old[k]) groups[k] = Object.assign({ stale: true }, old[k]); }); } catch (_e) { /* 없음 */ }
+      const skip = e && e.message === "--skip-hidden";
+      ["korea|rising", "us|rising"].forEach((k) => { if (old[k]) groups[k] = skip ? old[k] : Object.assign({ stale: true }, old[k]); }); } catch (_e) { /* 없음 */ }
   }
 
   const outObj = { asOf: today, builtAt: new Date().toISOString(), source: "네이버 증권 시가총액 순위·재무(연간·분기)·컨센서스 — scripts/screen-discovery.js",

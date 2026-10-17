@@ -117,11 +117,23 @@ async function addUsFactors(list, log) {
   });
   const fv = (c, p, cik) => { const m = FR[c + "|" + p]; const x = m && m.get(cik); return x ? x[0] : null; };
   const fe = (c, p, cik) => { const m = FR[c + "|" + p]; const x = m && m.get(cik); return x ? x[1] : null; };
-  let ok = 0;
+  let ok = 0, moved = 0;
+  const yearsOf = (fu) => Object.keys(fu).map(Number).filter((y) => fu[y].sh > 0).sort((a, b) => a - b);
   await mapLimit(list, 6, async (s) => {
     if (!s.cik || !(s.mcap > 0)) return;
-    const fu = LF.usFundamentals(s.cik, YEARS, fv, fe);
-    const ys = Object.keys(fu).map(Number).filter((y) => fu[y].sh > 0).sort((a, b) => a - b);
+    let fu = LF.usFundamentals(s.cik, YEARS, fv, fe);
+    let ys = yearsOf(fu);
+    // 지주회사 재편으로 티커가 이력 없는 새 CIK 로 옮겨 간 경우(예: XOM 2026 ExxonMobil Holdings) — 회사명 검색으로 최근까지 공시한 옛 CIK 를 찾는다
+    if (ys.length < 2 && s.name) {
+      await lim();
+      const q = String(s.name).replace(/[,.()]/g, " ").split(/\s+/).filter(Boolean).slice(0, 2).join(" ");
+      const j2 = await getJson("https://efts.sec.gov/LATEST/search-index?keysTyped=" + encodeURIComponent(q), SEC_UA);
+      for (const h of (j2 && j2.hits && j2.hits.hits) || []) {
+        const c2 = Number(h._id); if (c2 === s.cik) continue;
+        const fu2 = LF.usFundamentals(c2, YEARS, fv, fe), ys2 = yearsOf(fu2);
+        if (ys2.length >= 2 && ys2[ys2.length - 1] >= Y1 - 1) { fu = fu2; ys = ys2; s.cikAlt = c2; moved++; break; }
+      }
+    }
     if (!ys.length) return;
     const y = ys[ys.length - 1];
     const ext = await yahooExt(String(s.ticker).replace(".", "-")) || {};
@@ -130,7 +142,7 @@ async function addUsFactors(list, log) {
     fx.MOM = ext.MOM != null ? ext.MOM : null; fx.VOL = ext.VOL != null ? ext.VOL : null;
     s.fx = fx; s.fxYear = y; ok++;
   });
-  log("  미국 팩터(SEC·야후) " + ok + "/" + list.length + " (CIK " + list.filter((s) => s.cik).length + ")");
+  log("  미국 팩터(SEC·야후) " + ok + "/" + list.length + " (CIK " + list.filter((s) => s.cik).length + ", 재편 CIK 대체 " + moved + ")");
 }
 
 module.exports = { addKrFactors, addUsFactors };

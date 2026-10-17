@@ -84,7 +84,11 @@ function usFundamentals(cik, years, fv, fe, opt) {
   for (const y of years) {
     const p = "CY" + y, pi = "CY" + y + "Q4I";
     const rev = best ? (fv(best.c, p, cik) ?? first(US_REV.map((c) => fv(c, p, cik)))) : null;
-    const ni = first(US_NI.map((c) => fv(c, p, cik))), op = fv("OperatingIncomeLoss", p, cik);
+    // 순이익: 단위를 빠뜨린 태깅(예: Medtronic NetIncomeLoss 4,801 — 실제 48억 달러)은 다른 순이익 태그보다 100배 넘게 작다 → 그쪽을 쓴다
+    const nis = US_NI.map((c) => fv(c, p, cik)).filter((v) => v != null);
+    let ni = nis.length ? nis[0] : null;
+    if (ni != null) { const big = nis.reduce((m, v) => (Math.abs(v) > Math.abs(m) ? v : m), ni); if (Math.abs(big) > 100 * Math.abs(ni) && Math.abs(ni) > 0) ni = big; }
+    const op = fv("OperatingIncomeLoss", p, cik);
     const end = first(US_NI.map((c) => fe(c, p, cik))) || (best && fe(best.c, p, cik)) || fe("OperatingIncomeLoss", p, cik);
     if (rev == null && ni == null) continue;
     const cogs = first(US_COGS.map((c) => fv(c, p, cik)));
@@ -139,7 +143,8 @@ function usFactorsAt(fu, y, mcap, ext) {
     F: nOk >= 7 ? Math.round(sig.filter((v) => v === true).length * 9 / nOk) : null, SROA: sd(roas),
     SG1: f1 ? gr(f.rev, f1.rev) : null, SG3: f3 && f3.rev > 0 && f.rev > 0 ? Math.pow(f.rev / f3.rev, 1 / 3) - 1 : null, OPG: f1 ? gr(f.op, f1.op) : null,
     DROA: roa != null && roa1 != null ? roa - roa1 : null, DGM: gm != null && gm1 != null ? gm - gm1 : null, AG: f1 ? gr(f.assets, f1.assets) : null, ISS: f1 ? gr(f.sh, f1.sh) : null,
-    PAYOUT: f.div != null && f.ni > 0 ? f.div / f.ni : null, DGR: ext.dgr != null ? ext.dgr : null, DSTREAK: ext.streak != null ? ext.streak : null,
+    // PAYOUT 은 20배 넘으면 단위 오류로 보고 비운다
+    PAYOUT: f.div != null && f.ni > 0 && f.div / f.ni < 20 ? f.div / f.ni : null, DGR: ext.dgr != null ? ext.dgr : null, DSTREAK: ext.streak != null ? ext.streak : null,
     COV: fcf != null && f.div > 0 ? fcf / f.div : null,
   };
 }
