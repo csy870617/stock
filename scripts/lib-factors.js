@@ -7,6 +7,22 @@
 
 const ratio = (a, b) => (a != null && b != null && b > 0 ? a / b : null);
 const gr = (a, b) => (a != null && b != null && b > 0 ? a / b - 1 : null);
+const clamp = (v, lo, hi) => (v == null || !isFinite(v) ? null : Math.max(lo, Math.min(hi, v)));
+const avg = (a, nMin) => { const x = a.filter((v) => v != null && isFinite(v)); return x.length >= nMin ? x.reduce((p, v) => p + v, 0) / x.length : null; };
+// 2차 연구(주제다움) 지표 — 연도별 재무 지도에서 공통으로 계산. icOf(g) = 그 해 투하자본, fcfOf(g) = 그 해 FCF
+function themeExtra(fu, y, mcap, icOf, fcfOf, niOf) {
+  const f = fu[y], f1 = fu[y - 1];
+  const roicOf = (g) => { if (!g || g.op == null) return null; const ic = icOf(g); return ic > 0 ? g.op * 0.78 / ic : null; };
+  const opmOf = (g) => (g ? ratio(g.op, g.rev) : null);
+  const grOf = (k) => { const a = fu[y - k], b = fu[y - k - 1]; return a && b ? gr(a.rev, b.rev) : null; };
+  const fcf = fcfOf(f), ni = niOf(f), sg1 = grOf(0), ag = f1 ? gr(f.assets, f1.assets) : null;
+  return {
+    ROIC3: avg([0, 1, 2].map((k) => roicOf(fu[y - k])), 2), SOPM: sd([0, 1, 2, 3, 4].map((k) => opmOf(fu[y - k]))),
+    FCFM: fcf != null ? ratio(fcf, f.rev) : null, FCFNI: fcf != null && ni > 0 ? clamp(fcf / ni, -2, 3) : null,
+    SGVOL: sd([0, 1, 2].map(grOf)), SGAG: sg1 != null && ag != null ? sg1 - ag : null,
+    CAPEXA: f.capex != null ? ratio(Math.abs(f.capex), f.assets) : null,
+  };
+}
 const sd = (a) => { const x = a.filter((v) => v != null && isFinite(v)); if (x.length < 3) return null; const m = x.reduce((p, v) => p + v, 0) / x.length; return Math.sqrt(x.reduce((p, v) => p + (v - m) ** 2, 0) / (x.length - 1)); };
 
 // ── 한국: 기업현황 표 → 연도별 재무(12월 결산 실적 열만) ──
@@ -56,6 +72,7 @@ function krFactorsAt(fu, y, mcap) {
     DROA: roa != null && roa1 != null ? roa - roa1 : null, DGM: opm != null && opm1 != null ? opm - opm1 : null, AG: f1 ? gr(f.assets, f1.assets) : null, ISS: iss,
     PAYOUT: f.payout != null ? f.payout / 100 : null, DGR: f1 && f.divTot > 0 && f1.divTot > 0 ? f.divTot / f1.divTot - 1 : null,
     DSTREAK: f.divTot > 0 ? streak : null, COV: f.fcf != null && f.divTot > 0 ? f.fcf / f.divTot : null,
+    ...themeExtra(fu, y, mcap, (g) => (g.eq || 0) + (g.ibd || 0), (g) => g.fcf, (g) => g.np),
   };
 }
 
@@ -67,7 +84,7 @@ const US_CAPEX = ["PaymentsToAcquirePropertyPlantAndEquipment", "PaymentsToAcqui
 // 순이익: NetIncomeLoss(지배주주) → 보통주 귀속 → ProfitLoss(비지배 포함 — ITW 처럼 이 태그만 쓰는 회사가 있다)
 const US_NI = ["NetIncomeLoss", "NetIncomeLossAvailableToCommonStockholdersBasic", "ProfitLoss"];
 const US_DUR = US_REV.concat(US_COGS, US_CAPEX, US_NI, ["GrossProfit", "OperatingIncomeLoss", "NetCashProvidedByUsedInOperatingActivities", "PaymentsToDevelopSoftware",
-  "PaymentsOfDividends", "PaymentsOfDividendsCommonStock", "PaymentsForRepurchaseOfCommonStock", "ProceedsFromIssuanceOfCommonStock"]);
+  "PaymentsOfDividends", "PaymentsOfDividendsCommonStock", "PaymentsForRepurchaseOfCommonStock", "ProceedsFromIssuanceOfCommonStock", "ResearchAndDevelopmentExpense"]);
 // 주식 수: 희석 가중 → '기본·희석 공통'(XOM 등) → 기본 순. frames 는 그 기간을 담은 '가장 나중 보고서' 값이라 그 사이 분할이 소급 반영돼 있다
 //   → 호출 쪽 shNorm(값, 접수번호, 회계연도 말)으로 현재 분할 기준에 맞춘다(접수번호의 연도 = 제출 연도).
 const US_SHARES = ["WeightedAverageNumberOfDilutedSharesOutstanding", "WeightedAverageNumberOfShareOutstandingBasicAndDiluted", "WeightedAverageNumberOfSharesOutstandingBasic"];
@@ -101,7 +118,7 @@ function usFundamentals(cik, years, fv, fe, opt) {
     out[y] = {
       end, rev, gp, op, ni, ocf: fv("NetCashProvidedByUsedInOperatingActivities", p, cik), capex: cx == null ? null : cx + (fv("PaymentsToDevelopSoftware", p, cik) || 0),
       div: fv("PaymentsOfDividendsCommonStock", p, cik) ?? fv("PaymentsOfDividends", p, cik),
-      buy: fv("PaymentsForRepurchaseOfCommonStock", p, cik), iss: fv("ProceedsFromIssuanceOfCommonStock", p, cik),
+      buy: fv("PaymentsForRepurchaseOfCommonStock", p, cik), iss: fv("ProceedsFromIssuanceOfCommonStock", p, cik), rd: fv("ResearchAndDevelopmentExpense", p, cik),
       sh: (() => { for (const c of US_SHARES) { const s0 = fv(c, p, cik); if (s0 != null && s0 > 0) return shNorm ? shNorm(s0, fa ? fa(c, p, cik) : null, end) : s0; } return null; })(),
       assets: fv("Assets", pi, cik), ca: fv("AssetsCurrent", pi, cik), cl: fv("LiabilitiesCurrent", pi, cik), liab: fv("Liabilities", pi, cik),
       eq: fv("StockholdersEquity", pi, cik) ?? fv("StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest", pi, cik),
@@ -146,6 +163,10 @@ function usFactorsAt(fu, y, mcap, ext) {
     // PAYOUT 은 20배 넘으면 단위 오류로 보고 비운다
     PAYOUT: f.div != null && f.ni > 0 && f.div / f.ni < 20 ? f.div / f.ni : null, DGR: ext.dgr != null ? ext.dgr : null, DSTREAK: ext.streak != null ? ext.streak : null,
     COV: fcf != null && f.div > 0 ? fcf / f.div : null,
+    ...themeExtra(fu, y, mcap, (g) => (g.eq || 0) + (g.debt || 0) - (g.cash || 0) - (g.sti || 0), (g) => (g.ocf != null && g.capex != null ? g.ocf - g.capex : null), (g) => g.ni),
+    NETCASH: f.assets > 0 ? ((f.cash || 0) + (f.sti || 0) - (f.debt || 0)) / f.assets : null,
+    RDS: f.rd != null ? ratio(f.rd, f.rev) : null, RDA: f.rd != null ? ratio(f.rd, f.assets) : null,
+    GPG: f1 ? gr(f.gp, f1.gp) : null, BUYY: ((f.buy || 0) - (f.iss || 0)) / mcap,
   };
 }
 

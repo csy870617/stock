@@ -33,8 +33,16 @@ const sd = (a) => { const x = a.filter((v) => v != null && isFinite(v)); if (x.l
 const splitAfter = (s, date) => s.px.splits.filter((x) => x[0] > date).reduce((p, x) => p * x[1], 1);
 
 const FAC = ["EP", "BP", "SP", "FCFP", "EBITEV", "DY", "ROE", "ROA", "OPA", "CFOA", "OPM", "ROIC", "ACC", "LEV", "F", "SROA",
-  "SG1", "SG3", "OPG", "DROA", "DGM", "AG", "ISS", "PAYOUT", "DGR", "DSTREAK", "COV"];
-const FIELDS = ["t", "ym", "mcap", "rank", "fin", "opPos", "niPos"].concat(FAC, ["MOM", "VOL", "r1", "r3", "r6", "r12", "dcut"]);
+  "SG1", "SG3", "OPG", "DROA", "DGM", "AG", "ISS", "PAYOUT", "DGR", "DSTREAK", "COV",
+  "ROIC3", "SOPM", "FCFM", "FCFNI", "SGVOL", "SGAG", "CAPEXA"];
+const FIELDS = ["t", "ym", "mcap", "rank", "fin", "opPos", "niPos"].concat(FAC, ["MOM", "VOL", "r1", "r3", "r6", "r12", "dcut", "fROIC", "fSG", "fTRAP"]);
+// 2차 연구 충실도 결과 변수(다음 회계연도 재무 — 예측 변수에는 쓰지 않는다): ROIC·매출 성장·이익 붕괴(순이익 20% 이상 감소 또는 적자 전환)
+const fut = (fu, y) => {
+  const f = fu[y], n = fu[y + 1];
+  if (!n) return [null, null, null];
+  const x = LF.krFactorsAt(fu, y + 1, 1);
+  return [x ? x.ROIC : null, f.rev > 0 && n.rev != null ? n.rev / f.rev - 1 : null, f.np > 0 && n.np != null ? (n.np <= 0 || n.np < f.np * 0.8 ? 1 : 0) : null];
+};
 const rows = [];
 for (const ym of months) {
   const cs = [];
@@ -59,7 +67,7 @@ for (const ym of months) {
     // 배당 삭감(결과 변수): 다음 회계연도 배당 총액이 이번보다 10% 넘게 적음
     const dcut = f.divTot > 0 && fN && fN.divTot != null ? (fN.divTot < f.divTot * 0.9 ? 1 : 0) : null;
     rows.push([s.t, ym, Math.round(mcap), k + 1, s.fin ? 1 : 0, fx.opPos, fx.niPos].concat(FAC.map((k3) => fx[k3]),
-      [j12 != null && j1m != null ? a[j1m] / a[j12] - 1 : null, sd(mret), fwd(1), fwd(3), fwd(6), fwd(12), dcut]));
+      [j12 != null && j1m != null ? a[j1m] / a[j12] - 1 : null, sd(mret), fwd(1), fwd(3), fwd(6), fwd(12), dcut, ...fut(s.fu, y)]));
   });
 }
 const r6 = (v) => (typeof v === "number" && isFinite(v) ? +v.toPrecision(5) : v);

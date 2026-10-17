@@ -83,8 +83,16 @@ for (const s of stocks) {
 const divSum = (s, fromYM, toYM) => { let t = 0; for (let k = addM(fromYM, 1); k <= toYM; k = addM(k, 1)) t += s.divM[k] || 0; return t; };   // (from, to]
 
 const FAC = ["EP", "BP", "SP", "FCFP", "EBITEV", "DY", "SHY", "ROE", "ROA", "GPA", "OPA", "CFOA", "OPM", "ROIC", "ACC", "LEV", "F", "SROA",
-  "SG1", "SG3", "OPG", "DROA", "DGM", "AG", "ISS", "PAYOUT", "DGR", "DSTREAK", "COV"];
-const FIELDS = ["t", "ym", "mcap", "rank", "fin", "opPos", "niPos"].concat(FAC, ["MOM", "VOL", "r1", "r3", "r6", "r12", "dcut"]);
+  "SG1", "SG3", "OPG", "DROA", "DGM", "AG", "ISS", "PAYOUT", "DGR", "DSTREAK", "COV",
+  "ROIC3", "SOPM", "FCFM", "FCFNI", "SGVOL", "SGAG", "CAPEXA", "NETCASH", "RDS", "RDA", "GPG", "BUYY"];
+const FIELDS = ["t", "ym", "mcap", "rank", "fin", "opPos", "niPos"].concat(FAC, ["MOM", "VOL", "r1", "r3", "r6", "r12", "dcut", "fROIC", "fSG", "fTRAP"]);
+// 2차 연구 충실도 결과 변수(다음 회계연도 재무 — 예측 변수에는 쓰지 않는다): ROIC·매출 성장·이익 붕괴(순이익 20% 이상 감소 또는 적자 전환)
+const fut = (fu, y) => {
+  const f = fu[y], n = fu[y + 1];
+  if (!n) return [null, null, null];
+  const x = LF.usFactorsAt(fu, y + 1, 1);
+  return [x ? x.ROIC : null, f.rev > 0 && n.rev != null ? n.rev / f.rev - 1 : null, f.ni > 0 && n.ni != null ? (n.ni <= 0 || n.ni < f.ni * 0.8 ? 1 : 0) : null];
+};
 const rows = [];
 for (const ym of months) {
   const cs = [];
@@ -115,7 +123,7 @@ for (const ym of months) {
     const j12 = s.idx.get(addM(ym, -12)), j1m = s.idx.get(addM(ym, -1));
     const hasNext = s.idx.get(addM(ym, 12)) != null;
     rows.push([s.t, ym, Math.round(mcap / 1e6), k + 1, s.fin ? 1 : 0, fx.opPos, fx.niPos].concat(FAC.map((k3) => fx[k3]),
-      [j12 != null && j1m != null ? a[j1m] / a[j12] - 1 : null, sd(mret), fwd(1), fwd(3), fwd(6), fwd(12), dTTM > 0 && hasNext ? (dNext < dTTM * 0.9 ? 1 : 0) : null]));
+      [j12 != null && j1m != null ? a[j1m] / a[j12] - 1 : null, sd(mret), fwd(1), fwd(3), fwd(6), fwd(12), dTTM > 0 && hasNext ? (dNext < dTTM * 0.9 ? 1 : 0) : null, ...fut(s.fu, y)]));
   });
   if (ym.endsWith("-12")) log(ym + " 종목 " + top.length);
 }
