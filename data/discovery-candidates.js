@@ -2,8 +2,8 @@
 // groups["<country>|<theme>"] = {rule 하드 조건, weights 점수 가중, eligible 적격 수, incumbents 현 편성(점수 낮은 순·같은 잣대), candidates 상위 후보}
 // 수치 단위: 성장률·upside·마진·배당성향 %, ROE·ROA·opm %, debt 부채비율 %, per·pbr 배, divY %. 시세·재무는 생성 시점 네이버 값.
 window.DISCOVERY_CANDIDATES = {
- "asOf": "2026-10-17",
- "builtAt": "2026-10-17T22:30:24.834Z",
+ "asOf": "2026-10-18",
+ "builtAt": "2026-10-18T01:58:35.218Z",
  "source": "네이버 증권 시가총액 순위·재무(연간·분기)·컨센서스 — scripts/screen-discovery.js",
  "universe": {
   "korea": 400,
