@@ -244,6 +244,14 @@ svg { display: block; }
 /* 후보 종목(주제 화면 T3 아래) · 편성 결격 표시 — data/candidates.js */
 .r-def { flex: none; height: 16px; line-height: 16px; padding: 0 4px; border-radius: 4px; font-size: 10px; font-weight: 800; background: var(--warn-soft); color: var(--warn); }
 .r-def.r-chk { background: var(--sf3); color: var(--mut); }
+.r-def, .r-warn { cursor: pointer; }
+.dt-alert { margin-top: 12px; display: grid; gap: 8px; }
+.al-i { padding: 10px 12px; border-radius: 10px; background: var(--sf2); font-size: 13px; line-height: 1.55; color: var(--ink2); }
+.al-k { font-weight: 700; color: var(--ink); margin-bottom: 2px; }
+.al-k.al-w { color: var(--warn); }
+.al-at { font-weight: 500; font-size: 12px; color: var(--mut); margin-left: 4px; }
+.al-why { margin: 4px 0 0; padding-left: 16px; }
+.al-why li { margin: 2px 0; }
 .cand-gh { margin-top: 10px; border-top: 8px solid var(--sf2); padding-top: 18px; }
 .cand-sub { padding: 0 16px 6px; font-size: 12.5px; line-height: 1.5; color: var(--mut); }
 .crow { min-height: 58px; color: inherit; text-decoration: none; }
@@ -2303,7 +2311,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     if (!isPersonal(s.theme)) out.push('<span class="bd bd-t"><b>T' + esc(s.tier) + "</b>" + esc(themeMeta(s.theme).label) + " · " + esc((TIER_NAMES[s.tier] || "").split(" · ")[1] || "") + "</span>");
     else if (s.theme === "watch") out.push('<span class="bd">관심종목' + (s.watchTag ? " · " + esc(s.watchTag) : "") + "</span>");
     else out.push('<span class="bd">보유종목</span>');
-    if (e.upside != null && e.upside <= 0) out.push('<span class="bd bd-warn">목표가 도달</span>');
+    if (e.upside != null && e.upside <= 0) out.push('<span class="bd bd-warn" data-basis="' + esc(TP_HIT_TIP) + '">목표가 도달</span>');
     if (isValueTrap(s, e.upside)) out.push('<span class="bd bd-warn" data-basis="' + esc(VT_TIP) + '">낙폭발 상승여력</span>');
     var df = isPersonal(s.theme) ? null : defectOf(c, s.theme, s.ticker);
     if (df && df.state === "결격") out.push('<span class="bd bd-warn" data-basis="' + esc(defectText(df)) + '">결격 · 교체 대기</span>');
@@ -2317,6 +2325,33 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     var nx = ev && ev.next, day = nx && nx.date ? evDay(nx.date) : null;
     if (day && day.dd >= 0 && day.dd <= 30) out.push('<span class="bd bd-ev" title="' + esc(nx.title || "실적 발표") + '">실적 ' + (day.dd === 0 ? "오늘" : "D-" + day.dd) + "</span>");
     return out.join("");
+  }
+  // 주의 배지(결격·점검·목표가 도달·낙폭발 상승여력·현재가 확인·수급 과열)의 이유 — 배지를 누르지 않아도 상세 위쪽에 펼쳐 보인다
+  var TP_HIT_TIP = "현재가가 증권사 컨센서스 목표가 이상입니다. 결격·편출 사유는 아니며(목표가는 주가를 뒤따라 바뀌는 값), 논거·실적을 먼저 다시 확인하는 대상입니다.";
+  var PU_TIP = "최근 시세를 확인하지 못해 옛 가격 기준입니다. 표시된 상승여력이 실제와 다를 수 있습니다.";
+  var HOT_TIP = "외국인+기관 20일 순매수가 거래량의 6.3% 이상입니다 — 2016~2026년 이 구간은 이후 1·3개월 지수보다 약했습니다.";
+  function detailAlerts(s, c, e) {
+    var out = [];
+    var df = isPersonal(s.theme) ? null : defectOf(c, s.theme, s.ticker);
+    if (df && (df.state === "결격" || df.state === "점검 필요")) {
+      var why = [];
+      if (df.note) why.push(df.note);
+      (df.flags || []).forEach(function (f) { if (f.fresh || !df.note) why.push(f.msg); });
+      out.push({ warn: df.state === "결격", k: df.state === "결격" ? "결격 · 교체 대기" : "결격 점검 중",
+        lead: df.state === "결격" ? "검증을 통과한 대체 후보가 생기면 바로 교체합니다." : "매일 자동 점검에서 신호가 떠 다음 업데이트에서 실질 결격인지 판정합니다.",
+        why: why, at: df.judged });
+    }
+    if (e.upside != null && e.upside <= 0) out.push({ warn: true, k: "목표가 도달", lead: TP_HIT_TIP, why: [] });
+    if (isValueTrap(s, e.upside)) out.push({ warn: true, k: "낙폭발 상승여력", lead: VT_TIP, why: [] });
+    if (s.priceUnverified && !e.live) out.push({ warn: true, k: "현재가 확인 필요", lead: PU_TIP, why: [] });
+    var E = window.STOCK_EVENTS, ev = E && E.items && E.items[s.ticker], f = ev && ev.flow;
+    if (c === "korea" && f && f.hot) out.push({ warn: true, k: "수급 과열", lead: HOT_TIP, why: [] });
+    if (!out.length) return "";
+    return '<div class="dt-alert">' + out.map(function (a) {
+      return '<div class="al-i"><div class="al-k' + (a.warn ? " al-w" : "") + '">' + esc(a.k) + (a.at ? ' <span class="al-at">판정 ' + esc(mdOf(a.at)) + "</span>" : "") + "</div>" +
+        '<div class="al-t">' + esc(a.lead) + "</div>" +
+        (a.why.length ? '<ul class="al-why">' + a.why.map(function (w) { return "<li>" + esc(w) + "</li>"; }).join("") + "</ul>" : "") + "</div>";
+    }).join("") + "</div>";
   }
   function kv(k, v, sub, tip, mut) {
     return '<div class="kv-c"' + (tip ? ' data-basis="' + esc(tip) + '"' : "") + '><div class="kv-k">' + esc(k) +
@@ -2351,9 +2386,9 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     var e = effective(s), n = s.techNote || {}, sd = staleDays(s);
     var meta = (e.live ? '<span class="live-tx"><i class="live-dot"></i>실시간</span>'
       : esc(e.priceDate || D.generatedAt) + " 종가" + (sd >= 7 ? " (" + sd + "일 전)" : "")) + " · 전일 대비";
-    var badges = detailBadges(s, c, e);
+    var badges = detailBadges(s, c, e), alerts = detailAlerts(s, c, e);
     var top = '<div class="dt-top"><div class="dt-pxl"><span class="dt-pv">' + esc(fmtPrice(e.price, c)) + "</span>" + chgHtml(s.changePct, "dt-ch") + "</div>" +
-      '<div class="dt-meta">' + meta + "</div>" + (badges ? '<div class="dt-bd">' + badges + "</div>" : "") + "</div>";
+      '<div class="dt-meta">' + meta + "</div>" + (badges ? '<div class="dt-bd">' + badges + "</div>" : "") + alerts + "</div>";
     var why = it && it.why ? '<div class="dt-why"><span class="dt-why-k">Top Pick 선정 이유</span>' + esc(it.why) + "</div>" : "";
     var sig = (n.sigShort || n.sigMid || n.sigLong) ? '<div class="dt-sig">' + [["단기", n.sigShort, "일봉"], ["중기", n.sigMid, "주봉"], ["장기", n.sigLong, "월봉"]].map(function (p) {
         return '<div class="ds"><span class="ds-k">' + p[0] + " <i>" + p[2] + '</i></span><b class="ds-v t-' + (SIG_CLS[p[1]] || "x") + '">' + esc(p[1] || "–") + "</b></div>";
@@ -2657,9 +2692,9 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     var sub = [esc(s.ticker)];
     if (dv != null && dv >= 0.05) sub.push("배당 " + fmtDiv(dv));
     var flags = (NEW_TICKERS[s.ticker] ? '<span class="r-new" title="최근 편입">N</span>' : "") +
-      (isValueTrap(s, e.upside) ? '<span class="r-warn" title="' + esc(VT_TIP) + '">!</span>' : "");
+      (isValueTrap(s, e.upside) ? '<span class="r-warn" title="' + esc(VT_TIP) + '" data-basis="' + esc("낙폭발 상승여력 — " + VT_TIP) + '">!</span>' : "");
     var df = isPersonal(s.theme) ? null : defectOf(c, s.theme, s.ticker);
-    if (df && df.state !== "감시") flags += '<span class="r-def' + (df.state === "결격" ? "" : " r-chk") + '" title="' + esc(defectText(df)) + '">' + (df.state === "결격" ? "결격" : "점검") + "</span>";
+    if (df && df.state !== "감시") flags += '<span class="r-def' + (df.state === "결격" ? "" : " r-chk") + '" title="' + esc(defectText(df)) + '" data-basis="' + esc(defectText(df)) + '">' + (df.state === "결격" ? "결격" : "점검") + "</span>";
     return '<div class="row"' + openAttrs(c, s.ticker, s.theme, o.pkey ? ' data-pkey="' + esc(o.pkey) + '"' : "") + ">" +
       (o.edit ? '<span class="r-grip" title="끌어서 순서 바꾸기">' + ICON.grip + "</span>" : "") +
       '<div class="r-l"><div class="r-nm"><span class="r-name">' + esc(s.name) + "</span>" + flags + "</div>" +
@@ -3867,7 +3902,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     }
     if (t.closest("#mineEdit")) { state.mineEdit = !state.mineEdit; renderMine(); return; }
     var op = t.closest("[data-open]");
-    if (op && !t.closest("a")) {
+    if (op && !t.closest("a") && !t.closest(".r-def, .r-warn")) {   // 행 안 주의 칩은 누르면 이유 팝업(상세를 열지 않음)
       if (plDragMoved) { plDragMoved = false; return; }   // 방금 드래그로 순서를 바꿨으면 이 클릭은 무시
       openFromEl(op);
     }
