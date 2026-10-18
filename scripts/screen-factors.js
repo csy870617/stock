@@ -95,10 +95,20 @@ async function addKrFactors(list, log) {
 }
 
 // ── 미국 ──
+// 지주회사 재편 등으로 새 CIK 에 재무 이력이 없을 때 쓸 옛 CIK(티커 → [CIK])
+const CIK_PREDECESSOR = { XOM: [34088] };
 async function addUsFactors(list, log) {
   const lim = rateLimiter(7);
-  const want = (t) => String(t).toUpperCase().replace(".", "-");
+  const want = (t) => String(t).toUpperCase().replace(/[.\s/]+/g, "-");
+  // 1차: SEC 공식 티커→CIK 표. 검색 색인(efts)만 쓰던 때는 'V' 같은 한 글자 티커·'BRK B'(공백) 클래스 주식·일부 대형주를
+  // 못 찾아 Visa·Berkshire·Baker Hughes·Hershey·Ares 의 팩터가 비었다(2026-10-18 — 시총 상위 450 중 미국 회사 6곳).
+  // www.sec.gov 파일은 '이름 연락처' 형식의 User-Agent 만 받는다(data.sec.gov·efts 는 기존 SEC_UA 로 된다).
+  const tickerCik = new Map();
+  const tj = await getJson("https://www.sec.gov/files/company_tickers.json", "stock-dashboard-screen admin@stock-dashboard.dev");
+  Object.values(tj || {}).forEach((r) => { if (r && r.ticker) tickerCik.set(want(r.ticker), Number(r.cik_str)); });
   await mapLimit(list, 6, async (s) => {
+    const known = tickerCik.get(want(s.ticker));
+    if (known) { s.cik = known; return; }
     await lim();
     const j = await getJson("https://efts.sec.gov/LATEST/search-index?keysTyped=" + encodeURIComponent(s.ticker), SEC_UA);
     for (const h of (j && j.hits && j.hits.hits) || []) {
@@ -127,7 +137,12 @@ async function addUsFactors(list, log) {
     if (!s.cik || !(s.mcap > 0)) return;
     let fu = LF.usFundamentals(s.cik, YEARS, fv, fe);
     let ys = yearsOf(fu);
-    // 지주회사 재편으로 티커가 이력 없는 새 CIK 로 옮겨 간 경우(예: XOM 2026 ExxonMobil Holdings) — 회사명 검색으로 최근까지 공시한 옛 CIK 를 찾는다
+    // 지주회사 재편으로 티커가 이력 없는 새 CIK 로 옮겨 간 경우(예: XOM 2026 ExxonMobil Holdings) — 알려진 옛 CIK 를 먼저 쓰고,
+    // 없으면 회사명 검색으로 최근까지 공시한 옛 CIK 를 찾는다(XOM 은 새 이름 'Exxonmobil Holdings' 검색에 옛 'EXXON MOBIL CORP' 가 안 걸렸다)
+    for (const c2 of (ys.length < 2 && CIK_PREDECESSOR[want(s.ticker)]) || []) {
+      const fu2 = LF.usFundamentals(c2, YEARS, fv, fe), ys2 = yearsOf(fu2);
+      if (ys2.length >= 2) { fu = fu2; ys = ys2; s.cikAlt = c2; moved++; break; }
+    }
     if (ys.length < 2 && s.name) {
       await lim();
       const q = String(s.name).replace(/[,.()]/g, " ").split(/\s+/).filter(Boolean).slice(0, 2).join(" ");
