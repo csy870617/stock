@@ -132,7 +132,9 @@ async function addUsFactors(list, log) {
   const fv = (c, p, cik) => { const m = FR[c + "|" + p]; const x = m && m.get(cik); return x ? x[0] : null; };
   const fe = (c, p, cik) => { const m = FR[c + "|" + p]; const x = m && m.get(cik); return x ? x[1] : null; };
   let ok = 0, moved = 0;
-  const yearsOf = (fu) => Object.keys(fu).map(Number).filter((y) => fu[y].sh > 0).sort((a, b) => a - b);
+  // 주식 종류가 여럿인 회사(Visa·Berkshire·Hershey·Ares·Baker Hughes)는 전체 가중평균 주식 수를 종류별(차원)로만 공시해 frames 에 값이 없다 —
+  // 주식 수가 없다고 그 해를 통째로 버리면 팩터가 모두 빠지므로(2026-10-18), 매출이나 순이익이 있으면 쓰고 주식 수 변화(ISS)만 비운다.
+  const yearsOf = (fu) => Object.keys(fu).map(Number).filter((y) => fu[y].sh > 0 || fu[y].rev != null || fu[y].ni != null).sort((a, b) => a - b);
   await mapLimit(list, 6, async (s) => {
     if (!s.cik || !(s.mcap > 0)) return;
     let fu = LF.usFundamentals(s.cik, YEARS, fv, fe);
