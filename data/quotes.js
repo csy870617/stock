@@ -49,13 +49,6 @@ window.STOCK_QUOTES = {
    "close": 1298000,
    "closeDate": "2026-10-16"
   },
-  "213420": {
-   "price": 27100,
-   "date": "2026-10-16",
-   "changePct": 5,
-   "close": 27100,
-   "closeDate": "2026-10-16"
-  },
   "214450": {
    "price": 278000,
    "date": "2026-10-16",
@@ -89,6 +82,13 @@ window.STOCK_QUOTES = {
    "date": "2026-10-16",
    "changePct": -0.6,
    "close": 92100,
+   "closeDate": "2026-10-16"
+  },
+  "278470": {
+   "price": 325500,
+   "date": "2026-10-16",
+   "changePct": 9.2,
+   "close": 325500,
    "closeDate": "2026-10-16"
   },
   "298040": {
@@ -161,13 +161,6 @@ window.STOCK_QUOTES = {
    "close": 286500,
    "closeDate": "2026-10-16"
   },
-  "012330": {
-   "price": 352500,
-   "date": "2026-10-16",
-   "changePct": 4.4,
-   "close": 352500,
-   "closeDate": "2026-10-16"
-  },
   "086790": {
    "price": 122500,
    "date": "2026-10-16",
@@ -210,20 +203,6 @@ window.STOCK_QUOTES = {
    "close": 110200,
    "closeDate": "2026-10-16"
   },
-  "096770": {
-   "price": 152000,
-   "date": "2026-10-16",
-   "changePct": -1.9,
-   "close": 152000,
-   "closeDate": "2026-10-16"
-  },
-  "003490": {
-   "price": 26350,
-   "date": "2026-10-16",
-   "changePct": -10.5,
-   "close": 26350,
-   "closeDate": "2026-10-16"
-  },
   "032640": {
    "price": 15510,
    "date": "2026-10-16",
@@ -236,13 +215,6 @@ window.STOCK_QUOTES = {
    "date": "2026-10-16",
    "changePct": 1.3,
    "close": 42750,
-   "closeDate": "2026-10-16"
-  },
-  "024110": {
-   "price": 19920,
-   "date": "2026-10-16",
-   "changePct": 0.9,
-   "close": 19920,
    "closeDate": "2026-10-16"
   },
   "058470": {
@@ -364,6 +336,34 @@ window.STOCK_QUOTES = {
    "close": 169700,
    "closeDate": "2026-10-16"
   },
+  "086280": {
+   "price": 187100,
+   "date": "2026-10-16",
+   "changePct": 5.5,
+   "close": 187100,
+   "closeDate": "2026-10-16"
+  },
+  "018260": {
+   "price": 199900,
+   "date": "2026-10-16",
+   "changePct": 2.9,
+   "close": 199900,
+   "closeDate": "2026-10-16"
+  },
+  "005850": {
+   "price": 48550,
+   "date": "2026-10-16",
+   "changePct": 3.9,
+   "close": 48550,
+   "closeDate": "2026-10-16"
+  },
+  "095340": {
+   "price": 160800,
+   "date": "2026-10-16",
+   "changePct": 9,
+   "close": 160800,
+   "closeDate": "2026-10-16"
+  },
   "MSFT": {
    "price": 529.05,
    "date": "2026-10-16",
@@ -483,13 +483,6 @@ window.STOCK_QUOTES = {
    "close": 255.56,
    "closeDate": "2026-10-16"
   },
-  "AXON": {
-   "price": 390.29,
-   "date": "2026-10-16",
-   "changePct": -6.4,
-   "close": 390.29,
-   "closeDate": "2026-10-16"
-  },
   "NXT": {
    "price": 80.04,
    "date": "2026-10-16",
@@ -546,13 +539,6 @@ window.STOCK_QUOTES = {
    "close": 343.46,
    "closeDate": "2026-10-16"
   },
-  "ABT": {
-   "price": 104.89,
-   "date": "2026-10-16",
-   "changePct": 0.2,
-   "close": 104.89,
-   "closeDate": "2026-10-16"
-  },
   "MU": {
    "price": 878.84,
    "date": "2026-10-16",
@@ -579,13 +565,6 @@ window.STOCK_QUOTES = {
    "date": "2026-10-16",
    "changePct": -1.3,
    "close": 401.43,
-   "closeDate": "2026-10-16"
-  },
-  "MCHP": {
-   "price": 73.85,
-   "date": "2026-10-16",
-   "changePct": -0.6,
-   "close": 73.85,
    "closeDate": "2026-10-16"
   },
   "GILD": {
@@ -672,13 +651,6 @@ window.STOCK_QUOTES = {
    "close": 463.15,
    "closeDate": "2026-10-16"
   },
-  "APH": {
-   "price": 79.35,
-   "date": "2026-10-16",
-   "changePct": -2.6,
-   "close": 79.35,
-   "closeDate": "2026-10-16"
-  },
   "DVN": {
    "price": 50.73,
    "date": "2026-10-16",
@@ -754,6 +726,34 @@ window.STOCK_QUOTES = {
    "date": "2026-10-16",
    "changePct": 0.3,
    "close": 213.69,
+   "closeDate": "2026-10-16"
+  },
+  "TJX": {
+   "price": 147.33,
+   "date": "2026-10-16",
+   "changePct": 1.9,
+   "close": 147.33,
+   "closeDate": "2026-10-16"
+  },
+  "ANET": {
+   "price": 176.98,
+   "date": "2026-10-16",
+   "changePct": -4.6,
+   "close": 176.98,
+   "closeDate": "2026-10-16"
+  },
+  "GD": {
+   "price": 344.23,
+   "date": "2026-10-16",
+   "changePct": 2.1,
+   "close": 344.23,
+   "closeDate": "2026-10-16"
+  },
+  "APPF": {
+   "price": 212.13,
+   "date": "2026-10-16",
+   "changePct": -3,
+   "close": 212.13,
    "closeDate": "2026-10-16"
   }
  },
