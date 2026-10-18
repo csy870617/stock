@@ -259,6 +259,18 @@ const builtDay = (v) => (v && typeof v === "string" ? v.slice(0, 10) : null);
   else if (b !== today && !(obj.builtAt >= T + "T21:00:00Z")) missBackbone.push(name + " 마지막 생성 " + obj.builtAt + " — 오늘 재실행 필요");
 });
 
+// ── 매일 결격 점검(2026-10-18 사용자 지시 — '매일 결격 검사, 발생 시 바로 교체', CLAUDE.md §3-7) ──
+// check-defects.js 를 다시 돌려 candidate-notes.json 의 최신 판정을 반영한 뒤 판정한다:
+// 자동 신호가 뜬 편성 종목을 모두 판정했는가 + 실질 결격마다 최신 거래일(T) 이후 교체를 시도했는가.
+const missDefect = [];
+try {
+  require("child_process").execFileSync(process.execPath, [path.join(__dirname, "check-defects.js")], { stdio: "ignore" });
+  global.window = {}; const cp = path.join(ROOT, "data/candidates.js"); delete require.cache[require.resolve(cp)]; require(cp);
+  const CS = (global.window.CANDIDATES || {}).summary || {};
+  if (CS.review) missDefect.push("점검 필요 " + CS.review + "종목(node scripts/check-defects.js)");
+  if (CS.untried) missDefect.push("오늘 교체 시도 안 한 결격 " + CS.untried + "종목");
+} catch (e) { missDefect.push("check-defects 실패: " + (e && e.message ? e.message.split("\n")[0] : e)); }
+
 const missMarket = ["marketNote", "marketNoteUS", "marketNoteKR"].filter((f) => !D[f] || !String(D[f]).trim());
 // generatedAt 은 daily-maintenance 가 매일 올려 시황 신선도를 가리므로,
 // 시황 문구를 실제로 다시 쓴 날(marketNoteAsOf)을 별도로 게이트한다.
@@ -323,6 +335,7 @@ if (process.argv.includes("--emit")) {
       { key: "market",    label: "시황",        done: missMarket.length ? 0 : 1, total: 1 },
       // backbone(오늘 재실행)이 빠지면 CLI 게이트는 빨강인데 패널만 초록인 불일치가 났다(감사).
       { key: "backbone",  label: "지표 재생성",  done: missBackbone.length ? 0 : 2, total: 2 },
+      { key: "defects",   label: "결격 점검",   done: missDefect.length ? 0 : 1, total: 1 },
     ],
     rotation: [
       { key: "verified", label: "목표가 재검증", fresh: N - staleVerif.length, total: N,
@@ -369,6 +382,7 @@ rows.forEach(([name, done, total, miss]) => {
 
 [["index-notes", missIdx], ["topPicks", missTop], ["liquidity", missLiq],
  ["backbone 최신화 (오늘 재실행)", missBackbone],
+ ["결격 점검 (자동 신호 판정 + 결격 교체 시도)", missDefect],
  ["신규 후보 탐색 (전 " + DISC_GROUPS.length + "그룹 " + VERIF_CYCLE_DAYS + "일 이내)", missDisc],
  ["주간 심층 발굴 (C 모드 " + VERIF_CYCLE_DAYS + "일 이내)", missDeep],
  ["aiTarget 재시도 (전 종목 " + VERIF_CYCLE_DAYS + "일 이내)",
@@ -402,7 +416,7 @@ console.log("  ℹ️  tier 회전(참고): " + Object.keys(tierGroups).length +
 
 const blockers = missTech.length + missValue.length + missVerif.length + missTier.length +
   missIdx.length + missTop.length + missLiq.length + missDisc.length + missDeep.length + staleAi.length +
-  missBackbone.length + missMarket.length;
+  missBackbone.length + missMarket.length + missDefect.length;
 
 console.log("");
 if (blockers === 0) {

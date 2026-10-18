@@ -16,7 +16,9 @@
 //   한국 점수에는 컨센서스 상승여력을 넣지 않는다(백테스트상 한국 upside 선별력 없음 — §7). 미국만 일부 반영.
 //
 // 사용법: node scripts/screen-discovery.js            # 받기 + 기록
-//         node scripts/screen-discovery.js --if-stale  # 6일 이내 생성본이 있으면 건너뜀(Action 주 1회용)
+//         node scripts/screen-discovery.js --if-stale [일]  # 그 일수(기본 6) 이내 생성본이 있으면 건너뜀
+//         node scripts/screen-discovery.js --if-stale 0.75 --hidden-stale 6  # Action: 매일 다시 만들고 히든 두 그룹(15~20분)은 6일마다
+//           (2026-10-18 매일 결격 점검 도입 — 편성 종목의 주제 기준 미달을 매일 보려면 스크린이 매일 새로워야 한다)
 //         node scripts/screen-discovery.js --limit 40  # 시험용(국가별 상위 N종목만)
 //         node scripts/screen-discovery.js --skip-hidden  # 히든 두 그룹은 이전 결과 유지(약 15분 절약 — 주제 기준만 다시 볼 때)
 const fs = require("fs");
@@ -28,6 +30,9 @@ const OUT = path.join(ROOT, "data", "discovery-candidates.js");
 const argVal = (n) => { const i = process.argv.indexOf("--" + n); return i >= 0 ? process.argv[i + 1] : null; };
 const LIMIT = Number(argVal("limit") || 0);
 const IF_STALE = process.argv.includes("--if-stale");
+const numArg = (n, d) => { const v = Number(argVal(n)); return isFinite(v) && v > 0 ? v : d; };
+const STALE_DAYS = numArg("if-stale", 6);
+const HIDDEN_STALE = process.argv.includes("--hidden-stale") ? numArg("hidden-stale", 6) : 0;
 const TOP_N = 25;   // 2026-10-18 10→25 — 사용자 지시 '최선의 종목'으로 그룹당 검증 후보를 넓힘
 const today = new Date().toISOString().slice(0, 10);
 
@@ -35,7 +40,7 @@ if (IF_STALE && fs.existsSync(OUT)) {
   try {
     global.window = {}; require(OUT);
     const b = (global.window.DISCOVERY_CANDIDATES || {}).builtAt;
-    if (b && (Date.now() - Date.parse(b)) / 86400000 < 6) { console.log("discovery-candidates.js 신선(" + b + ") — 건너뜀"); process.exit(0); }
+    if (b && (Date.now() - Date.parse(b)) / 86400000 < STALE_DAYS) { console.log("discovery-candidates.js 신선(" + b + ") — 건너뜀"); process.exit(0); }
   } catch (_e) { /* 다시 만든다 */ }
 }
 
@@ -395,10 +400,18 @@ function view(s, score) {
   });
 
   // 히든 두 그룹 — 별도 스크린(유니버스·지표가 다르다). 실패하면(또는 --skip-hidden) 이전 파일의 히든 그룹을 그대로 둔다.
+  // 히든 생성 시각 — 히든을 다시 만들지 않으면 이전 값을 잇는다(--hidden-stale 판정용)
+  let hiddenBuiltAt = null;
+  const prevHiddenAt = (() => { try { global.window = {}; delete require.cache[require.resolve(OUT)]; require(OUT);
+    const o = global.window.DISCOVERY_CANDIDATES || {}; return o.hiddenBuiltAt || o.builtAt || null; } catch (_e) { return null; } })();
+  const hiddenFresh = HIDDEN_STALE && prevHiddenAt && (Date.now() - Date.parse(prevHiddenAt)) / 86400000 < HIDDEN_STALE;
   try {
-    if (process.argv.includes("--skip-hidden")) throw new Error("--skip-hidden");
+    if (process.argv.includes("--skip-hidden") || hiddenFresh) throw new Error("--skip-hidden");
     Object.assign(groups, await require("./screen-hidden").hiddenGroups(D, { log: (m) => console.log("  [히든] " + m) }));
+    hiddenBuiltAt = new Date().toISOString();
   } catch (e) {
+    hiddenBuiltAt = prevHiddenAt;
+    if (hiddenFresh) console.log("히든 두 그룹은 " + prevHiddenAt + " 생성본 유지(--hidden-stale " + HIDDEN_STALE + "일)");
     if (!(e && e.message === "--skip-hidden")) console.error("히든 스크린 실패 — 이전 히든 그룹 유지:", e && e.message);
     try { global.window = {}; delete require.cache[require.resolve(OUT)]; require(OUT); const old = (global.window.DISCOVERY_CANDIDATES || {}).groups || {};
       const skip = e && e.message === "--skip-hidden";
@@ -408,7 +421,7 @@ function view(s, score) {
   // 주제 팩터를 못 받은 종목(미국은 대개 IFRS 로 공시하는 외국 ADR — SEC us-gaap frames 에 없다). 저평가 정체성(EBIT/EV·FCF)은 팩터가 없으면 통과할 수 없어
   // 이 목록의 종목은 저평가 후보에서 빠진다 — 서브에이전트가 gateThresholds 로 직접 판정할 수 있게 남긴다.
   const noFx = (c, cap) => all.filter((s) => s.c === c && !s.extra && !s.fx && s.rank <= cap).sort((a, b) => a.rank - b.rank).map((s) => s.ticker + " " + s.name + " #" + s.rank);
-  const outObj = { asOf: today, builtAt: new Date().toISOString(), source: "네이버 증권 시가총액 순위·재무(연간·분기)·컨센서스 — scripts/screen-discovery.js",
+  const outObj = { asOf: today, builtAt: new Date().toISOString(), hiddenBuiltAt, source: "네이버 증권 시가총액 순위·재무(연간·분기)·컨센서스 — scripts/screen-discovery.js",
     universe: { korea: kr.length, us: us.length, failed: fail.length }, note: "후보 생성용 스크린 — 편입·교체 판단은 세션 검증과 CLAUDE.md §5 기준으로만",
     noFactors: { us: noFx("us", 450), korea: noFx("korea", 250) }, groups };
   fs.writeFileSync(OUT,

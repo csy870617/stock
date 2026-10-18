@@ -7,6 +7,7 @@ name: Refresh quotes (daily, token-free)
 #   3) update-stock-ta.js → data/stock-ta.js (개별 종목 단기/장기 기술적 분석) + data/chart/<ticker>.json (종목 상세 캔들 차트 — 일·주·월봉)
 #   4) update-liquidity-gauge.js → data/liquidity-auto.js (시장지표 기반 유동성 게이지 baseline)
 #   5) screen-watch.js → data/watch-candidates.js (관심종목 차트 후보: 턴어라운드·신고가 + 기존 태그 유효성)
+#   5-2) screen-discovery.js(매일, 히든 6일마다) → check-defects.js → data/candidates.js (주제별 후보 + 편성 결격 점검)
 #   (월) gen-tickers.js → data/tickers.js (관심종목 검색 사전, 주 1회)
 #   6) daily-maintenance.js → recommendations.js generatedAt(오늘) + 지수·스냅샷(history.js)
 # 이렇게 하면 LLM 추천 Routine이 실패해도 앱은 매일 오늘자 날짜·시세·지수 기술적 분석·유동성 baseline·스냅샷을 유지한다.
@@ -96,13 +97,19 @@ jobs:
         run: node scripts/screen-watch.js
         continue-on-error: true
 
-      # 주간 심층 발굴(C 모드) 후보 스크린 — 6일 이내 생성본이 있으면 건너뛴다(주 1회, 토큰 0).
+      # 발굴 후보 스크린 — 매일 아침 1회(18시간 이내 생성본이 있으면 건너뜀, 토큰 0). 2026-10-18 매일 결격 점검 도입으로 주 1회 → 매일.
       # 시장 전체(한국 400·미국 600)를 같은 잣대로 훑어 세션이 검색 예산을 '후보 검증'에만 쓰게 한다.
       # 우량·성장·저평가·배당은 2026-10-17 검증된 주제 팩터(screen-factors.js — 한국 기업현황·미국 SEC/야후, 약 5분 추가)로 거르고 점수를 매긴다.
       # 히든 두 그룹은 screen-hidden.js(한국 시총 3천억~12조 약 600종목의 5년 재무·현금, 미국 SEC XBRL·나스닥 EPS)를
-      # 함께 돌려 15~20분이 더 걸린다 — 실패해도 이전 히든 그룹을 유지한다.
-      - name: Screen discovery candidates (weekly, → data/discovery-candidates.js, token-free)
-        run: node scripts/screen-discovery.js --if-stale
+      # 함께 돌려 15~20분이 더 걸려 6일마다만 다시 만든다(--hidden-stale 6) — 실패해도 이전 히든 그룹을 유지한다.
+      - name: Screen discovery candidates (daily, → data/discovery-candidates.js, token-free)
+        run: node scripts/screen-discovery.js --if-stale 0.75 --hidden-stale 6
+        continue-on-error: true
+
+      # 매일 결격 점검 + 주제별 후보 목록 — 편성 종목의 목표가 소진·추세 붕괴·주제 기준 미달(자동 결격)과
+      # 실적 발표·급락·목표가 하향(점검 필요)을 찾아 data/candidates.js 에 쓴다(앱 '후보 종목'·결격 표시). 판정·교체는 A 회차 세션(CLAUDE.md §3-7).
+      - name: Check defects + candidate list (→ data/candidates.js, token-free)
+        run: node scripts/check-defects.js
         continue-on-error: true
 
       # 관심종목 검색 사전(이름→코드) — 신규 상장 반영용, 월요일 아침 실행에서만 주 1회.
@@ -129,14 +136,14 @@ jobs:
       - name: Commit & push if changed
         id: commit
         run: |
-          if git diff --quiet -- data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/events.js data/fundamentals.js data/liquidity-auto.js data/watch-candidates.js data/discovery-candidates.js data/coverage-status.js data/tickers.js data/consensus.js data/reco-ops.json data/chart; then
+          if git diff --quiet -- data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/events.js data/fundamentals.js data/liquidity-auto.js data/watch-candidates.js data/discovery-candidates.js data/candidates.js data/coverage-status.js data/tickers.js data/consensus.js data/reco-ops.json data/chart; then
             echo "변화 없음 — 커밋 생략"
             echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/events.js data/fundamentals.js data/liquidity-auto.js data/watch-candidates.js data/discovery-candidates.js data/coverage-status.js data/tickers.js data/consensus.js data/reco-ops.json data/chart
+          git add data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/events.js data/fundamentals.js data/liquidity-auto.js data/watch-candidates.js data/discovery-candidates.js data/candidates.js data/coverage-status.js data/tickers.js data/consensus.js data/reco-ops.json data/chart
           git commit -m "매일 데이터 갱신 (자동) — 시세·기준일·스냅샷 (update-quotes + daily-maintenance)"
           # 다른 자동 커밋(LLM 재평가 Routine 등)과 경합해 push 가 거부될 수 있으므로,
           # 거부되면 원격 변경을 rebase 로 얹어 1회 재시도한다(그날 갱신이 조용히 유실되지 않도록).
@@ -159,8 +166,9 @@ jobs:
               node scripts/update-consensus.js || true
               node scripts/gen-technote.js || true
               node scripts/daily-maintenance.js || true
+              node scripts/check-defects.js || true
               node scripts/coverage.js --emit || true
-              git add data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/events.js data/fundamentals.js data/liquidity-auto.js data/watch-candidates.js data/discovery-candidates.js data/coverage-status.js data/tickers.js data/consensus.js data/reco-ops.json data/chart
+              git add data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/events.js data/fundamentals.js data/liquidity-auto.js data/watch-candidates.js data/discovery-candidates.js data/candidates.js data/coverage-status.js data/tickers.js data/consensus.js data/reco-ops.json data/chart
               git diff --cached --quiet || git commit -m "매일 데이터 갱신 (자동) — 시세·기준일·스냅샷 (update-quotes + daily-maintenance)"
             fi
             # 원격 변경과 합쳐진 결과도 커밋 전과 같은 게이트를 통과해야 push 한다
