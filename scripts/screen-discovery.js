@@ -28,7 +28,7 @@ const OUT = path.join(ROOT, "data", "discovery-candidates.js");
 const argVal = (n) => { const i = process.argv.indexOf("--" + n); return i >= 0 ? process.argv[i + 1] : null; };
 const LIMIT = Number(argVal("limit") || 0);
 const IF_STALE = process.argv.includes("--if-stale");
-const TOP_N = 10;
+const TOP_N = 25;   // 2026-10-18 10→25 — 사용자 지시 '최선의 종목'으로 그룹당 검증 후보를 넓힘
 const today = new Date().toISOString().slice(0, 10);
 
 if (IF_STALE && fs.existsSync(OUT)) {
@@ -277,7 +277,21 @@ function exFilter(rule, elig) {
     const xs = elig.map((s) => s.fx && s.fx[e.dec]).filter((v) => v != null && isFinite(v)).sort((a, b) => a - b);
     cut[k] = xs.length >= 10 ? xs[Math.floor(xs.length * 0.9)] : null;
   });
-  return (s) => (rule.ex || []).filter((k) => { const e = EX[k]; return e.dec ? cut[k] != null && s.fx && s.fx[e.dec] != null && s.fx[e.dec] >= cut[k] : e.f(s); }).map((k) => EX[k].label);
+  const fn = (s) => (rule.ex || []).filter((k) => { const e = EX[k]; return e.dec ? cut[k] != null && s.fx && s.fx[e.dec] != null && s.fx[e.dec] >= cut[k] : e.f(s); }).map((k) => EX[k].label);
+  fn.cuts = cut;   // 상위 10% 필터 문턱(자산 증가율·이익 변동) — 스크린 밖 후보를 같은 잣대로 재도록 출력에 남긴다
+  return fn;
+}
+// 정체성 조건 중 모집단 분포로 정하는 문턱(우량 3년 평균 ROIC 중앙값, 저평가 EBIT/EV·FCF/시총 70백분위) — 스크린 밖 후보(외국 ADR·순위 밖 종목)를
+// 서브에이전트가 같은 기준으로 판정할 수 있게 값으로 남긴다. 계산은 coreGate·valueGate 와 같은 모집단.
+function gateInfo(c, th, base0, pool) {
+  const q = (arr, p) => { const xs = arr.filter((v) => v != null && isFinite(v)).sort((a, b) => a - b); return xs.length >= 10 ? xs[Math.ceil((xs.length - 1) * p)] : null; };
+  const pc = (v) => (v == null ? null : Math.round(v * 1000) / 10);
+  if (th === "core") return { roic3Median: pc(q(base0.filter((s) => !s.fin).map((s) => s.fx && s.fx.ROIC3), 0.5)) };
+  if (th === "value") {
+    const u = pool.filter((s) => !s.extra && s.rank <= (c === "korea" ? 200 : 400) && !s.fin);
+    return { ebitevP70: pc(q(u.map((s) => s.fx && s.fx.EBITEV), 0.7)), fcfpP70: pc(q(u.map((s) => s.fx && s.fx.FCFP), 0.7)) };
+  }
+  return null;
 }
 function pctRank(vals) {
   const xs = vals.filter((v) => v != null && isFinite(v)).sort((a, b) => a - b);
@@ -374,7 +388,9 @@ function view(s, score) {
         const fails = row ? (okAll(row) ? [] : [rule.ok(row) ? "정체성 조건 미달(" + (th === "core" ? "3년 평균 ROIC 상위 절반" : "EBIT/EV·FCF 수익률 상위 30%") + ")" : "정체성 조건 미달"]).concat(whyEx(row).filter((w0) => w0 !== EX.trend.label)) : null;
         return Object.assign(v, { tier: m.tier, passesRule: row ? !fails.length : null }, fails && fails.length ? { fails } : {});
       }).sort((a, b) => (a.score == null) - (b.score == null) || (a.score - b.score));
-      groups[key] = { rule: rule.label, weights: rule.w, eligible: elig.length, filtered: base.length - elig.length, incumbents: inc, candidates: cands };
+      const cutsPct = {}; Object.keys(whyEx.cuts || {}).forEach((k) => { const v = whyEx.cuts[k]; if (v != null) cutsPct[k] = Math.round(v * 1000) / 10; });
+      groups[key] = { rule: rule.label, weights: rule.w, eligible: elig.length, filtered: base.length - elig.length,
+        gateThresholds: gateInfo(c, th, base0, pool) || undefined, filterCuts: Object.keys(cutsPct).length ? cutsPct : undefined, incumbents: inc, candidates: cands };
     });
   });
 
@@ -389,8 +405,12 @@ function view(s, score) {
       ["korea|rising", "us|rising"].forEach((k) => { if (old[k]) groups[k] = skip ? old[k] : Object.assign({ stale: true }, old[k]); }); } catch (_e) { /* 없음 */ }
   }
 
+  // 주제 팩터를 못 받은 종목(미국은 대개 IFRS 로 공시하는 외국 ADR — SEC us-gaap frames 에 없다). 저평가 정체성(EBIT/EV·FCF)은 팩터가 없으면 통과할 수 없어
+  // 이 목록의 종목은 저평가 후보에서 빠진다 — 서브에이전트가 gateThresholds 로 직접 판정할 수 있게 남긴다.
+  const noFx = (c, cap) => all.filter((s) => s.c === c && !s.extra && !s.fx && s.rank <= cap).sort((a, b) => a.rank - b.rank).map((s) => s.ticker + " " + s.name + " #" + s.rank);
   const outObj = { asOf: today, builtAt: new Date().toISOString(), source: "네이버 증권 시가총액 순위·재무(연간·분기)·컨센서스 — scripts/screen-discovery.js",
-    universe: { korea: kr.length, us: us.length, failed: fail.length }, note: "후보 생성용 스크린 — 편입·교체 판단은 세션 검증과 CLAUDE.md §5 기준으로만", groups };
+    universe: { korea: kr.length, us: us.length, failed: fail.length }, note: "후보 생성용 스크린 — 편입·교체 판단은 세션 검증과 CLAUDE.md §5 기준으로만",
+    noFactors: { us: noFx("us", 450), korea: noFx("korea", 250) }, groups };
   fs.writeFileSync(OUT,
     "// 주간 심층 발굴 후보 — scripts/screen-discovery.js 가 생성(LLM 토큰 0). 앱은 로드하지 않는다(sw.js SHELL 에 넣지 말 것).\n" +
     "// groups[\"<country>|<theme>\"] = {rule 하드 조건, weights 점수 가중, eligible 적격 수, incumbents 현 편성(점수 낮은 순·같은 잣대), candidates 상위 후보}\n" +

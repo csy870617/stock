@@ -5,7 +5,7 @@
 //   상방(10배 가능성) — ①작은 출발점: 시총 수천억~수조 원 ②긴 성장 활주로: 매출 연 20% 이상 성장 ③ROIC 15% 이상 지속(번 돈을
 //     높은 수익률로 재투자) ④이중 엔진: 출발 밸류가 합리적(PEG ≤ 1.5 — 이익 성장 + 재평가)
 //   하방(비교적 안전) — ⑤순현금 또는 낮은 부채 + 잉여현금흐름(FCF) 흑자 ⑥이미 이익을 내는 회사 ⑦해자 ⑧주주와 같은 배를 탄
-//     경영진(창업자·내부자 지분, 희석 자제) ⑨단일 고객·제품·규제 집중 없음
+//     경영진(희석 자제 — 창업자·내부자 지분은 가점, 2026-10-18 완화) ⑨단일 고객·제품·규제 집중 없음
 //   ⑦⑧⑨와 성장 활주로(시장 규모·침투율)는 숫자로 잴 수 없어 세션이 웹 검색으로 검증한다 — 이 스크립트는 ①~⑥과 희석만 거른다.
 //
 // 데이터(전부 공개 페이지·API, 키 불필요):
@@ -427,7 +427,7 @@ function build(c, pool, members) {
   const funnel = {};
   pool.forEach((x) => x.why.forEach((w0) => { const k = w0.replace(/\(.*$/, "").replace(/\s[\d.]+$/, "").replace(/연 [\d.]+% /, ""); funnel[k] = (funnel[k] || 0) + 1; }));
   return { rule: RULE_LABEL[c], weights: w, eligible: elig.length, nearMissCount: near.length, screened: pool.length, funnel, incumbents: inc,
-    candidates: top(elig, TOP_N, false), nearMiss: top(near, 12, true),
+    candidates: top(elig, TOP_N, false), nearMiss: top(near, 20, true),
     note: "히든 = 10배 가능성 + 영구 손실 위험 낮음(scripts/screen-hidden.js). candidates = 숫자 조건 모두 충족, nearMiss = 안전 조건은 충족하고 상방 조건(시총 상한·성장·ROIC·PEG·희석) 하나만 완화선 안에서 미달(fails 에 무엇이 모자란지). 해자·경영진 지분·집중 리스크·성장 활주로(시장 규모·침투율)는 숫자로 못 걸러 세션이 검증한다." };
 }
 
