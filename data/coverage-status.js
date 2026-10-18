@@ -62,7 +62,7 @@ window.COVERAGE_STATUS = {
    "label": "목표가 재검증",
    "fresh": 115,
    "total": 115,
-   "oldestDays": 7,
+   "oldestDays": 2,
    "ok": true
   },
   {
