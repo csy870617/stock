@@ -769,6 +769,20 @@ window.STOCK_QUOTES = {
    "changePct": -3,
    "close": 212.13,
    "closeDate": "2026-10-16"
+  },
+  "CB": {
+   "price": 359.79,
+   "date": "2026-10-16",
+   "changePct": 2,
+   "close": 359.79,
+   "closeDate": "2026-10-16"
+  },
+  "ADP": {
+   "price": 288.9,
+   "date": "2026-10-16",
+   "changePct": 1.1,
+   "close": 288.9,
+   "closeDate": "2026-10-16"
   }
  },
  "indices": {
