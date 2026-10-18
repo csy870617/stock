@@ -2,17 +2,17 @@
 // 매일 결격 점검 + 주제별 후보 목록 — LLM 토큰 0 (순수 스크립트)
 //
 // 왜: 교체는 편출 종목에 결격이 있을 때만 한다(CLAUDE.md §5). 그런데 결격을 주 1회(C 모드)만 찾으면
-//     목표가 소진·추세 붕괴·실적 쇼크가 생겨도 최대 일주일 늦게 바뀐다(2026-10-18 사용자 지시 '매일 결격 검사, 발생 시 바로 교체').
+//     추세 붕괴·주제 이탈·실적 쇼크가 생겨도 최대 일주일 늦게 바뀐다(2026-10-18 사용자 지시 '매일 결격 검사, 발생 시 바로 교체').
 //     숫자로 판정되는 결격은 이 스크립트가 매일 찾고, 판단이 필요한 신호(실적 발표·급락·목표가 하향)는
 //     '점검 필요'로 올려 A 회차 세션이 웹 검색으로 실질/형식을 가린다(§3-7).
 //
-// 입력: recommendations.js(편성) · quotes.js(종가) · stock-ta.js(엔진 신호) · events.js(실적 일정) · fundamentals.js(최근 분기)
+// 입력: recommendations.js(편성) · stock-ta.js(엔진 신호) · events.js(실적 일정) · fundamentals.js(최근 분기)
 //       · tp-history.json(목표가 변화) · chart/<ticker>.json(5일 수익률) · discovery-candidates.js(스크린 — 주제 기준·후보)
 //       · candidate-notes.json(세션 판정 — 후보 상태·편성 결격 판정)
 // 출력: data/candidates.js(앱 — 주제별 T3 아래 '후보 종목'과 편성 종목 결격 표시) + 콘솔 세션 큐
 //
 // 자동 신호(편성 정식 5주제 × 한·미):
-//   tp    목표가 소진 — 종가 ≥ 네이버 컨센서스 목표가(단일·30일 초과 값 제외)
+//   (목표가 소진은 결격 사유가 아니다 — 2026-10-18 사용자 결정. 재검증 우선순위로만 쓴다: coverage.js)
 //   trend 추세 붕괴 — 엔진 단·중·장기 신호 모두 '매도' 이하(§6)
 //   theme 주제 기준 미달 — 스크린(discovery-candidates.js)의 편성 판정 fails
 //   earn  실적 발표 직후(10일 안) — 가이던스·역성장 확인
@@ -48,7 +48,6 @@ function load(file, key) {
   return global.window[key] || null;
 }
 const D = load("recommendations.js", "STOCK_DATA");
-const Q = (load("quotes.js", "STOCK_QUOTES") || {}).quotes || {};
 const TA = load("stock-ta.js", "STOCK_TA") || {};
 const EV = (load("events.js", "STOCK_EVENTS") || {}).items || {};
 const FU = (load("fundamentals.js", "STOCK_FUND") || {}).items || {};
@@ -108,10 +107,6 @@ function sigOf(t) {
 // 편성 종목 한 개의 자동 신호
 function flagsFor(c, th, s, screenRow) {
   const out = [], key = c + ":" + s.ticker, prot = PROTECT.has(key);
-  const q = Q[s.ticker] || {};
-  const px = q.close || q.price || s.price;
-  if (!prot && px && s.targetPrice && s.tpSource === "naver" && !s.tpStale && px >= s.targetPrice)
-    out.push({ k: "tp", hard: true, msg: "목표가 소진(종가가 컨센서스 목표가 이상)" });
   const sg = sigOf(s.ticker);
   if (!prot && sg && sg.every((x) => BAD.has(x))) out.push({ k: "trend", hard: true, msg: "추세 붕괴(단·중·장기 모두 매도 이하)" });
   if (screenFresh && screenRow && screenRow.fails && screenRow.fails.length)
