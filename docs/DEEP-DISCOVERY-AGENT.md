@@ -1,7 +1,7 @@
 # C 모드(주간 심층 발굴) — 후보 검증 서브에이전트 지침
 
 > 메인 세션 사용법(CLAUDE.md §3-6): `node scripts/screen-discovery.js` → `node scripts/deep-packets.js <폴더> --beta` 로 그룹별 묶음 10개를 만든 뒤, 그룹마다 **후보 검증 에이전트(이 파일)** 1개와 **편성 전수 점검 에이전트(`docs/DEEP-AUDIT-AGENT.md`)** 1개를 띄운다(모두 20개, 한 메시지에서 백그라운드로). 에이전트에게는 이 파일 경로와 `{TODAY}`·`{GROUP}`·`{PACKET}` 값만 넘기고 파일을 직접 읽게 한다.
-> 2026-10-12 첫 회차는 그룹당 검색 12회·후보 3~4개였다. 2026-10-18 사용자 지시('최선의 종목 선정이 최우선')로 후보 상위 25·새 후보 최소 8개 깊은 검증·검색 35회로 넓혔다.
+> 2026-10-12 첫 회차는 그룹당 검색 12회·후보 3~4개였다. 2026-10-18 사용자 지시('최선의 종목 선정이 최우선')로 후보 상위 25·새 후보 최소 8개 깊은 검증·검색 35회로 넓혔으나, 턴당 검색 200회 상한(하네스 강제)에 막혀 같은 날 오후부터 '편성 점검 → 실질 결격 그룹만 후보 검증' 파이프라인으로 바꿨다(CLAUDE.md §3-6).
 
 ---
 
@@ -23,7 +23,7 @@
 1. **선별**: candidates 를 점수순으로 보되 다음은 이유만 적고 건너뛴다 — 다른 정식 주제에 이미 편성(`alsoIn` 이 정식 주제)·지주사 지분법/연결 왜곡·합병·분사 직후 숫자 왜곡·기각 후보(사정 변경 없음).
    - 'β 때문에 보류'된 보류 후보는 검증 사실을 그대로 쓰고 verdict 를 `adopt` 로 올린다(β 조합은 메인이 국가 단위로 판단한다 — 당신은 β 값만 정확히 적는다).
    - 미국 저평가·배당 그룹은 `noFactors` 목록에서 주제에 맞을 법한 큰 종목 2~4개를 `gateThresholds` 기준으로 직접 따져 본다(stockanalysis statistics 의 EV/EBIT·FCF yield 등).
-2. **깊은 검증 — 새 후보 최소 8개**(그럴듯한 후보가 그보다 적으면 전부). 종목마다 검색 2~4회:
+2. **깊은 검증 — 편성 점검이 찾은 실질 결격의 대체 후보를 최대 8개**(그럴듯한 후보가 그보다 적으면 전부, 결격이 없으면 메인이 이 단계를 건너뛴다). 종목마다 검색 2~4회:
    - 최근 분기·최근 연도 실적(매출·영업이익/EPS YoY), 올해·내년 가이던스 또는 컨센서스 방향(상향/하향)
    - 컨센서스 목표가 — **서로 다른 신뢰 도메인 2곳**(5% 넘게 다르면 세 번째로 판별). 단일 증권사 값은 컨센서스가 아니다.
    - 배당(DPS·배당 이력), 지배구조·주요 리스크(소송·규제·고객 집중·희석)
@@ -44,7 +44,7 @@
 - **히든**: 10배 가능성 + 영구 손실 위험 낮음. 숫자 조건(시총·성장·ROIC·PEG·순현금·FCF)은 스크린이 걸렀으니 해자·희석 이력·집중 리스크·성장 활주로를 증거로 판정한다. 변동성 상한 없음.
 
 ## 도구·예산
-- **WebSearch 만**(WebFetch·금융 API 직접 호출은 403). **검색 최대 35회.** `allowed_domains` 에 biz.chosun.com·mk.co.kr·yna.co.kr·reuters.com·barrons.com·marketwatch.com·apnews.com·ft.com·wsj.com 을 넣지 말 것(API 가 400 으로 거부해 호출만 버린다 — 도메인 제한 없는 결과에 나오면 인용은 된다).
+- **WebSearch 만**(WebFetch·금융 API 직접 호출은 403). **검색 상한은 메인이 프롬프트로 준다(보통 ~10~15회, 결격이 많은 그룹 ~30회 — 턴당 200회를 모든 에이전트가 나눠 쓴다, CLAUDE.md §3-3).** `allowed_domains` 에 biz.chosun.com·mk.co.kr·yna.co.kr·reuters.com·barrons.com·marketwatch.com·apnews.com·ft.com·wsj.com 을 넣지 말 것(API 가 400 으로 거부해 호출만 버린다 — 도메인 제한 없는 결과에 나오면 인용은 된다).
 - Bash 는 읽기·계산만: `cd /home/user/stock && node scripts/vol-beta.js korea:<코드> us:<티커>`(묶음에 β 가 없을 때만), 위 curl.
 - 수치는 검색 결과에 실제로 적힌 값만. 확인 못 하면 null(추정 금지).
 - 신뢰 도메인(출처 URL 은 여기서): fnguide.com, wisereport.co.kr, tipranks.com, stockanalysis.com, investing.com, marketbeat.com, marketscreener.com, zacks.com, morningstar.com, tikr.com, finance.yahoo.com, nasdaq.com, finance.naver.com, stock.naver.com, dart.fss.or.kr, krx.co.kr, sec.gov, hankyung.com, mk.co.kr, sedaily.com, edaily.co.kr, mt.co.kr, biz.chosun.com, yna.co.kr, newsis.com, news1.kr, fnnews.com, asiae.co.kr, businesspost.co.kr, thebell.co.kr, heraldcorp.com, newspim.com, zdnet.co.kr, bizwatch.co.kr, reuters.com, bloomberg.com, wsj.com, ft.com, cnbc.com, marketwatch.com, barrons.com, apnews.com. 블로그·카페·커뮤니티·유튜브·위키 금지. stock.pstatic.net PDF·회사 IR 페이지·globenewswire·prnewswire·businesswire·barchart 는 참고만(신뢰 도메인으로 세지 않음).

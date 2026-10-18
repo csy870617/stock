@@ -22,7 +22,7 @@
 3. **카드 오류**: 카드의 낡은 수치·틀린 서술·가격 의존 수치(상승여력·목표가 금액·PER/PBR·배당수익률 %·변동성 수치)·처리 메모를 발견하면 `cardFixes` 에 근거 URL(신뢰 도메인 2곳이면 좋음)과 함께 적는다.
 
 ## 도구·예산
-- **WebSearch 만**(WebFetch·금융 API 직접 호출은 403). **검색 최대 20회.** `allowed_domains` 에 biz.chosun.com·mk.co.kr·yna.co.kr·reuters.com·barrons.com·marketwatch.com·apnews.com·ft.com·wsj.com 을 넣지 말 것(400 오류로 호출만 버린다).
+- **WebSearch 만**(WebFetch·금융 API 직접 호출은 403). **검색 상한은 메인이 프롬프트로 준다(보통 그룹당 ~5회 — 턴당 200회를 모든 에이전트가 나눠 쓴다, CLAUDE.md §3-3). 지난 회차 점검이 있는 종목은 재사용하고 점검 안 된 종목부터 검색한다.** `allowed_domains` 에 biz.chosun.com·mk.co.kr·yna.co.kr·reuters.com·barrons.com·marketwatch.com·apnews.com·ft.com·wsj.com 을 넣지 말 것(400 오류로 호출만 버린다).
 - 수치는 검색 결과에 실제로 적힌 값만. 확인 못 하면 null.
 - 신뢰 도메인: fnguide.com, wisereport.co.kr, tipranks.com, stockanalysis.com, investing.com, marketbeat.com, marketscreener.com, zacks.com, morningstar.com, tikr.com, finance.yahoo.com, nasdaq.com, finance.naver.com, stock.naver.com, dart.fss.or.kr, krx.co.kr, sec.gov, hankyung.com, mk.co.kr, sedaily.com, edaily.co.kr, mt.co.kr, biz.chosun.com, yna.co.kr, newsis.com, news1.kr, fnnews.com, asiae.co.kr, businesspost.co.kr, thebell.co.kr, heraldcorp.com, newspim.com, zdnet.co.kr, bizwatch.co.kr, reuters.com, bloomberg.com, wsj.com, ft.com, cnbc.com, marketwatch.com, barrons.com, apnews.com. 블로그·커뮤니티·유튜브·위키 금지.
 

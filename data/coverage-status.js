@@ -9,9 +9,9 @@ window.COVERAGE_STATUS = {
   {
    "key": "techNote",
    "label": "기술 대응",
-   "done": 115,
+   "done": 110,
    "total": 115,
-   "ok": true
+   "ok": false
   },
   {
    "key": "valueNote",
@@ -101,5 +101,5 @@ window.COVERAGE_STATUS = {
    "ok": true
   }
  ],
- "ok": true
+ "ok": false
 };
