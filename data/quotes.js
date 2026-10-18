@@ -91,6 +91,13 @@ window.STOCK_QUOTES = {
    "close": 92100,
    "closeDate": "2026-10-16"
   },
+  "298040": {
+   "price": 1926000,
+   "date": "2026-10-16",
+   "changePct": 5.8,
+   "close": 1926000,
+   "closeDate": "2026-10-16"
+  },
   "316140": {
    "price": 31350,
    "date": "2026-10-16",
@@ -196,25 +203,11 @@ window.STOCK_QUOTES = {
    "close": 194000,
    "closeDate": "2026-10-16"
   },
-  "034020": {
-   "price": 64600,
-   "date": "2026-10-16",
-   "changePct": 2.1,
-   "close": 64600,
-   "closeDate": "2026-10-16"
-  },
   "000270": {
    "price": 110200,
    "date": "2026-10-16",
    "changePct": 4.1,
    "close": 110200,
-   "closeDate": "2026-10-16"
-  },
-  "015760": {
-   "price": 28600,
-   "date": "2026-10-16",
-   "changePct": 0.5,
-   "close": 28600,
    "closeDate": "2026-10-16"
   },
   "096770": {
@@ -364,6 +357,13 @@ window.STOCK_QUOTES = {
    "close": 181400,
    "closeDate": "2026-10-16"
   },
+  "066570": {
+   "price": 169700,
+   "date": "2026-10-16",
+   "changePct": 0.7,
+   "close": 169700,
+   "closeDate": "2026-10-16"
+  },
   "MSFT": {
    "price": 529.05,
    "date": "2026-10-16",
@@ -469,13 +469,6 @@ window.STOCK_QUOTES = {
    "close": 121.47,
    "closeDate": "2026-10-16"
   },
-  "XOM": {
-   "price": 178.98,
-   "date": "2026-10-16",
-   "changePct": 2.5,
-   "close": 178.98,
-   "closeDate": "2026-10-16"
-  },
   "KO": {
    "price": 93.9,
    "date": "2026-10-16",
@@ -509,13 +502,6 @@ window.STOCK_QUOTES = {
    "date": "2026-10-16",
    "changePct": 0.4,
    "close": 1257.03,
-   "closeDate": "2026-10-16"
-  },
-  "CVX": {
-   "price": 224.99,
-   "date": "2026-10-16",
-   "changePct": 2.6,
-   "close": 224.99,
    "closeDate": "2026-10-16"
   },
   "CI": {
@@ -630,13 +616,6 @@ window.STOCK_QUOTES = {
    "close": 288.89,
    "closeDate": "2026-10-16"
   },
-  "APH": {
-   "price": 79.35,
-   "date": "2026-10-16",
-   "changePct": -2.6,
-   "close": 79.35,
-   "closeDate": "2026-10-16"
-  },
   "NVT": {
    "price": 142.03,
    "date": "2026-10-16",
@@ -693,6 +672,13 @@ window.STOCK_QUOTES = {
    "close": 463.15,
    "closeDate": "2026-10-16"
   },
+  "APH": {
+   "price": 79.35,
+   "date": "2026-10-16",
+   "changePct": -2.6,
+   "close": 79.35,
+   "closeDate": "2026-10-16"
+  },
   "DVN": {
    "price": 50.73,
    "date": "2026-10-16",
@@ -733,6 +719,41 @@ window.STOCK_QUOTES = {
    "date": "2026-10-16",
    "changePct": -1.5,
    "close": 215.28,
+   "closeDate": "2026-10-16"
+  },
+  "SO": {
+   "price": 91.18,
+   "date": "2026-10-16",
+   "changePct": 2.2,
+   "close": 91.18,
+   "closeDate": "2026-10-16"
+  },
+  "WEC": {
+   "price": 108.71,
+   "date": "2026-10-16",
+   "changePct": 2.5,
+   "close": 108.71,
+   "closeDate": "2026-10-16"
+  },
+  "MSCI": {
+   "price": 569.08,
+   "date": "2026-10-16",
+   "changePct": -1,
+   "close": 569.08,
+   "closeDate": "2026-10-16"
+  },
+  "RSG": {
+   "price": 231.54,
+   "date": "2026-10-16",
+   "changePct": 0.8,
+   "close": 231.54,
+   "closeDate": "2026-10-16"
+  },
+  "CTAS": {
+   "price": 213.69,
+   "date": "2026-10-16",
+   "changePct": 0.3,
+   "close": 213.69,
    "closeDate": "2026-10-16"
   }
  },

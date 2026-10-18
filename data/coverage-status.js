@@ -9,9 +9,9 @@ window.COVERAGE_STATUS = {
   {
    "key": "techNote",
    "label": "기술 대응",
-   "done": 108,
+   "done": 115,
    "total": 115,
-   "ok": false
+   "ok": true
   },
   {
    "key": "valueNote",
@@ -86,10 +86,10 @@ window.COVERAGE_STATUS = {
   {
    "key": "aiTarget",
    "label": "AI 적정가 재시도",
-   "fresh": 108,
+   "fresh": 115,
    "total": 115,
-   "oldestDays": null,
-   "ok": false
+   "oldestDays": 10,
+   "ok": true
   },
   {
    "key": "tier",
@@ -101,5 +101,5 @@ window.COVERAGE_STATUS = {
    "ok": true
   }
  ],
- "ok": false
+ "ok": true
 };

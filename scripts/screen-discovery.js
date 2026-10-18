@@ -122,6 +122,11 @@ async function rankUS(exch, pages) {
       mcap: num(s.marketValueRaw), divYieldRank: num(s.dividendYield) }));
 }
 const FIN_RE = /(금융|은행|보험|증권|화재|생명|카드|캐피탈|투자|리츠|REIT)/i;
+// 네이버 업종 코드(integration.industryCode) — 은행 301·손해보험 315·증권 321·생명보험 330·카드 337.
+// 예전엔 이름에 금융 낱말이 없으면 '부채비율 400% 초과'로 금융을 추정했는데, 방산 선수금으로 부채비율이 높은
+// LIG디펜스(446%)·한국항공우주(447%)가 금융으로 잡혀 비금융 부채비율·ROIC 조건을 건너뛰었다(2026-10-18 C 모드).
+// 업종 코드가 없을 때만 부채비율 추정을 쓴다.
+const KR_FIN_INDUSTRY = new Set(["301", "315", "321", "330", "337"]);
 // 같은 회사의 다른 주식(GOOGL·GOOG, BRK.A·BRK.B …)을 한 회사로 묶는 이름 키
 const coKey = (n) => String(n || "").toLowerCase().replace(/\bclass\s+[a-z]\b/g, "").replace(/\b(inc|corp|corporation|co|company|ltd|plc|holdings?|group|the|n\.?v|s\.?a|ag|se)\b\.?/g, "")
   .replace(/[^a-z0-9가-힣]/g, "");
@@ -145,7 +150,8 @@ async function enrichKR(s) {
   const price = s.price || num(ti.lastClosePrice);
   const tp = num(ci.priceTargetMean), tpDate = ci.createDate || null;
   const fresh = tpDate && (Date.now() - Date.parse(tpDate)) / 86400000 <= 60;
-  const fin = FIN_RE.test(s.name) || (last(debt.act) != null && last(debt.act) > 400);
+  const ind = it && it.industryCode != null ? String(it.industryCode) : null;
+  const fin = FIN_RE.test(s.name) || (ind ? KR_FIN_INDUSTRY.has(ind) : (last(debt.act) != null && last(debt.act) > 400));
   return Object.assign(s, {
     fin, price,
     revG: growth(last(rev.act), last(rev.act, 2)), revE: growth(rev.est, last(rev.act)),
