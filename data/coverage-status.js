@@ -1,8 +1,8 @@
 // 자동 생성 — scripts/coverage.js --emit (refresh-quotes Action, 토큰 0)
 // 앱 상단 '데이터 신선도' 패널이 읽는다. 직접 수정하지 말 것.
 window.COVERAGE_STATUS = {
- "asOf": "2026-10-18",
- "T": "2026-10-16",
+ "asOf": "2026-10-19",
+ "T": "2026-10-19",
  "total": 119,
  "cycleDays": 7,
  "daily": [
@@ -69,7 +69,7 @@ window.COVERAGE_STATUS = {
    "label": "목표가 재검증",
    "fresh": 119,
    "total": 119,
-   "oldestDays": 7,
+   "oldestDays": 3,
    "ok": true
   },
   {
@@ -78,7 +78,7 @@ window.COVERAGE_STATUS = {
    "fresh": 10,
    "total": 10,
    "unit": "그룹",
-   "oldestDays": 0,
+   "oldestDays": 1,
    "ok": true
   },
   {
@@ -87,7 +87,7 @@ window.COVERAGE_STATUS = {
    "fresh": 1,
    "total": 1,
    "unit": "회",
-   "oldestDays": 0,
+   "oldestDays": 1,
    "ok": true
   },
   {
@@ -95,7 +95,7 @@ window.COVERAGE_STATUS = {
    "label": "AI 적정가 재시도",
    "fresh": 119,
    "total": 119,
-   "oldestDays": 10,
+   "oldestDays": 11,
    "ok": true
   },
   {
@@ -104,7 +104,7 @@ window.COVERAGE_STATUS = {
    "fresh": 10,
    "total": 10,
    "unit": "그룹",
-   "oldestDays": 0,
+   "oldestDays": 1,
    "ok": true
   }
  ],

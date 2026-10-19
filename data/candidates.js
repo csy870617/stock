@@ -2,8 +2,8 @@
 // groups["<country>|<theme>"] = {defects 편성 결격(state 결격|점검 필요|감시), list 후보(status 검증 통과|보류|검증 대기)}
 // 세션 판정은 data/candidate-notes.json(CLAUDE.md §3-7) — 이 파일을 직접 고치지 않는다.
 window.CANDIDATES = {
- "asOf": "2026-10-18",
- "T": "2026-10-16",
+ "asOf": "2026-10-19",
+ "T": "2026-10-19",
  "screenAsOf": "2026-10-18",
  "screenFresh": true,
  "groups": {
@@ -19,17 +19,12 @@ window.CANDIDATES = {
        "k": "theme",
        "msg": "주제 기준 미달 — 정체성 조건 미달",
        "fresh": false
-      },
-      {
-       "k": "tpcut",
-       "msg": "컨센서스 목표가 14일 새 -22% 하향 — 논거 확인",
-       "fresh": false
       }
      ],
      "note": "ROE 6%·3년 평균 ROIC 5.7%(우량 정체성 미달) — 검증 통과 대체 없음",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-18"
+     "triedAt": "2026-10-19"
     }
    ],
    "list": [
@@ -53,7 +48,7 @@ window.CANDIDATES = {
      "flags": [
       {
        "k": "drop",
-       "msg": "5거래일 -22.8%(시장 중앙값 -3.5%) 급락 — 원인 확인",
+       "msg": "5거래일 -13.6%(시장 중앙값 -0.6%) 급락 — 원인 확인",
        "fresh": false
       }
      ],
@@ -176,7 +171,7 @@ window.CANDIDATES = {
      "flags": [
       {
        "k": "tpcut",
-       "msg": "컨센서스 목표가 14일 새 -13.4% 하향 — 논거 확인",
+       "msg": "컨센서스 목표가 14일 새 -10.8% 하향 — 논거 확인",
        "fresh": false
       }
      ],
@@ -407,22 +402,12 @@ window.CANDIDATES = {
        "k": "theme",
        "msg": "주제 기준 미달 — 매출 성장 미달(3년 4.9%·향후 18.4%), PEG 1.77",
        "fresh": false
-      },
-      {
-       "k": "drop",
-       "msg": "5거래일 -19.5%(시장 중앙값 -3.5%) 급락 — 원인 확인",
-       "fresh": false
-      },
-      {
-       "k": "tpcut",
-       "msg": "컨센서스 목표가 14일 새 -19.9% 하향 — 논거 확인",
-       "fresh": false
       }
      ],
      "note": "성장 숫자·PEG 미달 — 품질 최상위라 대체 확보 시 교체",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-18"
+     "triedAt": "2026-10-19"
     },
     {
      "ticker": "064760",
@@ -436,14 +421,14 @@ window.CANDIDATES = {
       },
       {
        "k": "drop",
-       "msg": "5거래일 -19%(시장 중앙값 -3.5%) 급락 — 원인 확인",
+       "msg": "5거래일 -19.3%(시장 중앙값 -0.6%) 급락 — 원인 확인",
        "fresh": false
       }
      ],
      "note": "3년 매출 연평균 -1.9% — 근접 완화선 미달, 대체 후보 소진",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-18"
+     "triedAt": "2026-10-19"
     },
     {
      "ticker": "403870",
@@ -457,26 +442,20 @@ window.CANDIDATES = {
       },
       {
        "k": "drop",
-       "msg": "5거래일 -16.3%(시장 중앙값 -3.5%) 급락 — 원인 확인",
+       "msg": "5거래일 -13.8%(시장 중앙값 -0.6%) 급락 — 원인 확인",
        "fresh": false
       }
      ],
      "note": "3년 성장 2.8%·1·2분기 매출·영업이익 감소",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-18"
+     "triedAt": "2026-10-19"
     },
     {
      "ticker": "082920",
      "name": "비츠로셀",
      "state": "감시",
-     "flags": [
-      {
-       "k": "tpcut",
-       "msg": "컨센서스 목표가 14일 새 -23.1% 하향 — 논거 확인",
-       "fresh": false
-      }
-     ],
+     "flags": [],
      "note": "상반기 매출 +30.7%·영업이익 +25.1%로 성장 유지, 최근 목표가 하향 원인 미확인 — 감시",
      "judged": "2026-10-18",
      "verdict": "형식"
@@ -488,7 +467,7 @@ window.CANDIDATES = {
      "flags": [
       {
        "k": "drop",
-       "msg": "5거래일 -19.4%(시장 중앙값 -3.5%) 급락 — 원인 확인",
+       "msg": "5거래일 -16.3%(시장 중앙값 -0.6%) 급락 — 원인 확인",
        "fresh": false
       }
      ],
@@ -533,14 +512,14 @@ window.CANDIDATES = {
       },
       {
        "k": "earn",
-       "msg": "실적 발표(10/13) · EPS 서프라이즈 13.8% — 가이던스·논거 확인",
+       "msg": "실적 발표(10/13) · EPS 서프라이즈 13.8% · 전년 대비 매출 -0.4% — 가이던스·논거 확인",
        "fresh": false
       }
      ],
      "note": "마진·3년 ROIC 구조적 미달 — 검증 통과 대체 없음",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-18"
+     "triedAt": "2026-10-19"
     },
     {
      "ticker": "AMZN",
@@ -894,7 +873,7 @@ window.CANDIDATES = {
       },
       {
        "k": "earn",
-       "msg": "실적 발표(10/13) · EPS 서프라이즈 2.4% — 가이던스·논거 확인",
+       "msg": "실적 발표(10/13) · EPS 서프라이즈 2.4% · 전년 대비 EBIT -12.3% — 가이던스·논거 확인",
        "fresh": false
       }
      ],
@@ -1005,7 +984,7 @@ window.CANDIDATES = {
      "note": "⑨ 세액공제(45X) 의존",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-18"
+     "triedAt": "2026-10-19"
     },
     {
      "ticker": "NVT",
@@ -1026,7 +1005,7 @@ window.CANDIDATES = {
      "note": "⑤ 재무 안전 조건 미달 — 미국 히든 후보 풀 소진",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-18"
+     "triedAt": "2026-10-19"
     },
     {
      "ticker": "FSS",
@@ -1042,7 +1021,7 @@ window.CANDIDATES = {
      "note": "⑤ 재무 안전 조건 미달 — 미국 히든 후보 풀 소진",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-18"
+     "triedAt": "2026-10-19"
     },
     {
      "ticker": "MKSI",
@@ -1063,7 +1042,7 @@ window.CANDIDATES = {
      "note": "⑤ 재무 안전 조건 미달 — 미국 히든 후보 풀 소진",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-18"
+     "triedAt": "2026-10-19"
     },
     {
      "ticker": "AAON",
@@ -1084,7 +1063,7 @@ window.CANDIDATES = {
      "note": "⑤ 재무 안전 조건 미달 — 미국 히든 후보 풀 소진",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-18"
+     "triedAt": "2026-10-19"
     },
     {
      "ticker": "RBC",
@@ -1100,7 +1079,7 @@ window.CANDIDATES = {
      "note": "⑤ 재무 안전 조건 미달 — 미국 히든 후보 풀 소진",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-18"
+     "triedAt": "2026-10-19"
     },
     {
      "ticker": "NVMI",
