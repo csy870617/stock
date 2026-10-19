@@ -359,13 +359,9 @@ svg { display: block; }
 .mkt-note:empty { display: none; }
 .mn-p + .mn-p { margin-top: 6px; }
 .mn-tag { display: inline-block; height: 19px; line-height: 19px; padding: 0 5px; border-radius: 4px; font-size: 11.5px; font-weight: 700; color: var(--acc); background: var(--acc-soft); margin-right: 3px; vertical-align: 1px; }
-.mkt-more { margin-top: 14px; border-top: 1px solid var(--line2); }
-.mkt-more > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px; padding-top: 13px; font-size: 14px; font-weight: 600; }
-.mkt-more > summary::-webkit-details-marker { display: none; }
-.mkt-more > summary::after { content: ""; margin-left: auto; width: 7px; height: 7px; border-right: 2px solid var(--mut); border-bottom: 2px solid var(--mut); transform: rotate(45deg) translateY(-2px); transition: transform .2s; }
-.mkt-more[open] > summary::after { transform: rotate(-135deg); }
-.mm-sub { color: var(--mut); font-weight: 500; font-size: 12.5px; }
-.mkt-more-body { padding-top: 12px; }
+/* 거시 유동성 판단 — 시황 바로 아래(지수 대응은 지수 칸을 누르면 여는 지수 상세에 있다) */
+.liq-det { margin-top: 14px; padding-top: 13px; border-top: 1px solid var(--line2); }
+.liq-det:empty { display: none; }
 .md-sec + .md-sec { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line2); }
 .md-t { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; font-size: 14.5px; font-weight: 700; }
 .md-as { font-size: 12px; font-weight: 500; color: var(--mut); }
@@ -788,10 +784,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       <div class="idx-row" id="idxGrid" data-ctx="idx"></div>
       <div class="liq-row" id="liqGrid"></div>
       <div class="mkt-note" id="marketNote"></div>
-      <details class="mkt-more" id="mktMore" data-sk="mkt-more">
-        <summary>시장 자세히 <span class="mm-sub">지수 대응 · 유동성 근거</span></summary>
-        <div class="mkt-more-body"><div id="idxNotes"></div><div id="liqDetail"></div></div>
-      </details>
+      <div class="liq-det" id="liqDetail"></div>
     </section>
     <section class="blk blk-list" id="picksBox" style="display:none">
       <div class="blk-h"><h2>오늘의 Top Pick</h2><button class="ic-tip" type="button" id="picksTip" aria-label="선정 기준 보기"></button><span class="blk-sub" id="picksSub"></span></div>
@@ -1390,14 +1383,12 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     requestAnimationFrame(function () { markClamps(document.getElementById("marketNote")); });
     syncMktBox();
   }
-  // 시장 카드는 지수·유동성·시황 중 하나라도 있을 때만, '시장 자세히'는 펼칠 내용이 있을 때만 보인다(데이터 파일 누락 대비).
+  // 시장 카드는 지수·유동성·시황 중 하나라도 있을 때만 보인다(데이터 파일 누락 대비).
   function syncMktBox() {
     var box = document.getElementById("mktBox");
     if (!box || window.__pastActive) return;
     function has(id) { var el = document.getElementById(id); return !!(el && el.innerHTML.trim()); }
     box.style.display = has("idxGrid") || has("liqGrid") || has("marketNote") ? "" : "none";
-    var more = document.getElementById("mktMore");
-    if (more) more.style.display = has("idxNotes") || has("liqDetail") ? "" : "none";
   }
   document.getElementById("disclaimer").textContent = D.disclaimer || "";
 
@@ -2424,6 +2415,13 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     var T = window.INDEX_TA;
     return T && Array.isArray(T.indices) ? T.indices.filter(function (i) { return i.key === key; })[0] || null : null;
   }
+  // 지수 지역의 거시 유동성 단기 등급 칩(밸류 줄 앞)
+  function idxLiqChip(key) {
+    var r = IDX_REGION[key], A = window.LIQUIDITY_AUTO, c = r && ((L && L[r]) || (A && A[r])), g = c && c.shortTerm;
+    if (!g) return "";
+    var gi = LQ_RANKS.indexOf(g);
+    return '<span class="it-liq" style="color:' + (gi >= 0 ? "var(--lq" + gi + ")" : "var(--mut)") + '">유동성 ' + esc(g) + "</span>";
+  }
   function indexDetailHtml(x) {
     var chNA = !x.change || x.change === "–", dir = chNA ? "flat" : (x.changeDir === "up" ? "up" : "down");
     var asOf = window.INDEX_TA && window.INDEX_TA.asOf;
@@ -2434,10 +2432,11 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       return '<div class="ds"><span class="ds-k">' + p[0] + " <i>" + p[2] + '</i></span><b class="ds-v t-' + (SIG_CLS[g] || "x") + '">' + esc(g || "–") + "</b></div>";
     }).join("") + "</div></div>";
     var n = ((window.INDEX_NOTES && window.INDEX_NOTES.items) || {})[x.key], nAs = window.INDEX_NOTES && window.INDEX_NOTES.asOf;
-    var line = function (k, v, g) { return v ? '<div class="tn-line"><span class="tn-k">' + k + '</span><span class="tn-v">' + (g ? sigBadge(g) : "") + esc(v) + "</span></div>" : ""; };
+    var line = function (k, v, g, lead) { return v ? '<div class="tn-line"><span class="tn-k">' + k + '</span><span class="tn-v">' + (lead || "") + (g ? sigBadge(g) : "") + esc(v) + "</span></div>" : ""; };
     var notes = n && (n.value || n.short || n.mid || n.long)
-      ? '<section class="dt-sec"><h3>지수 대응' + (nAs ? ' <span class="md-as">작성 ' + esc(mdOf(nAs)) + "</span>" : "") + "</h3>" +
-        line("밸류", n.value) + line("단기", n.short, n.sigShort) + line("중기", n.mid, n.sigMid) + line("장기", n.long, n.sigLong) + "</section>" : "";
+      ? '<section class="dt-sec"><h3>지수 대응' + (nAs ? ' <span class="md-as">작성 ' + esc(mdOf(nAs)) + "</span>" : "") +
+        (nAs && asOf && nAs < asOf ? ' <span class="tn-stale" title="오늘 데이터(' + esc(asOf) + ')로 아직 갱신되지 않았습니다.">미갱신</span>' : "") + "</h3>" +
+        line("밸류", n.value, null, idxLiqChip(x.key)) + line("단기", n.short, n.sigShort) + line("중기", n.mid, n.sigMid) + line("장기", n.long, n.sigLong) + "</section>" : "";
     var acts = x.chartUrl ? '<div class="dt-act"><a class="btn" href="' + esc(safeUrl(x.chartUrl)) + '" target="_blank" rel="noopener" title="네이버 증권에서 보기">' + ICON.ext + " 네이버</a></div>" : "";
     return top + chartHtml("idx-" + x.key) + sig + notes + acts;
   }
@@ -3961,7 +3960,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     if (sug.length) wlAddItem(sug[0].t, sug[0].raw ? "" : sug[0].n, sug[0].c, state.mine);
   });
 
-  // 오늘의 시장 — 유동성: 요약 줄(단기·중기 게이지)만 보이고, 판단 문장·근거·자동 지표는 '시장 자세히'에 둔다.
+  // 오늘의 시장 — 유동성: 요약 줄(단기·중기 게이지) + 시황 아래 판단 문장·근거·자동 지표.
   var LQ_RANKS = ["매우 부정", "부정", "신중", "우호", "매우 우호"];
   function renderLiquidity() {
     var A = window.LIQUIDITY_AUTO;   // 시장지표 기반 자동 baseline (매일 갱신, 무토큰)
@@ -3984,7 +3983,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     var lqCC = state.country, src = hasL ? L : A;
     var c = hasL ? (lqCC === "us" ? L.us : L.korea) : null, a = A ? (lqCC === "us" ? A.us : A.korea) : null;
     var s0 = c || a;
-    grid.innerHTML = s0 ? '<span class="lq-k" title="거시 유동성(단기 1–3개월·중기 6–12개월) — 근거는 시장 자세히">유동성</span>' +
+    grid.innerHTML = s0 ? '<span class="lq-k" title="거시 유동성(단기 1–3개월·중기 6–12개월) — 근거는 시황 아래">유동성</span>' +
       term("단기", s0.shortTerm) + term("중기", s0.midTerm) : "";
     // 자세히 — 판단 문장(headline)·근거(drivers)·자동 baseline·지표·출처
     var head = hasL ? (lqCC === "us" ? (L.headlineUS || L.headline) : (L.headlineKR || L.headline)) : (A ? A.note : "");
@@ -4005,22 +4004,11 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     syncMktBox();
   }
 
-  // 오늘의 시장 — 지수: 지수값·등락·단/중/장 신호(엔진)를 작은 칸으로, 세션의 지수 대응 문장은 '시장 자세히'에 둔다.
+  // 오늘의 시장 — 지수: 지수값·등락·단/중/장 신호(엔진)를 작은 칸으로, 세션의 지수 대응 문장은 칸을 누르면 여는 지수 상세에 둔다.
+  var IDX_REGION = { nasdaq: "us", dow: "us", kospi: "korea", kosdaq: "korea" };
   function renderIndexTA() {
-    var T = window.INDEX_TA, grid = document.getElementById("idxGrid"), notes = document.getElementById("idxNotes");
-    if (!T || !Array.isArray(T.indices) || !T.indices.length) { grid.innerHTML = ""; notes.innerHTML = ""; syncMktBox(); return; }
-    var NT = (window.INDEX_NOTES && window.INDEX_NOTES.items) || {};
-    var IDX_REGION = { nasdaq: "us", dow: "us", kospi: "korea", kosdaq: "korea" };
-    function idxLiqGrade(key) {
-      var r = IDX_REGION[key]; if (!r) return "";
-      var A = window.LIQUIDITY_AUTO, c = (L && L[r]) || (A && A[r]);
-      return (c && c.shortTerm) || "";
-    }
-    function noteLine(k, v, lead) {
-      return v ? '<div class="tn-line"><span class="tn-k">' + k + '</span><span class="tn-v">' + (lead || "") + esc(v) + "</span></div>" : "";
-    }
-    var nnAsOf = window.INDEX_NOTES && window.INDEX_NOTES.asOf;
-    var stale = nnAsOf && T.asOf && nnAsOf < T.asOf;
+    var T = window.INDEX_TA, grid = document.getElementById("idxGrid");
+    if (!T || !Array.isArray(T.indices) || !T.indices.length) { grid.innerHTML = ""; syncMktBox(); return; }
     function tile(x) {
       var chNA = !x.change || x.change === "–";
       var chDir = chNA ? "flat" : (x.changeDir === "up" ? "up" : "down");
@@ -4031,21 +4019,10 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       return '<div class="ix" role="button" tabindex="0" data-open="1" data-idx="' + esc(x.key) + '" data-c="' + esc(IDX_REGION[x.key] || "us") +
         '" data-t="idx-' + esc(x.key) + '" data-th="idx" title="' + esc(x.name) + ' 차트 보기">' + inner + "</div>";
     }
-    function noteBlock(x) {
-      var n = NT[x.key];
-      if (!(n && (n.value || n.short || n.mid || n.long))) return "";
-      var g = idxLiqGrade(x.key), gi = LQ_RANKS.indexOf(g);
-      var liqChip = g ? '<span class="it-liq" style="color:' + (gi >= 0 ? "var(--lq" + gi + ")" : "var(--mut)") + '">유동성 ' + esc(g) + "</span>" : "";
-      return '<div class="md-idx"><div class="md-in">' + esc(x.name) + "</div>" + noteLine("밸류", n.value, liqChip) +
-        noteLine("단기", n.short, sigBadge(n.sigShort)) + noteLine("중기", n.mid, sigBadge(n.sigMid)) + noteLine("장기", n.long, sigBadge(n.sigLong)) + "</div>";
-    }
     var shown = T.indices.filter(function (x) { return IDX_REGION[x.key] === state.country; });
     if (!shown.length) shown = T.indices;   // 매핑 밖이면 전체 폴백
     document.getElementById("mktAs").textContent = (T.asOf ? T.asOf.slice(5).replace("-", "/") + " 종가 기준" : "");
     grid.innerHTML = shown.map(tile).join("");
-    var nb = shown.map(noteBlock).join("");
-    notes.innerHTML = nb ? '<div class="md-sec"><div class="md-t">지수 대응<span class="md-as">' + (nnAsOf ? "작성 " + esc(nnAsOf) : "") + "</span>" +
-      (stale ? '<span class="tn-stale" title="오늘 데이터(' + esc(T.asOf) + ')로 아직 갱신되지 않았습니다. 표시는 ' + esc(nnAsOf) + ' 기준입니다.">미갱신</span>' : "") + "</div>" + nb + "</div>" : "";
     syncMktBox();
   }
 

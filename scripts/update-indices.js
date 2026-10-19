@@ -22,7 +22,8 @@ const path = require("path");
 
 const TA = require("./lib-ta.js");   // 공유 기술적 분석 라이브러리(단기/중기/장기)
 const { settleDailyBars } = require("./lib-quote");
-const { writeChart } = require("./lib-chart");   // 지수 상세 캔들 차트 data/chart/idx-<key>.json(앱 '오늘의 시장' 지수 칸을 누르면 연다)   // 일봉을 끝난 장 기준으로 정리(장중 미완성 봉 제외·빈 종가 채움)
+const { writeChart } = require("./lib-chart");
+const KR_VOL_THOUSANDS = { kospi: 1, kosdaq: 1 };   // 지수 상세 캔들 차트 data/chart/idx-<key>.json(앱 '오늘의 시장' 지수 칸을 누르면 연다)   // 일봉을 끝난 장 기준으로 정리(장중 미완성 봉 제외·빈 종가 채움)
 
 const ROOT = path.join(__dirname, "..");
 const OUT = path.join(ROOT, "data", "indices.js");
@@ -189,7 +190,9 @@ function loadPrevAsOf() {
     const a = rows ? analyze(cfg, rows, gapOkFor(cfg.key)) : null;
     if (a) {
       indices.push(a);
-      if (writeChart("idx-" + cfg.key, rows, 2)) charts++;
+      // 야후는 코스피·코스닥 거래량을 천 주 단위로 준다(예: 298,900 = 약 3억 주) — 차트에는 주 단위로 바꿔 쓴다
+      const chartRows = KR_VOL_THOUSANDS[cfg.key] ? Object.assign(rows.map((r) => Object.assign({}, r, { vol: r.vol != null ? r.vol * 1000 : r.vol })), { offMs: rows.offMs, lastDate: rows.lastDate }) : rows;
+      if (writeChart("idx-" + cfg.key, chartRows, 2)) charts++;
       live++;
       if (rows.lastDate && (!lastBar || rows.lastDate > lastBar)) lastBar = rows.lastDate;
     } else if (prev[cfg.key]) {
