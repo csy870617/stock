@@ -341,7 +341,8 @@ svg { display: block; }
 /* ── 홈: 오늘의 시장 ── */
 .idx-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .ix { display: block; min-width: 0; padding: 12px 12px 11px; border-radius: 14px; background: var(--sf2); }
-@media (hover: hover) { a.ix:hover { background: var(--sf3); } }
+.ix[data-open] { cursor: pointer; -webkit-tap-highlight-color: transparent; }
+@media (hover: hover) { .ix[data-open]:hover { background: var(--sf3); } }
 .ix-top { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
 .ix-nm { font-size: 13px; font-weight: 600; color: var(--ink2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ix .sg i { width: 15px; height: 17px; font-size: 9.5px; border-radius: 4px; }
@@ -784,7 +785,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     </div>
     <section class="blk" id="mktBox">
       <div class="blk-h"><h2>오늘의 시장</h2><span class="blk-sub" id="mktAs"></span></div>
-      <div class="idx-row" id="idxGrid"></div>
+      <div class="idx-row" id="idxGrid" data-ctx="idx"></div>
       <div class="liq-row" id="liqGrid"></div>
       <div class="mkt-note" id="marketNote"></div>
       <details class="mkt-more" id="mktMore" data-sk="mkt-more">
@@ -2071,7 +2072,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     if (CH.ro) { CH.ro.disconnect(); CH.ro = null; }
     var prev = CH.cur;
     if (!el) { CH.cur = null; return; }
-    var st = { el: el, key: it.t, c: it.c, dp: it.c === "korea" ? 0 : 2, cross: null, crossY: null, ma: {}, src: null, line: false };
+    var st = { el: el, key: it.t, c: it.c, dp: it.idx ? 2 : it.c === "korea" ? 0 : 2, cross: null, crossY: null, ma: {}, src: null, line: false };
     if (prev && prev.key === st.key && prev.c === st.c) { st.cross = prev.cross; st.crossY = prev.crossY; }
     CH.cur = st;
     var box = el.querySelector(".ch-box");
@@ -2418,6 +2419,28 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       (srcs ? '<div class="dt-src">' + srcs + "</div>" : "") + '<div class="dt-act">' + acts + "</div>";
   }
   // 시세만 있는 관심·보유 종목(정밀분석 전) — 현재가 + 정밀분석 요청
+  // ── 지수 상세(나스닥·다우·코스피·코스닥) — 캔들 차트(data/chart/idx-<key>.json, update-indices.js) + 엔진 신호 + 지수 대응 ──
+  function indexOf(key) {
+    var T = window.INDEX_TA;
+    return T && Array.isArray(T.indices) ? T.indices.filter(function (i) { return i.key === key; })[0] || null : null;
+  }
+  function indexDetailHtml(x) {
+    var chNA = !x.change || x.change === "–", dir = chNA ? "flat" : (x.changeDir === "up" ? "up" : "down");
+    var asOf = window.INDEX_TA && window.INDEX_TA.asOf;
+    var top = '<div class="dt-top"><div class="dt-pxl"><span class="dt-pv">' + esc(x.level) + '</span><div class="dt-ch ' + dir + '">' + esc(x.change || "–") + "</div></div>" +
+      '<div class="dt-meta">' + (asOf ? esc(mdOf(asOf)) + " 종가" : "") + " · 전일 대비</div></div>";
+    var sig = '<div class="dt-sum"><div class="dt-sig">' + [["단기", x.short, "일봉"], ["중기", x.mid, "주봉"], ["장기", x.long, "월봉"]].map(function (p) {
+      var g = p[1] && p[1].signal;
+      return '<div class="ds"><span class="ds-k">' + p[0] + " <i>" + p[2] + '</i></span><b class="ds-v t-' + (SIG_CLS[g] || "x") + '">' + esc(g || "–") + "</b></div>";
+    }).join("") + "</div></div>";
+    var n = ((window.INDEX_NOTES && window.INDEX_NOTES.items) || {})[x.key], nAs = window.INDEX_NOTES && window.INDEX_NOTES.asOf;
+    var line = function (k, v, g) { return v ? '<div class="tn-line"><span class="tn-k">' + k + '</span><span class="tn-v">' + (g ? sigBadge(g) : "") + esc(v) + "</span></div>" : ""; };
+    var notes = n && (n.value || n.short || n.mid || n.long)
+      ? '<section class="dt-sec"><h3>지수 대응' + (nAs ? ' <span class="md-as">작성 ' + esc(mdOf(nAs)) + "</span>" : "") + "</h3>" +
+        line("밸류", n.value) + line("단기", n.short, n.sigShort) + line("중기", n.mid, n.sigMid) + line("장기", n.long, n.sigLong) + "</section>" : "";
+    var acts = x.chartUrl ? '<div class="dt-act"><a class="btn" href="' + esc(safeUrl(x.chartUrl)) + '" target="_blank" rel="noopener" title="네이버 증권에서 보기">' + ICON.ext + " 네이버</a></div>" : "";
+    return top + chartHtml("idx-" + x.key) + sig + notes + acts;
+  }
   function lightDetailHtml(item) {
     var pm = plist(item.k), c = item.c, d = wlCache[c + ":" + item.t];
     var req = wlReqCache ? wlReqCache[item.t] : null;
@@ -3551,7 +3574,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   function itemOf(el) {
     return { c: el.getAttribute("data-c"), t: el.getAttribute("data-t"), th: el.getAttribute("data-th"),
       light: el.getAttribute("data-light") === "1", k: el.getAttribute("data-k") || el.getAttribute("data-th"),
-      n: el.getAttribute("data-n") || "", why: el.getAttribute("data-why") || "" };
+      n: el.getAttribute("data-n") || "", why: el.getAttribute("data-why") || "", idx: el.getAttribute("data-idx") || "" };
   }
   function openFromEl(el) {
     var host = el.closest("[data-ctx]");
@@ -3585,6 +3608,18 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   function renderSheet(keep) {
     var it = SH.ctx[SH.idx]; if (!it) return;
     var top = keep ? shBody.scrollTop : 0;
+    if (it.idx) {   // 지수 상세 — 오늘의 시장 지수 칸
+      var ix = indexOf(it.idx);
+      document.getElementById("shName").textContent = ix ? ix.name : it.idx;
+      document.getElementById("shCode").textContent = "지수 · " + (it.c === "korea" ? "한국" : "미국");
+      document.getElementById("shPos").textContent = SH.ctx.length > 1 ? (SH.idx + 1) + "/" + SH.ctx.length : "";
+      document.getElementById("shPrev").disabled = SH.idx <= 0;
+      document.getElementById("shNext").disabled = SH.idx >= SH.ctx.length - 1;
+      shBody.innerHTML = ix ? indexDetailHtml(ix) : '<div class="empty">지수 정보를 찾을 수 없습니다.</div>';
+      mountChart(it);
+      shBody.scrollTop = top;
+      return;
+    }
     var s = it.light ? null : findStock(it.c, it.t, it.th);
     document.getElementById("shName").textContent = it.light ? (it.n || it.t) : (s ? s.name : it.t);
     document.getElementById("shCode").textContent = it.t + " · " + (s && s.market ? s.market : (it.c === "us" ? "US" : "KR"));
@@ -3992,8 +4027,9 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       var inner = '<div class="ix-top"><span class="ix-nm">' + esc(x.name) + "</span>" +
         sigStrip({ sigShort: x.short && x.short.signal, sigMid: x.mid && x.mid.signal, sigLong: x.long && x.long.signal }) + "</div>" +
         '<div class="ix-lv">' + esc(x.level) + '</div><div class="ix-ch ' + chDir + '">' + esc(x.change) + "</div>";
-      return x.chartUrl ? '<a class="ix" href="' + esc(safeUrl(x.chartUrl)) + '" target="_blank" rel="noopener" title="' + esc(x.name) + ' 차트(네이버)">' + inner + "</a>"
-        : '<div class="ix">' + inner + "</div>";
+      // 누르면 지수 상세(캔들 차트·신호·지수 대응)가 종목 상세와 같은 화면으로 열린다 — 네이버 링크는 상세 아래 버튼
+      return '<div class="ix" role="button" tabindex="0" data-open="1" data-idx="' + esc(x.key) + '" data-c="' + esc(IDX_REGION[x.key] || "us") +
+        '" data-t="idx-' + esc(x.key) + '" data-th="idx" title="' + esc(x.name) + ' 차트 보기">' + inner + "</div>";
     }
     function noteBlock(x) {
       var n = NT[x.key];

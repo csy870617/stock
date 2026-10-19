@@ -21,7 +21,8 @@ const fs = require("fs");
 const path = require("path");
 
 const TA = require("./lib-ta.js");   // 공유 기술적 분석 라이브러리(단기/중기/장기)
-const { settleDailyBars } = require("./lib-quote");   // 일봉을 끝난 장 기준으로 정리(장중 미완성 봉 제외·빈 종가 채움)
+const { settleDailyBars } = require("./lib-quote");
+const { writeChart } = require("./lib-chart");   // 지수 상세 캔들 차트 data/chart/idx-<key>.json(앱 '오늘의 시장' 지수 칸을 누르면 연다)   // 일봉을 끝난 장 기준으로 정리(장중 미완성 봉 제외·빈 종가 채움)
 
 const ROOT = path.join(__dirname, "..");
 const OUT = path.join(ROOT, "data", "indices.js");
@@ -99,6 +100,7 @@ async function fetchSeriesOnce(symbol, bustCache) {
     if (q.close[i] == null) continue;
     rows.push({
       t: ts[i], close: q.close[i],
+      open: q.open && q.open[i] != null ? q.open[i] : null,   // 차트 캔들용(지표 계산은 쓰지 않는다)
       high: q.high && q.high[i] != null ? q.high[i] : q.close[i],
       low: q.low && q.low[i] != null ? q.low[i] : q.close[i],
       vol: q.volume && q.volume[i] != null ? q.volume[i] : null
@@ -108,6 +110,7 @@ async function fetchSeriesOnce(symbol, bustCache) {
   // 마지막 봉의 거래소 현지 날짜 = 실제 최신 거래일. 주말·휴장일에 돌려도 실행일이 아닌
   // 이 날짜가 asOf 가 돼야 INDEX_NOTES.asOf 비교에서 '구식'으로 오판되지 않는다.
   const off = ((res.meta && res.meta.gmtoffset) || 0) * 1000;
+  rows.offMs = off;
   const lastT = rows[rows.length - 1].t, prevT = rows[rows.length - 2].t;
   const day = (t) => (t ? new Date(t * 1000 + off).toISOString().slice(0, 10) : null);
   rows.lastDate = day(lastT);
@@ -162,7 +165,7 @@ function loadPrevAsOf() {
 
 (async () => {
   const prev = loadPrev();
-  let live = 0, fellBack = 0, lastBar = null;
+  let live = 0, fellBack = 0, lastBar = null, charts = 0;
 
   // 전 지수를 먼저 받아 두면, 같은 나라 짝 지수와 봉 날짜를 대조해 '정상 연휴'와
   // '중간 봉 누락'을 구분할 수 있다 — 성금요일·설날·추석처럼 달력일 간격이 3일을
@@ -186,6 +189,7 @@ function loadPrevAsOf() {
     const a = rows ? analyze(cfg, rows, gapOkFor(cfg.key)) : null;
     if (a) {
       indices.push(a);
+      if (writeChart("idx-" + cfg.key, rows, 2)) charts++;
       live++;
       if (rows.lastDate && (!lastBar || rows.lastDate > lastBar)) lastBar = rows.lastDate;
     } else if (prev[cfg.key]) {
@@ -223,5 +227,5 @@ function loadPrevAsOf() {
   fs.writeFileSync(OUT, body);
 
   console.log("indices.js 갱신: " + indices.length + "개 지수 (" + asOf + ") — 실시간 " +
-    live + " · 폴백 " + fellBack);
+    live + " · 폴백 " + fellBack + " · 차트 " + charts);
 })();
