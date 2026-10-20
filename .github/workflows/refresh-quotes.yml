@@ -91,6 +91,8 @@ jobs:
       - name: Update liquidity gauge baseline (Yahoo → data/liquidity-auto.js, token-free)
         run: node scripts/update-liquidity-gauge.js
         continue-on-error: true
+        env:
+          ECOS_KEY: ${{ secrets.ECOS_KEY }}   # 한국은행 ECOS 인증키(저장소 Secrets) — 없으면 sample 키로 받는다(lib-ratemodel.js)
 
       # 관심종목 차트 후보(턴어라운드·신고가) + 기존 관심종목 태그 유효성 — LLM 루틴이 읽어 리서치·편입
       - name: Screen watch candidates (Yahoo → data/watch-candidates.js, token-free)
