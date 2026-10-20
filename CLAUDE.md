@@ -62,7 +62,7 @@
 | `topPicks` 한·미 3+3 | 매 거래일 | `asOf ≥ T` | — |
 | `liquidity.js` 게이지·headline 3종 | 매 거래일 | `asOf ≥ T` | — |
 | 시황 `marketNote`/US/KR | 매 거래일 | `marketNoteAsOf ≥ T` | — |
-| backbone 재생성 | 매 실행 | `builtAt` 오늘, 또는 T 21:00Z 이후(주말·휴장일) | — |
+| backbone 재생성 | 매 실행 | `builtAt` 오늘(평일 06:40Z 이후엔 그 뒤 생성본만 — 한국 마감 전 생성본은 T 가 하루 늦다), 또는 T 21:00Z 이후(주말·휴장일) | — |
 | **목표가 재검증**(`targetPrice`·`thesis`·`risks`·배당·실적) | 7일 회전 | 전 종목 `verifiedAt` 7일 이내 | `--remaining verified`(최대 15 — **목표가 소진 종목 우선** → 만료 → 선행) |
 | **주간 심층 발굴**(C 모드) | 주 1회(일요일) | `deepDiscovery.asOf` 7일 이내 | `--remaining deep`(필요하면 exit 1) |
 | **결격 점검**(§3-7) | 매 거래일 | 자동 신호 판정 완료(점검 필요 0) + 실질 결격 전부 `triedAt ≥ T` | `node scripts/check-defects.js` |

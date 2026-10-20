@@ -257,6 +257,14 @@ const builtDay = (v) => (v && typeof v === "string" ? v.slice(0, 10) : null);
   // 오늘 재생성했거나, T 의 양국 장 마감 뒤(T 21:00Z — 평일 21:00 Action 이후)에 재생성했으면 통과.
   // 후자는 주말·휴장일에 금요일 밤 데이터가 그대로 최신인 경우다(그날 다시 돌려도 바뀌는 게 없다).
   else if (b !== today && !(obj.builtAt >= T + "T21:00:00Z")) missBackbone.push(name + " 마지막 생성 " + obj.builtAt + " — 오늘 재실행 필요");
+  // '오늘 생성'이어도 오늘 한국장 마감(06:30Z) 전에 만든 것이면 그 뒤 마감분이 빠져 T 가 하루 늦다 — 평일 06:40Z 이후엔 그 뒤 생성본만 인정한다.
+  // (2026-10-20 실측: A 루틴이 00:08Z 생성본을 '오늘 재실행됨'으로 보고 backbone 을 건너뛰어 T=10-19 로 매 거래일 항목을 통과 처리 →
+  //  12:25Z 에 늦게 돈 Action 이 T 를 10-20 으로 올리자 시황·유동성·지수·Top Pick 이 한꺼번에 미갱신이 됐다.)
+  else {
+    const now = new Date(), wd = now.getUTCDay(), krClose = today + "T06:40:00Z";
+    if (wd >= 1 && wd <= 5 && now.toISOString() >= krClose && obj.builtAt < krClose)
+      missBackbone.push(name + " 마지막 생성 " + obj.builtAt + " — 오늘 한국장 마감(06:30Z) 전 생성본이라 재실행 필요");
+  }
 });
 
 // ── 매일 결격 점검(2026-10-18 사용자 지시 — '매일 결격 검사, 발생 시 바로 교체', CLAUDE.md §3-7) ──
