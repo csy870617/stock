@@ -2,7 +2,7 @@
 // groups["<country>|<theme>"] = {defects 편성 결격(state 결격|점검 필요|감시), list 후보(status 검증 통과|보류|검증 대기)}
 // 세션 판정은 data/candidate-notes.json(CLAUDE.md §3-7) — 이 파일을 직접 고치지 않는다.
 window.CANDIDATES = {
- "asOf": "2026-10-19",
+ "asOf": "2026-10-20",
  "T": "2026-10-19",
  "screenAsOf": "2026-10-19",
  "screenFresh": true,
@@ -169,7 +169,7 @@ window.CANDIDATES = {
      "flags": [
       {
        "k": "tpcut",
-       "msg": "컨센서스 목표가 14일 새 -10.8% 하향 — 논거 확인",
+       "msg": "컨센서스 목표가 14일 새 -11.2% 하향 — 논거 확인",
        "fresh": false
       }
      ],
@@ -1035,7 +1035,7 @@ window.CANDIDATES = {
       },
       {
        "k": "drop",
-       "msg": "5거래일 -15.2%(시장 중앙값 1.5%) 급락 — 원인 확인",
+       "msg": "5거래일 -13%(시장 중앙값 0.6%) 급락 — 원인 확인",
        "fresh": false
       }
      ],
@@ -1072,7 +1072,7 @@ window.CANDIDATES = {
       },
       {
        "k": "drop",
-       "msg": "5거래일 -18.8%(시장 중앙값 1.5%) 급락 — 원인 확인",
+       "msg": "5거래일 -13.8%(시장 중앙값 0.6%) 급락 — 원인 확인",
        "fresh": false
       }
      ],
@@ -1089,11 +1089,6 @@ window.CANDIDATES = {
       {
        "k": "theme",
        "msg": "주제 기준 미달 — FCF 적자, 순차입금 > 영업현금흐름, ROIC 미달(3년 평균 16.1%)",
-       "fresh": false
-      },
-      {
-       "k": "drop",
-       "msg": "5거래일 -14.4%(시장 중앙값 1.5%) 급락 — 원인 확인",
        "fresh": false
       }
      ],
@@ -1135,11 +1130,6 @@ window.CANDIDATES = {
       {
        "k": "theme",
        "msg": "주제 기준 미달 — 매출 성장 미달(3년 27.5%·최근 9.1%)",
-       "fresh": false
-      },
-      {
-       "k": "drop",
-       "msg": "5거래일 -14%(시장 중앙값 1.5%) 급락 — 원인 확인",
        "fresh": false
       }
      ],
