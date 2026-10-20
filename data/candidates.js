@@ -525,11 +525,6 @@ window.CANDIDATES = {
        "k": "theme",
        "msg": "주제 기준 미달 — 정체성 조건 미달",
        "fresh": false
-      },
-      {
-       "k": "earn",
-       "msg": "실적 발표(10/13) · EPS 서프라이즈 13.8% · 전년 대비 매출 -0.4% — 가이던스·논거 확인",
-       "fresh": false
       }
      ],
      "note": "마진·3년 ROIC 구조적 미달 — 검증 통과 대체 없음",
@@ -907,11 +902,6 @@ window.CANDIDATES = {
        "k": "theme",
        "msg": "주제 기준 미달 — 정체성 조건 미달",
        "fresh": false
-      },
-      {
-       "k": "earn",
-       "msg": "실적 발표(10/13) · EPS 서프라이즈 2.4% · 전년 대비 EBIT -12.3% — 가이던스·논거 확인",
-       "fresh": false
       }
      ],
      "note": "주가 상승",
@@ -1014,16 +1004,6 @@ window.CANDIDATES = {
    "eligible": 11,
    "defects": [
     {
-     "ticker": "NXT",
-     "name": "Nextpower",
-     "state": "결격",
-     "flags": [],
-     "note": "⑨ 세액공제(45X) 의존",
-     "judged": "2026-10-18",
-     "verdict": "실질",
-     "triedAt": "2026-10-19"
-    },
-    {
      "ticker": "NVT",
      "name": "nVent Electric",
      "state": "결격",
@@ -1035,7 +1015,7 @@ window.CANDIDATES = {
       },
       {
        "k": "drop",
-       "msg": "5거래일 -13%(시장 중앙값 0.6%) 급락 — 원인 확인",
+       "msg": "5거래일 -13.4%(시장 중앙값 1.6%) 급락 — 원인 확인",
        "fresh": false
       }
      ],
@@ -1072,7 +1052,7 @@ window.CANDIDATES = {
       },
       {
        "k": "drop",
-       "msg": "5거래일 -13.8%(시장 중앙값 0.6%) 급락 — 원인 확인",
+       "msg": "5거래일 -14.7%(시장 중앙값 1.6%) 급락 — 원인 확인",
        "fresh": false
       }
      ],
@@ -1089,6 +1069,11 @@ window.CANDIDATES = {
       {
        "k": "theme",
        "msg": "주제 기준 미달 — FCF 적자, 순차입금 > 영업현금흐름, ROIC 미달(3년 평균 16.1%)",
+       "fresh": false
+      },
+      {
+       "k": "drop",
+       "msg": "5거래일 -14.2%(시장 중앙값 1.6%) 급락 — 원인 확인",
        "fresh": false
       }
      ],
@@ -1109,6 +1094,22 @@ window.CANDIDATES = {
       }
      ],
      "note": "⑤ 재무 안전 조건 미달 — 미국 히든 후보 풀 소진",
+     "judged": "2026-10-18",
+     "verdict": "실질",
+     "triedAt": "2026-10-19"
+    },
+    {
+     "ticker": "NXT",
+     "name": "Nextpower",
+     "state": "점검 필요",
+     "flags": [
+      {
+       "k": "drop",
+       "msg": "5거래일 -11%(시장 중앙값 1.6%) 급락 — 원인 확인",
+       "fresh": true
+      }
+     ],
+     "note": "⑨ 세액공제(45X) 의존",
      "judged": "2026-10-18",
      "verdict": "실질",
      "triedAt": "2026-10-19"
@@ -1172,9 +1173,9 @@ window.CANDIDATES = {
   }
  },
  "summary": {
-  "review": 1,
-  "defect": 11,
+  "review": 2,
+  "defect": 10,
   "watch": 17,
-  "untried": 11
+  "untried": 10
  }
 };
