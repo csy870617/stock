@@ -872,18 +872,6 @@ window.CANDIDATES = {
    "eligible": 72,
    "defects": [
     {
-     "ticker": "MTB",
-     "name": "M&T Bank",
-     "state": "점검 필요",
-     "flags": [
-      {
-       "k": "earn",
-       "msg": "실적 발표(10/16) · EPS 서프라이즈 2% · 전년 대비 매출 -0.5%, EBIT -18.4% — 가이던스·논거 확인",
-       "fresh": true
-      }
-     ]
-    },
-    {
      "ticker": "KO",
      "name": "Coca-Cola",
      "state": "감시",
@@ -1172,7 +1160,7 @@ window.CANDIDATES = {
   }
  },
  "summary": {
-  "review": 1,
+  "review": 0,
   "defect": 11,
   "watch": 17,
   "untried": 0
