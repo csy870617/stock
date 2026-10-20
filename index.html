@@ -359,7 +359,16 @@ svg { display: block; }
 .mkt-note:empty { display: none; }
 .mn-p + .mn-p { margin-top: 6px; }
 .mn-tag { display: inline-block; height: 19px; line-height: 19px; padding: 0 5px; border-radius: 4px; font-size: 11.5px; font-weight: 700; color: var(--acc); background: var(--acc-soft); margin-right: 3px; vertical-align: 1px; }
-/* 거시 유동성 판단 — 시황 바로 아래(지수 대응은 지수 칸을 누르면 여는 지수 상세에 있다) */
+/* 시황 + 거시 유동성 — 한 접기 안(접힌 상태는 시황 첫 줄 미리보기). 지수 대응은 지수 칸을 누르면 여는 지수 상세에 있다 */
+.mkt-fold { margin-top: 14px; border-top: 1px solid var(--line2); }
+.mkt-fold > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 8px; min-width: 0; padding-top: 13px; font-size: 14px; font-weight: 600; -webkit-tap-highlight-color: transparent; }
+.mkt-fold > summary::-webkit-details-marker { display: none; }
+.mkt-fold > summary::after { content: ""; flex: none; margin-left: auto; width: 7px; height: 7px; border-right: 2px solid var(--mut); border-bottom: 2px solid var(--mut); transform: rotate(45deg) translateY(-2px); transition: transform .2s; }
+.mkt-fold[open] > summary::after { transform: rotate(-135deg); }
+.mf-k { flex: none; }
+.mf-prev { flex: 1; min-width: 0; font-size: 13px; font-weight: 500; color: var(--mut); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mkt-fold[open] .mf-prev { visibility: hidden; }
+.mkt-fold .mkt-note { margin-top: 10px; }
 .liq-det { margin-top: 14px; padding-top: 13px; border-top: 1px solid var(--line2); }
 .liq-det:empty { display: none; }
 .md-sec + .md-sec { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line2); }
@@ -783,8 +792,11 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       <div class="blk-h"><h2>오늘의 시장</h2><span class="blk-sub" id="mktAs"></span></div>
       <div class="idx-row" id="idxGrid" data-ctx="idx"></div>
       <div class="liq-row" id="liqGrid"></div>
-      <div class="mkt-note" id="marketNote"></div>
-      <div class="liq-det" id="liqDetail"></div>
+      <details class="mkt-fold" id="mktFold">
+        <summary><span class="mf-k">시황 · 거시 유동성</span><span class="mf-prev" id="mktPrev"></span></summary>
+        <div class="mkt-note" id="marketNote"></div>
+        <div class="liq-det" id="liqDetail"></div>
+      </details>
     </section>
     <section class="blk blk-list" id="picksBox" style="display:none">
       <div class="blk-h"><h2>오늘의 Top Pick</h2><button class="ic-tip" type="button" id="picksTip" aria-label="선정 기준 보기"></button><span class="blk-sub" id="picksSub"></span></div>
@@ -1374,13 +1386,13 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     var mn = String((c === "us" ? D.marketNoteUS : D.marketNoteKR) || D.marketNote || "").trim();
     var parts = mn.split(/\n\s*\n/).map(function (x) { return x.replace(/\s+/g, " ").trim(); }).filter(Boolean);
     if (!parts.length) parts = [mn];
-    var k = "mn:" + c;
+    // 접기 안이라 줄임 없이 전문 — 접힌 상태는 summary 의 첫 줄 미리보기
+    document.getElementById("mktPrev").textContent = parts[0] || "";
     document.getElementById("marketNote").innerHTML = mn
-      ? '<div class="mn-body' + clampCls(k, "clamp3") + '"' + clampAttr(k, "clamp3") + ">" + parts.map(function (p, i) {
+      ? '<div class="mn-body">' + parts.map(function (p, i) {
           return '<p class="mn-p">' + (i === 0 ? '<span class="mn-tag">시황</span>' : "") + esc(p) + "</p>";
         }).join("") + "</div>"
       : "";
-    requestAnimationFrame(function () { markClamps(document.getElementById("marketNote")); });
     syncMktBox();
   }
   // 시장 카드는 지수·유동성·시황 중 하나라도 있을 때만 보인다(데이터 파일 누락 대비).
@@ -1388,7 +1400,9 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     var box = document.getElementById("mktBox");
     if (!box || window.__pastActive) return;
     function has(id) { var el = document.getElementById(id); return !!(el && el.innerHTML.trim()); }
-    box.style.display = has("idxGrid") || has("liqGrid") || has("marketNote") ? "" : "none";
+    box.style.display = has("idxGrid") || has("liqGrid") || has("marketNote") || has("liqDetail") ? "" : "none";
+    var fold = document.getElementById("mktFold");
+    if (fold) fold.style.display = has("marketNote") || has("liqDetail") ? "" : "none";
   }
   document.getElementById("disclaimer").textContent = D.disclaimer || "";
 
@@ -3983,7 +3997,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     var lqCC = state.country, src = hasL ? L : A;
     var c = hasL ? (lqCC === "us" ? L.us : L.korea) : null, a = A ? (lqCC === "us" ? A.us : A.korea) : null;
     var s0 = c || a;
-    grid.innerHTML = s0 ? '<span class="lq-k" title="거시 유동성(단기 1–3개월·중기 6–12개월) — 근거는 시황 아래">유동성</span>' +
+    grid.innerHTML = s0 ? '<span class="lq-k" title="거시 유동성(단기 1–3개월·중기 6–12개월) — 근거는 아래 「시황 · 거시 유동성」을 펼치면">유동성</span>' +
       term("단기", s0.shortTerm) + term("중기", s0.midTerm) : "";
     // 자세히 — 판단 문장(headline)·근거(drivers)·자동 baseline·지표·출처
     var head = hasL ? (lqCC === "us" ? (L.headlineUS || L.headline) : (L.headlineKR || L.headline)) : (A ? A.note : "");
