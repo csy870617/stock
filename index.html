@@ -377,6 +377,7 @@ svg { display: block; }
 .fed-r { display: grid; grid-template-columns: 44px 62px 64px minmax(0, 1fr); gap: 6px; padding: 6px 0; border-top: 1px solid var(--line2); }
 .fed-h { color: var(--mut); font-size: 11.5px; border-top: 0; padding-top: 0; }
 .fed-r .up { color: var(--up); } .fed-r .down { color: var(--down); }
+.bok-r { grid-template-columns: 44px 62px 64px minmax(0, 1fr); }
 .liq-det:empty { display: none; }
 .md-sec + .md-sec { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line2); }
 .md-t { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; font-size: 14.5px; font-weight: 700; }
@@ -4002,6 +4003,31 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
           "</span><span>" + esc(m.outcomes.map(function (o) { return fedOutcome(o, true); }).join(" · ")) + "</span></div>";
       }).join("") + "</div></div>";
   }
+  // 한국은행 기준금리 시장 기대 — CD 91일·국고 1년에서 과거 평균 기간 프리미엄을 뺀 값(liquidity-auto.js bok, scripts/lib-bokpath.js)
+  function bokHtml(B) {
+    if (!B || B.base == null) return "";
+    var md = function (d) { return +d.slice(5, 7) + "/" + +d.slice(8, 10); };
+    var pp = function (v) { return (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(2) + "%p"; };
+    var tip = "한국은 연준처럼 회의별 금리 선물이 없어, 만기가 짧은 시장 금리로 읽습니다. 시장 금리 ≈ 그 기간 평균 기준금리 기대 + 기간 프리미엄이라, 과거 평균 프리미엄을 빼면 기대가 남습니다. " +
+      "보정(기준금리는 콜금리로 복원): CD 91일은 다음 3개월 평균 기준금리보다 평균 0.18%p 높았고(2016~2026, 방향 적중 82%), 국고 1년은 다음 1년 평균보다 0.05%p 높았습니다(2023~2025 — 표본 짧음, 방향 적중 94%). " +
+      "프리미엄도 국면마다 움직여 오차가 ±0.15~0.17%p 있습니다. 회의별 확률이 아니라 기간 평균 기대입니다.";
+    var row = function (k, e) {
+      return e ? '<div class="fed-r bok-r"><span>' + k + "</span><span>" + e.rate.toFixed(2) + '%</span><span class="' + (e.chg > 0.004 ? "up" : e.chg < -0.004 ? "down" : "") + '">' + pp(e.chg) +
+        "</span><span>" + esc(shortRead(e.chg)) + "</span></div>" : "";
+    };
+    function shortRead(c) {
+      var n = Math.abs(c / 0.25).toFixed(1);
+      return c >= 0.25 ? "인상 기대 · 약 " + n + "회분" : c <= -0.25 ? "인하 기대 · 약 " + n + "회분" : c >= 0.05 ? "동결 우세 · 인상 쪽" : c <= -0.05 ? "동결 우세 · 인하 쪽" : "동결";
+    }
+    var mk = [["콜", B.call], ["CD 91일", B.cd91], ["국고 1년", B.y1], ["3년", B.y3]].filter(function (x) { return x[1] != null; })
+      .map(function (x) { return x[0] + " " + Number(x[1]).toFixed(2) + "%"; }).join(" · ");
+    return '<div class="md-sec fed"><div class="md-t">한국은행 금리 전망<span class="md-as">시장 금리 반영 · ' + esc(md(B.asOf)) + "</span>" +
+      '<button class="ic-tip" type="button" data-basis="' + esc(tip) + '" aria-label="계산 방법">' + ICON.info + "</button></div>" +
+      '<div class="fed-next">기준금리 <b>' + B.base.toFixed(2) + "%</b>" + (B.exp12m ? " — 1년 평균 기대 <b>" + B.exp12m.rate.toFixed(2) + "%</b> (" + esc(shortRead(B.exp12m.chg)) + ")" : "") + "</div>" +
+      (mk ? '<div class="fed-sub">' + esc(mk) + "</div>" : "") +
+      '<div class="fed-tbl"><div class="fed-r bok-r fed-h"><span>기간</span><span>평균 기대</span><span>현재 대비</span><span>읽기</span></div>' +
+      row("3개월", B.exp3m) + row("1년", B.exp12m) + "</div></div>";
+  }
   // 오늘의 시장 — 유동성: 요약 줄(단기·중기 게이지) + 시황 아래 판단 문장·근거·자동 지표.
   var LQ_RANKS = ["매우 부정", "부정", "신중", "우호", "매우 우호"];
   function renderLiquidity() {
@@ -4043,7 +4069,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       (head ? '<div class="md-head">' + esc(head) + "</div>" : "") +
       (drivers ? '<ul class="liq-drivers">' + drivers + "</ul>" : "") +
       (bits.length ? '<div class="md-bits">' + bits.map(function (x) { return "<div>" + x + "</div>"; }).join("") + "</div>" : "") + "</div>" +
-      fedHtml(A && A.fed);
+      (lqCC === "korea" ? bokHtml(A && A.bok) + fedHtml(A && A.fed) : fedHtml(A && A.fed) + bokHtml(A && A.bok));
     syncMktBox();
   }
 
