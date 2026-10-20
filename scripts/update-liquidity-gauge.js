@@ -18,7 +18,8 @@
 
 const fs = require("fs");
 const path = require("path");
-const { settleDailyBars } = require("./lib-quote");   // 일봉을 끝난 장 기준으로 정리(장중 미완성 봉 제외·빈 종가 채움)
+const { settleDailyBars } = require("./lib-quote");
+const { fedPath } = require("./lib-fedpath");   // FOMC 회의별 금리 경로(연방기금금리 선물) — 게이지 점수에는 넣지 않고 함께 보여 준다   // 일봉을 끝난 장 기준으로 정리(장중 미완성 봉 제외·빈 종가 채움)
 
 const ROOT = path.join(__dirname, "..");
 const OUT = path.join(ROOT, "data", "liquidity-auto.js");
@@ -211,9 +212,16 @@ function loadPrev() {
     }
   };
 
+  // 연준 금리 경로 — 시장(선물)이 반영한 회의별 인상·동결·인하 확률. 조회 실패면 이전 값을 유지한다(asOf 로 낡음 표시).
+  try { data.fed = await fedPath(); } catch (_e) { data.fed = null; }
+  if (!data.fed) {
+    try { global.window = {}; delete require.cache[require.resolve(OUT)]; require(OUT); const old = global.window.LIQUIDITY_AUTO; if (old && old.fed) data.fed = old.fed; } catch (_e) { /* 없음 */ }
+  }
+
   fs.writeFileSync(OUT, render(data));
   console.log("liquidity-auto.js 갱신 (" + asOf + ") — 미국 단기 " + data.us.shortTerm +
-    "/중기 " + data.us.midTerm + " · 한국 단기 " + data.korea.shortTerm + "/중기 " + data.korea.midTerm);
+    "/중기 " + data.us.midTerm + " · 한국 단기 " + data.korea.shortTerm + "/중기 " + data.korea.midTerm +
+    (data.fed && data.fed.meetings[0] ? " · 다음 FOMC " + data.fed.meetings[0].date + " " + data.fed.meetings[0].outcomes.map((o) => (o.n > 0 ? "인상" + o.n : o.n < 0 ? "인하" + -o.n : "동결") + " " + o.p + "%").join("/") : " · FOMC 경로 없음"));
 })();
 
 function render(data) {

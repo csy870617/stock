@@ -15,7 +15,7 @@
 - **매물대·사실 데이터**: `stock-ta.js` 의 기간별 `f`(20·60·120봉 이평·일목 구름·지지/저항·매물대 위 비중 — 숫자 그대로)와 종목별 `vp`(최근 1년 일봉 24구간 거래 비중·현재가 위 비중·가까운 거래 집중 구간). 엔진 내부 부분점수(`metrics`·`read`)는 2026-10-16 부터 저장하지 않는다.
 - **`data/fundamentals.js`**(`update-fundamentals.js`): PER·선행 PER(한국 FnGuide 올해 추정·미국 Zacks 다음 4분기 합)·PBR·배당수익률(최근 결산 DPS ÷ 현재가)·최근 분기 매출/영업이익(EBIT)/순이익 전년 대비·다음 분기 컨센서스(한국)·최근 4주 EPS 추정 상향/하향(미국). 출처 값 그대로 종목 상세 '투자정보' 칸에 쓴다. 배당이 카드 값과 3배·0.3%p 넘게 어긋나면 `dyFlag` 로 표시를 막는다(예: 네이버 NVDA 주당배당금 오류).
 - **`techNote`(기술 대응) = 자동**(`gen-technote.js`, v3): 위 숫자로 단·중·장 문장을 매일 생성해 `recommendations.js` 에 쓴다(§4-2). 세션은 techNote 를 쓰지 않는다.
-- `data/liquidity-auto.js`(유동성 baseline, `update-liquidity-gauge.js`) · `data/watch-candidates.js`(관심 차트 후보, `screen-watch.js`) · `data/history.js`(스냅샷, `rsp` 포함) · `data/coverage-status.js`(앱 '데이터 신선도' 패널, `coverage.js --emit`) · `data/tickers.js`(검색 사전, `gen-tickers.js` — 월요일 주 1회, KRX 실패 시 네이버 폴백).
+- `data/liquidity-auto.js`(유동성 baseline, `update-liquidity-gauge.js` — `fed` 에 **연준 금리 경로**: 연방기금금리 선물(야후 ZQ 월물)로 푼 FOMC 회의별 기대 금리·인상/동결/인하 확률(CME FedWatch 방식, `lib-fedpath.js` — FOMC 일정 상수는 해가 바뀌기 전에 다음 해를 추가), 게이지 점수엔 넣지 않고 홈 '시황 · 거시 유동성'에 표시) · `data/watch-candidates.js`(관심 차트 후보, `screen-watch.js`) · `data/history.js`(스냅샷, `rsp` 포함) · `data/coverage-status.js`(앱 '데이터 신선도' 패널, `coverage.js --emit`) · `data/tickers.js`(검색 사전, `gen-tickers.js` — 월요일 주 1회, KRX 실패 시 네이버 폴백).
 - `data/discovery-candidates.js`(발굴 후보 스크린, `screen-discovery.js --if-stale 0.75 --hidden-stale 6` — 매일 아침 재생성·히든 두 그룹은 6일마다, 앱은 로드하지 않음): 네이버 시총 순위(한국 KOSPI 250·KOSDAQ 150, 미국 NASDAQ 250·NYSE 350)의 연간·분기 재무·컨센서스 + 주제 팩터(`screen-factors.js` — 한국 기업현황·미국 SEC/야후, 정의는 연구와 공유하는 `lib-factors.js`)로 (국가×주제)별 후보 25개와 같은 잣대로 잰 현 편성을 기록(§6 '주제 기준' — 정체성 조건·건전성 필터·검증된 점수, 편성 종목의 필터 미달은 `fails`). 히든 두 그룹은 `screen-hidden.js`(§6 히든 기준 — 한국 기업현황 5년 재무·현금·최대주주, 미국 SEC XBRL·나스닥 EPS; 완전 충족 후보 + 상방 조건 하나만 모자란 근접 후보). **후보 생성용이지 선정 규칙이 아니다**(편입·교체는 §3-6·§5 검증으로만, 한국 점수엔 상승여력 미반영).
 - **`data/candidates.js`**(`check-defects.js`, 매일 — 앱 '추천 종목' 주제 화면 T3 아래 '후보 종목'과 편성 종목 '결격'·'점검' 표시): 스크린 + 세션 판정(`data/candidate-notes.json`)으로 그룹별 후보(검증 통과·보류·검증 대기, 기각 제외)와 편성 결격 신호를 쓴다(§3-7). 세션은 이 파일을 고치지 않고 `candidate-notes.json` 만 고친다.
 
@@ -160,6 +160,7 @@
 - **valueNote**: 밸류에이션 관점 1~2문장("왜 싸다/비싸다/적정한가") — thesis(사업)·techNote(가격)와 구별. 배수 숫자는 상세 '투자정보'의 PER·선행 PER·PBR 칸(자동)이 보여주므로 문장엔 쓰지 않고 그 배수를 어떻게 읽는지(이익 사이클·성장 대비·자산가치 대비·주주환원)를 쓴다(§4 공통).
 
 ### 4-3. 시황·유동성 (`liquidity.js` — baseline 위 판단층)
+- FOMC 확률은 검색하지 말고 `liquidity-auto.js` 의 `fed`(매일 자동, 선물 시장 반영)를 인용한다(2026-10-20 사용자 요청으로 도입 — 10/19 회차는 검색으로 확인 못 해 비워 뒀다).
 - baseline(`liquidity-auto.js`)이 못 읽는 것에 집중: 거시 이벤트(FOMC·금통위·지정학), 느린 거시(M2·연준 대차대조표·Core PCE/CPI·외국인 수급), 내러티브.
 - 게이지 5단계(`매우 우호`/`우호`/`신중`/`부정`/`매우 부정`) 단기·중기, 등급 변경·baseline 과의 괴리는 근거 수치를 `drivers` 에. `headline`·`headlineUS`·`headlineKR` 모두 갱신(앱은 선택 국가 것만 표시).
 - 시황 `marketNoteUS`·`marketNoteKR`(국가별)·`marketNote`(통합) 모두 갱신하고 `marketNoteAsOf` = 다시 쓴 날.
