@@ -378,6 +378,12 @@ svg { display: block; }
 .fed-h { color: var(--mut); font-size: 11.5px; border-top: 0; padding-top: 0; }
 .fed-r .up { color: var(--up); } .fed-r .down { color: var(--down); }
 .bok-r { grid-template-columns: 44px 62px 64px minmax(0, 1fr); }
+.rm-blk + .rm-blk { margin-top: 14px; }
+.rm-r { grid-template-columns: 52px 60px 64px minmax(0, 1fr); }
+.rm-news { margin-top: 8px; font-size: 13px; line-height: 1.6; color: var(--ink2); }
+.rm-news a { color: var(--mut); text-decoration: underline; text-underline-offset: 2px; margin-left: 4px; font-size: 12px; }
+.rm-st { display: inline-block; height: 19px; line-height: 19px; padding: 0 6px; margin-right: 6px; border-radius: 4px; font-size: 11.5px; font-weight: 700; vertical-align: 1px; }
+.rm-hawk { background: var(--up-soft); color: var(--up); } .rm-dove { background: var(--down-soft); color: var(--down); } .rm-neu { background: var(--sf3); color: var(--mut); }
 .liq-det:empty { display: none; }
 .md-sec + .md-sec { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line2); }
 .md-t { display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; font-size: 14.5px; font-weight: 700; }
@@ -4003,6 +4009,37 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
           "</span><span>" + esc(m.outcomes.map(function (o) { return fedOutcome(o, true); }).join(" · ")) + "</span></div>";
       }).join("") + "</div></div>";
   }
+  // 정책금리 예측 모델 — 표본 밖 검증을 통과한 방식(liquidity-auto.js rateModel, scripts/lib-ratemodel.js) + 루틴의 뉴스 판단(liquidity.js policyNews)
+  function rateModelHtml(R, N, cc) {
+    if (!R || (!R.us && !R.korea)) return "";
+    var tip = "2000~2026년(한국 2006~) 매달 그 시점에 알 수 있던 자료만으로 3·6·12개월 뒤 정책금리를 예측해 실제와 비교했습니다(표본 밖 검증).\n" +
+      "· 미국: 국채 3·6·12개월 금리로 푼 예측이 '변화 없음'보다 오차가 30~40% 작아 예측으로 씁니다.\n" +
+      "· 한국: CD·국고채 금리로 푼 예측이 '변화 없음'보다 정확하지 않아, 예측은 현재 금리 유지로 둡니다(시장 금리 기대는 아래 '한국은행 금리 전망'에 따로 보입니다).\n" +
+      "· 물가·실업률로 계산한 테일러 준칙 금리를 더해도 두 나라 모두 오차가 커져 예측에 넣지 않고 참고선으로만 보입니다.\n" +
+      "± 는 과거 같은 기간 예측의 평균 오차(RMSE)입니다. 뉴스 판단은 매일 루틴이 연준·한은 발언을 읽고 쓴 것으로 숫자 예측에는 섞지 않습니다.";
+    var lab = { 3: "3개월", 6: "6개월", 12: "1년" };
+    function blk(c, M) {
+      if (!M || !M.forecasts) return "";
+      var name = c === "us" ? "미국 연준" : "한국은행";
+      var flat = M.forecasts.every(function (f) { return f.chg === 0; });
+      var rows = M.forecasts.map(function (f) {
+        return '<div class="fed-r rm-r"><span>' + lab[f.h] + "</span><span><b>" + f.rate.toFixed(2) + '%</b></span><span class="' + (f.chg > 0.004 ? "up" : f.chg < -0.004 ? "down" : "") + '">' +
+          (f.chg > 0 ? "+" : f.chg < 0 ? "−" : "±") + Math.abs(f.chg).toFixed(2) + "%p</span><span>± " + f.rmse.toFixed(2) + "%p</span></div>";
+      }).join("");
+      var n = N && N[c];
+      var news = n && n.note ? '<div class="rm-news"><span class="rm-st rm-' + (n.stance === "매파" ? "hawk" : n.stance === "비둘기파" ? "dove" : "neu") + '">' + esc(n.stance || "중립") + "</span>" + esc(n.note) +
+        (n.sources && n.sources.length ? " " + n.sources.slice(0, 3).map(function (u, i) { return '<a href="' + esc(safeUrl(u)) + '" target="_blank" rel="noopener">출처' + (i + 1) + "</a>"; }).join(" ") : "") + "</div>" : "";
+      return '<div class="rm-blk"><div class="fed-next"><b>' + name + "</b> 정책금리 " + M.policy.toFixed(2) + "% → " +
+        (flat ? "<b>유지</b> 예측" : "1년 뒤 <b>" + M.forecasts[M.forecasts.length - 1].rate.toFixed(2) + "%</b> 예측") + "</div>" +
+        '<div class="fed-tbl"><div class="fed-r rm-r fed-h"><span>시점</span><span>예측</span><span>변화</span><span>과거 오차</span></div>' + rows + "</div>" +
+        (M.taylor ? '<div class="fed-sub">참고 — 물가·실업률 준칙 금리 ' + M.taylor.rate.toFixed(2) + "% (근원물가 " + M.taylor.infl.toFixed(1) + "%·실업률 " + M.taylor.unemp + "%)" +
+          (c === "korea" ? " · 시장 금리는 과거에 '유지' 가정보다 덜 맞아 예측에 쓰지 않음" : "") + "</div>" : "") + news + "</div>";
+    }
+    var order = cc === "korea" ? ["korea", "us"] : ["us", "korea"];
+    return '<div class="md-sec fed"><div class="md-t">금리 예측 모델<span class="md-as">검증 ' + esc(mdOf(R.validatedAt || "")) + (N && N.asOf ? " · 뉴스 " + esc(mdOf(N.asOf)) : "") + "</span>" +
+      '<button class="ic-tip" type="button" data-basis="' + esc(tip) + '" aria-label="모델 설명">' + ICON.info + "</button></div>" +
+      order.map(function (c) { return blk(c, R[c]); }).join("") + "</div>";
+  }
   // 한국은행 기준금리 시장 기대 — CD 91일·국고 1년에서 과거 평균 기간 프리미엄을 뺀 값(liquidity-auto.js bok, scripts/lib-bokpath.js)
   function bokHtml(B) {
     if (!B || B.base == null) return "";
@@ -4010,7 +4047,8 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     var pp = function (v) { return (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v).toFixed(2) + "%p"; };
     var tip = "한국은 연준처럼 회의별 금리 선물이 없어, 만기가 짧은 시장 금리로 읽습니다. 시장 금리 ≈ 그 기간 평균 기준금리 기대 + 기간 프리미엄이라, 과거 평균 프리미엄을 빼면 기대가 남습니다. " +
       "보정(기준금리는 콜금리로 복원): CD 91일은 다음 3개월 평균 기준금리보다 평균 0.18%p 높았고(2016~2026, 방향 적중 82%), 국고 1년은 다음 1년 평균보다 0.05%p 높았습니다(2023~2025 — 표본 짧음, 방향 적중 94%). " +
-      "프리미엄도 국면마다 움직여 오차가 ±0.15~0.17%p 있습니다. 회의별 확률이 아니라 기간 평균 기대입니다.";
+      "프리미엄도 국면마다 움직여 오차가 ±0.15~0.17%p 있습니다. 회의별 확률이 아니라 기간 평균 기대입니다.\n" +
+      "주의: 2006~2026년 표본 밖 검증에서 이렇게 읽은 시장 기대는 '금리 변화 없음' 가정보다 실제 기준금리를 덜 맞혔습니다 — 예측이 아니라 지금 시장 금리에 반영된 기대로 읽으세요(예측은 위 '금리 예측 모델').";
     var row = function (k, e) {
       return e ? '<div class="fed-r bok-r"><span>' + k + "</span><span>" + e.rate.toFixed(2) + '%</span><span class="' + (e.chg > 0.004 ? "up" : e.chg < -0.004 ? "down" : "") + '">' + pp(e.chg) +
         "</span><span>" + esc(shortRead(e.chg)) + "</span></div>" : "";
@@ -4021,7 +4059,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     }
     var mk = [["콜", B.call], ["CD 91일", B.cd91], ["국고 1년", B.y1], ["3년", B.y3]].filter(function (x) { return x[1] != null; })
       .map(function (x) { return x[0] + " " + Number(x[1]).toFixed(2) + "%"; }).join(" · ");
-    return '<div class="md-sec fed"><div class="md-t">한국은행 금리 전망<span class="md-as">시장 금리 반영 · ' + esc(md(B.asOf)) + "</span>" +
+    return '<div class="md-sec fed"><div class="md-t">한국은행 시장 기대<span class="md-as">시장 금리 반영 · ' + esc(md(B.asOf)) + "</span>" +
       '<button class="ic-tip" type="button" data-basis="' + esc(tip) + '" aria-label="계산 방법">' + ICON.info + "</button></div>" +
       '<div class="fed-next">기준금리 <b>' + B.base.toFixed(2) + "%</b>" + (B.exp12m ? " — 1년 평균 기대 <b>" + B.exp12m.rate.toFixed(2) + "%</b> (" + esc(shortRead(B.exp12m.chg)) + ")" : "") + "</div>" +
       (mk ? '<div class="fed-sub">' + esc(mk) + "</div>" : "") +
@@ -4069,6 +4107,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       (head ? '<div class="md-head">' + esc(head) + "</div>" : "") +
       (drivers ? '<ul class="liq-drivers">' + drivers + "</ul>" : "") +
       (bits.length ? '<div class="md-bits">' + bits.map(function (x) { return "<div>" + x + "</div>"; }).join("") + "</div>" : "") + "</div>" +
+      rateModelHtml(A && A.rateModel, hasL ? L.policyNews : null, lqCC) +
       (lqCC === "korea" ? bokHtml(A && A.bok) + fedHtml(A && A.fed) : fedHtml(A && A.fed) + bokHtml(A && A.bok));
     syncMktBox();
   }

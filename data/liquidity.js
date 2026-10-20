@@ -27,5 +27,24 @@ window.LIQUIDITY_DATA = {
  "sources": [
   "https://koreatimes.co.kr/economy/20261015/black-thursday-kospi-plunges-7-amid-ai-spending-fears",
   "https://www.cnbc.com/2026/10/14/stock-market-today-live-updates.html"
- ]
+ ],
+ "policyNews": {
+  "asOf": "2026-10-20",
+  "us": {
+   "stance": "매파",
+   "note": "9월 FOMC 의사록과 Collins·Williams 등 위원들이 연내 추가 인상 1회가 적절하다고 시사했고, 10/27~28보다 12월 인상이 유력하다는 쪽으로 기울었다(Logan 은 2회 이상 주장, Williams 는 2027년 추가 인상 불필요).",
+   "sources": [
+    "https://www.kitco.com/news/off-the-wire/2026-10-13/feds-collins-sees-another-rate-hike-table-end-2026",
+    "https://investinglive.com/central-banks/icymi-three-fed-officials-signal-inflation-fight-continues-williams-sees-no-2027-hike/",
+    "https://tradingeconomics.com/united-states/interest-rate/news/592678"
+   ]
+  },
+  "korea": {
+   "stance": "중립",
+   "note": "한국은행은 9월에 기준금리 3.00%가 추정 중립금리 범위 상단이라고 평가하고, 추가 인상은 중동 정세·국제유가와 회의 직전 지표를 보고 정하겠다며 단정하지 않았다.",
+   "sources": [
+    "https://www.metroseoul.co.kr/article/20260910500256"
+   ]
+  }
+ }
 };

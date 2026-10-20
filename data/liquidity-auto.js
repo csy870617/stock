@@ -161,9 +161,9 @@ window.LIQUIDITY_AUTO = {
   "base": 3,
   "call": 3.036,
   "cd91": 3.25,
-  "y1": 3.614,
-  "y2": 3.821,
-  "y3": 3.866,
+  "y1": 3.626,
+  "y2": 3.813,
+  "y3": 3.854,
   "exp3m": {
    "rate": 3.07,
    "chg": 0.07,
@@ -171,11 +171,84 @@ window.LIQUIDITY_AUTO = {
    "label": "3개월 동결 우세 — 인상 쪽으로 기움"
   },
   "exp12m": {
-   "rate": 3.564,
-   "chg": 0.564,
+   "rate": 3.576,
+   "chg": 0.576,
    "sd": 0.17,
    "label": "1년 인상 기대 — 기간 평균 금리가 지금보다 인상 약 2.3회분 높다"
   },
   "source": "네이버 증권 — 한국은행 기준금리·콜·CD 91일·국고채 1~3년. 기대 금리 = 시장 금리 − 과거 평균 기간 프리미엄(CD 0.18%p·국고 1년 0.05%p)"
+ },
+ "rateModel": {
+  "validatedAt": "2026-10-20",
+  "us": {
+   "asOf": "2026-10-16",
+   "policy": 3.88,
+   "forecasts": [
+    {
+     "h": 3,
+     "rate": 4.24,
+     "chg": 0.36,
+     "rmse": 0.33,
+     "noChangeRmse": 0.47,
+     "market": 4.08
+    },
+    {
+     "h": 6,
+     "rate": 4.51,
+     "chg": 0.63,
+     "rmse": 0.52,
+     "noChangeRmse": 0.86,
+     "market": 4.2
+    },
+    {
+     "h": 12,
+     "rate": 4.75,
+     "chg": 0.87,
+     "rmse": 1.08,
+     "noChangeRmse": 1.53,
+     "market": 4.46
+    }
+   ],
+   "taylor": {
+    "rate": 4.39,
+    "infl": 3.01,
+    "inflAt": "2026-08",
+    "unemp": 4.2,
+    "ustar": 4.39
+   }
+  },
+  "korea": {
+   "policy": 3,
+   "forecasts": [
+    {
+     "h": 3,
+     "rate": 3,
+     "chg": 0,
+     "rmse": 0.34,
+     "method": "변화 없음"
+    },
+    {
+     "h": 6,
+     "rate": 3,
+     "chg": 0,
+     "rmse": 0.43,
+     "method": "변화 없음"
+    },
+    {
+     "h": 12,
+     "rate": 3,
+     "chg": 0,
+     "rmse": 0.94,
+     "method": "변화 없음"
+    }
+   ],
+   "taylor": {
+    "rate": 4.83,
+    "infl": 2.73,
+    "inflAt": "2026-09",
+    "unemp": 2.7,
+    "ustar": 3.32
+   }
+  }
  }
 };

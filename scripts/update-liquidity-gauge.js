@@ -20,7 +20,8 @@ const fs = require("fs");
 const path = require("path");
 const { settleDailyBars } = require("./lib-quote");
 const { fedPath } = require("./lib-fedpath");
-const { bokPath } = require("./lib-bokpath");   // 한국은행 기준금리 시장 기대(CD·국고 1년 − 평균 기간 프리미엄) — 마찬가지로 표시만   // FOMC 회의별 금리 경로(연방기금금리 선물) — 게이지 점수에는 넣지 않고 함께 보여 준다   // 일봉을 끝난 장 기준으로 정리(장중 미완성 봉 제외·빈 종가 채움)
+const { bokPath } = require("./lib-bokpath");
+const { rateModel } = require("./lib-ratemodel");   // 정책금리 예측 — 표본 밖 검증을 통과한 방식만(미국 시장 회귀·한국 변화 없음) + 테일러 준칙 참고선   // 한국은행 기준금리 시장 기대(CD·국고 1년 − 평균 기간 프리미엄) — 마찬가지로 표시만   // FOMC 회의별 금리 경로(연방기금금리 선물) — 게이지 점수에는 넣지 않고 함께 보여 준다   // 일봉을 끝난 장 기준으로 정리(장중 미완성 봉 제외·빈 종가 채움)
 
 const ROOT = path.join(__dirname, "..");
 const OUT = path.join(ROOT, "data", "liquidity-auto.js");
@@ -216,10 +217,12 @@ function loadPrev() {
   // 연준 금리 경로 — 시장(선물)이 반영한 회의별 인상·동결·인하 확률. 조회 실패면 이전 값을 유지한다(asOf 로 낡음 표시).
   try { data.fed = await fedPath(); } catch (_e) { data.fed = null; }
   try { data.bok = await bokPath(); } catch (_e) { data.bok = null; }
-  if (!data.fed || !data.bok) {
+  try { data.rateModel = await rateModel(data.bok && data.bok.base); } catch (_e) { data.rateModel = null; }
+  if (!data.fed || !data.bok || !data.rateModel || !data.rateModel.us || !data.rateModel.korea) {
     try { global.window = {}; delete require.cache[require.resolve(OUT)]; require(OUT); const old = global.window.LIQUIDITY_AUTO || {};
       if (!data.fed && old.fed) data.fed = old.fed;
-      if (!data.bok && old.bok) data.bok = old.bok; } catch (_e) { /* 없음 */ }
+      if (!data.bok && old.bok) data.bok = old.bok;
+      if (old.rateModel) { data.rateModel = data.rateModel || {}; ["us", "korea"].forEach((c) => { if (!data.rateModel[c] && old.rateModel[c]) data.rateModel[c] = old.rateModel[c]; }); if (!data.rateModel.validatedAt) data.rateModel.validatedAt = old.rateModel.validatedAt; } } catch (_e) { /* 없음 */ }
   }
 
   fs.writeFileSync(OUT, render(data));
