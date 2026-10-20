@@ -30,7 +30,7 @@ window.LIQUIDITY_AUTO = {
   "shortScore": -0.34,
   "midScore": -0.2,
   "drivers": [
-   "⚠ 코스피 급락 floor 발동 (20일 -13%)",
+   "⚠ 코스피 급락 floor 발동 (20일 -17%)",
    "원/달러 추세 (+2)",
    "코스피 모멘텀(20d) (−2)",
    "글로벌 신용(20d) (−1)",
@@ -39,29 +39,29 @@ window.LIQUIDITY_AUTO = {
  },
  "fed": {
   "asOf": "2026-10-20",
-  "current": 3.878,
+  "current": 3.881,
   "meetings": [
    {
     "date": "2026-10-28",
-    "rate": 3.925,
-    "stepBp": 4.7,
-    "cumBp": 4.7,
+    "rate": 3.92,
+    "stepBp": 3.9,
+    "cumBp": 3.9,
     "outcomes": [
      {
       "n": 0,
-      "p": 81
+      "p": 84
      },
      {
       "n": 1,
-      "p": 19
+      "p": 16
      }
     ]
    },
    {
     "date": "2026-12-09",
-    "rate": 4.143,
-    "stepBp": 21.8,
-    "cumBp": 26.5,
+    "rate": 4.145,
+    "stepBp": 22.5,
+    "cumBp": 26.4,
     "outcomes": [
      {
       "n": 1,
@@ -76,16 +76,16 @@ window.LIQUIDITY_AUTO = {
    {
     "date": "2027-01-27",
     "rate": 4.255,
-    "stepBp": 11.2,
-    "cumBp": 37.7,
+    "stepBp": 11,
+    "cumBp": 37.4,
     "outcomes": [
      {
-      "n": 2,
-      "p": 51
+      "n": 1,
+      "p": 50
      },
      {
-      "n": 1,
-      "p": 49
+      "n": 2,
+      "p": 50
      }
     ]
    },
@@ -93,39 +93,39 @@ window.LIQUIDITY_AUTO = {
     "date": "2027-03-17",
     "rate": 4.432,
     "stepBp": 17.7,
-    "cumBp": 55.4,
+    "cumBp": 55.1,
     "outcomes": [
      {
       "n": 2,
-      "p": 78
+      "p": 80
      },
      {
       "n": 3,
-      "p": 22
+      "p": 20
      }
     ]
    },
    {
     "date": "2027-04-28",
-    "rate": 4.52,
-    "stepBp": 8.8,
-    "cumBp": 64.2,
+    "rate": 4.515,
+    "stepBp": 8.3,
+    "cumBp": 63.4,
     "outcomes": [
      {
       "n": 3,
-      "p": 57
+      "p": 54
      },
      {
       "n": 2,
-      "p": 43
+      "p": 46
      }
     ]
    },
    {
     "date": "2027-06-09",
-    "rate": 4.606,
-    "stepBp": 8.6,
-    "cumBp": 72.8,
+    "rate": 4.608,
+    "stepBp": 9.3,
+    "cumBp": 72.7,
     "outcomes": [
      {
       "n": 3,
@@ -139,17 +139,17 @@ window.LIQUIDITY_AUTO = {
    },
    {
     "date": "2027-07-28",
-    "rate": 4.63,
-    "stepBp": 2.4,
-    "cumBp": 75.2,
+    "rate": 4.635,
+    "stepBp": 2.7,
+    "cumBp": 75.4,
     "outcomes": [
      {
       "n": 3,
-      "p": 99
+      "p": 98
      },
      {
       "n": 4,
-      "p": 1
+      "p": 2
      }
     ]
    }
@@ -161,9 +161,9 @@ window.LIQUIDITY_AUTO = {
   "base": 3,
   "call": 3.036,
   "cd91": 3.25,
-  "y1": 3.626,
-  "y2": 3.813,
-  "y3": 3.854,
+  "y1": 3.597,
+  "y2": 3.793,
+  "y3": 3.835,
   "exp3m": {
    "rate": 3.07,
    "chg": 0.07,
@@ -171,10 +171,10 @@ window.LIQUIDITY_AUTO = {
    "label": "3개월 동결 우세 — 인상 쪽으로 기움"
   },
   "exp12m": {
-   "rate": 3.576,
-   "chg": 0.576,
+   "rate": 3.547,
+   "chg": 0.547,
    "sd": 0.17,
-   "label": "1년 인상 기대 — 기간 평균 금리가 지금보다 인상 약 2.3회분 높다"
+   "label": "1년 인상 기대 — 기간 평균 금리가 지금보다 인상 약 2.2회분 높다"
   },
   "source": "네이버 증권 — 한국은행 기준금리·콜·CD 91일·국고채 1~3년. 기대 금리 = 시장 금리 − 과거 평균 기간 프리미엄(CD 0.18%p·국고 1년 0.05%p)"
  },
