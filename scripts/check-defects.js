@@ -18,7 +18,8 @@
 //   earn  실적 발표 직후(10일 안) — 가이던스·역성장 확인
 //   drop  5거래일 수익률이 같은 나라 편성 종목 중앙값보다 12%p 이상 낮음 — 원인 확인(시장 전체 급락은 결격 신호가 아니다)
 //   tpcut 컨센서스 목표가 14일 새 -10% 이상 하향 — 논거 훼손 확인
-// 세션 판정(candidate-notes.json defects[그룹][티커] = {verdict: 실질|형식|없음|보호, note, asOf, flags, triedAt}):
+// 세션·AI 판정(candidate-notes.json defects[그룹][티커] = {verdict: 실질|형식|없음|보호, note, asOf, flags, triedAt, by?, sources?}):
+//   '점검 필요'는 ai-defects.js(Claude API, 키가 있을 때 Action 이 매일)가 먼저 판정하고(by:"ai") 세션이 검토·교체한다.
 //   판정이 덮는 신호(flags)에 없는 새 신호가 뜨면 다시 '점검 필요'가 된다.
 //   실질 결격은 매 거래일(T) 대체 후보로 교체를 시도하고 triedAt 을 남긴다(대체가 없으면 결격 표시 유지).
 //
@@ -178,6 +179,8 @@ COUNTRIES.forEach((c) => THEMES.forEach((th) => {
     if (v && v.asOf) d.judged = v.asOf;
     if (v && v.verdict) d.verdict = v.verdict;
     if (v && v.triedAt) d.triedAt = v.triedAt;
+    if (v && v.by) d.by = v.by;   // 판정 주체 — "ai"(ai-defects.js) 면 앱이 'AI 판정'으로 표시
+    if (PROTECT.has(c + ":" + s.ticker)) d.prot = true;
     defects.push(d);
     if (state === "점검 필요") queue.review.push({ g, d, hard: fresh.some((x) => x.hard) });
     if (state === "결격") queue.swap.push({ g, d });

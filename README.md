@@ -239,6 +239,31 @@ CORS 로 막히므로, **본인 전용 Cloudflare Worker**(무료)를 프록시�
   → 이 기능을 켜려면 위 배포 단계로 **최신 `worker/quotes-worker.js`(또는 `worker/valtown-quotes.ts`)를 재배포**하면 됩니다. 앱 코드 변경은 필요 없습니다.
 - **캐시**: 과거 시계열은 하루 단위로만 바뀌므로 엣지에서 30분 캐시합니다.
 
+## AI 연결 (선택 — Claude API)
+
+두 곳에서 따로 연결합니다. 둘 다 없어도 앱은 지금처럼 동작합니다.
+
+### 1) 매일 자동 분석 — GitHub Action (서버 키)
+
+키를 등록하면 `refresh-quotes` Action 이 평일 아침·저녁 시세 갱신 직후 Claude 로:
+
+- **시황·거시 유동성·연준/한은 판단·지수 대응·오늘의 Top Pick** 을 같은 날 데이터로 씁니다(`scripts/ai-daily.js`, Opus 5.5 + 웹 검색 최대 6회). 루틴 세션이 같은 날 쓴 문장은 덮지 않습니다.
+- **결격 '점검 필요' 종목**을 웹 검색으로 실질·형식·없음 판정합니다(`scripts/ai-defects.js`, Sonnet 5.5). 종목 교체는 하지 않습니다.
+- 종목마다 **최근 뉴스 한 줄**을 붙입니다(`scripts/ai-news.js`, 무료 헤드라인 + Haiku 5.5).
+
+등록: GitHub 저장소 → **Settings → Secrets and variables → Actions → New repository secret** → 이름 `ANTHROPIC_API_KEY`, 값은 [console.anthropic.com](https://console.anthropic.com/settings/keys) 에서 만든 키.
+결과·사용량·오류는 `data/ai-status.js` 에 남고 앱 헤더 ✦ **AI 연결** 창의 '매일 자동 분석' 칸에 보입니다.
+의존성은 `@anthropic-ai/sdk` 하나(`package.json`, 버전 고정)이고 AI 스텝에서만 `npm ci` 합니다.
+
+### 2) 앱 안 질문 — 이 기기 키 (BYOK)
+
+앱 헤더 ✦ **AI 연결**에 키를 넣으면 종목·지수 상세의 **AI에게 묻기**와 홈 '오늘의 시장'의 **AI 질문**에서
+그 화면의 데이터(카드·실적·신호·뉴스·유동성)를 맥락으로 바로 물어볼 수 있습니다.
+
+- 키는 **그 브라우저에만** 저장되고(끄면 탭을 닫을 때 지움) `api.anthropic.com` 으로만 전송됩니다. 서버 키와 별개입니다.
+- 모델(Opus 5.5·Sonnet 5.5·Haiku 5.5)과 웹 검색 사용 여부를 고를 수 있고, 답변마다 토큰·추정 비용이 표시됩니다.
+- Console 의 **Limits** 에서 월 지출 한도를 걸어 두길 권합니다. 같은 기기를 쓰는 사람은 그 키로 질문할 수 있습니다.
+
 ## 데이터 정확성
 
 데이터의 정확성이 최우선입니다. 자동 갱신 작업에는 다음 정확성 규칙이 포함돼 있습니다.

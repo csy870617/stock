@@ -1,0 +1,10 @@
+{
+  "name": "mystock-data-scripts",
+  "private": true,
+  "description": "데이터 갱신 스크립트 의존성 — AI 단계(scripts/ai-*.js)만 Anthropic SDK 를 쓴다. 나머지 스크립트는 의존성 없이 node 로 돈다.",
+  "license": "UNLICENSED",
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "@anthropic-ai/sdk": "0.131.0"
+  }
+}

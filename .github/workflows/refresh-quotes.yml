@@ -8,6 +8,8 @@ name: Refresh quotes (daily, token-free)
 #   4) update-liquidity-gauge.js → data/liquidity-auto.js (시장지표 기반 유동성 게이지 baseline)
 #   5) screen-watch.js → data/watch-candidates.js (관심종목 차트 후보: 턴어라운드·신고가 + 기존 태그 유효성)
 #   5-2) screen-discovery.js(매일, 히든 6일마다) → check-defects.js → data/candidates.js (주제별 후보 + 편성 결격 점검)
+#   5-3) AI 단계(Claude API — 저장소 Secrets 에 ANTHROPIC_API_KEY 가 있을 때만, 2026-10-21~):
+#        ai-defects.js(점검 필요 → 실질·형식·없음 판정) → ai-daily.js(시황·유동성·연준/한은·지수 대응·Top Pick) → ai-news.js(종목 뉴스 한 줄)
 #   (월) gen-tickers.js → data/tickers.js (관심종목 검색 사전, 주 1회)
 #   6) daily-maintenance.js → recommendations.js generatedAt(오늘) + 지수·스냅샷(history.js)
 # 이렇게 하면 LLM 추천 Routine이 실패해도 앱은 매일 오늘자 날짜·시세·지수 기술적 분석·유동성 baseline·스냅샷을 유지한다.
@@ -35,6 +37,8 @@ concurrency:
 
 env:
   TARGET_BRANCH: claude/stock-analysis-recommendation-v9310x   # 배포(=기본) 브랜치
+  # AI 단계 스위치 — 키 값은 각 스텝 env 로만 넘기고 여기서는 '있는지'만 본다
+  HAS_AI_KEY: ${{ secrets.ANTHROPIC_API_KEY != '' }}
 
 jobs:
   refresh:
@@ -114,6 +118,39 @@ jobs:
         run: node scripts/check-defects.js
         continue-on-error: true
 
+      # ── AI 단계(Claude API) — 저장소 Settings → Secrets → Actions 에 ANTHROPIC_API_KEY 가 있을 때만 돈다(없으면 건너뜀) ──
+      # 세션(A 루틴)이 쓰던 매일 항목을 세션 없이 채운다. 실패해도 나머지 갱신은 커밋한다(continue-on-error).
+      # 사용량·오류는 data/ai-status.js 에 남아 앱 'AI 연결' 창이 보여 준다. 교체(add/remove)는 하지 않는다 — 세션 몫.
+      - name: Install Anthropic SDK (AI steps only)
+        if: env.HAS_AI_KEY == 'true'
+        run: npm ci --no-audit --no-fund
+        continue-on-error: true
+
+      # 결격 '점검 필요' 종목만 웹 검색으로 판정(Sonnet 5.5, 종목당 검색 ≤3) → candidate-notes.json(by:"ai") → candidates.js 재생성
+      - name: AI defect verdicts (점검 필요 → candidate-notes.json)
+        if: env.HAS_AI_KEY == 'true'
+        run: node scripts/ai-defects.js
+        continue-on-error: true
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      # 시황·유동성·연준/한은 판단·지수 대응·Top Pick(Opus 5.5, 검색 ≤6) — 오늘(T) 몫이 비었거나 AI 가 쓴 것에 새 종가가 생겼을 때만.
+      # 세션이 같은 날 쓴 문장은 덮지 않는다(--if-stale).
+      - name: AI daily analysis (시황·유동성·지수 대응·Top Pick)
+        if: env.HAS_AI_KEY == 'true'
+        run: node scripts/ai-daily.js --if-stale
+        continue-on-error: true
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
+      # 종목별 최근 3일 헤드라인(네이버·야후, 무료) → 회사 소식 한 줄(Haiku 5.5, 검색 없음) → data/news.js
+      - name: AI stock news one-liners (→ data/news.js)
+        if: env.HAS_AI_KEY == 'true'
+        run: node scripts/ai-news.js
+        continue-on-error: true
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+
       # 관심종목 검색 사전(이름→코드) — 신규 상장 반영용, 월요일 아침 실행에서만 주 1회.
       # KRX 가 막히면 네이버로 폴백하고, 둘 다 실패한 국가는 기존 값을 유지한다(스크립트 내부 처리).
       - name: Refresh ticker dictionary (weekly, → data/tickers.js, token-free)
@@ -138,14 +175,14 @@ jobs:
       - name: Commit & push if changed
         id: commit
         run: |
-          if git diff --quiet -- data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/events.js data/fundamentals.js data/liquidity-auto.js data/watch-candidates.js data/discovery-candidates.js data/candidates.js data/coverage-status.js data/tickers.js data/consensus.js data/reco-ops.json data/chart; then
+          if git diff --quiet -- data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/events.js data/fundamentals.js data/liquidity-auto.js data/watch-candidates.js data/discovery-candidates.js data/candidates.js data/coverage-status.js data/tickers.js data/consensus.js data/reco-ops.json data/chart data/liquidity.js data/index-notes.js data/candidate-notes.json data/news.js data/ai-status.js; then
             echo "변화 없음 — 커밋 생략"
             echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/events.js data/fundamentals.js data/liquidity-auto.js data/watch-candidates.js data/discovery-candidates.js data/candidates.js data/coverage-status.js data/tickers.js data/consensus.js data/reco-ops.json data/chart
+          git add data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/events.js data/fundamentals.js data/liquidity-auto.js data/watch-candidates.js data/discovery-candidates.js data/candidates.js data/coverage-status.js data/tickers.js data/consensus.js data/reco-ops.json data/chart data/liquidity.js data/index-notes.js data/candidate-notes.json data/news.js data/ai-status.js
           git commit -m "매일 데이터 갱신 (자동) — 시세·기준일·스냅샷 (update-quotes + daily-maintenance)"
           # 다른 자동 커밋(LLM 재평가 Routine 등)과 경합해 push 가 거부될 수 있으므로,
           # 거부되면 원격 변경을 rebase 로 얹어 1회 재시도한다(그날 갱신이 조용히 유실되지 않도록).
@@ -159,7 +196,7 @@ jobs:
               git rebase --abort
               echo "::warning::rebase 충돌 — 원격 최신 위에 이번 실행 산출물을 다시 얹습니다"
               GEN="$RUNNER_TEMP/gen"; mkdir -p "$GEN"
-              cp data/quotes.js data/indices.js data/stock-ta.js data/events.js data/fundamentals.js data/liquidity-auto.js data/watch-candidates.js data/discovery-candidates.js data/tickers.js "$GEN/"
+              cp data/quotes.js data/indices.js data/stock-ta.js data/events.js data/fundamentals.js data/liquidity-auto.js data/watch-candidates.js data/discovery-candidates.js data/tickers.js data/news.js data/ai-status.js "$GEN/"
               cp -r data/chart "$RUNNER_TEMP/gen-chart" 2>/dev/null || true
               git reset --hard FETCH_HEAD
               cp "$GEN"/* data/
@@ -167,10 +204,13 @@ jobs:
               if [ -d "$RUNNER_TEMP/gen-chart" ]; then rm -rf data/chart && cp -r "$RUNNER_TEMP/gen-chart" data/chart; fi
               node scripts/update-consensus.js || true
               node scripts/gen-technote.js || true
+              # AI 결과는 API 를 다시 부르지 않고 이번 실행분(.ai-cache)을 다시 얹는다 — 원격에 같은 날 이후로 쓴 항목은 원격을 남긴다
+              node scripts/ai-defects.js --reapply || true
+              node scripts/ai-daily.js --reapply || true
               node scripts/daily-maintenance.js || true
               node scripts/check-defects.js || true
               node scripts/coverage.js --emit || true
-              git add data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/events.js data/fundamentals.js data/liquidity-auto.js data/watch-candidates.js data/discovery-candidates.js data/candidates.js data/coverage-status.js data/tickers.js data/consensus.js data/reco-ops.json data/chart
+              git add data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/events.js data/fundamentals.js data/liquidity-auto.js data/watch-candidates.js data/discovery-candidates.js data/candidates.js data/coverage-status.js data/tickers.js data/consensus.js data/reco-ops.json data/chart data/liquidity.js data/index-notes.js data/candidate-notes.json data/news.js data/ai-status.js
               git diff --cached --quiet || git commit -m "매일 데이터 갱신 (자동) — 시세·기준일·스냅샷 (update-quotes + daily-maintenance)"
             fi
             # 원격 변경과 합쳐진 결과도 커밋 전과 같은 게이트를 통과해야 push 한다

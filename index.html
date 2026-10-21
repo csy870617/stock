@@ -748,6 +748,80 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
 @media (min-width: 900px) {
   .ttabs { top: calc(var(--hdr) + 49px); }   /* 상단 화면 탭(48px + 선 1px) 바로 아래에 붙는다 */
 }
+
+/* ── AI(Claude API) — 연결 창 · 상세의 'AI에게 묻기' · 종목 뉴스 · AI 작성 표시 ── */
+.ic-btn .ai-dot { position: absolute; top: 7px; right: 6px; width: 7px; height: 7px; border-radius: 50%; background: var(--acc); box-shadow: 0 0 0 2px var(--sf); }
+.ai-tag { display: inline-flex; align-items: center; height: 18px; padding: 0 6px; border-radius: 5px; font-size: 11px; font-weight: 700; letter-spacing: 0; color: var(--ev); background: var(--ev-soft); vertical-align: 1px; white-space: nowrap; }
+.blk-act { flex: none; height: 28px; padding: 0 10px; border-radius: 8px; font-size: 12.5px; font-weight: 700; color: var(--ev); background: var(--ev-soft); white-space: nowrap; }
+.ai-modal .pl-modal-box { max-height: 90vh; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.ai-top { display: flex; align-items: center; gap: 8px; }
+.ai-top .pl-modal-t { flex: 1; }
+.ai-sec { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--line2); }
+.ai-sec.first { margin-top: 12px; padding-top: 0; border-top: 0; }
+.ai-h { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; }
+.ai-st { display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 6px; font-size: 12px; font-weight: 700; color: var(--ink2); background: var(--sf3); }
+.ai-st.ok { color: var(--acc); background: var(--acc-soft); }
+.ai-st.err { color: var(--warn); background: var(--warn-soft); }
+.ai-p { margin-top: 6px; font-size: 13px; line-height: 1.65; color: var(--ink2); }
+.ai-p b { color: var(--ink); }
+.ai-p a, .ai-help a { text-decoration: underline; text-underline-offset: 2px; }
+.ai-in { width: 100%; height: 46px; margin-top: 10px; padding: 0 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--sf2); font-size: 14.5px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+.ai-in:focus, .aq-in:focus { outline: 2px solid var(--ev); outline-offset: -1px; }
+.ai-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+.ai-row .btn { height: 44px; font-size: 14px; }
+.ai-chk { display: flex; align-items: center; gap: 7px; margin-top: 10px; font-size: 13px; color: var(--ink2); cursor: pointer; }
+.ai-chk input { width: 17px; height: 17px; accent-color: var(--ev); }
+.ai-msg { margin-top: 8px; font-size: 13px; line-height: 1.55; color: var(--ink2); }
+.ai-msg.err { color: var(--warn); }
+.ai-msg.ok { color: var(--acc); }
+.ai-key { display: flex; align-items: center; gap: 8px; margin-top: 10px; padding: 10px 12px; border-radius: 12px; background: var(--sf2); font-size: 13.5px; }
+.ai-key code { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: var(--ink2); }
+.ai-models { display: grid; gap: 6px; margin-top: 10px; }
+.ai-m { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; cursor: pointer; }
+.ai-m input { width: 17px; height: 17px; accent-color: var(--ev); flex: none; }
+.ai-m b { font-size: 14px; }
+.ai-m span { display: block; font-size: 12px; color: var(--mut); }
+.ai-m.on { border-color: var(--ev); background: var(--ev-soft); }
+.ai-kv { display: grid; grid-template-columns: 92px minmax(0, 1fr); gap: 6px 10px; margin-top: 10px; font-size: 13px; line-height: 1.5; }
+.ai-kv dt { color: var(--mut); }
+.ai-kv dd { color: var(--ink); min-width: 0; }
+.ai-kv .bad { color: var(--warn); }
+.ai-steps { margin: 8px 0 0 18px; font-size: 13px; line-height: 1.7; color: var(--ink2); }
+.ai-steps code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; color: var(--ink); background: var(--sf3); padding: 1px 5px; border-radius: 4px; }
+.ai-help { margin-top: 10px; font-size: 12px; line-height: 1.6; color: var(--mut); }
+.aq-sub { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin: -4px 0 12px; font-size: 12.5px; color: var(--mut); }
+.aq-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.aq-chip { min-height: 34px; padding: 6px 12px; border-radius: 17px; font-size: 13px; font-weight: 600; line-height: 1.35; text-align: left; color: var(--ink); background: var(--sf3); }
+.aq-turn + .aq-turn { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line2); }
+.aq-qw { display: flex; justify-content: flex-end; }
+.aq-q { max-width: 88%; padding: 9px 13px; border-radius: 14px 14px 4px 14px; font-size: 14px; font-weight: 600; line-height: 1.55; color: var(--ink); background: var(--ev-soft); white-space: pre-wrap; overflow-wrap: anywhere; }
+.aq-a { margin-top: 10px; font-size: 14.5px; line-height: 1.75; color: var(--ink); overflow-wrap: anywhere; }
+.aq-a p + p, .aq-a p + ul, .aq-a ul + p { margin-top: 8px; }
+.aq-a ul { margin-top: 4px; padding-left: 18px; list-style: disc; }
+.aq-a li + li { margin-top: 3px; }
+.aq-a code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 13px; background: var(--sf3); padding: 0 4px; border-radius: 4px; }
+.aq-ph { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; font-size: 13px; color: var(--mut); }
+.aq-ph i { width: 6px; height: 6px; border-radius: 50%; background: var(--ev); animation: aqb 1s infinite ease-in-out; }
+.aq-ph i:nth-child(2) { animation-delay: .15s; } .aq-ph i:nth-child(3) { animation-delay: .3s; }
+@keyframes aqb { 0%, 80%, 100% { opacity: .25; } 40% { opacity: 1; } }
+.aq-err { margin-top: 10px; padding: 9px 12px; border-radius: 10px; font-size: 13px; line-height: 1.55; color: var(--warn); background: var(--warn-soft); }
+.aq-cites { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 8px; font-size: 12px; }
+.aq-cites a { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink2); text-decoration: underline; text-underline-offset: 2px; }
+.aq-meta { margin-top: 6px; font-size: 11.5px; color: var(--mut); }
+.aq-tools { display: flex; gap: 14px; margin-top: 12px; }
+.aq-form { display: flex; align-items: flex-end; gap: 8px; margin-top: 14px; }
+.aq-in { flex: 1; min-width: 0; min-height: 46px; max-height: 160px; padding: 12px 13px; border: 1px solid var(--line); border-radius: 14px; resize: none; background: var(--sf2); font: inherit; font-size: 15px; line-height: 1.45; color: var(--ink); }
+.aq-send { flex: none; width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; color: var(--sf); background: var(--ink); }
+.aq-send svg { width: 20px; height: 20px; }
+.aq-off { padding: 14px; border-radius: 12px; background: var(--sf2); }
+.aq-off p { font-size: 14px; line-height: 1.65; color: var(--ink2); }
+.aq-off .btn { margin-top: 12px; width: 100%; }
+.aq-note { margin-top: 10px; font-size: 11.5px; line-height: 1.55; color: var(--mut); }
+.dt-news { margin: 0 20px 14px; padding: 12px 14px; border-radius: 12px; background: var(--sf2); }
+.dn-k { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--ink2); }
+.dn-t { margin-top: 4px; font-size: 14.5px; line-height: 1.6; color: var(--ink); }
+.dn-l { display: grid; gap: 3px; margin-top: 6px; }
+.dn-l a { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12.5px; color: var(--mut); text-decoration: underline; text-underline-offset: 2px; }
 </style>
 </head>
 <body>
@@ -763,6 +837,10 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>
         <select class="ov-sel" id="asofSel" aria-label="기준일 선택 — 과거 편성 보기"></select>
       </label>
+      <button class="ic-btn" id="aiBtn" type="button" title="AI 연결(Claude API)" aria-label="AI 연결 설정">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M10 3.5l1.6 4.4a3 3 0 0 0 1.8 1.8L17.8 11.3l-4.4 1.6a3 3 0 0 0-1.8 1.8L10 19.1l-1.6-4.4a3 3 0 0 0-1.8-1.8L2.2 11.3l4.4-1.6a3 3 0 0 0 1.8-1.8z"/><path d="M18.5 2.5l.6 1.6 1.6.6-1.6.6-.6 1.6-.6-1.6-1.6-.6 1.6-.6z" fill="currentColor" stroke="none"/></svg>
+        <i class="ai-dot" id="aiDot" hidden></i>
+      </button>
       <button class="ic-btn" id="themeBtn" type="button" title="라이트·다크 전환" aria-label="화면 밝기 전환">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor" stroke="none"/></svg>
       </button>
@@ -803,7 +881,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       </details>
     </div>
     <section class="blk" id="mktBox">
-      <div class="blk-h"><h2>오늘의 시장</h2><span class="blk-sub" id="mktAs"></span></div>
+      <div class="blk-h"><h2>오늘의 시장</h2><span class="blk-sub" id="mktAs"></span><button class="blk-act" id="mktAsk" type="button" title="시장·금리·유동성에 대해 Claude 에게 묻기">AI 질문</button></div>
       <div class="idx-row" id="idxGrid" data-ctx="idx"></div>
       <div class="liq-row" id="liqGrid"></div>
       <details class="mkt-fold" id="mktFold">
@@ -894,6 +972,17 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   <div class="sh-body" id="shBody"></div>
 </aside>
 
+<!-- AI 연결(Claude API) — 이 기기 키(질문하기)와 서버 자동 분석(GitHub Secrets) 상태 -->
+<div class="pl-modal ai-modal" id="aiModal" hidden>
+  <div class="pl-modal-box" role="dialog" aria-modal="true" aria-labelledby="aiTitle">
+    <div class="ai-top">
+      <div class="pl-modal-t" id="aiTitle">AI 연결 · Claude API</div>
+      <button class="ic-btn" id="aiClose" type="button" aria-label="닫기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div id="aiBody"></div>
+  </div>
+</div>
+
 <!-- 개인 목록에서 '정밀분석까지 마친 풀카드'를 뺄 때 묻는 선택 창 —
      이 기기에서만 숨길지, 편성 자체에서 빼서 매일 분석까지 멈출지. -->
 <div class="pl-modal" id="plModal" hidden>
@@ -920,6 +1009,8 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
 <script src="data/recommendations.js"></script>
 <script src="data/coverage-status.js"></script>
 <script src="data/candidates.js"></script>
+<script src="data/news.js"></script>
+<script src="data/ai-status.js"></script>
 <script src="data/quotes.js"></script>
 <script src="data/history.js"></script>
 <!-- 티커 사전(~360KB)은 관심종목 '검색' 입력 때만 쓰이므로 defer 로 빼 초기 렌더를 막지 않는다
@@ -1405,7 +1496,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     document.getElementById("mktPrev").textContent = parts[0] || "";
     document.getElementById("marketNote").innerHTML = mn
       ? '<div class="mn-body">' + parts.map(function (p, i) {
-          return '<p class="mn-p">' + (i === 0 ? '<span class="mn-tag">시황</span>' : "") + esc(p) + "</p>";
+          return '<p class="mn-p">' + (i === 0 ? '<span class="mn-tag">시황</span>' + (aiWrote("market", D.marketNote) ? AI_TAG + " " : "") : "") + esc(p) + "</p>";
         }).join("") + "</div>"
       : "";
     syncMktBox();
@@ -2393,7 +2484,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       (df.flags || []).forEach(function (f) { if (f.fresh || !df.note) why.push(f.msg); });
       out.push({ warn: df.state === "결격", k: df.state === "결격" ? "결격 · 교체 대기" : "결격 점검 중",
         lead: df.state === "결격" ? "검증을 통과한 대체 후보가 생기면 바로 교체합니다." : "매일 자동 점검에서 신호가 떠 다음 업데이트에서 실질 결격인지 판정합니다.",
-        why: why, at: df.judged });
+        why: why, at: df.judged, by: df.by });
     }
     if (e.upside != null && e.upside <= 0) out.push({ warn: true, k: "목표가 도달", lead: TP_HIT_TIP, why: [] });
     if (isValueTrap(s, e.upside)) out.push({ warn: true, k: "낙폭발 상승여력", lead: VT_TIP, why: [] });
@@ -2402,7 +2493,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     if (c === "korea" && f && f.hot) out.push({ warn: true, k: "수급 과열", lead: HOT_TIP, why: [] });
     if (!out.length) return "";
     return '<div class="dt-alert">' + out.map(function (a) {
-      return '<div class="al-i"><div class="al-k' + (a.warn ? " al-w" : "") + '">' + esc(a.k) + (a.at ? ' <span class="al-at">판정 ' + esc(mdOf(a.at)) + "</span>" : "") + "</div>" +
+      return '<div class="al-i"><div class="al-k' + (a.warn ? " al-w" : "") + '">' + esc(a.k) + (a.at ? ' <span class="al-at">' + (a.by === "ai" ? "AI " : "") + "판정 " + esc(mdOf(a.at)) + "</span>" : "") + "</div>" +
         '<div class="al-t">' + esc(a.lead) + "</div>" +
         (a.why.length ? '<ul class="al-why">' + a.why.map(function (w) { return "<li>" + esc(w) + "</li>"; }).join("") + "</ul>" : "") + "</div>";
     }).join("") + "</div>";
@@ -2456,8 +2547,9 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     if (vb) secs.push(["fin", "실적·밸류", vb]);
     var rk = s.risks || [];
     if (rk.length) secs.push(["risk", "리스크", '<ul class="risk-list">' + rk.map(function (r) { return "<li>" + esc(r) + "</li>"; }).join("") + "</ul>"]);
+    secs.push(["ai", "AI에게 묻기", aiSectionHtml("s:" + c + ":" + s.ticker + ":" + s.theme, { kind: "stock", c: c, t: s.ticker, th: s.theme })]);
     // 위쪽 고정 탭은 짧은 이름(한 줄에 모두 보이게), 섹션 제목은 원래 이름
-    var NAV = { info: "투자정보", thesis: "포인트", range: "범위", tech: "기술", fin: "실적", risk: "리스크" };
+    var NAV = { info: "투자정보", thesis: "포인트", range: "범위", tech: "기술", fin: "실적", risk: "리스크", ai: "AI" };
     var nav = '<nav class="dt-nav" aria-label="상세 항목">' + secs.map(function (x, i) {
       return '<a href="#dt-' + x[0] + '" data-sec="dt-' + x[0] + '"' + (i === 0 ? ' class="on"' : "") + ">" + NAV[x[0]] + "</a>";
     }).join("") + "</nav>";
@@ -2468,7 +2560,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     var acts = isPersonal(s.theme)
       ? chart + '<button class="btn" type="button" data-wl="' + esc(s.theme + "|" + c + "|" + s.ticker) + '">' + ICON.x + " " + esc(plist(s.theme).label) + "에서 빼기</button>"
       : chart + favAct(s, c, "watch") + favAct(s, c, "hold");
-    return top + chartHtml(s.ticker) + why + sum + nav + body +
+    return top + chartHtml(s.ticker) + why + newsHtml(s.ticker) + sum + nav + body +
       (srcs ? '<div class="dt-src">' + srcs + "</div>" : "") + '<div class="dt-act">' + acts + "</div>";
   }
   // 시세만 있는 관심·보유 종목(정밀분석 전) — 현재가 + 정밀분석 요청
@@ -2496,11 +2588,12 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     var n = ((window.INDEX_NOTES && window.INDEX_NOTES.items) || {})[x.key], nAs = window.INDEX_NOTES && window.INDEX_NOTES.asOf;
     var line = function (k, v, g, lead) { return v ? '<div class="tn-line"><span class="tn-k">' + k + '</span><span class="tn-v">' + (lead || "") + (g ? sigBadge(g) : "") + esc(v) + "</span></div>" : ""; };
     var notes = n && (n.value || n.short || n.mid || n.long)
-      ? '<section class="dt-sec"><h3>지수 대응' + (nAs ? ' <span class="md-as">작성 ' + esc(mdOf(nAs)) + "</span>" : "") +
+      ? '<section class="dt-sec"><h3>지수 대응' + (aiWrote("indexNotes", (((window.INDEX_NOTES || {}).items || {}).kospi || {}).short) ? " " + AI_TAG : "") + (nAs ? ' <span class="md-as">작성 ' + esc(mdOf(nAs)) + "</span>" : "") +
         (nAs && asOf && nAs < asOf ? ' <span class="tn-stale" title="오늘 데이터(' + esc(asOf) + ')로 아직 갱신되지 않았습니다.">미갱신</span>' : "") + "</h3>" +
         line("밸류", n.value, null, idxLiqChip(x.key)) + line("단기", n.short, n.sigShort) + line("중기", n.mid, n.sigMid) + line("장기", n.long, n.sigLong) + "</section>" : "";
     var acts = x.chartUrl ? '<div class="dt-act"><a class="btn" href="' + esc(safeUrl(x.chartUrl)) + '" target="_blank" rel="noopener" title="네이버 증권에서 보기">' + ICON.ext + " 네이버</a></div>" : "";
-    return top + chartHtml("idx-" + x.key) + sig + notes + acts;
+    return top + chartHtml("idx-" + x.key) + sig + notes +
+      '<section class="dt-sec"><h3>AI에게 묻기</h3>' + aiSectionHtml("i:" + x.key, { kind: "index", key: x.key }) + "</section>" + acts;
   }
   function lightDetailHtml(item) {
     var pm = plist(item.k), c = item.c, d = wlCache[c + ":" + item.t];
@@ -2528,7 +2621,9 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       (req ? '<a class="btn" href="' + esc(safeUrl(req.url)) + '" target="_blank" rel="noopener">요청 보기</a>'
            : '<a class="btn pri" href="' + reqUrl + '" target="_blank" rel="noopener" title="정밀분석 요청(GitHub 이슈) 열기">' + ICON.send + " 분석 요청</a>") +
       '<button class="btn" type="button" data-wl="' + esc(item.k + "|" + c + "|" + item.t) + '">' + ICON.x + " 빼기</button>";
-    return top + (d && d !== "loading" ? chartHtml(item.t) : "") + reqTag + note + '<div class="dt-act">' + acts + "</div>";
+    return top + (d && d !== "loading" ? chartHtml(item.t) : "") + newsHtml(item.t) + reqTag + note +
+      '<section class="dt-sec"><h3>AI에게 묻기</h3>' + aiSectionHtml("w:" + c + ":" + item.t, { kind: "light", c: c, t: item.t, n: item.n }) + "</section>" +
+      '<div class="dt-act">' + acts + "</div>";
   }
 
   // 주제 순서 — 사용자가 드래그로 바꾼 순서를 이 기기에 저장
@@ -2738,7 +2833,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   }
   function defectText(d) {
     var head = d.state === "결격" ? "결격 — 검증을 통과한 후보가 생기면 바로 교체합니다." : d.state === "점검 필요" ? "결격 여부를 점검하고 있습니다(매일 자동 점검 → 다음 업데이트에서 판정)." : "감시 중(교체 대상 아님).";
-    var why = d.note ? [d.note] : [];
+    var why = d.note ? [d.note + (d.by === "ai" ? " (AI 판정)" : "")] : [];
     (d.flags || []).forEach(function (f) { if (f.fresh || !d.note) why.push(f.msg); });
     return head + (why.length ? "\n· " + why.join("\n· ") : "");
   }
@@ -2875,7 +2970,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     if (curatedFull) {
       var stale = TP.asOf && taAsOf && TP.asOf < taAsOf;
       tipBtn.setAttribute("data-basis", "선정 기준 — " + (TP.note || DEFAULT_CRIT));
-      sub.innerHTML = (TP.asOf ? esc(mdOf(TP.asOf)) + " 기준" : "") +
+      sub.innerHTML = (aiWrote("topPicks", TP.korea && TP.korea[0] && TP.korea[0].reason) ? AI_TAG + " " : "") + (TP.asOf ? esc(mdOf(TP.asOf)) + " 기준" : "") +
         (stale ? '<span class="pk-stale" title="오늘 데이터(' + esc(taAsOf) + ')로 아직 갱신되지 않았습니다. 표시는 ' + esc(TP.asOf) + ' 기준입니다.">미갱신</span>' : "");
     } else {
       var partial = hadCurated || (Array.isArray(TP[cc]) && TP[cc].length);
@@ -3668,9 +3763,27 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     if (op && op.isConnected && !docked()) { try { op.focus({ preventScroll: true }); } catch (_e) {} }
   }
   window.addEventListener("popstate", function () { if (SH.open) closeSheet(true); });
-  function renderSheet(keep) {
+  // 실시간 시세 도착 등으로 상세를 다시 그려도 쓰던 질문(커서 위치 포함)이 끊기지 않게 한다
+  function renderSheet(keep) { var snap = aiFocusSnap(); renderSheet0(keep); aiFocusRestore(snap); }
+  function aiFocusSnap() { var a = document.activeElement; return a && a.matches && a.matches("[data-ai-in]") ? { ctx: a.getAttribute("data-ai-in"), s: a.selectionStart, e: a.selectionEnd } : null; }
+  function aiFocusRestore(sn) {
+    if (!sn) return;
+    var el = Array.prototype.filter.call(document.querySelectorAll("[data-ai-in]"), function (x) { return x.getAttribute("data-ai-in") === sn.ctx; })[0];
+    if (el && document.activeElement !== el) { try { el.focus({ preventScroll: true }); el.setSelectionRange(sn.s, sn.e); } catch (_e) {} }
+  }
+  function renderSheet0(keep) {
     var it = SH.ctx[SH.idx]; if (!it) return;
     var top = keep ? shBody.scrollTop : 0;
+    if (it.ai) {   // 시장 질문 — 홈 '오늘의 시장'의 AI 질문
+      document.getElementById("shName").textContent = "AI 질문 · 시장";
+      document.getElementById("shCode").textContent = it.c === "us" ? "미국 기준" : "한국 기준";
+      document.getElementById("shPos").textContent = "";
+      document.getElementById("shPrev").disabled = true;
+      document.getElementById("shNext").disabled = true;
+      shBody.innerHTML = '<section class="dt-sec"><h3>시장 · 금리 · 유동성</h3>' + aiSectionHtml("m:" + it.c, { kind: "market", c: it.c }) + "</section>";
+      shBody.scrollTop = top;
+      return;
+    }
     if (it.idx) {   // 지수 상세 — 오늘의 시장 지수 칸
       var ix = indexOf(it.idx);
       document.getElementById("shName").textContent = ix ? ix.name : it.idx;
@@ -4138,7 +4251,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       return '<a href="' + esc(safeUrl(u)) + '" target="_blank" rel="noopener">출처' + (i + 1) + "</a>";
     }).join("") : "";
     if (srcs) bits.push(srcs);
-    det.innerHTML = '<div class="md-sec"><div class="md-t">거시 유동성<span class="md-as">기준일 ' + esc(src.asOf) +
+    det.innerHTML = '<div class="md-sec"><div class="md-t">거시 유동성' + (hasL && aiWrote("liquidity", L.headline) ? AI_TAG : "") + '<span class="md-as">기준일 ' + esc(src.asOf) +
       (hasL && A && A.asOf && A.asOf !== L.asOf ? " · 자동 " + esc(A.asOf) : "") + "</span></div>" +
       (head ? '<div class="md-head">' + esc(head) + "</div>" : "") +
       (drivers ? '<ul class="liq-drivers">' + drivers + "</ul>" : "") +
@@ -4168,6 +4281,455 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     document.getElementById("mktAs").textContent = (T.asOf ? T.asOf.slice(5).replace("-", "/") + " 종가 기준" : "");
     grid.innerHTML = shown.map(tile).join("");
     syncMktBox();
+  }
+
+  // ══ AI(Claude API) — 이 기기 키로 묻기 · 서버 자동 분석 상태 · 뉴스 한 줄 · AI 작성 표시 ══
+  // 키는 이 브라우저(localStorage 또는 탭을 닫으면 지워지는 sessionStorage)에만 두고 api.anthropic.com 으로만 보낸다.
+  // 공식 SDK(@anthropic-ai/sdk)를 처음 질문할 때만 jsDelivr 에서 불러온다(앱 첫 화면 무게를 늘리지 않게).
+  var AI = {
+    KEY: "mystock.ai.key", MODEL: "mystock.ai.model", WEB: "mystock.ai.web", USE: "mystock.ai.usage",
+    SDK_URL: "https://cdn.jsdelivr.net/npm/@anthropic-ai/sdk@0.131.0/+esm",
+    MODELS: [
+      { id: "claude-opus-5-5", label: "Opus 5.5", note: "가장 정확 — 질문당 대략 3~10센트" },
+      { id: "claude-sonnet-5-5", label: "Sonnet 5.5", note: "빠르고 저렴 — 대략 2~5센트" },
+      { id: "claude-haiku-5-5", label: "Haiku 5.5", note: "가장 저렴 — 1센트 안팎" }
+    ],
+    // 100만 토큰당 달러(입력·출력·캐시 읽기) — 답변 아래 비용 추정용
+    PRICE: { "claude-opus-5-5": [4, 20, 0.2], "claude-sonnet-5-5": [2, 10, 0.2], "claude-haiku-5-5": [0.1, 0.5, 0.01] },
+    convos: {}, drafts: {}, info: {}, sdkP: null, mod: null, client: null, test: null, paintQ: {}
+  };
+  var AI_SYSTEM = [
+    "너는 '주식 추천' 대시보드 앱 안의 투자 정보 도우미다. 사용자의 질문에 한국어로 답한다.",
+    "- 먼저 함께 준 [앱 데이터]를 근거로 쓰고, 최신 사실(뉴스·실적·발언)이 필요하면 웹 검색을 쓴다(검색 도구가 있을 때만).",
+    "- 핵심을 첫 문장에 두고 3~8문장 또는 짧은 글머리표로 간결하게 쓴다. 사용자가 자세히 원하면 길게 써도 된다.",
+    "- 숫자는 데이터나 검색 결과에 있는 것만 쓴다. 모르면 모른다고 말한다. 날짜가 중요한 사실은 날짜를 붙인다.",
+    "- 사실과 해석을 구분한다. '사라·팔아라' 같은 매매 지시나 '오를 것' 같은 확정적 전망을 하지 않고, 근거·리스크·확인할 점을 정리해 판단을 돕는다.",
+    "- 이 앱의 기술 신호 등급(적극매수~적극매도)은 이미 일어난 움직임의 요약이며 넓은 표본에서 종목 선별력이 0에 가까웠다. 증권사 목표가는 체계적으로 낙관적이다(한국 리포트 1.8만 건: 12개월 뒤 목표가 이상 36%, 실현 수익 중앙 +13%). 필요할 때 이 점을 짚는다.",
+    "- 투자 권유가 아닌 참고 정보라는 전제를 지키되, 매 답변마다 면책 문구를 반복하지는 않는다."
+  ].join("\n");
+
+  function aiStore(k) { try { return localStorage.getItem(k) || sessionStorage.getItem(k) || ""; } catch (_e) { return ""; } }
+  function aiKey() { return aiStore(AI.KEY); }
+  function aiSetKey(k, remember) {
+    try { localStorage.removeItem(AI.KEY); sessionStorage.removeItem(AI.KEY); if (k) (remember ? localStorage : sessionStorage).setItem(AI.KEY, k); } catch (_e) {}
+    AI.client = null;
+    syncAiDot();
+  }
+  function aiModel() { var m = lsGet(AI.MODEL); return AI.MODELS.some(function (x) { return x.id === m; }) ? m : AI.MODELS[0].id; }
+  function aiModelLabel(id) { var m = AI.MODELS.filter(function (x) { return x.id === id; })[0]; return m ? m.label : id; }
+  function aiWeb() { return lsGet(AI.WEB) !== "0"; }
+  function syncAiDot() { var d = document.getElementById("aiDot"); if (d) d.hidden = !aiKey(); }
+  function loadSdk() {
+    if (!AI.sdkP) AI.sdkP = import(AI.SDK_URL).then(function (m) {
+      if (!(m.default || m.Anthropic)) throw new Error("SDK 모듈 형식이 예상과 다릅니다");
+      AI.mod = m; return m;
+    }).catch(function (e) { AI.sdkP = null; e.sdkLoad = true; throw e; });
+    return AI.sdkP;
+  }
+  function newClient(m, key, retries) {
+    var A = m.default || m.Anthropic;
+    return new A({ apiKey: key, dangerouslyAllowBrowser: true, maxRetries: retries == null ? 1 : retries });
+  }
+  function aiClient() {
+    return loadSdk().then(function (m) {
+      var k = aiKey();
+      if (!AI.client || AI.client.__k !== k) { AI.client = newClient(m, k); AI.client.__k = k; }
+      return AI.client;
+    });
+  }
+  function aiErr(e) {
+    var st = e && e.status, msg = String((e && e.message) || e || "");
+    if (e && e.sdkLoad) return "AI 모듈을 불러오지 못했습니다 — 인터넷 연결을 확인하고 다시 시도해 주세요.";
+    if (e && (e.name === "APIUserAbortError" || /abort/i.test(e.name || ""))) return "답변을 중단했습니다.";
+    if (st === 401) return "API 키가 올바르지 않습니다 — 'AI 연결'에서 키를 다시 확인해 주세요.";
+    if (st === 403) return "이 키로는 권한이 없습니다(워크스페이스·모델 권한 또는 결제 상태 확인).";
+    if (st === 404) return "모델을 찾지 못했습니다 — 'AI 연결'에서 다른 모델을 골라 보세요.";
+    if (st === 429) return "요청 한도를 넘었습니다 — 잠시 후 다시 시도해 주세요.";
+    if (st === 529 || st === 503 || st === 500) return "Claude 서버가 혼잡합니다 — 잠시 후 다시 시도해 주세요.";
+    if (st === 400) {
+      if (/credit balance|billing/i.test(msg)) return "계정 잔액이 부족합니다 — console.anthropic.com 결제(Plans & Billing)를 확인해 주세요.";
+      if (/web_search|web search/i.test(msg)) return "웹 검색을 쓸 수 없는 설정입니다 — 'AI 연결'에서 웹 검색을 끄거나, Console 에서 웹 검색을 허용해 주세요.";
+      return "요청 오류 — " + msg.replace(/^\d+\s*/, "").slice(0, 160);
+    }
+    if (/Failed to fetch|NetworkError|Load failed|Connection error|network/i.test(msg)) return "연결 실패 — 인터넷 연결을 확인하고 다시 시도해 주세요.";
+    return msg.slice(0, 180) || "알 수 없는 오류";
+  }
+  // 이 기기 사용량(오늘) — 답변마다 토큰 기준 비용을 더한다
+  function aiUsageToday() {
+    var u = null; try { u = JSON.parse(localStorage.getItem(AI.USE) || "null"); } catch (_e) {}
+    var d = new Date().toISOString().slice(0, 10);
+    return u && u.d === d ? u : { d: d, n: 0, usd: 0, s: 0 };
+  }
+  function aiAddUsage(model, u, turn) {
+    if (!u) return;
+    var p = AI.PRICE[model] || AI.PRICE["claude-opus-5-5"];
+    var usd = ((u.input_tokens || 0) * p[0] + (u.output_tokens || 0) * p[1] + (u.cache_read_input_tokens || 0) * p[2] + (u.cache_creation_input_tokens || 0) * p[0] * 1.25) / 1e6;
+    var srch = (u.server_tool_use && u.server_tool_use.web_search_requests) || 0;
+    turn.tin = (turn.tin || 0) + (u.input_tokens || 0) + (u.cache_read_input_tokens || 0) + (u.cache_creation_input_tokens || 0);
+    turn.tout = (turn.tout || 0) + (u.output_tokens || 0);
+    turn.usd = (turn.usd || 0) + usd; turn.srch = (turn.srch || 0) + srch;
+    var t = aiUsageToday(); t.usd += usd; t.s += srch;
+    try { localStorage.setItem(AI.USE, JSON.stringify(t)); } catch (_e) {}
+  }
+  function kTok(n) { return n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 0 : 1) + "k" : String(n || 0); }
+
+  // ── 질문 맥락(앱 데이터) — 종목·관심(분석 전)·지수·시장 ──
+  function line(k, v) { return v == null || v === "" ? "" : k + ": " + v; }
+  function pctTxt(v) { return v == null || !isFinite(v) ? "–" : (v > 0 ? "+" : "") + (Math.round(v * 10) / 10) + "%"; }
+  function newsTxt(t) {
+    var N = window.STOCK_NEWS, it = N && N.items && N.items[t];
+    return it && it.line ? "최근 뉴스(" + it.date + "): " + it.line + (it.links && it.links[0] ? " — " + it.links[0].s + " 「" + it.links[0].t + "」" : "") : "";
+  }
+  function ctxStock(c, t, th) {
+    var s = findStock(c, t, th); if (!s) return "(종목 정보 없음)";
+    var e = effective(s), n = s.techNote || {}, f = fundOf(t) || {}, q = f.q || {};
+    var ev = ((window.STOCK_EVENTS || {}).items || {})[t] || {}, ta = ((window.STOCK_TA || {}).ta || {})[t] || {};
+    var out = [
+      "종목: " + s.name + " (" + t + ", " + (c === "us" ? "미국" : "한국") + " " + (s.market || "") + ")" +
+        (isPersonal(s.theme) ? " · 사용자의 " + plist(s.theme).label + " 목록" : " · 추천 주제 '" + themeMeta(s.theme).label + "' Tier " + s.tier),
+      "현재가: " + fmtPrice(e.price, c) + " (" + (e.priceDate || "") + (e.live ? " 장중" : " 종가") + (e.chg != null ? ", 전일 대비 " + pctTxt(e.chg) : "") + ")",
+      s.targetPrice ? "증권사 컨센서스 목표가: " + fmtPrice(s.targetPrice, c) + (s.tpLow && s.tpHigh ? " (최저 " + fmtPrice(s.tpLow, c) + " ~ 최고 " + fmtPrice(s.tpHigh, c) + ")" : "") + (s.tpAsOf ? " · 집계 " + s.tpAsOf : "") : "",
+      s.aiTarget ? "앱의 AI 적정가: " + fmtPrice(s.aiTarget, c) + " — " + (s.aiBasis || "") : "",
+      "밸류: PER " + (f.per != null ? f.per : "–") + " · 선행 PER " + (f.fper != null ? f.fper : "–") + " · PBR " + (f.pbr != null ? f.pbr : "–") + " · 배당수익률 " + (f.dy != null ? f.dy + "%" : "–") + (f.mcap ? " · 시총 " + f.mcap : ""),
+      q.period ? "최근 분기(" + q.period + ") 전년 대비: 매출 " + pctTxt(q.rev && q.rev.yoy) + " · " + (q.opLabel || "영업이익") + " " + pctTxt(q.op && q.op.yoy) + " · 순이익 " + pctTxt(q.np && q.np.yoy) +
+        (q.next && q.next.op != null ? " · 다음 분기(" + q.next.period + ") 영업이익 컨센서스 " + q.next.op : "") : "",
+      f.rev4w ? "최근 4주 EPS 추정: 상향 " + f.rev4w.up + "건 · 하향 " + f.rev4w.down + "건" : "",
+      line("투자 포인트", s.thesis), line("밸류 해석", s.valueNote), (s.risks || []).length ? "리스크: " + s.risks.join(" / ") : "", line("실적 메모", s.earnings),
+      (n.sigShort || n.short) ? "기술(엔진 등급, 예측 아님): 단기 " + (n.sigShort || "–") + " — " + (n.short || "") + " | 중기 " + (n.sigMid || "–") + " — " + (n.mid || "") + " | 장기 " + (n.sigLong || "–") + " — " + (n.long || "") : "",
+      ta.risk ? "60일 변동성 " + ta.risk.vol + "% · 1년 최대낙폭 " + ta.risk.mdd + "%" : "",
+      ta.outlook && ta.outlook.m1 ? "다음 1개월 범위(방향 중립 통계): 80% " + fmtPrice(ta.outlook.m1[0], c) + "~" + fmtPrice(ta.outlook.m1[1], c) + (ta.outlook.c1 ? " · 50% " + fmtPrice(ta.outlook.c1[0], c) + "~" + fmtPrice(ta.outlook.c1[1], c) : "") : "",
+      ev.next && ev.next.date ? "다음 실적 발표: " + ev.next.date + (ev.next.title ? " (" + ev.next.title + ")" : "") : "",
+      ev.flow ? "20일 수급(거래량 대비): 외국인 " + pctTxt(ev.flow.f20 * 100) + " · 기관 " + pctTxt(ev.flow.o20 * 100) + (ev.flow.hot ? " · 수급 과열(이후 지수 대비 약세가 검증된 경고)" : "") : "",
+      newsTxt(t)
+    ];
+    var df = isPersonal(s.theme) ? null : defectOf(c, s.theme, t);
+    if (df) out.push("결격 점검: " + df.state + " — " + defectText(df).replace(/\n/g, " "));
+    var tp = (D.topPicks || {})[c] || [];
+    tp.forEach(function (x) { if (x.ticker === t) out.push("오늘의 Top Pick 선정 이유: " + x.reason); });
+    return out.filter(Boolean).join("\n");
+  }
+  function ctxLight(c, t, nm) {
+    var d = wlCache[c + ":" + t];
+    var out = ["종목: " + (nm || t) + " (" + t + ", " + (c === "us" ? "미국" : "한국") + ") · 사용자의 관심·보유 목록 — 앱에 분석 카드가 아직 없다(사업·실적·컨센서스는 검색으로 확인)"];
+    if (d && d !== "loading") {
+      out.push("현재가: " + fmtPrice(d.price, c) + " (" + (d.date || "") + ")" + (d.chg != null ? " 전일 대비 " + pctTxt(d.chg) : ""));
+      if (d.closes && d.closes.length > 20) {
+        var cl = d.closes, last = cl[cl.length - 1], r = function (k) { var p = cl[cl.length - 1 - k]; return p ? pctTxt((last / p - 1) * 100) : "–"; };
+        out.push("수익률: 1개월 " + r(21) + " · 3개월 " + r(63) + " · 1년 " + r(250) + " · 1년 최고 " + fmtPrice(Math.max.apply(null, cl.slice(-250)), c) + " · 최저 " + fmtPrice(Math.min.apply(null, cl.slice(-250)), c));
+      }
+    }
+    out.push(newsTxt(t));
+    return out.filter(Boolean).join("\n");
+  }
+  function idxLine(x) {
+    if (!x) return "";
+    return x.name + " " + x.level + " " + x.change + " — " + ["short", "mid", "long"].map(function (k) {
+      var p = x[k] || {}; return ({ short: "단기", mid: "중기", long: "장기" })[k] + " " + (p.signal || "–") + (p.metrics ? " (" + p.metrics.map(function (m) { return m[0] + " " + m[1]; }).join(" | ") + ")" : "");
+    }).join(" / ");
+  }
+  function liqTxt(reg) {
+    var A = window.LIQUIDITY_AUTO || {}, src = (L && L[reg]) ? L : null, x = src ? L[reg] : A[reg];
+    if (!x) return "";
+    var out = ["거시 유동성(" + (reg === "us" ? "미국" : "한국") + "): 단기 " + x.shortTerm + " · 중기 " + x.midTerm + (src ? " — " + ((reg === "us" ? L.headlineUS : L.headlineKR) || L.headline || "") : "")];
+    if (x.drivers) out.push("근거: " + x.drivers.join(" / "));
+    if (src && L.policyNews && L.policyNews[reg]) out.push((reg === "us" ? "연준" : "한국은행") + " 판단(" + L.policyNews.asOf + "): " + L.policyNews[reg].stance + " — " + L.policyNews[reg].note);
+    if (reg === "us" && A.fed && A.fed.meetings) out.push("연준 금리 경로(선물): 현재 " + A.fed.current + "% · " + A.fed.meetings.slice(0, 3).map(function (m) {
+      return m.date + " 기대 " + m.rate + "%(" + m.outcomes.map(function (o) { return (o.n > 0 ? "+" : "") + o.n * 25 + "bp " + o.p + "%"; }).join("/") + ")"; }).join(" · "));
+    if (reg === "korea" && A.bok) out.push("한국은행: 기준금리 " + A.bok.base + "% · " + [A.bok.exp3m, A.bok.exp12m].filter(Boolean).map(function (e) { return e.label; }).join(" · "));
+    if (A.inputs) out.push("지표: 미 10년물 " + A.inputs.us10y + "% · VIX " + A.inputs.vix + " · 달러지수 " + A.inputs.dxy + " · 원/달러 " + A.inputs.usdkrw);
+    return out.join("\n");
+  }
+  function ctxIndex(key) {
+    var x = indexOf(key), n = ((window.INDEX_NOTES || {}).items || {})[key], reg = IDX_REGION[key] || "us";
+    return [x ? "지수: " + idxLine(x) + " (" + ((window.INDEX_TA || {}).asOf || "") + " 종가 기준)" : "",
+      n ? "앱의 지수 대응(" + (window.INDEX_NOTES.asOf || "") + "): 밸류 — " + n.value + " | 단기 — " + n.short + " | 중기 — " + n.mid + " | 장기 — " + n.long : "",
+      liqTxt(reg)].filter(Boolean).join("\n");
+  }
+  function ctxMarket(c) {
+    var T = window.INDEX_TA, reg = c === "us" ? "us" : "korea";
+    var tp = (D.topPicks || {})[reg] || [];
+    return [
+      "기준: " + (T && T.asOf ? T.asOf + " 종가" : "") + " · 보고 있는 나라 " + (c === "us" ? "미국" : "한국"),
+      "시황(통합): " + (D.marketNote || "–"), "시황(미국): " + (D.marketNoteUS || "–"), "시황(한국): " + (D.marketNoteKR || "–"),
+      T && T.indices ? "지수: " + T.indices.map(idxLine).join("\n") : "",
+      liqTxt("us"), liqTxt("korea"),
+      tp.length ? "오늘의 Top Pick(" + (c === "us" ? "미국" : "한국") + "): " + tp.map(function (x) { return x.name + " — " + x.reason; }).join(" / ") : ""
+    ].filter(Boolean).join("\n");
+  }
+  function aiCtxText(ctx) {
+    var i = AI.info[ctx] || {};
+    if (i.kind === "stock") return ctxStock(i.c, i.t, i.th);
+    if (i.kind === "light") return ctxLight(i.c, i.t, i.n);
+    if (i.kind === "index") return ctxIndex(i.key);
+    return ctxMarket(i.c || state.country);
+  }
+  var AI_CHIPS = {
+    stock: ["추천 근거를 쉽게 설명해줘", "지금 가장 큰 리스크는 뭐야?", "최근 뉴스와 실적을 정리해줘", "신호와 변동 범위는 어떻게 읽어?"],
+    light: ["이 종목을 간단히 분석해줘", "최근 실적과 뉴스는?", "어떤 리스크를 봐야 해?"],
+    index: ["지금 이 지수 흐름을 설명해줘", "이번 주 주목할 일정은?", "유동성 판단과 어떻게 연결돼?"],
+    market: ["오늘 시장을 3줄로 요약해줘", "금리 전망이 주식에 주는 영향은?", "유동성 판단 근거를 설명해줘", "Top Pick 은 왜 골랐어?"]
+  };
+
+  // ── 질문 영역(상세 화면 섹션) — 대화는 메모리에 두고 화면을 다시 그려도 그대로 보인다 ──
+  function aiSectionHtml(ctx, info) {
+    AI.info[ctx] = info;
+    if (!aiKey()) {
+      return '<div class="aq-off"><p>Claude API 키를 연결하면 이 ' + (info.kind === "index" ? "지수" : info.kind === "market" ? "시장" : "종목") +
+        "에 대해 바로 물어볼 수 있습니다. 앱 데이터(카드·실적·신호·뉴스)를 함께 보내 답하고, 필요하면 최신 뉴스를 검색합니다.</p>" +
+        '<button class="btn pri" type="button" data-ai-open="1">AI 연결</button></div>';
+    }
+    return '<div class="aq-sub"><span>' + esc(aiModelLabel(aiModel())) + (aiWeb() ? " · 웹 검색" : "") + '</span><button class="lnk" type="button" data-ai-open="1">설정</button></div>' +
+      '<div class="aq" data-aichat="' + esc(ctx) + '"><div class="aq-log" data-ailog="' + esc(ctx) + '">' + aiLogHtml(ctx) + "</div>" +
+      '<form class="aq-form" data-ai-form="' + esc(ctx) + '"><textarea class="aq-in" data-ai-in="' + esc(ctx) + '" rows="1" maxlength="2000" placeholder="궁금한 점을 물어보세요" aria-label="질문 입력">' +
+      esc(AI.drafts[ctx] || "") + '</textarea><button class="aq-send" type="submit" aria-label="보내기">' + ICON.send + "</button></form>" +
+      '<p class="aq-note">답변은 참고용이며 틀릴 수 있습니다. 이 기기에 저장한 키로 직접 호출하고, 비용은 키의 계정에 청구됩니다.</p></div>';
+  }
+  function mdLite(t) {
+    var out = [], list = null;
+    function inl(x) { return esc(x).replace(/\*\*([^*]+)\*\*/g, "<b>$1</b>").replace(/`([^`]+)`/g, "<code>$1</code>"); }
+    String(t || "").replace(/\r/g, "").split("\n").forEach(function (ln) {
+      var m = /^\s*(?:[-*•]|\d+[.)])\s+(.*)$/.exec(ln);
+      if (m) { (list = list || []).push("<li>" + inl(m[1]) + "</li>"); return; }
+      if (list) { out.push("<ul>" + list.join("") + "</ul>"); list = null; }
+      var h = /^\s*#{1,4}\s+(.*)$/.exec(ln);
+      if (h) out.push("<p><b>" + inl(h[1]) + "</b></p>");
+      else if (ln.trim()) out.push("<p>" + inl(ln) + "</p>");
+    });
+    if (list) out.push("<ul>" + list.join("") + "</ul>");
+    return out.join("");
+  }
+  function hostOf(u) { try { return new URL(u).hostname.replace(/^www\./, ""); } catch (_e) { return ""; } }
+  function aiLogHtml(ctx) {
+    var cv = AI.convos[ctx], info = AI.info[ctx] || {};
+    if (!cv || !cv.turns.length) {
+      var chips = (AI_CHIPS[info.kind] || AI_CHIPS.stock).slice();
+      if (info.kind === "stock" && isPersonal(info.th)) chips[0] = "이 종목의 핵심을 정리해줘";
+      if (info.kind === "stock" && defectOf(info.c, info.th, info.t)) chips.splice(1, 0, "결격·점검 표시는 왜 떴어?");
+      return '<div class="aq-chips">' + chips.map(function (q) {
+        return '<button class="aq-chip" type="button" data-ai-ask="' + esc(ctx) + '" data-q="' + esc(q) + '">' + esc(q) + "</button>";
+      }).join("") + "</div>";
+    }
+    return cv.turns.map(function (tn) {
+      var meta = tn.tout ? esc(aiModelLabel(tn.model)) + " · 입력 " + kTok(tn.tin) + "·출력 " + kTok(tn.tout) + " 토큰 · 약 $" + (tn.usd || 0).toFixed(tn.usd < 0.01 ? 4 : 3) + (tn.srch ? " · 검색 " + tn.srch + "회(별도 과금)" : "") : "";
+      return '<div class="aq-turn"><div class="aq-qw"><div class="aq-q">' + esc(tn.q) + "</div></div>" +
+        (tn.a ? '<div class="aq-a">' + mdLite(tn.a) + "</div>" : "") +
+        (tn.busy ? '<div class="aq-ph"><i></i><i></i><i></i>' + esc(tn.phase || "답변 쓰는 중") + "</div>" : "") +
+        (tn.err ? '<div class="aq-err">' + esc(tn.err) + "</div>" : "") +
+        (tn.cites && tn.cites.length ? '<div class="aq-cites">' + tn.cites.slice(0, 6).map(function (x) {
+          return '<a href="' + esc(safeUrl(x.url)) + '" target="_blank" rel="noopener" title="' + esc(x.title || x.url) + '">' + esc(hostOf(x.url) || "출처") + "</a>";
+        }).join("") + "</div>" : "") +
+        (meta ? '<div class="aq-meta">' + meta + "</div>" : "") + "</div>";
+    }).join("") + '<div class="aq-tools">' + (cv.busy ? '<button class="lnk" type="button" data-ai-stop="' + esc(ctx) + '">중단</button>'
+      : '<button class="lnk" type="button" data-ai-reset="' + esc(ctx) + '">새 대화</button>') + "</div>";
+  }
+  function paintChat(ctx) {
+    if (AI.paintQ[ctx]) return;
+    AI.paintQ[ctx] = requestAnimationFrame(function () {
+      AI.paintQ[ctx] = 0;
+      Array.prototype.forEach.call(document.querySelectorAll("[data-ailog]"), function (el) {
+        if (el.getAttribute("data-ailog") === ctx) el.innerHTML = aiLogHtml(ctx);
+      });
+    });
+  }
+  function aiAsk(ctx, text) {
+    text = String(text || "").trim();
+    if (!text) return;
+    if (!aiKey()) { openAiModal(); return; }
+    var cv = AI.convos[ctx] || (AI.convos[ctx] = { api: [], turns: [] });
+    if (cv.busy) return;
+    var model = aiModel(), web = aiWeb();
+    var turn = { q: text, a: "", cites: [], busy: true, model: model, phase: "생각하는 중" };
+    cv.turns.push(turn); cv.busy = true;
+    var first = !cv.api.length;
+    cv.api.push({ role: "user", content: first ? "[앱 데이터 — 오늘 화면에 보이는 정보]\n" + aiCtxText(ctx) + "\n\n[질문]\n" + text : text });
+    paintChat(ctx);
+    setTimeout(function () {
+      var el = document.querySelector('[data-ailog="' + ctx.replace(/"/g, "") + '"] .aq-turn:last-of-type');
+      if (el && el.scrollIntoView) el.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }, 60);
+    aiClient().then(function (cl) { return aiRun(cl, cv, turn, ctx, model, web, 0); })
+      .catch(function (e) {
+        turn.err = aiErr(e);
+        // 실패한 질문은 대화 기록에서 뺀다(다음 질문이 같은 맥락으로 다시 시작하도록)
+        if (cv.api.length && cv.api[cv.api.length - 1].role === "user") cv.api.pop();
+      })
+      .then(function () { turn.busy = false; cv.busy = false; cv.stream = null; paintChat(ctx); });
+  }
+  function aiRun(cl, cv, turn, ctx, model, web, depth) {
+    var p = { model: model, max_tokens: 8000, system: AI_SYSTEM, messages: cv.api.slice(), output_config: { effort: "medium" }, cache_control: { type: "ephemeral" } };
+    if (web) p.tools = [{ type: /^claude-(opus|sonnet)-5/.test(model) ? "web_search_20260209" : "web_search_20250305", name: "web_search", max_uses: 3 }];
+    // 안전 분류기가 거절하면 서버가 다른 모델로 다시 돌린다(Opus·Sonnet 5.5 — Haiku 는 해당 없음)
+    if (/^claude-(opus|sonnet)-5-5$/.test(model)) { p.betas = ["server-side-fallback-2026-07-01"]; p.fallbacks = "default"; }
+    var stream = cl.beta.messages.stream(p);
+    cv.stream = stream;
+    stream.on("text", function (d) { turn.a += d; turn.phase = "답변 쓰는 중"; paintChat(ctx); });
+    stream.on("streamEvent", function (ev) {
+      var b = ev && ev.type === "content_block_start" && ev.content_block;
+      if (b && b.type === "server_tool_use") { turn.phase = "웹 검색 중"; paintChat(ctx); }
+      else if (b && b.type === "thinking" && !turn.a) { turn.phase = "생각하는 중"; paintChat(ctx); }
+    });
+    return stream.finalMessage().then(function (msg) {
+      aiAddUsage(model, msg.usage, turn);
+      cv.api.push({ role: "assistant", content: msg.content });
+      (msg.content || []).forEach(function (b) {
+        if (b.type === "text") (b.citations || []).forEach(function (x) {
+          if (x && x.url && !turn.cites.some(function (y) { return y.url === x.url; })) turn.cites.push({ url: x.url, title: x.title });
+        });
+      });
+      if (msg.stop_reason === "pause_turn" && depth < 3) return aiRun(cl, cv, turn, ctx, model, web, depth + 1);
+      if (msg.stop_reason === "refusal") turn.err = "이 질문에는 답하지 못했습니다(안전 정책" + (msg.stop_details && msg.stop_details.category ? " · " + msg.stop_details.category : "") + "). 다르게 물어봐 주세요.";
+      else if (msg.stop_reason === "max_tokens") turn.err = "답변이 길어 중간에서 끊겼습니다 — '이어서'라고 물어보면 계속합니다.";
+      if (!turn.a && !turn.err) turn.err = "빈 답변이 왔습니다 — 다시 시도해 주세요.";
+      var u = aiUsageToday(); u.n += 1; try { localStorage.setItem(AI.USE, JSON.stringify(u)); } catch (_e) {}
+    });
+  }
+
+  // ── AI 연결 창 ──
+  function fmtWhen(iso) {
+    if (!iso) return "–";
+    var d = new Date(iso); if (isNaN(d)) return "–";
+    var k = new Date(d.getTime() + 9 * 3600000);
+    return (k.getUTCMonth() + 1) + "/" + k.getUTCDate() + " " + String(k.getUTCHours()).padStart(2, "0") + ":" + String(k.getUTCMinutes()).padStart(2, "0") + " (한국)";
+  }
+  function usd(u) {
+    if (!u) return "";
+    var a = u.usd ? "약 $" + u.usd.toFixed(u.usd < 0.01 ? 4 : 3) : u.calls === 0 ? "호출 없음(변경 없음)" : "";
+    return a + (u.searches ? (a ? " · " : "") + "검색 " + u.searches + "회" : "");
+  }
+  var AI_WROTE = { market: "시황", liquidity: "유동성", indexNotes: "지수 대응", topPicks: "Top Pick" };
+  function serverAiHtml() {
+    var S = window.AI_STATUS || {}, d = S.daily, df = S.defects, nw = S.news;
+    var any = d || df || nw, bad = (d && d.error && !d.ok) || (df && df.error && !df.ok) || (nw && nw.error);
+    var chip = !any ? '<span class="ai-st">미연결</span>' : bad ? '<span class="ai-st err">오류</span>' : '<span class="ai-st ok">작동 중</span>';
+    var h = '<div class="ai-sec"><div class="ai-h">매일 자동 분석(서버) ' + chip + "</div>" +
+      '<p class="ai-p">GitHub Action 이 평일 아침·저녁 시세 갱신 직후 Claude 로 <b>시황·거시 유동성·연준/한은 판단·지수 대응·Top Pick</b>을 쓰고, <b>결격 점검 신호</b>를 판정하고, 종목마다 <b>최근 뉴스 한 줄</b>을 붙입니다.</p>';
+    if (!any) {
+      return h + '<ol class="ai-steps"><li>console.anthropic.com 에서 API 키를 만든다(위와 같은 키도 되지만 서버용 키를 따로 두는 편이 안전).</li>' +
+        "<li>GitHub 저장소 → Settings → Secrets and variables → Actions → <b>New repository secret</b></li>" +
+        "<li>이름 <code>ANTHROPIC_API_KEY</code>, 값에 키를 붙여 넣고 저장</li>" +
+        "<li>다음 자동 실행(평일 07:00·21:00 UTC)부터 작동 — Actions 탭에서 'Refresh quotes'를 수동 실행해도 된다</li></ol>" +
+        '<div class="ai-row"><a class="btn" href="https://github.com/csy870617/stock/settings/secrets/actions/new" target="_blank" rel="noopener">' + ICON.ext + " GitHub 키 등록 열기</a></div>" +
+        '<p class="ai-help">키를 이 앱이나 채팅에 붙여 넣지 말고 GitHub 화면에만 입력하세요. 예상 비용은 하루 1~2달러 안팎(Opus 5.5 하루 2회 분석 기준, 토큰 사용량에 따라 다름)입니다.</p></div>';
+    }
+    var rows = [];
+    if (d) rows.push(["시황·Top Pick", d.ok ? fmtWhen(d.at) + " · " + ((d.wrote || []).map(function (k) { return AI_WROTE[k] || k; }).join("·") || "변경 없음") + (d.usage ? " · " + usd(d.usage) : "")
+      : '<span class="bad">' + esc(fmtWhen(d.at) + " 실패 — " + (d.error || "")) + "</span>" + (d.lastOk ? " · 마지막 성공 " + esc(fmtWhen(d.lastOk)) : ""), true]);
+    if (d && d.note) rows.push(["참고", esc(d.note), true]);
+    if (df) rows.push(["결격 판정", (df.error && !df.ok ? '<span class="bad">' + esc(df.error) + "</span>" : esc(fmtWhen(df.at) + " · 판정 " + (df.judged || 0) + "건" + (df.pending > df.judged ? " · 대기 " + (df.pending - df.judged) + "건" : "") + (df.usage ? " · " + usd(df.usage) : ""))), true]);
+    if (nw) rows.push(["종목 뉴스", (nw.error ? '<span class="bad">' + esc(nw.error) + "</span>" : esc(fmtWhen(nw.at) + " · 뉴스 " + (nw.lines || 0) + "종목" + (nw.usage ? " · " + usd(nw.usage) : ""))), true]);
+    var models = [d && d.model, df && df.model, nw && nw.model].filter(Boolean).filter(function (m, i, a) { return a.indexOf(m) === i; }).map(aiModelLabel);
+    if (models.length) rows.push(["모델", esc(models.join(" · ")), true]);
+    return h + '<dl class="ai-kv">' + rows.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + (r[2] ? r[1] : esc(r[1])) + "</dd>"; }).join("") + "</dl>" +
+      '<p class="ai-help">비용은 토큰 기준 추정이며 웹 검색은 횟수만 셉니다(검색당 요금 별도). 서버 키는 GitHub Secrets <code>ANTHROPIC_API_KEY</code> 에 있고 이 화면에서 바꿀 수 없습니다 — ' +
+      '<a href="https://github.com/csy870617/stock/settings/secrets/actions" target="_blank" rel="noopener">GitHub 에서 관리</a>.</p></div>';
+  }
+  function renderAiModal() {
+    var key = aiKey(), t = AI.test, body = document.getElementById("aiBody"), u = aiUsageToday();
+    var chip = key ? (t && t.state === "err" ? '<span class="ai-st err">오류</span>' : '<span class="ai-st ok">연결됨</span>') : '<span class="ai-st">미연결</span>';
+    var msg = t ? '<div class="ai-msg ' + (t.state === "ok" ? "ok" : t.state === "err" ? "err" : "") + '">' + esc(t.msg) + "</div>" : "";
+    var h = '<div class="ai-sec first"><div class="ai-h">이 기기에서 질문하기 ' + chip + "</div>" +
+      '<p class="ai-p">종목·지수 상세와 홈의 <b>AI 질문</b>에서 Claude 에게 바로 묻습니다. 키는 <b>이 브라우저에만</b> 저장되고 Anthropic API(api.anthropic.com)로만 보내집니다.</p>';
+    if (key) {
+      h += '<div class="ai-key"><code>' + esc(key.slice(0, 10) + "…" + key.slice(-4)) + '</code><button class="lnk" type="button" id="aiRetest">다시 확인</button><button class="lnk" type="button" id="aiForget">연결 해제</button></div>' + msg;
+    } else {
+      h += '<input class="ai-in" id="aiKeyIn" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="sk-ant-api03-…" aria-label="Anthropic API 키">' +
+        '<label class="ai-chk"><input type="checkbox" id="aiRemember" checked> 이 기기에 기억(끄면 이 탭을 닫을 때 지웁니다)</label>' +
+        '<div class="ai-row"><button class="btn pri" type="button" id="aiSave"' + (t && t.state === "busy" ? " disabled" : "") + ">" + (t && t.state === "busy" ? "확인 중…" : "연결 확인 후 저장") + "</button></div>" + msg +
+        '<p class="ai-help">키 발급: <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com → API Keys</a> → Create Key (결제 수단 등록 필요 — Claude 구독과 별도로 사용량만큼 청구). ' +
+        "Console 의 Limits 에서 월 지출 한도를 낮게 걸어 두길 권합니다. 같은 기기를 쓰는 사람은 이 키로 질문할 수 있으니 공용 기기에서는 '기억'을 끄세요.</p>";
+    }
+    var cur = aiModel();
+    h += '<div class="ai-models" role="radiogroup" aria-label="질문에 쓸 모델">' + AI.MODELS.map(function (m) {
+      return '<label class="ai-m' + (m.id === cur ? " on" : "") + '"><input type="radio" name="aiModel" value="' + esc(m.id) + '"' + (m.id === cur ? " checked" : "") + "><div><b>" + esc(m.label) + "</b><span>" + esc(m.note) + "</span></div></label>";
+    }).join("") + "</div>" +
+      '<label class="ai-chk"><input type="checkbox" id="aiWebChk"' + (aiWeb() ? " checked" : "") + "> 필요하면 웹 검색(최신 뉴스·발언 확인, 검색 횟수만큼 추가 과금)</label>" +
+      (u.n || u.usd ? '<p class="ai-help">이 기기 오늘 사용: 질문 ' + u.n + "회 · 약 $" + u.usd.toFixed(3) + (u.s ? " · 검색 " + u.s + "회" : "") + "</p>" : "") + "</div>";
+    body.innerHTML = h + serverAiHtml();
+  }
+  function aiTestKey(key) {
+    AI.test = { state: "busy", msg: "키를 확인하는 중…" }; renderAiModal();
+    return loadSdk().then(function (m) { return newClient(m, key, 0).models.retrieve(aiModel()); })
+      .then(function () { AI.test = { state: "ok", msg: "연결됐습니다 — " + aiModelLabel(aiModel()) + " 사용 가능" }; return true; })
+      .catch(function (e) { AI.test = { state: "err", msg: aiErr(e) }; return false; });
+  }
+  function openAiModal() {
+    AI.test = AI.test && AI.test.state === "busy" ? AI.test : null;
+    renderAiModal();
+    document.getElementById("aiModal").hidden = false;
+    var inp = document.getElementById("aiKeyIn");
+    if (inp && !docked()) setTimeout(function () { try { inp.focus({ preventScroll: true }); } catch (_e) {} }, 80);
+  }
+  function closeAiModal() {
+    document.getElementById("aiModal").hidden = true;
+    if (SH.open) renderSheet(true);   // 연결 상태가 바뀌었으면 열린 상세의 질문 영역을 다시 그린다
+  }
+  document.getElementById("aiBtn").addEventListener("click", openAiModal);
+  document.getElementById("aiClose").addEventListener("click", closeAiModal);
+  document.getElementById("aiModal").addEventListener("click", function (e) {
+    if (e.target.id === "aiModal") { closeAiModal(); return; }
+    if (e.target.closest("#aiSave")) {
+      var v = (document.getElementById("aiKeyIn").value || "").trim(), rem = document.getElementById("aiRemember").checked;
+      if (!/^sk-ant-/.test(v)) { AI.test = { state: "err", msg: "Anthropic API 키는 sk-ant- 로 시작합니다." }; renderAiModal(); return; }
+      aiTestKey(v).then(function (ok) { if (ok) { aiSetKey(v, rem); toast("AI 연결됨"); } renderAiModal(); });
+    } else if (e.target.closest("#aiRetest")) {
+      aiTestKey(aiKey()).then(renderAiModal);
+    } else if (e.target.closest("#aiForget")) {
+      aiSetKey(""); AI.test = null; renderAiModal(); toast("AI 연결을 해제했습니다");
+    }
+  });
+  document.getElementById("aiModal").addEventListener("change", function (e) {
+    if (e.target.name === "aiModel") { lsSet(AI.MODEL, e.target.value); renderAiModal(); }
+    else if (e.target.id === "aiWebChk") lsSet(AI.WEB, e.target.checked ? "1" : "0");
+  });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !document.getElementById("aiModal").hidden) closeAiModal(); });
+  // 질문 영역 — 칩·보내기·중단·새 대화(상세 화면이 다시 그려져도 동작하도록 문서에 위임)
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest ? e.target : null; if (!t) return;
+    var b = t.closest("[data-ai-open]"); if (b) { e.preventDefault(); openAiModal(); return; }
+    b = t.closest("[data-ai-ask]"); if (b) { aiAsk(b.getAttribute("data-ai-ask"), b.getAttribute("data-q")); return; }
+    b = t.closest("[data-ai-stop]"); if (b) { var cv = AI.convos[b.getAttribute("data-ai-stop")]; if (cv && cv.stream) cv.stream.abort(); return; }
+    b = t.closest("[data-ai-reset]"); if (b) { var k = b.getAttribute("data-ai-reset"); delete AI.convos[k]; paintChat(k); }
+  });
+  document.addEventListener("submit", function (e) {
+    var f = e.target.closest && e.target.closest("[data-ai-form]"); if (!f) return;
+    e.preventDefault();
+    var ctx = f.getAttribute("data-ai-form"), ta = f.querySelector("textarea"), v = (ta.value || "").trim();
+    if (!v || (AI.convos[ctx] && AI.convos[ctx].busy)) return;
+    ta.value = ""; AI.drafts[ctx] = ""; ta.style.height = "";
+    aiAsk(ctx, v);
+  });
+  document.addEventListener("input", function (e) {
+    var ta = e.target; if (!ta.matches || !ta.matches("[data-ai-in]")) return;
+    AI.drafts[ta.getAttribute("data-ai-in")] = ta.value;
+    ta.style.height = "auto"; ta.style.height = Math.min(160, ta.scrollHeight + 2) + "px";
+  });
+  document.addEventListener("keydown", function (e) {
+    var ta = e.target; if (!ta.matches || !ta.matches("[data-ai-in]")) return;
+    // Enter = 보내기, Shift+Enter = 줄바꿈 — 한글 조합 중(isComposing)에는 보내지 않는다
+    if (e.key === "Enter" && !e.shiftKey && !e.isComposing && e.keyCode !== 229) { e.preventDefault(); var f = ta.closest("form"); if (f && f.requestSubmit) f.requestSubmit(); else if (f) f.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true })); }
+  });
+  document.getElementById("mktAsk").addEventListener("click", function (e) {
+    openSheet([{ ai: "market", c: state.country, t: "ai-market", th: "ai", n: "", why: "", idx: "", light: false, k: "" }], 0, e.currentTarget);
+  });
+  syncAiDot();
+
+  // ── AI 가 쓴 문장 표시 — ai-status.js 의 지문(앞 40자)과 지금 문장이 같을 때만 ──
+  function aiSig(s) { return String(s || "").replace(/\s+/g, " ").trim().slice(0, 40); }
+  function aiWrote(item, text) {
+    var d = (window.AI_STATUS || {}).daily, sg = d && d.sig && d.sig[item];
+    return !!(sg && text && sg === aiSig(text));
+  }
+  var AI_TAG = '<span class="ai-tag" data-basis="Claude API 가 매일 시세 갱신 직후 같은 날 데이터로 자동 작성했습니다(scripts/ai-daily.js).">AI</span>';
+  // 종목 뉴스 한 줄(ai-news.js) — 최근 4일 안의 것만
+  function newsHtml(t) {
+    var N = window.STOCK_NEWS, it = N && N.items && N.items[t];
+    if (!it || !it.line || !it.date) return "";
+    if ((Date.now() - Date.parse(it.date + "T00:00:00Z")) / 86400000 > 4) return "";
+    return '<div class="dt-news"><div class="dn-k">최근 뉴스 · ' + esc(mdOf(it.date)) + ' <span class="ai-tag" data-basis="최근 3일 헤드라인 중 이 회사 소식만 Claude 가 골라 한 줄로 요약했습니다(매일 자동). 원문을 확인하세요.">AI 요약</span></div>' +
+      '<div class="dn-t">' + esc(it.line) + "</div>" +
+      ((it.links || []).length ? '<div class="dn-l">' + it.links.slice(0, 3).map(function (l) {
+        return '<a href="' + esc(safeUrl(l.u)) + '" target="_blank" rel="noopener">' + esc((l.s ? l.s + " · " : "") + l.t) + "</a>";
+      }).join("") + "</div>" : "") + "</div>";
   }
 
   // ── 시작 ──
