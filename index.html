@@ -2459,7 +2459,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     if (e.upside != null && e.upside <= 0) out.push('<span class="bd bd-warn" data-basis="' + esc(TP_HIT_TIP) + '">목표가 도달</span>');
     if (isValueTrap(s, e.upside)) out.push('<span class="bd bd-warn" data-basis="' + esc(VT_TIP) + '">낙폭발 상승여력</span>');
     var df = isPersonal(s.theme) ? null : defectOf(c, s.theme, s.ticker);
-    if (df && df.state === "결격") out.push('<span class="bd bd-warn" data-basis="' + esc(defectText(df)) + '">결격 · 교체 대기</span>');
+    if (df && df.state === "결격") out.push('<span class="bd' + (df.dup ? "" : " bd-warn") + '" data-basis="' + esc(defectText(df)) + '">' + (df.dup ? "중복 · 교체 대기" : "결격 · 교체 대기") + "</span>");
     else if (df && df.state === "점검 필요") out.push('<span class="bd" data-basis="' + esc(defectText(df)) + '">결격 점검 중</span>');
     if (s.priceUnverified && !e.live) out.push('<span class="bd bd-warn" data-basis="최근 시세를 확인하지 못해 옛 가격 기준입니다. 표시된 상승여력이 실제와 다를 수 있습니다.">현재가 확인 필요</span>');
     var E = window.STOCK_EVENTS, ev = E && E.items && E.items[s.ticker], f = ev && ev.flow;
@@ -2475,6 +2475,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   var TP_HIT_TIP = "현재가가 증권사 컨센서스 목표가 이상입니다. 결격·편출 사유는 아니며(목표가는 주가를 뒤따라 바뀌는 값), 논거·실적을 먼저 다시 확인하는 대상입니다.";
   var PU_TIP = "최근 시세를 확인하지 못해 옛 가격 기준입니다. 표시된 상승여력이 실제와 다를 수 있습니다.";
   var HOT_TIP = "외국인+기관 20일 순매수가 거래량의 6.3% 이상입니다 — 2016~2026년 이 구간은 이후 1·3개월 지수보다 약했습니다.";
+  var DUP_LEAD = "같은 종목이 정식 주제 두 곳 이상에 있어 한 곳에만 남깁니다 — 회사 자체의 결격은 아닙니다. 이 자리는 검증을 통과한 다른 후보로 바꿉니다.";
   function detailAlerts(s, c, e) {
     var out = [];
     var df = isPersonal(s.theme) ? null : defectOf(c, s.theme, s.ticker);
@@ -2482,8 +2483,8 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       var why = [];
       if (df.note) why.push(df.note);
       (df.flags || []).forEach(function (f) { if (f.fresh || !df.note) why.push(f.msg); });
-      out.push({ warn: df.state === "결격", k: df.state === "결격" ? "결격 · 교체 대기" : "결격 점검 중",
-        lead: df.state === "결격" ? "검증을 통과한 대체 후보가 생기면 바로 교체합니다." : "매일 자동 점검에서 신호가 떠 다음 업데이트에서 실질 결격인지 판정합니다.",
+      out.push({ warn: df.state === "결격" && !df.dup, k: df.dup ? "중복 편성 · 교체 대기" : df.state === "결격" ? "결격 · 교체 대기" : "결격 점검 중",
+        lead: df.dup ? DUP_LEAD : df.state === "결격" ? "검증을 통과한 대체 후보가 생기면 바로 교체합니다." : "매일 자동 점검에서 신호가 떠 다음 업데이트에서 실질 결격인지 판정합니다.",
         why: why, at: df.judged, by: df.by });
     }
     if (e.upside != null && e.upside <= 0) out.push({ warn: true, k: "목표가 도달", lead: TP_HIT_TIP, why: [] });
@@ -2832,14 +2833,14 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     return null;
   }
   function defectText(d) {
-    var head = d.state === "결격" ? "결격 — 검증을 통과한 후보가 생기면 바로 교체합니다." : d.state === "점검 필요" ? "결격 여부를 점검하고 있습니다(매일 자동 점검 → 다음 업데이트에서 판정)." : "감시 중(교체 대상 아님).";
+    var head = d.dup ? "중복 편성 — " + DUP_LEAD : d.state === "결격" ? "결격 — 검증을 통과한 후보가 생기면 바로 교체합니다." : d.state === "점검 필요" ? "결격 여부를 점검하고 있습니다(매일 자동 점검 → 다음 업데이트에서 판정)." : "감시 중(교체 대상 아님).";
     var why = d.note ? [d.note + (d.by === "ai" ? " (AI 판정)" : "")] : [];
     if (d.long) why.push("대체 후보 없이 " + d.age + "일째 — " + (d.long === 2 ? "스크린 기준을 통과한 후보로 교체를 진행합니다" : "후보 범위를 넓혀 찾는 중입니다"));
     (d.flags || []).forEach(function (f) { if (f.fresh || !d.note) why.push(f.msg); });
     return head + (why.length ? "\n· " + why.join("\n· ") : "");
   }
   var CAND_CLS = { "검증 통과": "cs-ok", "보류": "cs-hold", "검증 대기": "cs-wait" };
-  var CAND_TIP = "후보 종목 — 시장 전체 스크린(주제 기준 통과, 점수순)과 세션 검증 결과입니다.\n· 검증 통과: 실적·컨센서스·주제 적합성 확인을 마친 대체 1순위\n· 보류: 확인할 조건이 남은 후보(사유 표시)\n· 검증 대기: 스크린만 통과\n편성 종목은 결격(논거 훼손·역성장·지배구조·주제 이탈·추세 붕괴 — 목표가 도달은 결격이 아님)이 생길 때만 교체합니다 — 매일 자동 점검하고, 결격이 확인되면 검증 통과 후보로 바로 바꿉니다. 매수 추천이 아닙니다.";
+  var CAND_TIP = "후보 종목 — 시장 전체 스크린(주제 기준 통과, 점수순)과 세션 검증 결과입니다.\n· 검증 통과: 실적·컨센서스·주제 적합성 확인을 마친 대체 1순위\n· 보류: 확인할 조건이 남은 후보(사유 표시)\n· 검증 대기: 스크린만 통과\n· 그룹·금융 상한: 같은 기업집단 5종목·금융 7종목을 넘겨, 같은 그룹 종목이 빠질 때만 편입할 수 있는 후보\n편성 종목은 결격(논거 훼손·역성장·지배구조·주제 이탈·추세 붕괴 — 목표가 도달은 결격이 아님)이 생길 때만 교체합니다 — 매일 자동 점검하고, 결격이 확인되면 검증 통과 후보로 바로 바꿉니다. 매수 추천이 아닙니다.";
   function candHtml(c, th) {
     var g = candGroup(c, th);
     if (!g || !g.list || !g.list.length) return "";
@@ -2851,7 +2852,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       '<div class="cand-sub">' + esc(sub) + "</div>" +
       show.map(function (x) {
         var subl = '<span class="wtag ' + (CAND_CLS[x.status] || "cs-wait") + '">' + esc(x.status) + "</span><span>" + esc(x.ticker) +
-          (x.alsoIn ? " · " + esc(themeMeta(x.alsoIn).label) + " 편성" : "") + (x.why ? ' · <span class="c-why">' + esc(x.why) + "</span>" : "") + "</span>";
+          (x.alsoIn ? " · " + esc(themeMeta(x.alsoIn).label) + " 편성" : "") + (x.cap ? " · " + esc(x.cap) : "") + (x.why ? ' · <span class="c-why">' + esc(x.why) + "</span>" : "") + "</span>";
         var note = x.note || (x.near ? "근접 후보 — " + x.near : "");
         return '<a class="row crow" href="' + esc(x.url) + '" target="_blank" rel="noopener">' +
           '<div class="r-l"><div class="r-nm"><span class="r-name">' + esc(x.name) + "</span></div>" +
@@ -2875,7 +2876,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     var flags = (NEW_TICKERS[s.ticker] ? '<span class="r-new" title="최근 편입">N</span>' : "") +
       (isValueTrap(s, e.upside) ? '<span class="r-warn" title="' + esc(VT_TIP) + '" data-basis="' + esc("낙폭발 상승여력 — " + VT_TIP) + '">!</span>' : "");
     var df = isPersonal(s.theme) ? null : defectOf(c, s.theme, s.ticker);
-    if (df && df.state !== "감시") flags += '<span class="r-def' + (df.state === "결격" ? "" : " r-chk") + '" title="' + esc(defectText(df)) + '" data-basis="' + esc(defectText(df)) + '">' + (df.state === "결격" ? "결격" : "점검") + "</span>";
+    if (df && df.state !== "감시") flags += '<span class="r-def' + (df.state === "결격" && !df.dup ? "" : " r-chk") + '" title="' + esc(defectText(df)) + '" data-basis="' + esc(defectText(df)) + '">' + (df.dup ? "중복" : df.state === "결격" ? "결격" : "점검") + "</span>";
     return '<div class="row"' + openAttrs(c, s.ticker, s.theme, o.pkey ? ' data-pkey="' + esc(o.pkey) + '"' : "") + ">" +
       (o.edit ? '<span class="r-grip" title="끌어서 순서 바꾸기">' + ICON.grip + "</span>" : "") +
       '<div class="r-l"><div class="r-nm"><span class="r-name">' + esc(s.name) + "</span>" + flags + "</div>" +
@@ -2922,11 +2923,18 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   }
   // 국가별 상위 3 폴백(큐레이션 데이터 없을 때) — 그 국가 정식 추천 중 종합점수 상위 3
   // 같은 티커가 두 주제에 있으면(예: 하나금융 — 저평가 T1·우량 T3) 가장 높은 티어의 편성을 대표로 쓴다(관심·보유 제외)
+  // 같은 종목이 여러 주제에 있으면 대표 하나 — check-defects 의 중복 판정이 '남길 곳'으로 정한 주제를 따른다
+  // (중복 자리는 교체 대상이라 Top Pick·대표 표시에 쓰지 않는다). 판정이 없으면 tier → 주제 순서(우량→성장→저평가→배당→히든).
+  var THEME_ORDER = ["core", "growth", "value", "dividend", "rising"];
   function bestByTicker(cc) {
     var m = {};
     (D[cc] || []).forEach(function (s) {
       if (isPersonal(s.theme)) return;
-      if (!m[s.ticker] || (s.tier || 9) < (m[s.ticker].tier || 9)) m[s.ticker] = s;
+      var df = defectOf(cc, s.theme, s.ticker);
+      if (df && df.dup) return;
+      var cur = m[s.ticker];
+      if (!cur || (s.tier || 9) < (cur.tier || 9) ||
+          ((s.tier || 9) === (cur.tier || 9) && THEME_ORDER.indexOf(s.theme) < THEME_ORDER.indexOf(cur.theme))) m[s.ticker] = s;
     });
     return m;
   }
@@ -3353,11 +3361,23 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
         sTile("그림자(기계적 선정)", fmtPct(sh.ret), sh.ret) +
         sTile("판단의 기여", fmtPct(sm.edge), sm.edge, "추천 편성 수익률 − 그림자 수익률. 양(+)이면 사람의 검증·판단이 기계적 선정보다 나았다는 뜻입니다.") +
         sTile(bName, fmtPct(f.idx), f.idx) +
+        (f.eq != null ? sTile("S&P 동일비중(RSP)", fmtPct(f.eq), f.eq, "S&P500 을 종목별 같은 비중으로 담은 지수 — 추천·그림자 모두 동일비중이라 시가총액 지수보다 공정한 비교 기준입니다.") : "") +
         (f.betaAlpha != null ? sTile("β 반영 초과 (β " + f.beta.toFixed(2) + ")", fmtPct(f.betaAlpha), f.betaAlpha, "시장 민감도(β×지수) 몫을 뺀 선별 효과 — 6주 이상 쌓이면 계산됩니다.") : "") +
-        "</div>" + '<div class="perf-note">' + esc(mdOf(f.from)) + " ~ " + esc(mdOf(f.to)) + " · " + (C.series.length - 1) + "거래일 · 선정 규칙은 2026-10-21부터 동결(3개월)</div>";
+        "</div>" + shadowThemeTable(sm.themes) +
+        '<div class="perf-note">' + esc(mdOf(f.from)) + " ~ " + esc(mdOf(f.to)) + " · " + (C.series.length - 1) + "거래일 · 선정 규칙은 2026-10-21부터 동결(3개월)</div>";
     }
-    return pBlk("판단 검증", "추천 vs 기계적 선정", body.replace('<p class="perf-desc">', '<p class="perf-desc">') +
+    return pBlk("판단 검증", "추천 vs 기계적 선정", body +
       '<p class="perf-note">ⓘ <button class="lnk" type="button" data-basis="' + esc(TIP) + '">그림자 포트폴리오란?</button></p>');
+  }
+  // 주제별 판단 검증 — 추천 그 주제 9종목 vs 그림자 그 주제 9종목(같은 방식). 차이 = 추천 − 그림자.
+  function shadowThemeTable(th) {
+    if (!th) return "";
+    var rows = orderedThemes().filter(function (t) { return !isPersonal(t.key) && th[t.key]; }).map(function (t) {
+      var x = th[t.key];
+      return '<tr><td class="pm-th">' + esc(t.label) + "</td>" + pmNum(x.f) + pmNum(x.s) + pmNum(x.edge) + "</tr>";
+    }).join("");
+    if (!rows) return "";
+    return '<div class="tbl-x"><table class="pm-tbl"><thead><tr><th>주제</th><th>추천</th><th>그림자</th><th>차이</th></tr></thead><tbody>' + rows + "</tbody></table></div>";
   }
 
   // 실시간 시세가 도착하면 보이는 화면(현재 탭·Top Pick·열린 상세)을 다시 그려 표시를 일치시킨다.

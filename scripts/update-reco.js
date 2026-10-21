@@ -42,7 +42,7 @@
 
 const fs = require("fs");
 const path = require("path");
-const { concentration, validate, loadTa, isTrustedSource, isBlockedSource, sourceHost, trustedDomainOf, priceNumberIn } = require("./validate-reco");
+const { concentration, GROUP_CAP, FIN_CAP, validate, loadTa, isTrustedSource, isBlockedSource, sourceHost, trustedDomainOf, priceNumberIn } = require("./validate-reco");
 
 const ROOT = path.join(__dirname, "..");
 const RECO = path.join(ROOT, "data", "recommendations.js");
@@ -302,9 +302,9 @@ if ((patch.add || []).length && !FORCE) {
   if (A.dup > B.dup) guardErrors.push("분산: 정식 주제 중복이 " + B.dup + " → " + A.dup + "자리로 늘어난다 — 한 종목은 정식 주제 한 곳에만(§6)");
   Object.keys(A.groups.korea).forEach((g) => {
     const a = A.groups.korea[g], b = B.groups.korea[g] || 0;
-    if (a > b && a > 5) guardErrors.push("분산: 한국 " + g + "그룹이 " + b + " → " + a + "종목(상한 5) — 다른 그룹 후보로");
+    if (a > b && a > GROUP_CAP) guardErrors.push("분산: 한국 " + g + "그룹이 " + b + " → " + a + "종목(상한 " + GROUP_CAP + ") — 다른 그룹 후보로");
   });
-  if (A.fin.korea > B.fin.korea && A.fin.korea > 7) guardErrors.push("분산: 한국 금융 업종이 " + B.fin.korea + " → " + A.fin.korea + "종목(상한 7) — 다른 업종 후보로");
+  if (A.fin.korea > B.fin.korea && A.fin.korea > FIN_CAP) guardErrors.push("분산: 한국 금융 업종이 " + B.fin.korea + " → " + A.fin.korea + "종목(상한 " + FIN_CAP + ") — 다른 업종 후보로");
 }
 if (guardErrors.length) {
   console.error("✗ 가드레일 위반 " + guardErrors.length + "건 — 저장 취소:");

@@ -56,6 +56,25 @@ const SC = load("discovery-candidates.js", "DISCOVERY_CANDIDATES") || { groups: 
 const notes = fs.existsSync(NOTES) ? JSON.parse(fs.readFileSync(NOTES, "utf8")) : { candidates: {}, defects: {} };
 notes.candidates = notes.candidates || {}; notes.defects = notes.defects || {};
 const tpHist = (() => { try { return JSON.parse(fs.readFileSync(path.join(DATA, "tp-history.json"), "utf8")); } catch (_e) { return null; } })();
+// 스크린·판정 기록에 이름이 없는 후보는 검색 사전(tickers.js)에서 이름을 찾는다(코드만 보이지 않게)
+let DICT = null;
+function dictName(c, t) {
+  if (!DICT) { DICT = new Map(); ((load("tickers.js", "TICKER_DICT")) || []).forEach((x) => { if (x && x.t && !DICT.has(x.c + "|" + x.t)) DICT.set(x.c + "|" + x.t, x.n); }); }
+  return DICT.get(c + "|" + t) || null;
+}
+// 분산 상한(§5 ⑥) — update-reco.js 와 같은 비교(교체 전 대비 중복·그룹·금융이 늘고 상한을 넘으면 거부)로 후보를 미리 걸러 보인다
+const { concentration, GROUP_CAP, FIN_CAP } = require("./validate-reco");
+const CONC = concentration(D);
+function capBlock(c, th, add, removeTicker) {
+  const D2 = { korea: D.korea.slice(), us: D.us.slice() };
+  if (removeTicker) D2[c] = D2[c].filter((s) => !(s.ticker === removeTicker && s.theme === th));
+  D2[c].push({ ticker: add.ticker, name: add.name, theme: th });
+  const A = concentration(D2), out = [];
+  if (A.dup > CONC.dup) out.push("중복");
+  Object.keys(A.groups.korea).forEach((gk) => { const a = A.groups.korea[gk]; if (a > (CONC.groups.korea[gk] || 0) && a > GROUP_CAP) out.push(gk + "그룹 상한"); });
+  if (A.fin.korea > CONC.fin.korea && A.fin.korea > FIN_CAP) out.push("금융 상한");
+  return out;
+}
 
 const today = new Date().toISOString().slice(0, 10);
 const T = TA.asOf || today;
@@ -149,19 +168,36 @@ function link(c, r) {
   return "https://finance.yahoo.com/quote/" + encodeURIComponent(r.ticker);
 }
 
-// 중복 편성(2026-10-21 사용자 승인 — 분산 가드레일): 같은 종목이 정식 주제 2곳 이상에 있으면 tier 가 높은(숫자 작은) 곳 하나만 남기고
-// 나머지 자리는 '중복' 결격으로 올린다(검색 없이 확정 — 같은 주제 후보로 교체). 동률이면 주제 순서(우량→성장→저평가→배당→히든).
+// 중복 편성(2026-10-21 사용자 승인 — 분산 가드레일): 같은 종목이 정식 주제 2곳 이상에 있으면 한 곳만 남기고
+// 나머지 자리는 '중복' 결격으로 올린다(검색 없이 확정 — 같은 주제 후보로 교체). 남길 곳 = ①그 주제 스크린 기준을 통과하는 곳
+// (fails 없음 — 예: SK하이닉스는 성장 필터 미달·우량 통과 → 우량) ②tier 가 높은(숫자 작은) 곳 ③주제 순서(우량→성장→저평가→배당→히든).
+// 앱(대표 종목 선택)·ai-daily(Top Pick 후보)도 이 판정을 그대로 따른다(candidates.js 의 dup).
 const THEME_KO = { core: "우량", growth: "성장", value: "저평가", dividend: "배당", rising: "히든" };
 const DUP = {};
 COUNTRIES.forEach((c) => {
   const occ = {};
   D[c].filter((s) => THEMES.includes(s.theme)).forEach((s) => { (occ[s.ticker] = occ[s.ticker] || []).push(s); });
+  const fits = (s) => {
+    if (!screenFresh) return 1;
+    const row = (((SC.groups || {})[c + "|" + s.theme] || {}).incumbents || []).find((r) => r.ticker === s.ticker);
+    return row && row.fails && row.fails.length ? 0 : 1;
+  };
   Object.keys(occ).forEach((t) => {
     if (occ[t].length < 2) return;
-    const keep = occ[t].slice().sort((a, b) => (a.tier - b.tier) || (THEMES.indexOf(a.theme) - THEMES.indexOf(b.theme)))[0];
+    const keep = occ[t].slice().sort((a, b) => (fits(b) - fits(a)) || ((a.tier || 9) - (b.tier || 9)) || (THEMES.indexOf(a.theme) - THEMES.indexOf(b.theme)))[0];
     occ[t].forEach((s) => { if (s !== keep) DUP[c + ":" + s.theme + ":" + t] = keep.theme; });
   });
 });
+// 결격이 이어진 날수의 시작일 — 직전 candidates.js 의 since 를 이어받는다(판정을 다시 써도 시계가 초기화되지 않게).
+// 결격 상태가 한 번이라도 풀렸다면 이어받을 값이 없어 새로 센다.
+const PREV_SINCE = {};
+(() => {
+  const prev = load("candidates.js", "CANDIDATES");
+  Object.keys((prev && prev.groups) || {}).forEach((g) => ((prev.groups[g] || {}).defects || []).forEach((d) => {
+    if (d.state === "결격" && d.since) PREV_SINCE[g + "|" + d.ticker] = d.since;
+  }));
+})();
+const minDate = (...xs) => xs.filter((x) => typeof x === "string" && /^\d{4}-\d{2}-\d{2}$/.test(x)).sort()[0] || null;
 const LONG_DAYS = 14, LONGER_DAYS = 28;   // 실질 결격이 대체 없이 남은 기간 — 14일: 후보 범위 확대, 28일: 스크린 적격 후보로 교체(CLAUDE.md §3-7)
 const groups = {}, queue = { review: [], swap: [], formal: 0 };
 let baselineTouched = 0;
@@ -185,6 +221,8 @@ COUNTRIES.forEach((c) => THEMES.forEach((th) => {
         flags: [{ k: "dup", msg: "중복 편성 — " + THEME_KO[dupKeep] + " 주제에도 있어 분산이 줄어든다", fresh: false }],
         note: "중복 편성 — " + THEME_KO[dupKeep] + " 주제에 남기고 이 주제는 다른 종목으로 교체", dup: dupKeep };
       if (v && v.triedAt) d.triedAt = v.triedAt;
+      d.since = minDate(PREV_SINCE[g + "|" + s.ticker], T); d.age = Math.max(0, dayDiff(T, d.since));
+      if (d.age >= LONG_DAYS) d.long = d.age >= LONGER_DAYS ? 2 : 1;
       defects.push(d); queue.swap.push({ g, d });
       return;
     }
@@ -205,7 +243,7 @@ COUNTRIES.forEach((c) => THEMES.forEach((th) => {
     if (v && v.by) d.by = v.by;   // 판정 주체 — "ai"(ai-defects.js) 면 앱이 'AI 판정'으로 표시
     if (PROTECT.has(c + ":" + s.ticker)) d.prot = true;
     if (state === "결격") {   // 대체 없이 남은 기간 — since(처음 실질 판정일)가 없으면 판정일
-      const since = (v && (v.since || v.asOf)) || T;
+      const since = minDate(PREV_SINCE[g + "|" + s.ticker], v && v.since, v && v.asOf) || T;
       d.since = since; d.age = Math.max(0, dayDiff(T, since));
       if (d.age >= LONG_DAYS) d.long = d.age >= LONGER_DAYS ? 2 : 1;
     }
@@ -225,11 +263,13 @@ COUNTRIES.forEach((c) => THEMES.forEach((th) => {
   const push = (t, status, note, x, asOf) => {
     if (memberSet.has(t) || list.some((y) => y.ticker === t)) return;
     const r = x ? x.r : null;
-    const it = { ticker: t, name: r ? (c === "us" ? shortName(r.name) : r.name) : (note && note.name) || t, status };
+    const it = { ticker: t, name: r ? (c === "us" ? shortName(r.name) : r.name) : (note && note.name) || dictName(c, t) || t, status };
     if (note && note.note) it.note = note.note;
     if (asOf) it.asOf = asOf;
     if (r) { const w = why(th, r); if (w) it.why = w; if (x.near) it.near = (r.fails || []).join(", ") || "근접"; }
     if (formalElsewhere[t]) it.alsoIn = formalElsewhere[t];
+    const cap = capBlock(c, th, it).filter((x) => x !== "중복");   // 중복은 alsoIn 으로 이미 보인다
+    if (cap.length) it.cap = cap.join("·");
     it.url = link(c, r || { ticker: t });
     list.push(it);
   };
@@ -252,7 +292,17 @@ if (opts.baseline && baselineTouched) {
   console.log("candidate-notes.json — 판정 " + baselineTouched + "건에 현재 신호(flags) 기록");
 }
 
-const outObj = { asOf: today, T, screenAsOf: SC.asOf || null, screenFresh: !!screenFresh, groups,
+// 국가 정식 편성 β(보유 기준 — performance-report.js 와 같은 계산) — 밴드(0.7~1.3) 밖이면 교체 후보는 β 를 1 쪽으로 되돌리는 쪽만(§5 ⑤)
+const BETA = (() => {
+  try {
+    const r = require("child_process").spawnSync(process.execPath, [path.join(__dirname, "performance-report.js"), "--json"], { encoding: "utf8", timeout: 60000 });
+    const j = JSON.parse(r.stdout);
+    const out = {};
+    COUNTRIES.forEach((c) => { const b = j.held && j.held[c] && j.held[c].all && j.held[c].all.beta; if (b != null) out[c] = b; });
+    return out;
+  } catch (_e) { return {}; }
+})();
+const outObj = { asOf: today, T, screenAsOf: SC.asOf || null, screenFresh: !!screenFresh, beta: BETA, groups,
   summary: { review: queue.review.length, defect: queue.swap.length, watch: queue.formal,
     untried: queue.swap.filter((x) => !(x.d.triedAt >= T)).length,
     dup: queue.swap.filter((x) => x.d.dup).length, long: queue.swap.filter((x) => x.d.long).length } };
@@ -272,8 +322,18 @@ if (queue.review.length) {
 }
 if (queue.swap.length) {
   console.log("\n[결격 — 교체 대기] 그룹의 '검증 통과' 후보부터 최종 확인 후 교체(§5·§3-7)");
+  COUNTRIES.forEach((c) => {
+    const b = BETA[c];
+    if (b == null) return;
+    const out = b < 0.7 || b > 1.3;
+    console.log("  · " + c + " 정식 편성 β " + b.toFixed(2) + (out ? " — 밴드(0.7~1.3) 밖: 배당·히든 외 교체는 β 를 " + (b < 0.7 ? "높이는" : "낮추는") + " 후보만(vol-beta.js 로 확인)" : " — 밴드 안"));
+  });
   queue.swap.forEach((x) => {
-    const ready = groups[x.g].list.filter((y) => y.status === "검증 통과").map((y) => y.name + "(" + y.ticker + ")");
+    // 이 자리와 맞바꿀 때 분산 상한에 걸리는 후보는 표시(update-reco 가 거부한다 — 다른 후보로)
+    const ready = groups[x.g].list.filter((y) => y.status === "검증 통과").map((y) => {
+      const blk = capBlock(x.g.split("|")[0], x.g.split("|")[1], y, x.d.ticker);
+      return y.name + "(" + y.ticker + (blk.length ? " — " + blk.join("·") + "으로 불가" : "") + ")";
+    });
     const esc = x.d.long === 2 ? " ★" + x.d.age + "일째 — 스크린 적격 후보로 교체(§3-7 28일 규칙)" : x.d.long === 1 ? " ☆" + x.d.age + "일째 — 후보 범위 확대(스크린 26~50위·근접·인접 주제)" : "";
     console.log("  " + x.g + " " + x.d.ticker + " " + x.d.name + (x.d.triedAt >= T ? " [교체 시도 " + x.d.triedAt + "]" : " [오늘 교체 시도 필요]") + esc + " — " + (x.d.note || "") + " · 대체 " + (ready.length ? ready.join(", ") : "검증 통과 후보 없음 → 스크린 상위 검증"));
   });

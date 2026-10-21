@@ -1,0 +1,18 @@
+{
+ "from": "2026-10-21",
+ "until": "2027-01-21",
+ "note": "선정 규칙 동결(CLAUDE.md §6) — 아래 파일·주제 정의가 기준선과 다르면 validate-reco 가 경고한다. 받아들인 변경은 accepted 에 사유와 함께 남는다.",
+ "baseline": {
+  "scripts/screen-discovery.js": "42d1c1d22f2d8958",
+  "scripts/screen-hidden.js": "d7ad263f0a46b646",
+  "scripts/screen-factors.js": "343af9eeaec1acdc",
+  "scripts/lib-factors.js": "022c5e81e2c7d0f5",
+  "scripts/check-defects.js": "a04407f3fa2551d2",
+  "scripts/lib-ta.js": "8a05760b3846ae73",
+  "scripts/shadow-track.js": "d35bb652f0110452",
+  "docs/DEEP-AUDIT-AGENT.md": "cfbb1d482ffea791",
+  "docs/DEEP-DISCOVERY-AGENT.md": "d12ae0dc75221330",
+  "recommendations.js themes": "8eb27174d8ccbe5f"
+ },
+ "accepted": []
+}

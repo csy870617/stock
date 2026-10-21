@@ -135,11 +135,31 @@ function priceNumberIn(text) {
 // 분산 가드레일(2026-10-21 사용자 승인): ①같은 종목은 정식 주제 1곳에만 ②한국 같은 기업집단·금융 업종은 국가 정식 편성(고유 종목)의
 // 일정 수 이하. 기존 초과는 경고(check-defects 가 중복을 결격으로 올려 교체), update-reco 는 '더 나빠지는' 편입을 거부한다.
 const GROUP_CAP = 5, FIN_CAP = 7;
-const KR_GROUPS = [["삼성", /^삼성/], ["SK", /^SK/], ["LG", /^LG/], ["현대차", /^현대(자동차|모비스|글로비스|로템|위아|건설|제철)|^기아/], ["HD현대", /^HD/],
+const KR_GROUPS = [["삼성", /^삼성/], ["SK", /^SK/], ["LG", /^LG/], ["현대차", /^현대(차|자동차|모비스|글로비스|로템|위아|건설|제철|오토에버|비앤지스틸)|^기아|^이노션/], ["HD현대", /^HD/],
   ["한화", /^한화/], ["롯데", /^롯데/], ["CJ", /^CJ/], ["포스코", /^POSCO|^포스코/], ["두산", /^두산/], ["GS", /^GS/], ["카카오", /^카카오/], ["LS", /^LS/]];
-const FIN_RE = /금융|은행|화재|손해|생명|증권|카드|캐피탈|보험|해상/;
+// 금융 판정은 스크린(discovery-candidates.js)의 fin 표시(네이버 업종 코드 — 은행·보험·증권·카드)를 먼저 쓰고, 스크린에 없는 종목만 이름으로.
+// 이름만 보면 '신한지주'처럼 금융 낱말이 없는 금융지주를 놓친다(2026-10-21 점검).
+const FIN_RE = /금융|은행|화재|손해|생명|증권|카드|캐피탈|보험|해상|^신한지주$/;
+let SCREEN_FIN = null;
+function screenFin() {
+  if (SCREEN_FIN) return SCREEN_FIN;
+  SCREEN_FIN = new Map();
+  try {
+    const w = {};
+    new Function("window", fs.readFileSync(path.join(ROOT, "data", "discovery-candidates.js"), "utf8"))(w);
+    const G = (w.DISCOVERY_CANDIDATES || {}).groups || {};
+    Object.keys(G).forEach((g) => {
+      const c = g.split("|")[0];
+      (G[g].incumbents || []).concat(G[g].candidates || []).forEach((r) => {
+        if (r && r.ticker && r.fin != null) SCREEN_FIN.set(c + "|" + r.ticker, !!r.fin || !!SCREEN_FIN.get(c + "|" + r.ticker));
+      });
+    });
+  } catch (_e) { /* 스크린이 없으면 이름으로만 판정 */ }
+  return SCREEN_FIN;
+}
 function concentration(D) {
   const out = { dup: 0, dupList: [], groups: { korea: {}, us: {} }, fin: { korea: 0, us: 0 }, over: [] };
+  const sf = screenFin();
   ["korea", "us"].forEach((c) => {
     const occ = {};
     (D[c] || []).filter((s) => !isPersonalTheme(s.theme)).forEach((s) => { (occ[s.ticker] = occ[s.ticker] || { n: 0, s }).n++; });
@@ -148,7 +168,8 @@ function concentration(D) {
       if (o.n > 1) { out.dup += o.n - 1; out.dupList.push(c + ":" + t + "×" + o.n); }
       if (c === "korea") {
         KR_GROUPS.forEach(([g, re]) => { if (re.test(o.s.name)) out.groups.korea[g] = (out.groups.korea[g] || 0) + 1; });
-        if (FIN_RE.test(o.s.name)) out.fin.korea++;
+        const k = c + "|" + t;
+        if (sf.has(k) ? sf.get(k) : FIN_RE.test(o.s.name)) out.fin.korea++;
       }
     });
     Object.keys(out.groups[c]).forEach((g) => { if (out.groups[c][g] > GROUP_CAP) out.over.push(c + " " + g + "그룹 " + out.groups[c][g] + "종목(상한 " + GROUP_CAP + ")"); });
@@ -488,6 +509,12 @@ if (require.main === module) {
   }
 
   const { errors, warnings } = validate(D, { quotes, ta: loadTa() });
+  // 선정 규칙 동결(CLAUDE.md §6) — 규칙이 든 파일·주제 정의가 기준선과 다르면 경고(받아들일 땐 rules-freeze.js --accept "사유")
+  try {
+    const fz = require("./rules-freeze").freezeStatus(D);
+    if (fz.active && fz.changed.length) warnings.push("선정 규칙 동결 중(" + fz.from + " ~ " + fz.until + "): " + fz.changed.join(", ") +
+      " 이(가) 기준선과 다르다 — 버그 수정·승인된 변경이면 node scripts/rules-freeze.js --accept \"사유\", 아니면 되돌린다");
+  } catch (e) { warnings.push("선정 규칙 동결 확인 실패: " + e.message); }
   if (warnings.length) {
     console.log("⚠ 경고 " + warnings.length + "건:");
     warnings.forEach((w) => console.log("  - " + w));

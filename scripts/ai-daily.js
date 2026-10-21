@@ -12,10 +12,11 @@
 //
 // 덮어쓰기 규칙(세션 작업을 지우지 않는다):
 //   --if-stale(Action) — 항목별로 '오늘 데이터(T)로 아직 안 쓴 것' 또는 'AI 가 쓴 것인데 새 종가가 생긴 것'만 쓴다.
-//     세션이 같은 T 로 쓴 문장은 그대로 둔다. 저녁(미국 마감 뒤) 실행은 아침에 AI 가 쓴 문장만 새 종가로 다시 쓴다.
+//     세션이 같은 T 로 쓴 문장은 그대로 둔다. 저녁(미국 마감 뒤) 실행은 AI 가 쓴 문장을 새 종가로 다시 쓰고,
+//     세션이 쓴 시황·유동성·지수 대응도 '새 종가가 나온 뒤 아무도 고치지 않았으면' 다시 쓴다(Top Pick 은 세션 것 유지).
 //   인자 없이 실행하면 네 항목을 모두 다시 쓴다(수동).
 //   --reapply — API 를 부르지 않고 이번 실행의 결과(.ai-cache/daily.json)를 다시 얹는다(Action rebase 충돌 복구용).
-//     원격에 같은 날 이후로 쓴 항목이 있으면 원격을 남긴다.
+//     이번 실행이 계획할 때 본 문장이 원격에서 바뀌었으면(그 사이 세션이 씀) 원격을 남긴다.
 //
 // 사용법: ANTHROPIC_API_KEY=… node scripts/ai-daily.js [--if-stale] [--reapply] [--dry]
 const fs = require("fs");
@@ -54,6 +55,18 @@ function sigs(S) {
     topPicks: L.sigOf(tp.korea && tp.korea[0] && tp.korea[0].reason),
   };
 }
+// 세션이 쓴 문장도 '새 종가가 나온 뒤 아무도 고치지 않았으면' 저녁에 새 종가로 다시 쓰는 항목(Top Pick 은 세션 판단이라 제외).
+// 왜: A 루틴(08:00 UTC)은 미국 장 시작 전에 쓰고, 예약 Action 은 몇 시간씩 늦게 돌아(아침 ~12:30·저녁 ~00:00 UTC)
+//   세션이 쓴 날은 미국 마감 뒤에도 하루 묵은 시황이 다음 아침까지 남았다(2026-10-21 점검).
+const REFRESH_SESSION = ["market", "liquidity", "indexNotes"];
+const newer = (a, b) => !!(a && b && ((a.kr || "") > (b.kr || "") || (a.us || "") > (b.us || "")));
+// seen = 실행마다 본 문장 지문과 '그 지문을 처음 본 때의 종가 기준' — 지문이 그대로면 처음 본 기준을 잇는다.
+//   처음 보는 지문은 지금 기준으로 적는다(세션이 언제 썼는지 모르면 최신으로 본다 — 세션 작업을 덮지 않는 쪽).
+function nextSeen(prevSeen, cur, basis) {
+  const items = {}, p = (prevSeen && prevSeen.items) || {};
+  ITEMS.forEach((k) => { items[k] = p[k] && p[k].sig === cur[k] ? p[k] : { sig: cur[k], basis }; });
+  return { at: new Date().toISOString(), items };
+}
 function plan(S, st) {
   const T = S.TA && S.TA.asOf, basis = basisOf(S.Q), prev = st.daily || {}, cur = sigs(S);
   const stale = {
@@ -63,12 +76,15 @@ function plan(S, st) {
     topPicks: !(S.D.topPicks && S.D.topPicks.asOf >= T),
   };
   const newClose = !!(prev.basis && (prev.basis.kr !== basis.kr || prev.basis.us !== basis.us));
+  const seenItems = (prev.seen && prev.seen.items) || {};
   const out = {};
   ITEMS.forEach((k) => {
     const mine = !!(prev.sig && prev.sig[k] && prev.sig[k] === cur[k]);
-    out[k] = { stale: stale[k], mine, need: stale[k] || (mine && newClose), write: !IF_STALE || stale[k] || mine };
+    const sn = seenItems[k];
+    const outdated = !stale[k] && !mine && REFRESH_SESSION.includes(k) && !!(sn && sn.sig && sn.sig === cur[k] && newer(basis, sn.basis));
+    out[k] = { stale: stale[k], mine, outdated, need: stale[k] || (mine && newClose) || outdated, write: !IF_STALE || stale[k] || mine || outdated };
   });
-  return { T, basis, items: out, run: !IF_STALE || ITEMS.some((k) => out[k].need) };
+  return { T, basis, items: out, cur, run: !IF_STALE || ITEMS.some((k) => out[k].need) };
 }
 
 // ── 프롬프트 재료 ──
@@ -108,18 +124,23 @@ function liquidityBlock(A, LQ) {
 }
 // Top Pick 후보 — §4-6 제외 조건(단기·중기 적극매도·추세 붕괴·한국 수급 과열)과 실질 결격을 미리 거른다
 function pickTable(S) {
-  const ta = (S.TA && S.TA.ta) || {}, defState = {};
-  Object.keys(S.CA.groups || {}).forEach((g) => (S.CA.groups[g].defects || []).forEach((d) => { defState[g.split("|")[0] + ":" + d.ticker] = d.state; }));
+  // 결격 상태는 (국가|주제|티커)로 본다 — '중복' 자리는 회사 결격이 아니라 편성 구성 문제라 그 자리만 건너뛰고
+  // 남길 주제의 행으로 후보에 올린다(check-defects 의 dup 판정을 따름)
+  const ta = (S.TA && S.TA.ta) || {}, defState = {}, dupSlot = new Set();
+  Object.keys(S.CA.groups || {}).forEach((g) => (S.CA.groups[g].defects || []).forEach((d) => {
+    if (d.dup) dupSlot.add(g + "|" + d.ticker);
+    else defState[g + "|" + d.ticker] = d.state;
+  }));
   const rows = { korea: [], us: [] }, eligible = { korea: new Set(), us: new Set() }, excluded = [];
   ["korea", "us"].forEach((c) => (S.D[c] || []).forEach((s) => {
-    if (isPersonalTheme(s.theme) || eligible[c].has(s.ticker)) return;
+    if (isPersonalTheme(s.theme) || eligible[c].has(s.ticker) || dupSlot.has(c + "|" + s.theme + "|" + s.ticker)) return;
     const x = ta[s.ticker] || {}, sg = ["short", "mid", "long"].map((k) => (x[k] && x[k].signal) || "–");
     const ev = S.EV[s.ticker] || {}, fu = S.FU[s.ticker] || {}, q = fu.q || {};
     let why = null;
     if (sg[0] === "적극매도" || sg[1] === "적극매도") why = "단기·중기 적극매도";
     else if (sg.every((v) => /매도/.test(v))) why = "추세 붕괴";
     else if (c === "korea" && ev.flow && ev.flow.hot) why = "수급 과열";
-    else if (defState[c + ":" + s.ticker] === "결격") why = "실질 결격(교체 대기)";
+    else if (defState[c + "|" + s.theme + "|" + s.ticker] === "결격") why = "실질 결격(교체 대기)";
     if (why) { excluded.push(c + ":" + s.ticker + " " + s.name + "(" + why + ")"); return; }
     eligible[c].add(s.ticker);
     const parts = [s.ticker + " " + s.name, THEME_KO[s.theme] + " T" + s.tier, "신호 " + sg.join("/")];
@@ -131,7 +152,7 @@ function pickTable(S) {
     if (fu.rev4w) parts.push("최근 4주 EPS 추정 상향 " + fu.rev4w.up + "·하향 " + fu.rev4w.down);
     const nx = ev.next && ev.next.date;
     if (nx && nx >= today) parts.push("실적 발표 " + nx);
-    const st = defState[c + ":" + s.ticker];
+    const st = defState[c + "|" + s.theme + "|" + s.ticker];
     if (st) parts.push("점검 상태 " + st);
     rows[c].push("- " + parts.join(" | "));
   }));
@@ -375,14 +396,17 @@ function reapply() {
   const c = L.readCache("daily.json");
   if (!c || !c.res) { console.log("ai-daily --reapply: 캐시 없음 — 건너뜀"); return; }
   const S = loadAll(), res = {};
+  // 이번 실행이 계획할 때 본 문장(seenSig)이 원격에 그대로일 때만 다시 얹는다 — 그 사이 세션이 고쳤으면 원격을 남긴다.
+  //   (예전 캐시엔 seenSig 가 없어 날짜로 판단)
+  const now = sigs(S), untouched = (k, byDate) => (c.seenSig ? now[k] === c.seenSig[k] : byDate);
   if (c.res.patch) {
     const p = {};
-    if (c.res.patch.marketNote && !(S.D.marketNoteAsOf >= c.today)) Object.assign(p, { marketNote: c.res.patch.marketNote, marketNoteUS: c.res.patch.marketNoteUS, marketNoteKR: c.res.patch.marketNoteKR, marketNoteAsOf: c.res.patch.marketNoteAsOf });
-    if (c.res.patch.topPicks && !(S.D.topPicks && S.D.topPicks.asOf >= c.today)) p.topPicks = c.res.patch.topPicks;
+    if (c.res.patch.marketNote && untouched("market", !(S.D.marketNoteAsOf >= c.today))) Object.assign(p, { marketNote: c.res.patch.marketNote, marketNoteUS: c.res.patch.marketNoteUS, marketNoteKR: c.res.patch.marketNoteKR, marketNoteAsOf: c.res.patch.marketNoteAsOf });
+    if (c.res.patch.topPicks && untouched("topPicks", !(S.D.topPicks && S.D.topPicks.asOf >= c.today))) p.topPicks = c.res.patch.topPicks;
     if (Object.keys(p).length) res.patch = p;
   }
-  if (c.res.liquidity && !(S.LQ && S.LQ.asOf >= c.today)) res.liquidity = c.res.liquidity;
-  if (c.res.indexNotes && !(S.IN && S.IN.asOf >= c.res.indexNotes.asOf)) res.indexNotes = c.res.indexNotes;
+  if (c.res.liquidity && untouched("liquidity", !(S.LQ && S.LQ.asOf >= c.today))) res.liquidity = c.res.liquidity;
+  if (c.res.indexNotes && untouched("indexNotes", !(S.IN && S.IN.asOf >= c.res.indexNotes.asOf))) res.indexNotes = c.res.indexNotes;
   const errs = [];
   const wrote = writeOutputs(res, errs);
   console.log("ai-daily --reapply: " + (wrote.length ? wrote.join(", ") + " 다시 반영" : "원격이 최신 — 반영 없음") + (errs.length ? " · 오류 " + errs.join(" / ") : ""));
@@ -397,19 +421,22 @@ async function main() {
   const st = L.readStatus(), P = plan(S, st);
   const todo = ITEMS.filter((k) => P.items[k].write);
   console.log("ai-daily: T " + P.T + " · 종가 한국 " + P.basis.kr + " 미국 " + P.basis.us + " · " +
-    ITEMS.map((k) => k + (P.items[k].stale ? "(미작성)" : P.items[k].mine ? "(AI 작성분)" : "(세션 작성분)")).join(" "));
+    ITEMS.map((k) => k + (P.items[k].stale ? "(미작성)" : P.items[k].mine ? "(AI 작성분)" : P.items[k].outdated ? "(세션 작성분 — 새 종가로 갱신)" : "(세션 작성분)")).join(" "));
+  const prevSeen = (st.daily || {}).seen;
   if (!P.run || !todo.length) {
     console.log("ai-daily: 쓸 항목 없음 — 오늘 몫이 이미 최신이거나 세션이 썼다");
-    // 건너뛴 사실도 남긴다(앱 'AI 연결' 창) — 지난 성공의 지문·종가 기준은 그대로 둔다
+    // 건너뛴 사실도 남긴다(앱 'AI 연결' 창) — 지난 성공의 지문·종가 기준은 그대로 두고, 본 문장 지문(seen)만 갱신
     const prev = st.daily || {};
-    L.writeStatus("daily", Object.assign({}, prev, { checkedAt: new Date().toISOString(), skipped: "오늘(" + P.T + ") 몫이 이미 최신 — " +
-      (ITEMS.some((k) => P.items[k].mine) ? "AI 작성분 유지" : "루틴 세션이 작성") }));
+    L.writeStatus("daily", Object.assign({}, prev, { checkedAt: new Date().toISOString(), seen: nextSeen(prevSeen, P.cur, P.basis),
+      skipped: "오늘(" + P.T + ") 몫이 이미 최신 — " + (ITEMS.some((k) => P.items[k].mine) ? "AI 작성분 유지" : "루틴 세션이 작성") }));
     return;
   }
 
   const model = L.MODELS.daily, startedAt = new Date().toISOString();
   let usage = L.newUsage(), memo = "", urls = [], note = [];
-  const status = { at: startedAt, T: P.T, basis: P.basis, model, ok: false };   // skipped·checkedAt 은 새 실행에서 지운다
+  const status = { at: startedAt, T: P.T, basis: P.basis, model, ok: false, seen: nextSeen(prevSeen, P.cur, P.basis) };   // skipped·checkedAt 은 새 실행에서 지운다
+  const refreshed = ITEMS.filter((k) => P.items[k].outdated);
+  if (refreshed.length) note.push("새 종가로 세션 문장 갱신: " + refreshed.join(", "));
   try {
     try {
       const r = await L.research(cl, { model, system: RESEARCH_SYSTEM, prompt: researchPrompt(S, P), maxSearches: +(process.env.AI_DAILY_SEARCHES || 6), effort: "medium" });
@@ -439,12 +466,13 @@ async function main() {
     if (skipped.length) note.push("검사 미통과로 유지: " + skipped.map((k) => k + "(" + err[k][0] + ")").join(" · "));
     const res = buildOutputs(S, out, urls, P, ok);
     if (DRY) { console.log(JSON.stringify(res, null, 1)); return; }
-    L.writeCache("daily.json", { at: startedAt, today, T: P.T, res });
+    L.writeCache("daily.json", { at: startedAt, today, T: P.T, res, seenSig: P.cur });
     const wErr = [];
     const wrote = writeOutputs(res, wErr);
     if (wErr.length) note.push(wErr.join(" · "));
-    const after = loadAll();
-    Object.assign(status, { ok: wrote.length > 0, wrote, sig: Object.assign({}, (st.daily && st.daily.sig) || {}, pickSig(sigs(after), wrote)), sources: urls.length });
+    const after = loadAll(), afterSig = sigs(after);
+    Object.assign(status, { ok: wrote.length > 0, wrote, sig: Object.assign({}, (st.daily && st.daily.sig) || {}, pickSig(afterSig, wrote)), sources: urls.length,
+      seen: nextSeen(prevSeen, afterSig, P.basis) });
     console.log("ai-daily: 반영 " + (wrote.join(", ") || "없음") + " · 검색 결과 " + urls.length + "건");
   } catch (e) {
     status.error = L.describeError(e);

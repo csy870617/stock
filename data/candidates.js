@@ -6,6 +6,10 @@ window.CANDIDATES = {
  "T": "2026-10-21",
  "screenAsOf": "2026-10-21",
  "screenFresh": true,
+ "beta": {
+  "korea": 0.4,
+  "us": 1.23
+ },
  "groups": {
   "korea|core": {
    "eligible": 17,
@@ -41,7 +45,9 @@ window.CANDIDATES = {
       }
      ],
      "note": "중복 편성 — 저평가 주제에 남기고 이 주제는 다른 종목으로 교체",
-     "dup": "value"
+     "dup": "value",
+     "since": "2026-10-21",
+     "age": 0
     },
     {
      "ticker": "278470",
@@ -68,6 +74,7 @@ window.CANDIDATES = {
      "name": "기업은행",
      "status": "검증 대기",
      "why": "3년 평균 ROIC 1% · 매출 성장 -9.9% · 주식 수 연 0%",
+     "cap": "금융 상한",
      "url": "https://m.stock.naver.com/domestic/stock/024110/total"
     }
    ]
@@ -88,7 +95,9 @@ window.CANDIDATES = {
       }
      ],
      "note": "중복 편성 — 우량 주제에 남기고 이 주제는 다른 종목으로 교체",
-     "dup": "core"
+     "dup": "core",
+     "since": "2026-10-21",
+     "age": 0
     },
     {
      "ticker": "207940",
@@ -103,7 +112,9 @@ window.CANDIDATES = {
       }
      ],
      "note": "중복 편성 — 우량 주제에 남기고 이 주제는 다른 종목으로 교체",
-     "dup": "core"
+     "dup": "core",
+     "since": "2026-10-21",
+     "age": 0
     },
     {
      "ticker": "298040",
@@ -123,6 +134,7 @@ window.CANDIDATES = {
      "note": "3년 평균 ROIC 33%·FCF 마진 15.5% — HD 계열 결격 시 계열 비중을 늘리지 않는 대체",
      "asOf": "2026-10-18",
      "why": "3년 매출 연평균 14.1% · FCF 마진 15.5% · 3년 평균 ROIC 33.3%",
+     "cap": "HD현대그룹 상한",
      "url": "https://m.stock.naver.com/domestic/stock/443060/total"
     },
     {
@@ -141,6 +153,7 @@ window.CANDIDATES = {
      "note": "3년 매출 연평균 21.5%·FCF 마진 12.6% — HD현대중공업 결격 시 같은 업종 대체",
      "asOf": "2026-10-18",
      "why": "3년 매출 연평균 21.5% · FCF 마진 12.6% · 3년 평균 ROIC 6.1%",
+     "cap": "삼성그룹 상한",
      "url": "https://m.stock.naver.com/domestic/stock/010140/total"
     },
     {
@@ -186,6 +199,7 @@ window.CANDIDATES = {
      "note": "3년 지표 약함·컨센서스 분산",
      "asOf": "2026-10-18",
      "why": "3년 매출 연평균 6.3% · FCF 마진 2.6% · 3년 평균 ROIC 5.7%",
+     "cap": "삼성그룹 상한",
      "url": "https://m.stock.naver.com/domestic/stock/009150/total"
     },
     {
@@ -302,6 +316,7 @@ window.CANDIDATES = {
      "note": "기업가치의 약 70%가 삼성전자 지분(우량 편성과 노출 중복)·3분기 일회성",
      "asOf": "2026-10-18",
      "why": "EBIT/EV 3.6% · 매출 성장 9.9%",
+     "cap": "삼성그룹 상한·금융 상한",
      "url": "https://m.stock.naver.com/domestic/stock/032830/total"
     },
     {
@@ -324,10 +339,11 @@ window.CANDIDATES = {
     },
     {
      "ticker": "071050",
-     "name": "071050",
+     "name": "한국금융지주",
      "status": "보류",
      "note": "3분기 증익 유지·컨센 2출처 확인 필요",
      "asOf": "2026-10-18",
+     "cap": "금융 상한",
      "url": "https://m.stock.naver.com/domestic/stock/071050/total"
     },
     {
@@ -383,7 +399,9 @@ window.CANDIDATES = {
       }
      ],
      "note": "중복 편성 — 우량 주제에 남기고 이 주제는 다른 종목으로 교체",
-     "dup": "core"
+     "dup": "core",
+     "since": "2026-10-21",
+     "age": 0
     },
     {
      "ticker": "086790",
@@ -398,7 +416,9 @@ window.CANDIDATES = {
       }
      ],
      "note": "중복 편성 — 저평가 주제에 남기고 이 주제는 다른 종목으로 교체",
-     "dup": "value"
+     "dup": "value",
+     "since": "2026-10-21",
+     "age": 0
     }
    ],
    "list": [
@@ -418,6 +438,7 @@ window.CANDIDATES = {
      "note": "3년 연속 배당 최대, 컨센 출처 간 10% 괴리 — 세 번째 출처 필요",
      "asOf": "2026-10-18",
      "why": "배당 비감소 3년 · 배당성향 31.3% · 배당 4%",
+     "cap": "금융 상한",
      "url": "https://m.stock.naver.com/domestic/stock/003690/total"
     },
     {
@@ -427,6 +448,7 @@ window.CANDIDATES = {
      "note": "목표가 내는 증권사 1곳",
      "asOf": "2026-10-18",
      "why": "배당 비감소 1년 · 배당성향 74.5% · 배당 6.8%",
+     "cap": "금융 상한",
      "url": "https://m.stock.naver.com/domestic/stock/031210/total"
     },
     {
@@ -443,6 +465,7 @@ window.CANDIDATES = {
      "name": "기업은행",
      "status": "검증 대기",
      "why": "배당 비감소 0년 · 배당성향 30.8% · 배당 5.3%",
+     "cap": "금융 상한",
      "url": "https://m.stock.naver.com/domestic/stock/024110/total"
     },
     {
@@ -567,7 +590,9 @@ window.CANDIDATES = {
       }
      ],
      "note": "중복 편성 — 성장 주제에 남기고 이 주제는 다른 종목으로 교체",
-     "dup": "growth"
+     "dup": "growth",
+     "since": "2026-10-21",
+     "age": 0
     },
     {
      "ticker": "UNH",
@@ -583,7 +608,9 @@ window.CANDIDATES = {
      ],
      "note": "중복 편성 — 저평가 주제에 남기고 이 주제는 다른 종목으로 교체",
      "dup": "value",
-     "triedAt": "2026-10-21"
+     "triedAt": "2026-10-21",
+     "since": "2026-10-21",
+     "age": 0
     },
     {
      "ticker": "COST",
@@ -880,7 +907,7 @@ window.CANDIDATES = {
     },
     {
      "ticker": "BAC",
-     "name": "BAC",
+     "name": "Bank of America",
      "status": "보류",
      "note": "금융 4번째(편중)",
      "asOf": "2026-10-18",
@@ -888,7 +915,7 @@ window.CANDIDATES = {
     },
     {
      "ticker": "LYG",
-     "name": "LYG",
+     "name": "Lloyds Banking Group",
      "status": "보류",
      "note": "11-11 기한",
      "asOf": "2026-10-18",
@@ -940,7 +967,9 @@ window.CANDIDATES = {
       }
      ],
      "note": "중복 편성 — 저평가 주제에 남기고 이 주제는 다른 종목으로 교체",
-     "dup": "value"
+     "dup": "value",
+     "since": "2026-10-21",
+     "age": 0
     },
     {
      "ticker": "KO",
@@ -989,7 +1018,7 @@ window.CANDIDATES = {
     },
     {
      "ticker": "MCD",
-     "name": "MCD",
+     "name": "McDonald's",
      "status": "보류",
      "note": "추세·컨센 하향 멈춤 확인 시",
      "asOf": "2026-10-18",
@@ -997,7 +1026,7 @@ window.CANDIDATES = {
     },
     {
      "ticker": "T",
-     "name": "T",
+     "name": "AT&T",
      "status": "보류",
      "note": "VZ 결격 시(10/26 3분기)",
      "asOf": "2026-10-18",
