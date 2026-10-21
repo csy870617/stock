@@ -1805,7 +1805,9 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       var up = (s.targetPrice != null && lv.price) ? (s.targetPrice - lv.price) / lv.price * 100 : s.upside;
       return { price: lv.price, priceDate: lv.date || s.priceDate, upside: up, live: inSession(isKrStock(s), lv.date), fetched: true, chg: liveChg(s, lv) };
     }
-    return { price: s.price, priceDate: s.priceDate, upside: s.upside, live: false, chg: s.changePct };
+    // 시세 서버가 없을 때의 스냅샷 — Action 이 장중에 받았으면 price 는 장중가(priceDate > 마지막 종가일)라 '종가'로 적지 않는다
+    var intra = !!(s._closeDate && s.priceDate && s.priceDate > s._closeDate);
+    return { price: s.price, priceDate: s.priceDate, upside: s.upside, live: false, intra: intra, chg: s.changePct };
   }
 
   // ── 과거 시계열 레이어 (성과 기간별 비교용 — 신뢰할 만한 기간의 실제 일봉 종가) ──
@@ -2531,6 +2533,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   function detailHtml(s, c, it) {
     var e = effective(s), n = s.techNote || {}, sd = staleDays(s);
     var meta = (e.live ? '<span class="live-tx" title="장중 시세 — 거래소·시세 서버 사정으로 최대 20분가량 늦을 수 있습니다"><i class="live-dot"></i>장중</span>'
+      : e.intra ? '<span title="자동 갱신 시점의 장중 가격입니다 — 실시간 시세를 받지 못했습니다">' + esc(e.priceDate) + " 장중 시세(갱신 시점)</span>"
       : esc(e.priceDate || D.generatedAt) + " 종가" + (sd >= 7 ? " (" + sd + "일 전)" : "")) + " · 전일 대비";
     var badges = detailBadges(s, c, e), alerts = detailAlerts(s, c, e);
     var top = '<div class="dt-top"><div class="dt-pxl"><span class="dt-pv">' + esc(fmtPrice(e.price, c)) + "</span>" + chgHtml(e.chg, "dt-ch") + "</div>" +
@@ -4445,7 +4448,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     var out = [
       "종목: " + s.name + " (" + t + ", " + (c === "us" ? "미국" : "한국") + " " + (s.market || "") + ")" +
         (isPersonal(s.theme) ? " · 사용자의 " + plist(s.theme).label + " 목록" : " · 추천 주제 '" + themeMeta(s.theme).label + "' Tier " + s.tier),
-      "현재가: " + fmtPrice(e.price, c) + " (" + (e.priceDate || "") + (e.live ? " 장중" : " 종가") + (e.chg != null ? ", 전일 대비 " + pctTxt(e.chg) : "") + ")",
+      "현재가: " + fmtPrice(e.price, c) + " (" + (e.priceDate || "") + (e.live ? " 장중" : e.intra ? " 장중(갱신 시점)" : " 종가") + (e.chg != null ? ", 전일 대비 " + pctTxt(e.chg) : "") + ")",
       s.targetPrice ? "증권사 컨센서스 목표가: " + fmtPrice(s.targetPrice, c) + (s.tpLow && s.tpHigh ? " (최저 " + fmtPrice(s.tpLow, c) + " ~ 최고 " + fmtPrice(s.tpHigh, c) + ")" : "") + (s.tpAsOf ? " · 집계 " + s.tpAsOf : "") : "",
       s.aiTarget ? "앱의 AI 적정가: " + fmtPrice(s.aiTarget, c) + " — " + (s.aiBasis || "") : "",
       "밸류: PER " + (f.per != null ? f.per : "–") + " · 선행 PER " + (f.fper != null ? f.fper : "–") + " · PBR " + (f.pbr != null ? f.pbr : "–") + " · 배당수익률 " + (f.dy != null ? f.dy + "%" : "–") + (f.mcap ? " · 시총 " + f.mcap : ""),
