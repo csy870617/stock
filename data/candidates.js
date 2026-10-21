@@ -754,7 +754,7 @@ window.CANDIDATES = {
     {
      "ticker": "GM",
      "name": "General Motors",
-     "state": "점검 필요",
+     "state": "감시",
      "flags": [
       {
        "k": "theme",
@@ -764,12 +764,13 @@ window.CANDIDATES = {
       {
        "k": "earn",
        "msg": "실적 발표(10/20) · EPS 서프라이즈 4.2% — 가이던스·논거 확인",
-       "fresh": true
+       "fresh": false
       }
      ],
-     "note": "매출 정체 — 10/20 3분기로 재판정",
-     "judged": "2026-10-18",
-     "verdict": "형식"
+     "note": "10/20 3분기 EPS가 예상을 4.2% 웃돌았으나, 조사 메모는 가이던스·GAAP 이익·악재 여부를 확인하지 못했다. 원인 미확인이라 감시가 필요하다.",
+     "judged": "2026-10-21",
+     "verdict": "형식",
+     "by": "ai"
     }
    ],
    "list": [
@@ -1175,9 +1176,9 @@ window.CANDIDATES = {
   }
  },
  "summary": {
-  "review": 1,
+  "review": 0,
   "defect": 12,
-  "watch": 16,
+  "watch": 17,
   "untried": 0
  }
 };

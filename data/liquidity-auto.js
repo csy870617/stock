@@ -39,80 +39,48 @@ window.LIQUIDITY_AUTO = {
  },
  "fed": {
   "asOf": "2026-10-21",
-  "current": 3.882,
+  "current": 3.878,
   "meetings": [
    {
     "date": "2026-10-28",
-    "rate": 3.915,
-    "stepBp": 3.3,
-    "cumBp": 3.3,
+    "rate": 3.92,
+    "stepBp": 4.2,
+    "cumBp": 4.2,
     "outcomes": [
      {
       "n": 0,
-      "p": 87
+      "p": 83
      },
      {
       "n": 1,
-      "p": 13
+      "p": 17
      }
     ]
    },
    {
     "date": "2026-12-09",
-    "rate": 4.133,
+    "rate": 4.138,
     "stepBp": 21.8,
-    "cumBp": 25.2,
+    "cumBp": 26,
     "outcomes": [
      {
       "n": 1,
-      "p": 99
+      "p": 96
      },
      {
       "n": 2,
-      "p": 1
+      "p": 4
      }
     ]
    },
    {
     "date": "2027-01-27",
-    "rate": 4.245,
+    "rate": 4.25,
     "stepBp": 11.2,
-    "cumBp": 36.3,
+    "cumBp": 37.2,
     "outcomes": [
      {
       "n": 1,
-      "p": 55
-     },
-     {
-      "n": 2,
-      "p": 45
-     }
-    ]
-   },
-   {
-    "date": "2027-03-17",
-    "rate": 4.411,
-    "stepBp": 16.6,
-    "cumBp": 52.9,
-    "outcomes": [
-     {
-      "n": 2,
-      "p": 88
-     },
-     {
-      "n": 3,
-      "p": 12
-     }
-    ]
-   },
-   {
-    "date": "2027-04-28",
-    "rate": 4.51,
-    "stepBp": 9.9,
-    "cumBp": 62.8,
-    "outcomes": [
-     {
-      "n": 3,
       "p": 51
      },
      {
@@ -122,34 +90,66 @@ window.LIQUIDITY_AUTO = {
     ]
    },
    {
-    "date": "2027-06-09",
-    "rate": 4.603,
-    "stepBp": 9.3,
-    "cumBp": 72.1,
+    "date": "2027-03-17",
+    "rate": 4.427,
+    "stepBp": 17.7,
+    "cumBp": 54.9,
     "outcomes": [
      {
-      "n": 3,
-      "p": 88
+      "n": 2,
+      "p": 80
      },
      {
-      "n": 2,
-      "p": 12
+      "n": 3,
+      "p": 20
      }
     ]
    },
    {
-    "date": "2027-07-28",
-    "rate": 4.635,
-    "stepBp": 3.2,
-    "cumBp": 75.3,
+    "date": "2027-04-28",
+    "rate": 4.525,
+    "stepBp": 9.8,
+    "cumBp": 64.7,
+    "outcomes": [
+     {
+      "n": 3,
+      "p": 59
+     },
+     {
+      "n": 2,
+      "p": 41
+     }
+    ]
+   },
+   {
+    "date": "2027-06-09",
+    "rate": 4.625,
+    "stepBp": 10,
+    "cumBp": 74.7,
     "outcomes": [
      {
       "n": 3,
       "p": 99
      },
      {
-      "n": 4,
+      "n": 2,
       "p": 1
+     }
+    ]
+   },
+   {
+    "date": "2027-07-28",
+    "rate": 4.66,
+    "stepBp": 3.5,
+    "cumBp": 78.2,
+    "outcomes": [
+     {
+      "n": 3,
+      "p": 87
+     },
+     {
+      "n": 4,
+      "p": 13
      }
     ]
    }
@@ -241,14 +241,7 @@ window.LIQUIDITY_AUTO = {
      "rmse": 0.94,
      "method": "변화 없음"
     }
-   ],
-   "taylor": {
-    "rate": 4.83,
-    "infl": 2.73,
-    "inflAt": "2026-09",
-    "unemp": 2.7,
-    "ustar": 3.32
-   }
+   ]
   }
  }
 };
