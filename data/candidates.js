@@ -524,24 +524,6 @@ window.CANDIDATES = {
    "eligible": 61,
    "defects": [
     {
-     "ticker": "UNH",
-     "name": "UnitedHealth Group",
-     "state": "결격",
-     "verdict": "실질",
-     "flags": [
-      {
-       "k": "dup",
-       "msg": "중복 편성 — 저평가 주제에도 있어 분산이 줄어든다",
-       "fresh": false
-      }
-     ],
-     "note": "중복 편성 — 저평가 주제에 남기고 이 주제는 다른 종목으로 교체",
-     "dup": "value",
-     "triedAt": "2026-10-21",
-     "since": "2026-10-21",
-     "age": 0
-    },
-    {
      "ticker": "COST",
      "name": "Costco Wholesale",
      "state": "감시",
@@ -558,15 +540,6 @@ window.CANDIDATES = {
     }
    ],
    "list": [
-    {
-     "ticker": "CB",
-     "name": "Chubb",
-     "status": "보류",
-     "note": "3분기 핵심 EPS 예상 상회, 보험료 성장 둔화 — 3분기 뒤 목표가 상향 확인 시 UNH 자리 1순위",
-     "asOf": "2026-10-21",
-     "why": "매출 성장 6.5% · 주식 수 연 -1.7%",
-     "url": "https://m.stock.naver.com/worldstock/stock/CB/total"
-    },
     {
      "ticker": "ASML",
      "name": "ASML N.V.",
@@ -1188,10 +1161,10 @@ window.CANDIDATES = {
  },
  "summary": {
   "review": 0,
-  "defect": 15,
+  "defect": 14,
   "watch": 14,
   "untried": 0,
-  "dup": 4,
+  "dup": 3,
   "long": 0
  }
 };
