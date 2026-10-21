@@ -132,6 +132,31 @@ function priceNumberIn(text) {
   return null;
 }
 
+// 분산 가드레일(2026-10-21 사용자 승인): ①같은 종목은 정식 주제 1곳에만 ②한국 같은 기업집단·금융 업종은 국가 정식 편성(고유 종목)의
+// 일정 수 이하. 기존 초과는 경고(check-defects 가 중복을 결격으로 올려 교체), update-reco 는 '더 나빠지는' 편입을 거부한다.
+const GROUP_CAP = 5, FIN_CAP = 7;
+const KR_GROUPS = [["삼성", /^삼성/], ["SK", /^SK/], ["LG", /^LG/], ["현대차", /^현대(자동차|모비스|글로비스|로템|위아|건설|제철)|^기아/], ["HD현대", /^HD/],
+  ["한화", /^한화/], ["롯데", /^롯데/], ["CJ", /^CJ/], ["포스코", /^POSCO|^포스코/], ["두산", /^두산/], ["GS", /^GS/], ["카카오", /^카카오/], ["LS", /^LS/]];
+const FIN_RE = /금융|은행|화재|손해|생명|증권|카드|캐피탈|보험|해상/;
+function concentration(D) {
+  const out = { dup: 0, dupList: [], groups: { korea: {}, us: {} }, fin: { korea: 0, us: 0 }, over: [] };
+  ["korea", "us"].forEach((c) => {
+    const occ = {};
+    (D[c] || []).filter((s) => !isPersonalTheme(s.theme)).forEach((s) => { (occ[s.ticker] = occ[s.ticker] || { n: 0, s }).n++; });
+    Object.keys(occ).forEach((t) => {
+      const o = occ[t];
+      if (o.n > 1) { out.dup += o.n - 1; out.dupList.push(c + ":" + t + "×" + o.n); }
+      if (c === "korea") {
+        KR_GROUPS.forEach(([g, re]) => { if (re.test(o.s.name)) out.groups.korea[g] = (out.groups.korea[g] || 0) + 1; });
+        if (FIN_RE.test(o.s.name)) out.fin.korea++;
+      }
+    });
+    Object.keys(out.groups[c]).forEach((g) => { if (out.groups[c][g] > GROUP_CAP) out.over.push(c + " " + g + "그룹 " + out.groups[c][g] + "종목(상한 " + GROUP_CAP + ")"); });
+    if (out.fin[c] > FIN_CAP) out.over.push(c + " 금융 " + out.fin[c] + "종목(상한 " + FIN_CAP + ")");
+  });
+  return out;
+}
+
 function validate(D, opts) {
   opts = opts || {};
   const quotes = opts.quotes || {};
@@ -384,6 +409,11 @@ function validate(D, opts) {
   ["korea", "us"].forEach((c) => (D[c] || []).forEach((s) => {
     if (!isPersonalTheme(s.theme) && trendBroken(s.ticker)) warnings.push(c + ":" + s.ticker + " " + s.name + "(" + s.theme + "): 추세 붕괴(단·중·장기 모두 매도 이하) — 정식 추천 결격, 검증된 대체 후보와 교체 대상");
   }));
+  {
+    const cc = concentration(D);
+    if (cc.dup) warnings.push("분산: 정식 주제 중복 " + cc.dup + "자리(" + cc.dupList.join(", ") + ") — 한 종목은 한 주제에만, check-defects 가 '중복' 결격으로 교체 대상에 올린다");
+    cc.over.forEach((x) => warnings.push("분산: " + x + " — 이 그룹·업종을 늘리는 편입 금지, 교체 때 줄이는 쪽 우선"));
+  }
   if (D.topPicks != null) {
     const tp = D.topPicks;
     if (typeof tp !== "object" || Array.isArray(tp)) {
@@ -472,4 +502,4 @@ if (require.main === module) {
   console.log("✓ 검증 통과: " + total + "종목, 오류 0건, 경고 " + warnings.length + "건 (" + path.relative(ROOT, file) + ")");
 }
 
-module.exports = { validate, loadTa, isTrustedSource, isBlockedSource, sourceHost, trustedDomainOf, PERSONAL_THEMES, isPersonalTheme, priceNumberIn };
+module.exports = { concentration, GROUP_CAP, FIN_CAP, validate, loadTa, isTrustedSource, isBlockedSource, sourceHost, trustedDomainOf, PERSONAL_THEMES, isPersonalTheme, priceNumberIn };

@@ -127,6 +127,8 @@ function put(notes, g, t, entry) {
     if (prev.by) e.by = prev.by; else delete e.by;   // 결격을 정한 쪽은 이전 판정(대개 세션) — 'AI 판정'으로 표시하지 않는다
   }
   if (prev && prev.triedAt) e.triedAt = prev.triedAt;
+  // 실질 결격이 처음 성립한 날 — 14·28일 장기 결격 판정의 기준(재판정해도 유지)
+  if (e.verdict === "실질") e.since = (prev && prev.verdict === "실질" && (prev.since || prev.asOf)) || e.asOf;
   notes.defects[g][t] = e;
   return e;
 }

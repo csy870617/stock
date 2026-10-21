@@ -42,7 +42,7 @@
 
 const fs = require("fs");
 const path = require("path");
-const { validate, loadTa, isTrustedSource, isBlockedSource, sourceHost, trustedDomainOf, priceNumberIn } = require("./validate-reco");
+const { concentration, validate, loadTa, isTrustedSource, isBlockedSource, sourceHost, trustedDomainOf, priceNumberIn } = require("./validate-reco");
 
 const ROOT = path.join(__dirname, "..");
 const RECO = path.join(ROOT, "data", "recommendations.js");
@@ -92,6 +92,7 @@ global.window = {};
 require(RECO);
 const D = global.window.STOCK_DATA;
 if (!D) { console.error("recommendations.js 로드 실패"); process.exit(1); }
+const CONC_BEFORE = concentration(D);   // 분산 가드레일 — 적용 뒤와 비교해 '더 나빠지는' 편입을 거부한다
 D.korea = D.korea || [];
 D.us = D.us || [];
 
@@ -295,6 +296,16 @@ const origTp = {};
   added++;
 });
 
+// 분산 가드레일(2026-10-21): 편입이 중복 자리를 늘리거나, 상한을 넘긴(또는 넘기게 되는) 그룹·금융 업종을 늘리면 거부
+if ((patch.add || []).length && !FORCE) {
+  const A = concentration(D), B = CONC_BEFORE;
+  if (A.dup > B.dup) guardErrors.push("분산: 정식 주제 중복이 " + B.dup + " → " + A.dup + "자리로 늘어난다 — 한 종목은 정식 주제 한 곳에만(§6)");
+  Object.keys(A.groups.korea).forEach((g) => {
+    const a = A.groups.korea[g], b = B.groups.korea[g] || 0;
+    if (a > b && a > 5) guardErrors.push("분산: 한국 " + g + "그룹이 " + b + " → " + a + "종목(상한 5) — 다른 그룹 후보로");
+  });
+  if (A.fin.korea > B.fin.korea && A.fin.korea > 7) guardErrors.push("분산: 한국 금융 업종이 " + B.fin.korea + " → " + A.fin.korea + "종목(상한 7) — 다른 업종 후보로");
+}
 if (guardErrors.length) {
   console.error("✗ 가드레일 위반 " + guardErrors.length + "건 — 저장 취소:");
   guardErrors.forEach((e) => console.error("  - " + e));

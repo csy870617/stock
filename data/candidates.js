@@ -24,7 +24,24 @@ window.CANDIDATES = {
      "note": "ROE 6%·3년 평균 ROIC 5.7%(우량 정체성 미달) — 검증 통과 대체 없음",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-21"
+     "triedAt": "2026-10-21",
+     "since": "2026-10-18",
+     "age": 3
+    },
+    {
+     "ticker": "086790",
+     "name": "하나금융지주",
+     "state": "결격",
+     "verdict": "실질",
+     "flags": [
+      {
+       "k": "dup",
+       "msg": "중복 편성 — 저평가 주제에도 있어 분산이 줄어든다",
+       "fresh": false
+      }
+     ],
+     "note": "중복 편성 — 저평가 주제에 남기고 이 주제는 다른 종목으로 교체",
+     "dup": "value"
     },
     {
      "ticker": "278470",
@@ -40,7 +57,9 @@ window.CANDIDATES = {
      "note": "단·중·장기 신호 모두 매도 이하(추세 붕괴) — 3분기 영업이익 추정 하향(원화 강세·유럽 물류비)으로 증권사 목표가 하향, 매출 성장은 유지돼 기초 체력 훼손은 아님 · 검증 통과 대체 후보 없어 감시",
      "judged": "2026-10-21",
      "verdict": "실질",
-     "triedAt": "2026-10-21"
+     "triedAt": "2026-10-21",
+     "since": "2026-10-21",
+     "age": 0
     }
    ],
    "list": [
@@ -56,6 +75,36 @@ window.CANDIDATES = {
   "korea|growth": {
    "eligible": 46,
    "defects": [
+    {
+     "ticker": "000660",
+     "name": "SK하이닉스",
+     "state": "결격",
+     "verdict": "실질",
+     "flags": [
+      {
+       "k": "dup",
+       "msg": "중복 편성 — 우량 주제에도 있어 분산이 줄어든다",
+       "fresh": false
+      }
+     ],
+     "note": "중복 편성 — 우량 주제에 남기고 이 주제는 다른 종목으로 교체",
+     "dup": "core"
+    },
+    {
+     "ticker": "207940",
+     "name": "삼성바이오로직스",
+     "state": "결격",
+     "verdict": "실질",
+     "flags": [
+      {
+       "k": "dup",
+       "msg": "중복 편성 — 우량 주제에도 있어 분산이 줄어든다",
+       "fresh": false
+      }
+     ],
+     "note": "중복 편성 — 우량 주제에 남기고 이 주제는 다른 종목으로 교체",
+     "dup": "core"
+    },
     {
      "ticker": "298040",
      "name": "효성중공업",
@@ -324,32 +373,32 @@ window.CANDIDATES = {
     {
      "ticker": "000810",
      "name": "삼성화재",
-     "state": "감시",
+     "state": "결격",
+     "verdict": "실질",
      "flags": [
       {
-       "k": "theme",
-       "msg": "주제 기준 미달 — 정체성 조건 미달",
+       "k": "dup",
+       "msg": "중복 편성 — 우량 주제에도 있어 분산이 줄어든다",
        "fresh": false
       }
      ],
-     "note": "주가 상승으로 배당수익률 문턱 경계",
-     "judged": "2026-10-18",
-     "verdict": "형식"
+     "note": "중복 편성 — 우량 주제에 남기고 이 주제는 다른 종목으로 교체",
+     "dup": "core"
     },
     {
      "ticker": "086790",
      "name": "하나금융지주",
-     "state": "감시",
+     "state": "결격",
+     "verdict": "실질",
      "flags": [
       {
-       "k": "theme",
-       "msg": "주제 기준 미달 — 정체성 조건 미달",
+       "k": "dup",
+       "msg": "중복 편성 — 저평가 주제에도 있어 분산이 줄어든다",
        "fresh": false
       }
      ],
-     "note": "주가 상승으로 배당수익률 문턱 경계",
-     "judged": "2026-10-18",
-     "verdict": "형식"
+     "note": "중복 편성 — 저평가 주제에 남기고 이 주제는 다른 종목으로 교체",
+     "dup": "value"
     }
    ],
    "list": [
@@ -422,7 +471,9 @@ window.CANDIDATES = {
      "note": "성장 숫자·PEG 미달 — 품질 최상위라 대체 확보 시 교체",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-21"
+     "triedAt": "2026-10-21",
+     "since": "2026-10-18",
+     "age": 3
     },
     {
      "ticker": "064760",
@@ -438,7 +489,9 @@ window.CANDIDATES = {
      "note": "3년 매출 연평균 -1.9% — 근접 완화선 미달, 대체 후보 소진",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-21"
+     "triedAt": "2026-10-21",
+     "since": "2026-10-18",
+     "age": 3
     },
     {
      "ticker": "403870",
@@ -454,7 +507,9 @@ window.CANDIDATES = {
      "note": "3년 성장 2.8%·1·2분기 매출·영업이익 감소",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-21"
+     "triedAt": "2026-10-21",
+     "since": "2026-10-18",
+     "age": 3
     },
     {
      "ticker": "082920",
@@ -500,40 +555,35 @@ window.CANDIDATES = {
    "eligible": 61,
    "defects": [
     {
+     "ticker": "AMZN",
+     "name": "Amazon",
+     "state": "결격",
+     "verdict": "실질",
+     "flags": [
+      {
+       "k": "dup",
+       "msg": "중복 편성 — 성장 주제에도 있어 분산이 줄어든다",
+       "fresh": false
+      }
+     ],
+     "note": "중복 편성 — 성장 주제에 남기고 이 주제는 다른 종목으로 교체",
+     "dup": "growth"
+    },
+    {
      "ticker": "UNH",
      "name": "UnitedHealth Group",
      "state": "결격",
-     "flags": [
-      {
-       "k": "theme",
-       "msg": "주제 기준 미달 — 정체성 조건 미달",
-       "fresh": false
-      },
-      {
-       "k": "earn",
-       "msg": "실적 발표(10/13) · EPS 서프라이즈 13.8% · 전년 대비 매출 -0.4% — 가이던스·논거 확인",
-       "fresh": false
-      }
-     ],
-     "note": "마진·3년 ROIC 구조적 미달 — 검증 통과 대체 없음",
-     "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-21"
-    },
-    {
-     "ticker": "AMZN",
-     "name": "Amazon",
-     "state": "감시",
      "flags": [
       {
-       "k": "theme",
-       "msg": "주제 기준 미달 — 정체성 조건 미달(3년 평균 ROIC 상위 절반)",
+       "k": "dup",
+       "msg": "중복 편성 — 저평가 주제에도 있어 분산이 줄어든다",
        "fresh": false
       }
      ],
-     "note": "3년 ROIC 문턱 근소 미달",
-     "judged": "2026-10-18",
-     "verdict": "형식"
+     "note": "중복 편성 — 저평가 주제에 남기고 이 주제는 다른 종목으로 교체",
+     "dup": "value",
+     "triedAt": "2026-10-21"
     },
     {
      "ticker": "COST",
@@ -878,6 +928,21 @@ window.CANDIDATES = {
    "eligible": 73,
    "defects": [
     {
+     "ticker": "VZ",
+     "name": "Verizon Communications",
+     "state": "결격",
+     "verdict": "실질",
+     "flags": [
+      {
+       "k": "dup",
+       "msg": "중복 편성 — 저평가 주제에도 있어 분산이 줄어든다",
+       "fresh": false
+      }
+     ],
+     "note": "중복 편성 — 저평가 주제에 남기고 이 주제는 다른 종목으로 교체",
+     "dup": "value"
+    },
+    {
      "ticker": "KO",
      "name": "Coca-Cola",
      "state": "감시",
@@ -1020,7 +1085,9 @@ window.CANDIDATES = {
      "note": "⑨ 세액공제(45X) 의존 · 최근 낙폭은 회사 고유 악재 미확인(10/28 실적 발표 예정)",
      "judged": "2026-10-21",
      "verdict": "실질",
-     "triedAt": "2026-10-21"
+     "triedAt": "2026-10-21",
+     "since": "2026-10-21",
+     "age": 0
     },
     {
      "ticker": "NVT",
@@ -1041,7 +1108,9 @@ window.CANDIDATES = {
      "note": "⑤ 재무 안전 조건 미달 — 미국 히든 후보 풀 소진",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-21"
+     "triedAt": "2026-10-21",
+     "since": "2026-10-18",
+     "age": 3
     },
     {
      "ticker": "FSS",
@@ -1057,7 +1126,9 @@ window.CANDIDATES = {
      "note": "⑤ 재무 안전 조건 미달 — 미국 히든 후보 풀 소진",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-21"
+     "triedAt": "2026-10-21",
+     "since": "2026-10-18",
+     "age": 3
     },
     {
      "ticker": "MKSI",
@@ -1078,7 +1149,9 @@ window.CANDIDATES = {
      "note": "⑤ 재무 안전 조건 미달 — 미국 히든 후보 풀 소진",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-21"
+     "triedAt": "2026-10-21",
+     "since": "2026-10-18",
+     "age": 3
     },
     {
      "ticker": "AAON",
@@ -1099,7 +1172,9 @@ window.CANDIDATES = {
      "note": "⑤ 재무 안전 조건 미달 — 미국 히든 후보 풀 소진",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-21"
+     "triedAt": "2026-10-21",
+     "since": "2026-10-18",
+     "age": 3
     },
     {
      "ticker": "RBC",
@@ -1115,7 +1190,9 @@ window.CANDIDATES = {
      "note": "⑤ 재무 안전 조건 미달 — 미국 히든 후보 풀 소진",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-21"
+     "triedAt": "2026-10-21",
+     "since": "2026-10-18",
+     "age": 3
     },
     {
      "ticker": "NVMI",
@@ -1177,8 +1254,10 @@ window.CANDIDATES = {
  },
  "summary": {
   "review": 0,
-  "defect": 12,
-  "watch": 17,
-  "untried": 0
+  "defect": 19,
+  "watch": 14,
+  "untried": 7,
+  "dup": 8,
+  "long": 0
  }
 };

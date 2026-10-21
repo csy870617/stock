@@ -149,6 +149,20 @@ function link(c, r) {
   return "https://finance.yahoo.com/quote/" + encodeURIComponent(r.ticker);
 }
 
+// 중복 편성(2026-10-21 사용자 승인 — 분산 가드레일): 같은 종목이 정식 주제 2곳 이상에 있으면 tier 가 높은(숫자 작은) 곳 하나만 남기고
+// 나머지 자리는 '중복' 결격으로 올린다(검색 없이 확정 — 같은 주제 후보로 교체). 동률이면 주제 순서(우량→성장→저평가→배당→히든).
+const THEME_KO = { core: "우량", growth: "성장", value: "저평가", dividend: "배당", rising: "히든" };
+const DUP = {};
+COUNTRIES.forEach((c) => {
+  const occ = {};
+  D[c].filter((s) => THEMES.includes(s.theme)).forEach((s) => { (occ[s.ticker] = occ[s.ticker] || []).push(s); });
+  Object.keys(occ).forEach((t) => {
+    if (occ[t].length < 2) return;
+    const keep = occ[t].slice().sort((a, b) => (a.tier - b.tier) || (THEMES.indexOf(a.theme) - THEMES.indexOf(b.theme)))[0];
+    occ[t].forEach((s) => { if (s !== keep) DUP[c + ":" + s.theme + ":" + t] = keep.theme; });
+  });
+});
+const LONG_DAYS = 14, LONGER_DAYS = 28;   // 실질 결격이 대체 없이 남은 기간 — 14일: 후보 범위 확대, 28일: 스크린 적격 후보로 교체(CLAUDE.md §3-7)
 const groups = {}, queue = { review: [], swap: [], formal: 0 };
 let baselineTouched = 0;
 COUNTRIES.forEach((c) => THEMES.forEach((th) => {
@@ -165,6 +179,15 @@ COUNTRIES.forEach((c) => THEMES.forEach((th) => {
     const row = (sg.incumbents || []).find((r) => r.ticker === s.ticker);
     const fl = flagsFor(c, th, s, row);
     const v = verdicts[s.ticker];
+    const dupKeep = DUP[c + ":" + th + ":" + s.ticker];
+    if (dupKeep) {
+      const d = { ticker: s.ticker, name: s.name, state: "결격", verdict: "실질",
+        flags: [{ k: "dup", msg: "중복 편성 — " + THEME_KO[dupKeep] + " 주제에도 있어 분산이 줄어든다", fresh: false }],
+        note: "중복 편성 — " + THEME_KO[dupKeep] + " 주제에 남기고 이 주제는 다른 종목으로 교체", dup: dupKeep };
+      if (v && v.triedAt) d.triedAt = v.triedAt;
+      defects.push(d); queue.swap.push({ g, d });
+      return;
+    }
     if (v && opts.baseline && !v.flags) { v.flags = fl.map((x) => x.k); baselineTouched++; }
     const covered = v && v.flags ? new Set(v.flags) : new Set();
     const fresh = fl.filter((x) => !covered.has(x.k));
@@ -181,6 +204,11 @@ COUNTRIES.forEach((c) => THEMES.forEach((th) => {
     if (v && v.triedAt) d.triedAt = v.triedAt;
     if (v && v.by) d.by = v.by;   // 판정 주체 — "ai"(ai-defects.js) 면 앱이 'AI 판정'으로 표시
     if (PROTECT.has(c + ":" + s.ticker)) d.prot = true;
+    if (state === "결격") {   // 대체 없이 남은 기간 — since(처음 실질 판정일)가 없으면 판정일
+      const since = (v && (v.since || v.asOf)) || T;
+      d.since = since; d.age = Math.max(0, dayDiff(T, since));
+      if (d.age >= LONG_DAYS) d.long = d.age >= LONGER_DAYS ? 2 : 1;
+    }
     defects.push(d);
     if (state === "점검 필요") queue.review.push({ g, d, hard: fresh.some((x) => x.hard) });
     if (state === "결격") queue.swap.push({ g, d });
@@ -226,7 +254,8 @@ if (opts.baseline && baselineTouched) {
 
 const outObj = { asOf: today, T, screenAsOf: SC.asOf || null, screenFresh: !!screenFresh, groups,
   summary: { review: queue.review.length, defect: queue.swap.length, watch: queue.formal,
-    untried: queue.swap.filter((x) => !(x.d.triedAt >= T)).length } };
+    untried: queue.swap.filter((x) => !(x.d.triedAt >= T)).length,
+    dup: queue.swap.filter((x) => x.d.dup).length, long: queue.swap.filter((x) => x.d.long).length } };
 fs.writeFileSync(OUT,
   "// 주제별 후보 종목 + 편성 결격 점검 — scripts/check-defects.js 가 생성(LLM 토큰 0). 앱 '추천 종목' 주제 화면의 T3 아래 '후보 종목'.\n" +
   "// groups[\"<country>|<theme>\"] = {defects 편성 결격(state 결격|점검 필요|감시), list 후보(status 검증 통과|보류|검증 대기)}\n" +
@@ -245,7 +274,8 @@ if (queue.swap.length) {
   console.log("\n[결격 — 교체 대기] 그룹의 '검증 통과' 후보부터 최종 확인 후 교체(§5·§3-7)");
   queue.swap.forEach((x) => {
     const ready = groups[x.g].list.filter((y) => y.status === "검증 통과").map((y) => y.name + "(" + y.ticker + ")");
-    console.log("  " + x.g + " " + x.d.ticker + " " + x.d.name + (x.d.triedAt >= T ? " [교체 시도 " + x.d.triedAt + "]" : " [오늘 교체 시도 필요]") + " — " + (x.d.note || "") + " · 대체 " + (ready.length ? ready.join(", ") : "검증 통과 후보 없음 → 스크린 상위 검증"));
+    const esc = x.d.long === 2 ? " ★" + x.d.age + "일째 — 스크린 적격 후보로 교체(§3-7 28일 규칙)" : x.d.long === 1 ? " ☆" + x.d.age + "일째 — 후보 범위 확대(스크린 26~50위·근접·인접 주제)" : "";
+    console.log("  " + x.g + " " + x.d.ticker + " " + x.d.name + (x.d.triedAt >= T ? " [교체 시도 " + x.d.triedAt + "]" : " [오늘 교체 시도 필요]") + esc + " — " + (x.d.note || "") + " · 대체 " + (ready.length ? ready.join(", ") : "검증 통과 후보 없음 → 스크린 상위 검증"));
   });
 }
 if (opts.gate && (outObj.summary.review || outObj.summary.untried)) process.exit(1);

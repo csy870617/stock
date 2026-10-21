@@ -2834,6 +2834,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   function defectText(d) {
     var head = d.state === "결격" ? "결격 — 검증을 통과한 후보가 생기면 바로 교체합니다." : d.state === "점검 필요" ? "결격 여부를 점검하고 있습니다(매일 자동 점검 → 다음 업데이트에서 판정)." : "감시 중(교체 대상 아님).";
     var why = d.note ? [d.note + (d.by === "ai" ? " (AI 판정)" : "")] : [];
+    if (d.long) why.push("대체 후보 없이 " + d.age + "일째 — " + (d.long === 2 ? "스크린 기준을 통과한 후보로 교체를 진행합니다" : "후보 범위를 넓혀 찾는 중입니다"));
     (d.flags || []).forEach(function (f) { if (f.fresh || !d.note) why.push(f.msg); });
     return head + (why.length ? "\n· " + why.join("\n· ") : "");
   }
@@ -3318,8 +3319,45 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   }
   function renderPerf() {
     renderPerfChips();
-    document.getElementById("perfBody").innerHTML = perfView(state.country);
+    document.getElementById("perfBody").innerHTML = shadowBlk(state.country) + perfView(state.country);
     markActiveRow();
+    loadShadow();
+  }
+  // ── 판단 검증 — 추천 편성 vs 그림자 포트폴리오(스크린 상위를 기계적으로 고른 편성, scripts/shadow-track.js) ──
+  //   2026-10-21 시작(같은 날 선정 규칙 동결). 추천이 그림자보다 꾸준히 나아야 '사람의 판단'이 가치를 더한 것이다.
+  var SHADOW = null, shadowReq = false;
+  function loadShadow() {
+    if (SHADOW || shadowReq || typeof fetch !== "function") return;
+    shadowReq = true;
+    fetch("data/shadow.json", { cache: "no-cache" }).then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) { if (j) { SHADOW = j; if (state.tab === "perf") renderPerf(); } }).catch(function (e) { if (window.console) console.warn("shadow.json", e); });
+  }
+  function sTile(k, v, sign, tip) {   // 성과 요약 칸과 같은 모양(그쪽 pTile 은 함수 안에 있어 따로 둔다)
+    var cls = sign == null ? "" : (sign > 0 ? " up" : (sign < 0 ? " down" : ""));
+    return '<div class="tile"' + (tip ? ' data-basis="' + esc(tip) + '"' : "") + '><div class="k">' + esc(k) +
+      (tip ? '<i class="kv-i">' + ICON.info + "</i>" : "") + '</div><div class="v' + cls + '">' + v + "</div></div>";
+  }
+  function shadowBlk(c) {
+    var C = SHADOW && SHADOW[c], sm = C && C.summary;
+    if (!C || !C.series || !C.series.length) return "";
+    var f = sm && sm.formal, sh = sm && sm.shadow, bName = c === "korea" ? "KOSPI" : "S&P500";
+    var TIP = "그림자 포트폴리오: 같은 스크린(주제 정의·건전성 필터·검증된 점수)에서 점수 상위를 사람 판단 없이 주제마다 9개씩 기계적으로 고른 편성(매주 월요일 재선정, 동일비중). " +
+      "추천 편성과 같은 날·같은 방식(끝난 장 종가, 동일비중 일별 연결)으로 잽니다. 추천이 그림자보다 꾸준히 앞서야 세션의 검증·판단이 실제로 가치를 더한 것입니다. " +
+      "기간이 짧으면 차이는 우연일 수 있습니다 — 최소 3개월은 지켜봐야 합니다.";
+    var body;
+    if (!f || C.series.length < 2) {
+      body = '<p class="perf-desc">' + esc(mdOf(C.series[0].d)) + " 종가부터 기록을 시작했습니다 — 다음 거래일부터 숫자가 쌓입니다.</p>";
+    } else {
+      body = '<div class="tiles">' +
+        sTile("추천 편성", fmtPct(f.ret), f.ret) +
+        sTile("그림자(기계적 선정)", fmtPct(sh.ret), sh.ret) +
+        sTile("판단의 기여", fmtPct(sm.edge), sm.edge, "추천 편성 수익률 − 그림자 수익률. 양(+)이면 사람의 검증·판단이 기계적 선정보다 나았다는 뜻입니다.") +
+        sTile(bName, fmtPct(f.idx), f.idx) +
+        (f.betaAlpha != null ? sTile("β 반영 초과 (β " + f.beta.toFixed(2) + ")", fmtPct(f.betaAlpha), f.betaAlpha, "시장 민감도(β×지수) 몫을 뺀 선별 효과 — 6주 이상 쌓이면 계산됩니다.") : "") +
+        "</div>" + '<div class="perf-note">' + esc(mdOf(f.from)) + " ~ " + esc(mdOf(f.to)) + " · " + (C.series.length - 1) + "거래일 · 선정 규칙은 2026-10-21부터 동결(3개월)</div>";
+    }
+    return pBlk("판단 검증", "추천 vs 기계적 선정", body.replace('<p class="perf-desc">', '<p class="perf-desc">') +
+      '<p class="perf-note">ⓘ <button class="lnk" type="button" data-basis="' + esc(TIP) + '">그림자 포트폴리오란?</button></p>');
   }
 
   // 실시간 시세가 도착하면 보이는 화면(현재 탭·Top Pick·열린 상세)을 다시 그려 표시를 일치시킨다.
