@@ -1001,6 +1001,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
         s.priceUnverified = false; // 실제 시세 확보 → '현재가 확인 필요' 마크 해제
         s.priceDate = q.date || s.priceDate;
         s.changePct = (typeof q.changePct === "number" && isFinite(q.changePct)) ? q.changePct : null; // 전일 대비 일간 등락률
+        if (typeof q.close === "number" && isFinite(q.close) && q.closeDate) { s._close = q.close; s._closeDate = q.closeDate; }   // 마지막으로 끝난 정규장 종가(장중 등락률 계산용)
         s.upside = (s.targetPrice != null && q.price)
           ? (s.targetPrice - q.price) / q.price * 100 : s.upside;
       });
@@ -1651,7 +1652,10 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
         var any = false;
         todo.forEach(function (s) {
           var v = map && map[symbolFor(s)];
-          if (v && typeof v.price === "number" && isFinite(v.price)) { liveCache[s.ticker] = { price: v.price, date: v.date }; any = true; }
+          if (v && typeof v.price === "number" && isFinite(v.price)) {
+            liveCache[s.ticker] = { price: v.price, date: v.date, chg: typeof v.changePct === "number" && isFinite(v.changePct) ? v.changePct : null };
+            any = true;
+          }
           else { liveCache[s.ticker] = null; }   // 응답에 없으면 스냅샷 유지
           delete liveInflight[s.ticker];
         });
@@ -1688,14 +1692,29 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   }
   function isKrStock(s) { return s.market === "KOSPI" || s.market === "KOSDAQ" || /^\d{6}$/.test(s.ticker || ""); }
 
+  // 시세 서버 값의 전일 대비 등락률 — ①서버가 준 값(야후 전일 종가 대비) ②스냅샷의 마지막 종가가 바로 앞 평일이면 그 종가 대비로 계산
+  // ③시세 날짜가 스냅샷과 같으면 스냅샷 등락률 ④그 밖엔 기준을 모르므로 비운다(엉뚱한 날 기준 등락률을 보이지 않는다)
+  function prevWeekday(d) {
+    var t = Date.parse(d + "T00:00:00Z"); if (isNaN(t)) return null;
+    do { t -= 86400000; } while (new Date(t).getUTCDay() === 0 || new Date(t).getUTCDay() === 6);
+    return new Date(t).toISOString().slice(0, 10);
+  }
+  function liveChg(s, lv) {
+    if (lv.chg != null) return lv.chg;
+    if (!lv.date) return s.changePct;
+    if (s._close && s._closeDate && s._closeDate < lv.date && prevWeekday(lv.date) === s._closeDate) return (lv.price / s._close - 1) * 100;
+    if (lv.date === s.priceDate) return s.changePct;
+    return null;
+  }
+
   // 종목의 "표시용" 현재가·상승여력 — 시세 서버 값이 있으면 그것으로(장중이면 live), 없으면 스냅샷으로
   function effective(s) {
     var lv = liveCache[s.ticker];
     if (lv && lv.price != null && liveFresh(lv.date)) {
       var up = (s.targetPrice != null && lv.price) ? (s.targetPrice - lv.price) / lv.price * 100 : s.upside;
-      return { price: lv.price, priceDate: lv.date || s.priceDate, upside: up, live: inSession(isKrStock(s), lv.date), fetched: true };
+      return { price: lv.price, priceDate: lv.date || s.priceDate, upside: up, live: inSession(isKrStock(s), lv.date), fetched: true, chg: liveChg(s, lv) };
     }
-    return { price: s.price, priceDate: s.priceDate, upside: s.upside, live: false };
+    return { price: s.price, priceDate: s.priceDate, upside: s.upside, live: false, chg: s.changePct };
   }
 
   // ── 과거 시계열 레이어 (성과 기간별 비교용 — 신뢰할 만한 기간의 실제 일봉 종가) ──
@@ -2422,7 +2441,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     var meta = (e.live ? '<span class="live-tx" title="장중 시세 — 거래소·시세 서버 사정으로 최대 20분가량 늦을 수 있습니다"><i class="live-dot"></i>장중</span>'
       : esc(e.priceDate || D.generatedAt) + " 종가" + (sd >= 7 ? " (" + sd + "일 전)" : "")) + " · 전일 대비";
     var badges = detailBadges(s, c, e), alerts = detailAlerts(s, c, e);
-    var top = '<div class="dt-top"><div class="dt-pxl"><span class="dt-pv">' + esc(fmtPrice(e.price, c)) + "</span>" + chgHtml(s.changePct, "dt-ch") + "</div>" +
+    var top = '<div class="dt-top"><div class="dt-pxl"><span class="dt-pv">' + esc(fmtPrice(e.price, c)) + "</span>" + chgHtml(e.chg, "dt-ch") + "</div>" +
       '<div class="dt-meta">' + meta + "</div>" + (badges ? '<div class="dt-bd">' + badges + "</div>" : "") + alerts + "</div>";
     var why = it && it.why ? '<div class="dt-why"><span class="dt-why-k">Top Pick 선정 이유</span>' + esc(it.why) + "</div>" : "";
     var sig = (n.sigShort || n.sigMid || n.sigLong) ? '<div class="dt-sig">' + [["단기", n.sigShort, "일봉"], ["중기", n.sigMid, "주봉"], ["장기", n.sigLong, "월봉"]].map(function (p) {
@@ -2489,7 +2508,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     var top;
     if (d === undefined || d === "loading") top = '<div class="dt-top"><div class="dt-meta">시세 불러오는 중…</div></div>';
     else if (d === null) top = '<div class="dt-top"><div class="dt-meta">시세를 불러오지 못했습니다 — 코드·시장(한국/미국)을 확인해 주세요.</div></div>';
-    else top = '<div class="dt-top"><div class="dt-pxl"><span class="dt-pv">' + esc(fmtPrice(d.price, c)) + "</span>" + chgHtml(chgNum(d.ta && d.ta.change), "dt-ch") + "</div>" +
+    else top = '<div class="dt-top"><div class="dt-pxl"><span class="dt-pv">' + esc(fmtPrice(d.price, c)) + "</span>" + chgHtml((d.chg != null ? d.chg : chgNum(d.ta && d.ta.change)), "dt-ch") + "</div>" +
       '<div class="dt-meta">' + (inSession(c === "korea", d.date) ? '<span class="live-tx" title="장중 시세 — 최대 20분가량 늦을 수 있습니다"><i class="live-dot"></i>장중</span>'
         : esc(d.date || "최근") + " 종가") + " · 전일 대비</div>" +
       '<div class="dt-bd"><span class="bd">' + esc(pm.badge) + '</span><span class="bd">분석 전</span></div></div>';
@@ -2766,7 +2785,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       '<div class="r-l"><div class="r-nm"><span class="r-name">' + esc(s.name) + "</span>" + flags + "</div>" +
         '<div class="r-sub">' + tag + "<span>" + sub.join(" · ") + "</span></div></div>" +
       sigStrip(s.techNote || {}) +
-      '<div class="r-r"><div class="r-px">' + pxText(e.price, c) + (e.live ? '<i class="live-dot" title="장중 시세(지연 가능)"></i>' : "") + "</div>" + chgHtml(s.changePct, "r-ch") + "</div>" +
+      '<div class="r-r"><div class="r-px">' + pxText(e.price, c) + (e.live ? '<i class="live-dot" title="장중 시세(지연 가능)"></i>' : "") + "</div>" + chgHtml(e.chg, "r-ch") + "</div>" +
       (o.edit && o.k ? '<button class="r-del" type="button" data-wl="' + esc(o.k + "|" + c + "|" + s.ticker) + '" aria-label="' + esc(plist(o.k).label + " 목록에서 빼기") + '">' + ICON.x + "</button>" : "") +
     "</div>";
   }
@@ -2783,7 +2802,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       (o.edit ? '<span class="r-grip" title="끌어서 순서 바꾸기">' + ICON.grip + "</span>" : "") +
       '<div class="r-l"><div class="r-nm"><span class="r-name">' + esc(item.n || item.t) + "</span></div>" +
         '<div class="r-sub"><span class="wtag wt-light">' + esc(plist(item.k).label) + "</span><span>" + esc(item.t) + " · " + esc(st) + "</span></div></div>" +
-      '<div class="r-r"><div class="r-px">' + (ok ? pxText(d.price, item.c) : "–") + "</div>" + chgHtml(ok ? chgNum(d.ta && d.ta.change) : null, "r-ch") + "</div>" +
+      '<div class="r-r"><div class="r-px">' + (ok ? pxText(d.price, item.c) : "–") + "</div>" + chgHtml(ok ? (d.chg != null ? d.chg : chgNum(d.ta && d.ta.change)) : null, "r-ch") + "</div>" +
       (o.edit ? '<button class="r-del" type="button" data-wl="' + esc(item.k + "|" + item.c + "|" + item.t) + '" aria-label="' + esc(plist(item.k).label + " 목록에서 빼기") + '">' + ICON.x + "</button>" : "") +
     "</div>";
   }
@@ -2802,7 +2821,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       '<span class="pk-n">' + n + "</span>" +
       '<div class="r-l"><div class="r-nm"><span class="r-name">' + esc(s.name) + '</span><span class="pk-th">' + esc(themeMeta(s.theme).label) + " · T" + esc(s.tier) + "</span></div>" +
         (reason ? '<div class="pk-why">' + esc(reason) + "</div>" : '<div class="r-sub"><span>' + esc(s.ticker) + "</span></div>") + "</div>" +
-      '<div class="r-r"><div class="r-px">' + pxText(e.price, cc) + (e.live ? '<i class="live-dot" title="장중 시세(지연 가능)"></i>' : "") + "</div>" + chgHtml(s.changePct, "r-ch") + "</div>" +
+      '<div class="r-r"><div class="r-px">' + pxText(e.price, cc) + (e.live ? '<i class="live-dot" title="장중 시세(지연 가능)"></i>' : "") + "</div>" + chgHtml(e.chg, "r-ch") + "</div>" +
     "</div>";
   }
   // 국가별 상위 3 폴백(큐레이션 데이터 없을 때) — 그 국가 정식 추천 중 종합점수 상위 3
@@ -3424,7 +3443,8 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
         var price = pv && typeof pv.price === "number" && isFinite(pv.price) ? pv.price : closes[closes.length - 1];
         var date = pv && pv.date ? pv.date : (dates.length ? dates[dates.length - 1] : "");
         // closes·dates 는 상세의 종가 선 차트가 쓴다(시세만 있는 종목 — 시·고·저가 없다)
-        wlCache[key] = { sym: sym, price: price, date: date, ta: ta, closes: closes, dates: dates };
+        wlCache[key] = { sym: sym, price: price, date: date, ta: ta, closes: closes, dates: dates,
+          chg: pv && typeof pv.changePct === "number" && isFinite(pv.changePct) ? pv.changePct : null };   // 시세 서버의 전일 대비(장중 기준)
         if (onDone) onDone();
       }).catch(function () { tryIdx(i + 1); });
     })(0);

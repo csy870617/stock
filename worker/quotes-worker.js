@@ -9,7 +9,7 @@
 //   배포되면 https://stock-quotes.<계정>.workers.dev 주소가 나온다 → data/config.js 의 quotesApi 에 입력.
 //
 // 사용 예: GET https://stock-quotes.<계정>.workers.dev/?symbols=005930.KS,AAPL,^KS11
-// 응답 예: {"005930.KS":{"price":71900,"date":"2026-07-04"},"AAPL":{"price":250.1,"date":"2026-07-03"}}
+// 응답 예: {"005930.KS":{"price":71900,"date":"2026-07-04","prevClose":70500,"changePct":1.99},"AAPL":{"price":250.1,"date":"2026-07-03",…}}
 //
 // ── 과거 시계열(기술적 분석용) ──
 // GET …/?symbols=005930.KS,AAPL&history=1&range=6mo
@@ -48,7 +48,12 @@ async function oneQuote(sym) {
     const off = (m.gmtoffset || 0) * 1000;               // 거래소 현지시각 기준 날짜
     date = new Date(m.regularMarketTime * 1000 + off).toISOString().slice(0, 10);
   }
-  return { price: m.regularMarketPrice, date };
+  // 전일 대비 등락률 — 장중엔 장중가 기준(정규장 전일 종가 대비). 야후 meta 의 regularMarketChangePercent(없으면 chartPreviousClose 로 계산)
+  const prev = typeof m.chartPreviousClose === "number" && isFinite(m.chartPreviousClose) && m.chartPreviousClose > 0 ? m.chartPreviousClose : null;
+  let changePct = typeof m.regularMarketChangePercent === "number" && isFinite(m.regularMarketChangePercent) ? m.regularMarketChangePercent
+    : prev ? (m.regularMarketPrice / prev - 1) * 100 : null;
+  if (changePct != null) changePct = Math.round(changePct * 100) / 100;
+  return { price: m.regularMarketPrice, date, prevClose: prev, changePct };
 }
 
 async function oneHistory(sym, range) {
