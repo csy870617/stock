@@ -46,6 +46,7 @@ window.CANDIDATES = {
      ],
      "note": "중복 편성 — 저평가 주제에 남기고 이 주제는 다른 종목으로 교체",
      "dup": "value",
+     "triedAt": "2026-10-21",
      "since": "2026-10-21",
      "age": 0
     },
@@ -53,13 +54,7 @@ window.CANDIDATES = {
      "ticker": "278470",
      "name": "에이피알",
      "state": "결격",
-     "flags": [
-      {
-       "k": "trend",
-       "msg": "추세 붕괴(단·중·장기 모두 매도 이하)",
-       "fresh": false
-      }
-     ],
+     "flags": [],
      "note": "단·중·장기 신호 모두 매도 이하(추세 붕괴) — 3분기 영업이익 추정 하향(원화 강세·유럽 물류비)으로 증권사 목표가 하향, 매출 성장은 유지돼 기초 체력 훼손은 아님 · 검증 통과 대체 후보 없어 감시",
      "judged": "2026-10-21",
      "verdict": "실질",
@@ -83,23 +78,6 @@ window.CANDIDATES = {
    "eligible": 46,
    "defects": [
     {
-     "ticker": "000660",
-     "name": "SK하이닉스",
-     "state": "결격",
-     "verdict": "실질",
-     "flags": [
-      {
-       "k": "dup",
-       "msg": "중복 편성 — 우량 주제에도 있어 분산이 줄어든다",
-       "fresh": false
-      }
-     ],
-     "note": "중복 편성 — 우량 주제에 남기고 이 주제는 다른 종목으로 교체",
-     "dup": "core",
-     "since": "2026-10-21",
-     "age": 0
-    },
-    {
      "ticker": "207940",
      "name": "삼성바이오로직스",
      "state": "결격",
@@ -113,6 +91,7 @@ window.CANDIDATES = {
      ],
      "note": "중복 편성 — 우량 주제에 남기고 이 주제는 다른 종목으로 교체",
      "dup": "core",
+     "triedAt": "2026-10-21",
      "since": "2026-10-21",
      "age": 0
     },
@@ -127,6 +106,15 @@ window.CANDIDATES = {
     }
    ],
    "list": [
+    {
+     "ticker": "103590",
+     "name": "일진전기",
+     "status": "검증 통과",
+     "note": "2분기 영업이익 +91%·북미 수주잔고 확대 — 성장 편성 전력기기가 이미 3종목이라 다른 업종 결격 자리엔 후순위",
+     "asOf": "2026-10-21",
+     "why": "3년 매출 연평균 20.6% · FCF 마진 3% · 3년 평균 ROIC 11.8%",
+     "url": "https://m.stock.naver.com/domestic/stock/103590/total"
+    },
     {
      "ticker": "443060",
      "name": "HD현대마린솔루션",
@@ -157,15 +145,6 @@ window.CANDIDATES = {
      "url": "https://m.stock.naver.com/domestic/stock/010140/total"
     },
     {
-     "ticker": "103590",
-     "name": "일진전기",
-     "status": "보류",
-     "note": "FCF 마진·ROIC 약함, 편성 전력기기 2종목과 겹침 — 효성중공업 결격 시 1순위",
-     "asOf": "2026-10-18",
-     "why": "3년 매출 연평균 20.6% · FCF 마진 3% · 3년 평균 ROIC 11.8%",
-     "url": "https://m.stock.naver.com/domestic/stock/103590/total"
-    },
-    {
      "ticker": "161890",
      "name": "한국콜마",
      "status": "보류",
@@ -173,15 +152,6 @@ window.CANDIDATES = {
      "asOf": "2026-10-18",
      "why": "3년 매출 연평균 13.4% · FCF 마진 4.7% · 3년 평균 ROIC 7.5%",
      "url": "https://m.stock.naver.com/domestic/stock/161890/total"
-    },
-    {
-     "ticker": "010120",
-     "name": "LS ELECTRIC",
-     "status": "보류",
-     "note": "FCF 마진·ROIC 약함, 지배구조 미확인",
-     "asOf": "2026-10-18",
-     "why": "3년 매출 연평균 13.7% · FCF 마진 2% · 3년 평균 ROIC 9.6%",
-     "url": "https://m.stock.naver.com/domestic/stock/010120/total"
     },
     {
      "ticker": "079550",
@@ -229,6 +199,14 @@ window.CANDIDATES = {
      "status": "검증 대기",
      "why": "3년 매출 연평균 -4.6% · FCF 마진 7.5% · 3년 평균 ROIC 3.4%",
      "url": "https://m.stock.naver.com/domestic/stock/011780/total"
+    },
+    {
+     "ticker": "028050",
+     "name": "삼성E&A",
+     "status": "검증 대기",
+     "why": "3년 매출 연평균 -3.5% · FCF 마진 2.2% · 3년 평균 ROIC 17.3%",
+     "cap": "삼성그룹 상한",
+     "url": "https://m.stock.naver.com/domestic/stock/028050/total"
     }
    ]
   },
@@ -400,36 +378,20 @@ window.CANDIDATES = {
      ],
      "note": "중복 편성 — 우량 주제에 남기고 이 주제는 다른 종목으로 교체",
      "dup": "core",
-     "since": "2026-10-21",
-     "age": 0
-    },
-    {
-     "ticker": "086790",
-     "name": "하나금융지주",
-     "state": "결격",
-     "verdict": "실질",
-     "flags": [
-      {
-       "k": "dup",
-       "msg": "중복 편성 — 저평가 주제에도 있어 분산이 줄어든다",
-       "fresh": false
-      }
-     ],
-     "note": "중복 편성 — 저평가 주제에 남기고 이 주제는 다른 종목으로 교체",
-     "dup": "value",
+     "triedAt": "2026-10-21",
      "since": "2026-10-21",
      "age": 0
     }
    ],
    "list": [
     {
-     "ticker": "030200",
-     "name": "KT",
+     "ticker": "383220",
+     "name": "F&F",
      "status": "보류",
-     "note": "1·2분기 영업이익 감소, 신뢰 컨센 2출처 없음 — 3분기 회복·분기 배당 유지 시 비금융 1순위",
-     "asOf": "2026-10-18",
-     "why": "배당 비감소 2년 · 배당성향 33.6% · 배당 4.9%",
-     "url": "https://m.stock.naver.com/domestic/stock/030200/total"
+     "note": "2분기 실적 부진·단일 브랜드 의존·인수 검토 — 3분기 중국 회복과 인수 철회 확인 시",
+     "asOf": "2026-10-21",
+     "why": "배당 비감소 4년 · 배당성향 25.4% · 배당 4.1%",
+     "url": "https://m.stock.naver.com/domestic/stock/383220/total"
     },
     {
      "ticker": "003690",
@@ -452,28 +414,12 @@ window.CANDIDATES = {
      "url": "https://m.stock.naver.com/domestic/stock/031210/total"
     },
     {
-     "ticker": "030000",
-     "name": "제일기획",
-     "status": "보류",
-     "note": "2026년 이익 감소 전망",
-     "asOf": "2026-10-18",
-     "why": "배당 비감소 2년 · 배당성향 60% · 배당 6.3%",
-     "url": "https://m.stock.naver.com/domestic/stock/030000/total"
-    },
-    {
      "ticker": "024110",
      "name": "기업은행",
      "status": "검증 대기",
      "why": "배당 비감소 0년 · 배당성향 30.8% · 배당 5.3%",
      "cap": "금융 상한",
      "url": "https://m.stock.naver.com/domestic/stock/024110/total"
-    },
-    {
-     "ticker": "004800",
-     "name": "효성",
-     "status": "검증 대기",
-     "why": "배당 비감소 1년 · 배당성향 25.3% · 배당 4.1%",
-     "url": "https://m.stock.naver.com/domestic/stock/004800/total"
     }
    ]
   },
@@ -578,23 +524,6 @@ window.CANDIDATES = {
    "eligible": 61,
    "defects": [
     {
-     "ticker": "AMZN",
-     "name": "Amazon",
-     "state": "결격",
-     "verdict": "실질",
-     "flags": [
-      {
-       "k": "dup",
-       "msg": "중복 편성 — 성장 주제에도 있어 분산이 줄어든다",
-       "fresh": false
-      }
-     ],
-     "note": "중복 편성 — 성장 주제에 남기고 이 주제는 다른 종목으로 교체",
-     "dup": "growth",
-     "since": "2026-10-21",
-     "age": 0
-    },
-    {
      "ticker": "UNH",
      "name": "UnitedHealth Group",
      "state": "결격",
@@ -633,8 +562,8 @@ window.CANDIDATES = {
      "ticker": "CB",
      "name": "Chubb",
      "status": "보류",
-     "note": "컨센 목표가가 현재가 수준(편입 즉시 소진)·금융 편중 — 3분기 뒤 목표가 상향 시 UNH 자리 후보",
-     "asOf": "2026-10-18",
+     "note": "3분기 핵심 EPS 예상 상회, 보험료 성장 둔화 — 3분기 뒤 목표가 상향 확인 시 UNH 자리 1순위",
+     "asOf": "2026-10-21",
      "why": "매출 성장 6.5% · 주식 수 연 -1.7%",
      "url": "https://m.stock.naver.com/worldstock/stock/CB/total"
     },
@@ -646,13 +575,6 @@ window.CANDIDATES = {
      "asOf": "2026-10-12",
      "why": "매출 성장 15.6%",
      "url": "https://m.stock.naver.com/worldstock/stock/ASML.O/total"
-    },
-    {
-     "ticker": "BAC",
-     "name": "Bank of America",
-     "status": "검증 대기",
-     "why": "매출 성장 6.8% · 주식 수 연 -3.2%",
-     "url": "https://m.stock.naver.com/worldstock/stock/BAC/total"
     },
     {
      "ticker": "SAN",
@@ -885,6 +807,7 @@ window.CANDIDATES = {
      "note": "방산 중복(GD)·최근 EBIT 감소 원인 미확인",
      "asOf": "2026-10-18",
      "why": "EBIT/EV 5.4% · FCF/시총 5.5% · 매출 성장 5.6%",
+     "alsoIn": "dividend",
      "url": "https://m.stock.naver.com/worldstock/stock/LMT/total"
     },
     {
@@ -955,23 +878,6 @@ window.CANDIDATES = {
    "eligible": 73,
    "defects": [
     {
-     "ticker": "VZ",
-     "name": "Verizon Communications",
-     "state": "결격",
-     "verdict": "실질",
-     "flags": [
-      {
-       "k": "dup",
-       "msg": "중복 편성 — 저평가 주제에도 있어 분산이 줄어든다",
-       "fresh": false
-      }
-     ],
-     "note": "중복 편성 — 저평가 주제에 남기고 이 주제는 다른 종목으로 교체",
-     "dup": "value",
-     "since": "2026-10-21",
-     "age": 0
-    },
-    {
      "ticker": "KO",
      "name": "Coca-Cola",
      "state": "감시",
@@ -1011,9 +917,9 @@ window.CANDIDATES = {
     {
      "ticker": "PG",
      "name": "Procter & Gamble",
-     "status": "보류",
-     "note": "10/22 실적 후 컨센 여유 5% 이상이면 KO·JNJ 대체 1순위(유틸리티 쏠림 완화)",
-     "asOf": "2026-10-18",
+     "status": "검증 통과",
+     "note": "70년 연속 배당 증가·이익 안정 — 10/22 실적 확인 뒤 배당 결격 자리 1순위",
+     "asOf": "2026-10-21",
      "url": "https://finance.yahoo.com/quote/PG"
     },
     {
@@ -1023,14 +929,6 @@ window.CANDIDATES = {
      "note": "추세·컨센 하향 멈춤 확인 시",
      "asOf": "2026-10-18",
      "url": "https://finance.yahoo.com/quote/MCD"
-    },
-    {
-     "ticker": "T",
-     "name": "AT&T",
-     "status": "보류",
-     "note": "VZ 결격 시(10/26 3분기)",
-     "asOf": "2026-10-18",
-     "url": "https://finance.yahoo.com/quote/T"
     },
     {
      "ticker": "BAC",
@@ -1068,13 +966,6 @@ window.CANDIDATES = {
      "url": "https://m.stock.naver.com/worldstock/stock/AMX/total"
     },
     {
-     "ticker": "LMT",
-     "name": "Lockheed Martin",
-     "status": "검증 대기",
-     "why": "배당 비감소 10년 · 배당성향 62.4% · 배당 2.6%",
-     "url": "https://m.stock.naver.com/worldstock/stock/LMT/total"
-    },
-    {
      "ticker": "ING",
      "name": "ING Groep N.V.",
      "status": "검증 대기",
@@ -1094,6 +985,20 @@ window.CANDIDATES = {
      "status": "검증 대기",
      "why": "배당성향 79.6% · 배당 3.4%",
      "url": "https://m.stock.naver.com/worldstock/stock/UL/total"
+    },
+    {
+     "ticker": "CM",
+     "name": "Canadian Imperial Bank of Commerce",
+     "status": "검증 대기",
+     "why": "배당성향 29% · 배당 2.7%",
+     "url": "https://m.stock.naver.com/worldstock/stock/CM/total"
+    },
+    {
+     "ticker": "BAP",
+     "name": "Credicorp",
+     "status": "검증 대기",
+     "why": "배당성향 15.7% · 배당 3.8%",
+     "url": "https://m.stock.naver.com/worldstock/stock/BAP/total"
     }
    ]
   },
@@ -1283,10 +1188,10 @@ window.CANDIDATES = {
  },
  "summary": {
   "review": 0,
-  "defect": 19,
+  "defect": 15,
   "watch": 14,
-  "untried": 7,
-  "dup": 8,
+  "untried": 0,
+  "dup": 4,
   "long": 0
  }
 };
