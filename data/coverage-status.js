@@ -1,8 +1,8 @@
 // 자동 생성 — scripts/coverage.js --emit (refresh-quotes Action, 토큰 0)
 // 앱 상단 '데이터 신선도' 패널이 읽는다. 직접 수정하지 말 것.
 window.COVERAGE_STATUS = {
- "asOf": "2026-10-20",
- "T": "2026-10-20",
+ "asOf": "2026-10-21",
+ "T": "2026-10-21",
  "total": 119,
  "cycleDays": 7,
  "daily": [
@@ -23,30 +23,30 @@ window.COVERAGE_STATUS = {
   {
    "key": "indexNotes",
    "label": "지수 대응",
-   "done": 0,
+   "done": 4,
    "total": 4,
-   "ok": false
+   "ok": true
   },
   {
    "key": "topPicks",
    "label": "Top Pick",
-   "done": 0,
+   "done": 6,
    "total": 6,
-   "ok": false
+   "ok": true
   },
   {
    "key": "liquidity",
    "label": "유동성 판단",
-   "done": 0,
+   "done": 1,
    "total": 1,
-   "ok": false
+   "ok": true
   },
   {
    "key": "market",
    "label": "시황",
-   "done": 0,
+   "done": 1,
    "total": 1,
-   "ok": false
+   "ok": true
   },
   {
    "key": "backbone",
@@ -58,9 +58,9 @@ window.COVERAGE_STATUS = {
   {
    "key": "defects",
    "label": "결격 점검",
-   "done": 0,
+   "done": 1,
    "total": 1,
-   "ok": false
+   "ok": true
   }
  ],
  "rotation": [
@@ -78,7 +78,7 @@ window.COVERAGE_STATUS = {
    "fresh": 10,
    "total": 10,
    "unit": "그룹",
-   "oldestDays": 2,
+   "oldestDays": 3,
    "ok": true
   },
   {
@@ -87,7 +87,7 @@ window.COVERAGE_STATUS = {
    "fresh": 1,
    "total": 1,
    "unit": "회",
-   "oldestDays": 2,
+   "oldestDays": 3,
    "ok": true
   },
   {
@@ -95,7 +95,7 @@ window.COVERAGE_STATUS = {
    "label": "AI 적정가 재시도",
    "fresh": 119,
    "total": 119,
-   "oldestDays": 12,
+   "oldestDays": 13,
    "ok": true
   },
   {
@@ -104,9 +104,9 @@ window.COVERAGE_STATUS = {
    "fresh": 10,
    "total": 10,
    "unit": "그룹",
-   "oldestDays": 2,
+   "oldestDays": 3,
    "ok": true
   }
  ],
- "ok": false
+ "ok": true
 };

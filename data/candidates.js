@@ -3,7 +3,7 @@
 // 세션 판정은 data/candidate-notes.json(CLAUDE.md §3-7) — 이 파일을 직접 고치지 않는다.
 window.CANDIDATES = {
  "asOf": "2026-10-21",
- "T": "2026-10-20",
+ "T": "2026-10-21",
  "screenAsOf": "2026-10-20",
  "screenFresh": true,
  "groups": {
@@ -24,7 +24,23 @@ window.CANDIDATES = {
      "note": "ROE 6%·3년 평균 ROIC 5.7%(우량 정체성 미달) — 검증 통과 대체 없음",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-19"
+     "triedAt": "2026-10-21"
+    },
+    {
+     "ticker": "278470",
+     "name": "에이피알",
+     "state": "결격",
+     "flags": [
+      {
+       "k": "trend",
+       "msg": "추세 붕괴(단·중·장기 모두 매도 이하)",
+       "fresh": false
+      }
+     ],
+     "note": "단·중·장기 신호 모두 매도 이하(추세 붕괴) — 3분기 영업이익 추정 하향(원화 강세·유럽 물류비)으로 증권사 목표가 하향, 매출 성장은 유지돼 기초 체력 훼손은 아님 · 검증 통과 대체 후보 없어 감시",
+     "judged": "2026-10-21",
+     "verdict": "실질",
+     "triedAt": "2026-10-21"
     }
    ],
    "list": [
@@ -40,18 +56,6 @@ window.CANDIDATES = {
   "korea|growth": {
    "eligible": 45,
    "defects": [
-    {
-     "ticker": "329180",
-     "name": "HD현대중공업",
-     "state": "점검 필요",
-     "flags": [
-      {
-       "k": "trend",
-       "msg": "추세 붕괴(단·중·장기 모두 매도 이하)",
-       "fresh": true
-      }
-     ]
-    },
     {
      "ticker": "298040",
      "name": "효성중공업",
@@ -413,17 +417,12 @@ window.CANDIDATES = {
        "k": "theme",
        "msg": "주제 기준 미달 — 매출 성장 미달(3년 4.9%·향후 18.4%), PEG 1.77",
        "fresh": false
-      },
-      {
-       "k": "drop",
-       "msg": "5거래일 -15.2%(시장 중앙값 -2.1%) 급락 — 원인 확인",
-       "fresh": false
       }
      ],
      "note": "성장 숫자·PEG 미달 — 품질 최상위라 대체 확보 시 교체",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-19"
+     "triedAt": "2026-10-21"
     },
     {
      "ticker": "064760",
@@ -434,17 +433,12 @@ window.CANDIDATES = {
        "k": "theme",
        "msg": "주제 기준 미달 — 매출 성장 미달(3년 -1.9%·향후 31.3%)",
        "fresh": false
-      },
-      {
-       "k": "drop",
-       "msg": "5거래일 -18.8%(시장 중앙값 -2.1%) 급락 — 원인 확인",
-       "fresh": false
       }
      ],
      "note": "3년 매출 연평균 -1.9% — 근접 완화선 미달, 대체 후보 소진",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-19"
+     "triedAt": "2026-10-21"
     },
     {
      "ticker": "403870",
@@ -455,17 +449,12 @@ window.CANDIDATES = {
        "k": "theme",
        "msg": "주제 기준 미달 — 매출 성장 미달(3년 2.8%·향후 48%)",
        "fresh": false
-      },
-      {
-       "k": "drop",
-       "msg": "5거래일 -18.3%(시장 중앙값 -2.1%) 급락 — 원인 확인",
-       "fresh": false
       }
      ],
      "note": "3년 성장 2.8%·1·2분기 매출·영업이익 감소",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-19"
+     "triedAt": "2026-10-21"
     },
     {
      "ticker": "082920",
@@ -480,13 +469,7 @@ window.CANDIDATES = {
      "ticker": "095340",
      "name": "ISC",
      "state": "감시",
-     "flags": [
-      {
-       "k": "drop",
-       "msg": "5거래일 -14.8%(시장 중앙값 -2.1%) 급락 — 원인 확인",
-       "fresh": false
-      }
-     ],
+     "flags": [],
      "note": "근접 후보(3년 평균 ROIC 14.4%)",
      "judged": "2026-10-18",
      "verdict": "형식"
@@ -530,7 +513,7 @@ window.CANDIDATES = {
      "note": "마진·3년 ROIC 구조적 미달 — 검증 통과 대체 없음",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-19"
+     "triedAt": "2026-10-21"
     },
     {
      "ticker": "AMZN",
@@ -1004,6 +987,22 @@ window.CANDIDATES = {
    "eligible": 11,
    "defects": [
     {
+     "ticker": "NXT",
+     "name": "Nextpower",
+     "state": "결격",
+     "flags": [
+      {
+       "k": "drop",
+       "msg": "5거래일 -11%(시장 중앙값 1.6%) 급락 — 원인 확인",
+       "fresh": false
+      }
+     ],
+     "note": "⑨ 세액공제(45X) 의존 · 최근 낙폭은 회사 고유 악재 미확인(10/28 실적 발표 예정)",
+     "judged": "2026-10-21",
+     "verdict": "실질",
+     "triedAt": "2026-10-21"
+    },
+    {
      "ticker": "NVT",
      "name": "nVent Electric",
      "state": "결격",
@@ -1022,7 +1021,7 @@ window.CANDIDATES = {
      "note": "⑤ 재무 안전 조건 미달 — 미국 히든 후보 풀 소진",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-19"
+     "triedAt": "2026-10-21"
     },
     {
      "ticker": "FSS",
@@ -1038,7 +1037,7 @@ window.CANDIDATES = {
      "note": "⑤ 재무 안전 조건 미달 — 미국 히든 후보 풀 소진",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-19"
+     "triedAt": "2026-10-21"
     },
     {
      "ticker": "MKSI",
@@ -1059,7 +1058,7 @@ window.CANDIDATES = {
      "note": "⑤ 재무 안전 조건 미달 — 미국 히든 후보 풀 소진",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-19"
+     "triedAt": "2026-10-21"
     },
     {
      "ticker": "AAON",
@@ -1080,7 +1079,7 @@ window.CANDIDATES = {
      "note": "⑤ 재무 안전 조건 미달 — 미국 히든 후보 풀 소진",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-19"
+     "triedAt": "2026-10-21"
     },
     {
      "ticker": "RBC",
@@ -1096,23 +1095,7 @@ window.CANDIDATES = {
      "note": "⑤ 재무 안전 조건 미달 — 미국 히든 후보 풀 소진",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-19"
-    },
-    {
-     "ticker": "NXT",
-     "name": "Nextpower",
-     "state": "점검 필요",
-     "flags": [
-      {
-       "k": "drop",
-       "msg": "5거래일 -11%(시장 중앙값 1.6%) 급락 — 원인 확인",
-       "fresh": true
-      }
-     ],
-     "note": "⑨ 세액공제(45X) 의존",
-     "judged": "2026-10-18",
-     "verdict": "실질",
-     "triedAt": "2026-10-19"
+     "triedAt": "2026-10-21"
     },
     {
      "ticker": "NVMI",
@@ -1173,9 +1156,9 @@ window.CANDIDATES = {
   }
  },
  "summary": {
-  "review": 2,
-  "defect": 10,
+  "review": 0,
+  "defect": 12,
   "watch": 17,
-  "untried": 10
+  "untried": 0
  }
 };
