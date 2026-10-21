@@ -4612,8 +4612,9 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
         '<p class="ai-help">키를 이 앱이나 채팅에 붙여 넣지 말고 GitHub 화면에만 입력하세요. 예상 비용은 하루 1~2달러 안팎(Opus 5.5 하루 2회 분석 기준, 토큰 사용량에 따라 다름)입니다.</p></div>';
     }
     var rows = [];
-    if (d) rows.push(["시황·Top Pick", d.ok ? fmtWhen(d.at) + " · " + ((d.wrote || []).map(function (k) { return AI_WROTE[k] || k; }).join("·") || "변경 없음") + (d.usage ? " · " + usd(d.usage) : "")
+    if (d && d.at) rows.push(["시황·Top Pick", d.ok ? fmtWhen(d.at) + " · " + ((d.wrote || []).map(function (k) { return AI_WROTE[k] || k; }).join("·") || "변경 없음") + (d.usage ? " · " + usd(d.usage) : "")
       : '<span class="bad">' + esc(fmtWhen(d.at) + " 실패 — " + (d.error || "")) + "</span>" + (d.lastOk ? " · 마지막 성공 " + esc(fmtWhen(d.lastOk)) : ""), true]);
+    if (d && d.skipped) rows.push(["최근 확인", esc(fmtWhen(d.checkedAt) + " · " + d.skipped), true]);
     if (d && d.note) rows.push(["참고", esc(d.note), true]);
     if (df) rows.push(["결격 판정", (df.error && !df.ok ? '<span class="bad">' + esc(df.error) + "</span>" : esc(fmtWhen(df.at) + " · 판정 " + (df.judged || 0) + "건" + (df.pending > df.judged ? " · 대기 " + (df.pending - df.judged) + "건" : "") + (df.usage ? " · " + usd(df.usage) : ""))), true]);
     if (nw) rows.push(["종목 뉴스", (nw.error ? '<span class="bad">' + esc(nw.error) + "</span>" : esc(fmtWhen(nw.at) + " · 뉴스 " + (nw.lines || 0) + "종목" + (nw.usage ? " · " + usd(nw.usage) : ""))), true]);

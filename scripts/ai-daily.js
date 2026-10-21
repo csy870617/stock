@@ -398,11 +398,18 @@ async function main() {
   const todo = ITEMS.filter((k) => P.items[k].write);
   console.log("ai-daily: T " + P.T + " · 종가 한국 " + P.basis.kr + " 미국 " + P.basis.us + " · " +
     ITEMS.map((k) => k + (P.items[k].stale ? "(미작성)" : P.items[k].mine ? "(AI 작성분)" : "(세션 작성분)")).join(" "));
-  if (!P.run || !todo.length) { console.log("ai-daily: 쓸 항목 없음 — 오늘 몫이 이미 최신이거나 세션이 썼다"); return; }
+  if (!P.run || !todo.length) {
+    console.log("ai-daily: 쓸 항목 없음 — 오늘 몫이 이미 최신이거나 세션이 썼다");
+    // 건너뛴 사실도 남긴다(앱 'AI 연결' 창) — 지난 성공의 지문·종가 기준은 그대로 둔다
+    const prev = st.daily || {};
+    L.writeStatus("daily", Object.assign({}, prev, { checkedAt: new Date().toISOString(), skipped: "오늘(" + P.T + ") 몫이 이미 최신 — " +
+      (ITEMS.some((k) => P.items[k].mine) ? "AI 작성분 유지" : "루틴 세션이 작성") }));
+    return;
+  }
 
   const model = L.MODELS.daily, startedAt = new Date().toISOString();
   let usage = L.newUsage(), memo = "", urls = [], note = [];
-  const status = { at: startedAt, T: P.T, basis: P.basis, model, ok: false };
+  const status = { at: startedAt, T: P.T, basis: P.basis, model, ok: false };   // skipped·checkedAt 은 새 실행에서 지운다
   try {
     try {
       const r = await L.research(cl, { model, system: RESEARCH_SYSTEM, prompt: researchPrompt(S, P), maxSearches: +(process.env.AI_DAILY_SEARCHES || 6), effort: "medium" });
