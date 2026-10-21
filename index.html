@@ -861,7 +861,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
 
   <footer class="foot" id="foot">
     <p><b>투자 권유가 아닌 참고 정보입니다.</b> 기술 신호 등급(적극매수~적극매도)은 이미 일어난 움직임을 요약한 '현재 상태'이지 예측이 아닙니다.</p>
-    <p><span id="routineTime">매일 한국시간 오후 5시(LA 오전 1시)</span> 자동 갱신 · 가격 옆 초록 점(●)은 장중 실시간 시세</p>
+    <p><span id="routineTime">매일 한국시간 오후 5시(LA 오전 1시)</span> 자동 갱신 · 가격 옆 점(●)은 장중 시세(최대 20분가량 지연 가능) — 장이 닫히면 마지막 종가</p>
     <details class="foot-more" data-sk="foot-more">
       <summary>안내 · 신호·범위·목표가를 읽는 법</summary>
       <p id="disclaimer"></p>
@@ -1673,12 +1673,27 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     return (Date.now() - t) / 86400000 <= 8;
   }
 
-  // 종목의 "표시용" 현재가·상승여력 — 실시간 값이 있으면 그것으로, 없으면 스냅샷으로
+  // 지금 그 시장의 정규장이 열려 있고 시세 날짜가 오늘(현지)인가 — 시세 서버는 장이 닫혀도 마지막 종가를 돌려주므로
+  // 응답이 왔다는 것만으로 '장중'이라 하지 않는다(휴장일은 날짜가 오늘이 아니라 걸러진다). 한국 09:00~15:30 KST, 미국 09:30~16:00 ET.
+  function inSession(kr, dateStr) {
+    try {
+      var p = {};
+      new Intl.DateTimeFormat("en-US", { timeZone: kr ? "Asia/Seoul" : "America/New_York", year: "numeric", month: "2-digit", day: "2-digit",
+        weekday: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(new Date()).forEach(function (x) { p[x.type] = x.value; });
+      if (p.weekday === "Sat" || p.weekday === "Sun") return false;
+      if (dateStr !== p.year + "-" + p.month + "-" + p.day) return false;
+      var m = +p.hour * 60 + +p.minute;
+      return kr ? (m >= 540 && m < 930) : (m >= 570 && m < 960);
+    } catch (_e) { return false; }
+  }
+  function isKrStock(s) { return s.market === "KOSPI" || s.market === "KOSDAQ" || /^\d{6}$/.test(s.ticker || ""); }
+
+  // 종목의 "표시용" 현재가·상승여력 — 시세 서버 값이 있으면 그것으로(장중이면 live), 없으면 스냅샷으로
   function effective(s) {
     var lv = liveCache[s.ticker];
     if (lv && lv.price != null && liveFresh(lv.date)) {
       var up = (s.targetPrice != null && lv.price) ? (s.targetPrice - lv.price) / lv.price * 100 : s.upside;
-      return { price: lv.price, priceDate: lv.date || s.priceDate, upside: up, live: true };
+      return { price: lv.price, priceDate: lv.date || s.priceDate, upside: up, live: inSession(isKrStock(s), lv.date), fetched: true };
     }
     return { price: s.price, priceDate: s.priceDate, upside: s.upside, live: false };
   }
@@ -2404,7 +2419,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   }
   function detailHtml(s, c, it) {
     var e = effective(s), n = s.techNote || {}, sd = staleDays(s);
-    var meta = (e.live ? '<span class="live-tx"><i class="live-dot"></i>실시간</span>'
+    var meta = (e.live ? '<span class="live-tx" title="장중 시세 — 거래소·시세 서버 사정으로 최대 20분가량 늦을 수 있습니다"><i class="live-dot"></i>장중</span>'
       : esc(e.priceDate || D.generatedAt) + " 종가" + (sd >= 7 ? " (" + sd + "일 전)" : "")) + " · 전일 대비";
     var badges = detailBadges(s, c, e), alerts = detailAlerts(s, c, e);
     var top = '<div class="dt-top"><div class="dt-pxl"><span class="dt-pv">' + esc(fmtPrice(e.price, c)) + "</span>" + chgHtml(s.changePct, "dt-ch") + "</div>" +
@@ -2475,7 +2490,8 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     if (d === undefined || d === "loading") top = '<div class="dt-top"><div class="dt-meta">시세 불러오는 중…</div></div>';
     else if (d === null) top = '<div class="dt-top"><div class="dt-meta">시세를 불러오지 못했습니다 — 코드·시장(한국/미국)을 확인해 주세요.</div></div>';
     else top = '<div class="dt-top"><div class="dt-pxl"><span class="dt-pv">' + esc(fmtPrice(d.price, c)) + "</span>" + chgHtml(chgNum(d.ta && d.ta.change), "dt-ch") + "</div>" +
-      '<div class="dt-meta">' + esc(d.date || "실시간") + " · 전일 대비</div>" +
+      '<div class="dt-meta">' + (inSession(c === "korea", d.date) ? '<span class="live-tx" title="장중 시세 — 최대 20분가량 늦을 수 있습니다"><i class="live-dot"></i>장중</span>'
+        : esc(d.date || "최근") + " 종가") + " · 전일 대비</div>" +
       '<div class="dt-bd"><span class="bd">' + esc(pm.badge) + '</span><span class="bd">분석 전</span></div></div>';
     var reqTag = req ? (req.state === "open"
       ? '<div class="dt-pad"><div class="dt-req">정밀분석 요청됨<span class="eta">· ' + esc(nextAnalysisEta()) + "</span></div></div>"
@@ -2750,7 +2766,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       '<div class="r-l"><div class="r-nm"><span class="r-name">' + esc(s.name) + "</span>" + flags + "</div>" +
         '<div class="r-sub">' + tag + "<span>" + sub.join(" · ") + "</span></div></div>" +
       sigStrip(s.techNote || {}) +
-      '<div class="r-r"><div class="r-px">' + pxText(e.price, c) + (e.live ? '<i class="live-dot" title="실시간"></i>' : "") + "</div>" + chgHtml(s.changePct, "r-ch") + "</div>" +
+      '<div class="r-r"><div class="r-px">' + pxText(e.price, c) + (e.live ? '<i class="live-dot" title="장중 시세(지연 가능)"></i>' : "") + "</div>" + chgHtml(s.changePct, "r-ch") + "</div>" +
       (o.edit && o.k ? '<button class="r-del" type="button" data-wl="' + esc(o.k + "|" + c + "|" + s.ticker) + '" aria-label="' + esc(plist(o.k).label + " 목록에서 빼기") + '">' + ICON.x + "</button>" : "") +
     "</div>";
   }
@@ -2786,7 +2802,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       '<span class="pk-n">' + n + "</span>" +
       '<div class="r-l"><div class="r-nm"><span class="r-name">' + esc(s.name) + '</span><span class="pk-th">' + esc(themeMeta(s.theme).label) + " · T" + esc(s.tier) + "</span></div>" +
         (reason ? '<div class="pk-why">' + esc(reason) + "</div>" : '<div class="r-sub"><span>' + esc(s.ticker) + "</span></div>") + "</div>" +
-      '<div class="r-r"><div class="r-px">' + pxText(e.price, cc) + (e.live ? '<i class="live-dot" title="실시간"></i>' : "") + "</div>" + chgHtml(s.changePct, "r-ch") + "</div>" +
+      '<div class="r-r"><div class="r-px">' + pxText(e.price, cc) + (e.live ? '<i class="live-dot" title="장중 시세(지연 가능)"></i>' : "") + "</div>" + chgHtml(s.changePct, "r-ch") + "</div>" +
     "</div>";
   }
   // 국가별 상위 3 폴백(큐레이션 데이터 없을 때) — 그 국가 정식 추천 중 종합점수 상위 3
