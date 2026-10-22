@@ -2,13 +2,13 @@
 // groups["<country>|<theme>"] = {defects 편성 결격(state 결격|점검 필요|감시), list 후보(status 검증 통과|보류|검증 대기)}
 // 세션 판정은 data/candidate-notes.json(CLAUDE.md §3-7) — 이 파일을 직접 고치지 않는다.
 window.CANDIDATES = {
- "asOf": "2026-10-21",
- "T": "2026-10-21",
+ "asOf": "2026-10-22",
+ "T": "2026-10-22",
  "screenAsOf": "2026-10-21",
  "screenFresh": true,
  "beta": {
-  "korea": 0.4,
-  "us": 1.23
+  "korea": 0.35,
+  "us": 1.27
  },
  "groups": {
   "korea|core": {
@@ -28,9 +28,9 @@ window.CANDIDATES = {
      "note": "ROE 6%·3년 평균 ROIC 5.7%(우량 정체성 미달) — 검증 통과 대체 없음",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-21",
+     "triedAt": "2026-10-22",
      "since": "2026-10-18",
-     "age": 3
+     "age": 4
     },
     {
      "ticker": "086790",
@@ -46,27 +46,21 @@ window.CANDIDATES = {
      ],
      "note": "중복 편성 — 저평가 주제에 남기고 이 주제는 다른 종목으로 교체",
      "dup": "value",
-     "triedAt": "2026-10-21",
+     "triedAt": "2026-10-22",
      "since": "2026-10-21",
-     "age": 0
+     "age": 1
     },
     {
      "ticker": "278470",
      "name": "에이피알",
      "state": "결격",
-     "flags": [
-      {
-       "k": "trend",
-       "msg": "추세 붕괴(단·중·장기 모두 매도 이하)",
-       "fresh": false
-      }
-     ],
+     "flags": [],
      "note": "단·중·장기 신호 모두 매도 이하(추세 붕괴) — 3분기 영업이익 추정 하향(원화 강세·유럽 물류비)으로 증권사 목표가 하향, 매출 성장은 유지돼 기초 체력 훼손은 아님 · 검증 통과 대체 후보 없어 감시",
      "judged": "2026-10-21",
      "verdict": "실질",
-     "triedAt": "2026-10-21",
+     "triedAt": "2026-10-22",
      "since": "2026-10-21",
-     "age": 0
+     "age": 1
     }
    ],
    "list": [
@@ -97,9 +91,9 @@ window.CANDIDATES = {
      ],
      "note": "중복 편성 — 우량 주제에 남기고 이 주제는 다른 종목으로 교체",
      "dup": "core",
-     "triedAt": "2026-10-21",
+     "triedAt": "2026-10-22",
      "since": "2026-10-21",
-     "age": 0
+     "age": 1
     },
     {
      "ticker": "298040",
@@ -116,8 +110,8 @@ window.CANDIDATES = {
      "ticker": "103590",
      "name": "일진전기",
      "status": "검증 통과",
-     "note": "2분기 영업이익 +91%·북미 수주잔고 확대 — 성장 편성 전력기기가 이미 3종목이라 다른 업종 결격 자리엔 후순위",
-     "asOf": "2026-10-21",
+     "note": "2분기 영업이익 +91%·북미 수주잔고 확대, β 가 높아 한국 β 를 올리는 대체 — 10/22 최신 컨센서스(신뢰 출처 2곳)를 확인하지 못해 보류선, 성장 편성 전력기기가 이미 3종목이라 후순위",
+     "asOf": "2026-10-22",
      "why": "3년 매출 연평균 20.6% · FCF 마진 3% · 3년 평균 ROIC 11.8%",
      "url": "https://m.stock.naver.com/domestic/stock/103590/total"
     },
@@ -223,13 +217,7 @@ window.CANDIDATES = {
      "ticker": "000270",
      "name": "기아",
      "state": "감시",
-     "flags": [
-      {
-       "k": "tpcut",
-       "msg": "컨센서스 목표가 14일 새 -11.2% 하향 — 논거 확인",
-       "fresh": false
-      }
-     ],
+     "flags": [],
      "note": "원재료비·전기차 믹스로 3분기 이익 추정 하향(매수 의견 유지) — 3분기 실적에서 확인",
      "judged": "2026-10-18",
      "verdict": "형식"
@@ -384,9 +372,9 @@ window.CANDIDATES = {
      ],
      "note": "중복 편성 — 우량 주제에 남기고 이 주제는 다른 종목으로 교체",
      "dup": "core",
-     "triedAt": "2026-10-21",
+     "triedAt": "2026-10-22",
      "since": "2026-10-21",
-     "age": 0
+     "age": 1
     }
    ],
    "list": [
@@ -446,9 +434,9 @@ window.CANDIDATES = {
      "note": "성장 숫자·PEG 미달 — 품질 최상위라 대체 확보 시 교체",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-21",
+     "triedAt": "2026-10-22",
      "since": "2026-10-18",
-     "age": 3
+     "age": 4
     },
     {
      "ticker": "064760",
@@ -464,9 +452,9 @@ window.CANDIDATES = {
      "note": "3년 매출 연평균 -1.9% — 근접 완화선 미달, 대체 후보 소진",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-21",
+     "triedAt": "2026-10-22",
      "since": "2026-10-18",
-     "age": 3
+     "age": 4
     },
     {
      "ticker": "403870",
@@ -482,9 +470,9 @@ window.CANDIDATES = {
      "note": "3년 성장 2.8%·1·2분기 매출·영업이익 감소",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-21",
+     "triedAt": "2026-10-22",
      "since": "2026-10-18",
-     "age": 3
+     "age": 4
     },
     {
      "ticker": "082920",
@@ -992,9 +980,9 @@ window.CANDIDATES = {
      "note": "⑨ 세액공제(45X) 의존 · 최근 낙폭은 회사 고유 악재 미확인(10/28 실적 발표 예정)",
      "judged": "2026-10-21",
      "verdict": "실질",
-     "triedAt": "2026-10-21",
+     "triedAt": "2026-10-22",
      "since": "2026-10-21",
-     "age": 0
+     "age": 1
     },
     {
      "ticker": "NVT",
@@ -1010,9 +998,9 @@ window.CANDIDATES = {
      "note": "⑤ 재무 안전 조건 미달 — 미국 히든 후보 풀 소진",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-21",
+     "triedAt": "2026-10-22",
      "since": "2026-10-18",
-     "age": 3
+     "age": 4
     },
     {
      "ticker": "FSS",
@@ -1028,9 +1016,9 @@ window.CANDIDATES = {
      "note": "⑤ 재무 안전 조건 미달 — 미국 히든 후보 풀 소진",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-21",
+     "triedAt": "2026-10-22",
      "since": "2026-10-18",
-     "age": 3
+     "age": 4
     },
     {
      "ticker": "MKSI",
@@ -1046,9 +1034,9 @@ window.CANDIDATES = {
      "note": "⑤ 재무 안전 조건 미달 — 미국 히든 후보 풀 소진",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-21",
+     "triedAt": "2026-10-22",
      "since": "2026-10-18",
-     "age": 3
+     "age": 4
     },
     {
      "ticker": "AAON",
@@ -1064,9 +1052,9 @@ window.CANDIDATES = {
      "note": "⑤ 재무 안전 조건 미달 — 미국 히든 후보 풀 소진",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-21",
+     "triedAt": "2026-10-22",
      "since": "2026-10-18",
-     "age": 3
+     "age": 4
     },
     {
      "ticker": "RBC",
@@ -1082,9 +1070,9 @@ window.CANDIDATES = {
      "note": "⑤ 재무 안전 조건 미달 — 미국 히든 후보 풀 소진",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-21",
+     "triedAt": "2026-10-22",
      "since": "2026-10-18",
-     "age": 3
+     "age": 4
     },
     {
      "ticker": "NVMI",
