@@ -2,24 +2,12 @@
 // 앱 'AI 연결' 창이 '매일 자동 분석' 칸에 보여 준다. 비용은 토큰 기준 추정(웹 검색은 횟수만 — 검색당 요금 별도).
 window.AI_STATUS = {
  "defects": {
-  "at": "2026-10-22T13:02:41.529Z",
+  "at": "2026-10-22T23:55:48.277Z",
   "model": "claude-sonnet-5-5",
   "ok": true,
-  "pending": 3,
-  "judged": 3,
+  "pending": 1,
+  "judged": 1,
   "items": [
-   {
-    "g": "korea|value",
-    "t": "086280",
-    "name": "현대글로비스",
-    "verdict": "형식"
-   },
-   {
-    "g": "korea|value",
-    "t": "018260",
-    "name": "삼성에스디에스",
-    "verdict": "형식"
-   },
    {
     "g": "us|growth",
     "t": "META",
@@ -28,55 +16,62 @@ window.AI_STATUS = {
    }
   ],
   "usage": {
-   "calls": 6,
-   "input": 78256,
-   "output": 4124,
+   "calls": 2,
+   "input": 43179,
+   "output": 2018,
    "cacheRead": 0,
-   "searches": 9,
-   "usd": 0.198
+   "searches": 3,
+   "usd": 0.107
   }
  },
  "news": {
-  "at": "2026-10-22T13:03:55.534Z",
+  "at": "2026-10-22T23:58:54.539Z",
   "model": "claude-haiku-5-5",
   "ok": true,
   "stocks": 114,
   "fetched": 114,
-  "called": 95,
-  "lines": 85,
+  "called": 91,
+  "lines": 79,
   "usage": {
-   "calls": 95,
-   "input": 142260,
-   "output": 6908,
+   "calls": 91,
+   "input": 129706,
+   "output": 6275,
    "cacheRead": 0,
    "searches": 0,
-   "usd": 0.018
+   "usd": 0.016
   }
  },
  "daily": {
-  "checkedAt": "2026-10-22T13:03:55.402Z",
+  "at": "2026-10-22T23:56:19.491Z",
+  "T": "2026-10-22",
+  "basis": {
+   "kr": "2026-10-22",
+   "us": "2026-10-22"
+  },
+  "model": "claude-opus-5-5",
+  "ok": true,
   "seen": {
-   "at": "2026-10-22T13:03:55.402Z",
+   "at": "2026-10-22T23:58:54.404Z",
    "items": {
     "market": {
-     "sig": "(10/21 미국 마감 기준) 나스닥 26,702.86(+1.05%)·다",
+     "sig": "10/22 미국과 한국 증시는 AI 투자비 부담과 유가 급등이 겹치며 기",
      "basis": {
       "kr": "2026-10-22",
-      "us": "2026-10-21"
+      "us": "2026-10-22"
      }
     },
     "liquidity": {
-     "sig": "미국은 10/21 다우·나스닥 동반 상승과 VIX 16.7에도 10년물 ",
+     "sig": "미국은 금리가 내려왔지만 연준의 12월 인상 기대와 신용 약화로 '신중'",
      "basis": {
       "kr": "2026-10-22",
-      "us": "2026-10-21"
+      "us": "2026-10-22"
      }
     },
     "indexNotes": {
-     "sig": "일봉은 구름 아래·전환<기준에 머리 위 매물 61%로 자체 '적극매도'이",
+     "sig": "일봉 등급 매도(추세 하락)로 구름 아래·전환<기준·후행 부진이고, RS",
      "basis": {
       "kr": "2026-10-22",
-      "us": "2026-10-21"
+      "us": "2026-10-22"
      }
     },
     "topPicks": {
@@ -88,6 +83,25 @@ window.AI_STATUS = {
     }
    }
   },
-  "skipped": "오늘(2026-10-22) 몫이 이미 최신 — 루틴 세션이 작성"
+  "wrote": [
+   "liquidity",
+   "indexNotes",
+   "market"
+  ],
+  "sig": {
+   "liquidity": "미국은 금리가 내려왔지만 연준의 12월 인상 기대와 신용 약화로 '신중'",
+   "indexNotes": "일봉 등급 매도(추세 하락)로 구름 아래·전환<기준·후행 부진이고, RS",
+   "market": "10/22 미국과 한국 증시는 AI 투자비 부담과 유가 급등이 겹치며 기"
+  },
+  "sources": 40,
+  "usage": {
+   "calls": 2,
+   "input": 266228,
+   "output": 13178,
+   "cacheRead": 0,
+   "searches": 6,
+   "usd": 1.328
+  },
+  "note": "새 종가로 세션 문장 갱신: market, liquidity, indexNotes"
  }
 };

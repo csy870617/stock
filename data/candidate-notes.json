@@ -1063,16 +1063,17 @@
       },
       "META": {
         "verdict": "형식",
-        "note": "3분기 매출은 26% 늘어난 646억 달러로 성장 논거는 유지됐다. 다만 수십억 달러 합의금과 AI 지출 급증으로 이익·잉여현금흐름이 압박받아 법적 비용과 capex 추이 확인 전까지 감시한다.",
+        "note": "3분기 실적 발표(10/21) 후 법적 비용 98.9억 달러와 capex 확대 계획, 비의결권 신규 주식 발표로 5거래일 -11.9% 하락했다. 매출 성장은 유지돼 비의결권 주식의 규모·용도와 희석 여부 확인 전까지 감시한다.",
         "asOf": "2026-10-22",
         "flags": [
-          "earn"
+          "earn",
+          "drop"
         ],
         "by": "ai",
         "sources": [
-          "https://fortune.com/2026/10/21/meta-q3-earnings-mark-zuckerberg-capex-muse/",
-          "https://invezz.com/au/news/2026/10/21/meta-stock-jumps-on-earnings-but-dollar25b-penalty-raises-stakes/",
-          "https://invezz.com/news/2026/10/21/meta-stock-jumps-on-earnings-but-25b-penalty-raises-stakes/"
+          "https://www.bloomberg.com/news/articles/2026-10-21/meta-boosts-bet-on-ai-with-new-spending-outlook-stock-offering",
+          "https://finance.yahoo.com/markets/stocks/articles/meta-stock-falls-despite-wall-195053217.html",
+          "https://www.cnbc.com/2026/10/22/meta-stock-q3-earnings-free-cash-flow.html"
         ]
       }
     },
