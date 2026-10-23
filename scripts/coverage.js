@@ -61,7 +61,7 @@ const LQ = load("data/liquidity.js", "LIQUIDITY_DATA");
 
 if (!D) { console.error("recommendations.js 를 읽을 수 없습니다."); process.exit(2); }
 
-// '오늘'은 UTC 달력일 기준 — Action·루틴(08:00 UTC 발화)·verifiedAt/tierAsOf 기록이 모두
+// '오늘'은 UTC 달력일 기준 — Action·루틴(09:07·22:13 UTC 발화)·verifiedAt/tierAsOf 기록이 모두
 // 같은 UTC 기준을 쓰므로 내부 정합이 유지된다. (KST 자정~09시 사이 수동 실행 시 KST 달력일과
 // 하루 어긋나 보일 수 있으나 게이트 비교 기준은 일관된다 — 필요하면 --date 로 강제.)
 const today = argVal("date") || new Date().toISOString().slice(0, 10);
