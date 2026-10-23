@@ -3,21 +3,21 @@
 window.COVERAGE_STATUS = {
  "asOf": "2026-10-23",
  "T": "2026-10-23",
- "total": 120,
+ "total": 119,
  "cycleDays": 7,
  "daily": [
   {
    "key": "techNote",
    "label": "기술 대응",
-   "done": 120,
-   "total": 120,
+   "done": 119,
+   "total": 119,
    "ok": true
   },
   {
    "key": "valueNote",
    "label": "밸류 설명",
-   "done": 120,
-   "total": 120,
+   "done": 119,
+   "total": 119,
    "ok": true
   },
   {
@@ -58,17 +58,17 @@ window.COVERAGE_STATUS = {
   {
    "key": "defects",
    "label": "결격 점검",
-   "done": 0,
+   "done": 1,
    "total": 1,
-   "ok": false
+   "ok": true
   }
  ],
  "rotation": [
   {
    "key": "verified",
    "label": "목표가 재검증",
-   "fresh": 120,
-   "total": 120,
+   "fresh": 119,
+   "total": 119,
    "oldestDays": 5,
    "ok": true
   },
@@ -93,10 +93,10 @@ window.COVERAGE_STATUS = {
   {
    "key": "aiTarget",
    "label": "AI 적정가 재시도",
-   "fresh": 120,
-   "total": 120,
-   "oldestDays": 13,
-   "ok": true
+   "fresh": 117,
+   "total": 119,
+   "oldestDays": null,
+   "ok": false
   },
   {
    "key": "tier",
