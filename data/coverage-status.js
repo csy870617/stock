@@ -93,10 +93,10 @@ window.COVERAGE_STATUS = {
   {
    "key": "aiTarget",
    "label": "AI 적정가 재시도",
-   "fresh": 117,
+   "fresh": 119,
    "total": 119,
-   "oldestDays": null,
-   "ok": false
+   "oldestDays": 13,
+   "ok": true
   },
   {
    "key": "tier",
@@ -108,5 +108,5 @@ window.COVERAGE_STATUS = {
    "ok": true
   }
  ],
- "ok": false
+ "ok": true
 };
