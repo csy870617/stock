@@ -125,7 +125,7 @@ A 가 한국 마감 뒤 판단을 맡듯, U 는 미국 마감 뒤 세션만 할 
 2. **backbone**(UTC 월~금 — 그날 미국 정규장이 있었던 날만): `update-quotes`·`update-consensus`·`update-stock-ta`·`update-indices`·`update-liquidity-gauge`·`screen-watch`·`update-events`·`update-fundamentals` → `gen-technote`. Action 이 늦어도 미국 종가 숫자가 이 시각에 들어가게 하는 것이다. **`close-gate.js --mark` 는 돌리지 않는다**(Action 이 그 마감의 AI 단계를 돌아야 한다). 주말(UTC 토·일)은 2~3단계를 건너뛴다.
 3. **결격 점검·교체**(§3-7 그대로): `check-defects.js` → AI 판정이 없는 '점검 필요' 판정(대개 미국 실적 발표) → 실질 결격은 같은 회차에 교체 시도. 한국 종목은 A 가 그날 이미 시도했으면(`triedAt` ≥ T) 다시 하지 않는다.
 4. **정밀분석·편성 제외 이슈**(§4-8)가 열려 있으면 처리.
-5. **회전 큐**: §3-4 2~3단계(발굴 → 재검증 → aiTarget → tier).
+5. **회전 큐 — 선행분까지 전부 처리**: §3-4 2~3단계(발굴 → 재검증 → aiTarget → tier). `--remaining` 이 내는 `(선행)` 분도 만료분과 똑같이 그 회차에 처리한다 — '만료분 0'·'직전 회차가 많이 처리했다'·'주기 내'는 이월 사유가 아니다(큐에는 4일 이상 지난 것만 나오므로 같은 날 처리한 종목이 다시 나오지 않는다; 2026-10-23 첫 U 회차가 선행 36건을 이월해 사용자 지시로 명시). 하루 두 회차(A·U)가 선행분을 나눠 먹어 만료가 한꺼번에 몰리지 않게 하는 것이 목적이다. 검색 예산이 모자라면 처리한 만큼 merge 하고 남은 건수를 보고한다.
 6. 새로 편입한 종목이 있으면 §3-6 3단계 후속 처리(valueNote·aiTarget·tier). 그 밖의 valueNote·D절·C 모드·시황·유동성·지수·Top Pick 은 하지 않는다.
 7. **기록·배포**: `snapshot.js`(같은 날짜 교체 — 그날 미국 종가 반영) → `perf-track.js` → WATCHLIST 회차 기록(`## <날짜> U 회차`) → `archive-watchlist.js` → validate 오류 0 → `coverage.js --emit` → 커밋·push(배포+지정 브랜치). 열린 이슈가 있으면 결과 코멘트, `coverage.js` exit 0 이면 닫는다.
 - 할 일이 하나도 없으면(주말이고 큐가 비면) "전 항목 주기 내 — 할 일 없음"으로 끝낸다(빈 커밋 금지). 보고 항목은 §3-4 6단계 + 결격 판정·교체 건수.
