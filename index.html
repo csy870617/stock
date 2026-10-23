@@ -55,6 +55,7 @@
   --warn-soft: #fff1e6;
   --ev:        #6741d9;
   --ev-soft:   #f1edfd;
+  --pf-f: #6741d9; --pf-s: #0c8f6a; --pf-i: #8b95a1;   /* 성과 곡선: 추천 · 그림자 · 지수 */
   --t1bg: #191f28; --t1fg: #ffffff;
   --t2bg: #6b7684; --t2fg: #ffffff;
   --t3bg: #eef0f3; --t3fg: #4e5968;
@@ -92,6 +93,7 @@
   --warn-soft: rgba(255,146,43,0.14);
   --ev:        #9775fa;
   --ev-soft:   rgba(151,117,250,0.16);
+  --pf-f: #9775fa; --pf-s: #20a77c; --pf-i: #7e868f;
   --t1bg: #ececef; --t1fg: #111214;
   --t2bg: #8b939c; --t2fg: #111214;
   --t3bg: #2c2f34; --t3fg: #b1b8c0;
@@ -126,6 +128,7 @@
     --warn-soft: rgba(255,146,43,0.14);
     --ev:        #9775fa;
     --ev-soft:   rgba(151,117,250,0.16);
+    --pf-f: #9775fa; --pf-s: #20a77c; --pf-i: #7e868f;
     --t1bg: #ececef; --t1fg: #111214;
     --t2bg: #8b939c; --t2fg: #111214;
     --t3bg: #2c2f34; --t3fg: #b1b8c0;
@@ -155,7 +158,7 @@ svg { display: block; }
 [hidden] { display: none !important; }
 ::selection { background: color-mix(in srgb, var(--acc) 24%, transparent); }
 :focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; }
-.r-px, .r-ch, .ix-lv, .ix-ch, .dt-pv, .dt-ch, .kv-v, .tile .v, .pm-tbl, .past-tbl, .ol-p, .ol-pct, .vp-ax, .qline, .fr-n, .sh-pos { font-variant-numeric: tabular-nums; }
+.r-px, .r-ch, .ix-lv, .ix-ch, .dt-pv, .dt-ch, .kv-v, .past-tbl, .ol-p, .ol-pct, .vp-ax, .qline, .fr-n, .sh-pos { font-variant-numeric: tabular-nums; }
 .up { color: var(--up); } .down { color: var(--down); } .flat { color: var(--mut); }
 
 /* ── 상단 바 ── */
@@ -279,7 +282,6 @@ svg { display: block; }
 .t-sb, .t-b { color: var(--up); } .t-n, .t-x { color: var(--ink2); } .t-s, .t-ss { color: var(--down); }
 
 /* ── 칩(주제·티어·기간) ── */
-.blk-chips { padding: 12px 16px 14px; }
 .chip-g { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .chip { flex: none; height: 34px; padding: 0 14px; border-radius: 999px; font-size: 14.5px; font-weight: 600; color: var(--ink2); background: var(--sf3); white-space: nowrap; display: inline-flex; align-items: center; transition: background .15s, color .15s; }
 .chip.on { background: var(--ink); color: var(--sf); }
@@ -469,35 +471,89 @@ svg { display: block; }
 .pl-list [data-pkey].pl-drag { z-index: 3; background: var(--sf); box-shadow: var(--shadow); border-radius: 12px; }
 .pl-list [data-pkey].pl-drag::before { display: none; }
 
-/* ── 성과 ── */
-.seg-p button { flex: 1 1 auto; height: 32px; padding: 0 6px; font-size: 13.5px; }
-.pf-themes { margin-top: 12px; }
-.perf-desc { margin: -4px 0 12px; font-size: 13px; line-height: 1.6; color: var(--ink2); }
-.perf-desc strong { color: var(--ink); }
-.tile[data-basis] { cursor: help; }
-.tile .k .kv-i { display: inline-flex; vertical-align: -2px; margin-left: 2px; }
-.tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.tile { min-width: 0; padding: 12px 13px; border-radius: 12px; background: var(--sf2); }
-.tile .k { font-size: 12.5px; color: var(--mut); }
-.tile .v { margin-top: 3px; font-size: 19px; font-weight: 800; letter-spacing: -0.035em; overflow-wrap: anywhere; }
-.tile .v.up { color: var(--up); } .tile .v.down { color: var(--down); }
-.perf-note { margin-top: 12px; font-size: 12.5px; line-height: 1.65; color: var(--mut); }
-.perf-note b { color: var(--ink2); }
-.tbl-x { overflow-x: auto; margin: 0 -16px; padding: 0 16px; }
-.pm-tbl { width: 100%; min-width: 300px; border-collapse: collapse; font-size: 13.5px; }
-.pm-tbl th { padding: 8px 6px; border-bottom: 1px solid var(--line); text-align: right; font-size: 12px; font-weight: 600; color: var(--mut); white-space: nowrap; }
-.pm-tbl td { padding: 10px 6px; border-bottom: 1px solid var(--line2); text-align: right; white-space: nowrap; }
-.pm-tbl th:first-child, .pm-tbl td:first-child { padding-left: 0; text-align: left; }
-.pm-tbl td b { font-weight: 700; }
-.pm-tbl td i { display: block; font-style: normal; font-size: 11px; color: var(--mut); }
-.pm-tbl .pm-na { color: var(--mut); }
-.pm-th { font-weight: 600; }
-.pt-row { cursor: pointer; }
-@media (hover: hover) { .pt-row:hover td { background: var(--hov); } }
-.pt-on td { background: var(--sf2); }
-.pt-on td:first-child { box-shadow: inset 3px 0 0 var(--ink); padding-left: 8px; }
-.pm-tot td { font-weight: 700; border-top: 1px solid var(--line); }
-.pt-b { color: var(--ink2); }
+/* ── 성과 — data/perf.json(scripts/perf-track.js). 한 줄 판정 → 숫자 → 누적 곡선 → 주제·티어·교체 ── */
+.pf-verdict { margin: -2px 0 12px; font-size: 14.5px; line-height: 1.7; color: var(--ink2); }
+.pf-verdict b { color: var(--ink); font-weight: 700; }
+.pf-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: -4px 0 14px; }
+.pf-chip { display: inline-flex; align-items: center; height: 24px; padding: 0 9px; border-radius: 12px; background: var(--sf3); color: var(--ink2); font-size: 12px; font-weight: 600; cursor: help; }
+.pf-chip.on { background: var(--ink); color: var(--sf); }
+.pf-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 8px; }
+.pf-kpi { min-width: 0; padding: 11px 12px; border-radius: 12px; background: var(--sf2); }
+.pf-kpi .k { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--mut); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pf-kpi .v { margin-top: 3px; font-size: 20px; font-weight: 800; letter-spacing: -0.035em; }
+.pf-kpi .v.up { color: var(--up); } .pf-kpi .v.down { color: var(--down); }
+.lk { flex: none; display: inline-block; width: 14px; height: 0; border-top: 2.5px solid var(--pf-f); border-radius: 2px; vertical-align: middle; }
+.lk.lk-i { border-top: 2px solid var(--pf-i); }
+.lk.lk-s { border-top-color: var(--pf-s); }
+.pf-chart { position: relative; margin: 14px 0 4px; outline: none; touch-action: pan-y; -webkit-tap-highlight-color: transparent; }
+.pf-chart:focus-visible { box-shadow: 0 0 0 2px var(--ink2); border-radius: 8px; }
+.pf-chart svg { display: block; width: 100%; }
+.pf-chart .gl { stroke: var(--line2); stroke-width: 1; }
+.pf-chart .g0 { stroke: var(--line); stroke-width: 1; }
+.pf-chart .yl, .pf-chart .xl { fill: var(--mut); font-size: 11px; font-variant-numeric: tabular-nums; }
+.pf-chart .ln { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.pf-chart .ln-f { stroke: var(--pf-f); stroke-width: 2.5; }
+.pf-chart .ln-i { stroke: var(--pf-i); }
+.pf-chart .ln-s { stroke: var(--pf-s); }
+.pf-chart circle.dot { stroke: var(--sf); stroke-width: 2; }
+.pf-chart circle.ln-f { fill: var(--pf-f); } .pf-chart circle.ln-i { fill: var(--pf-i); } .pf-chart circle.ln-s { fill: var(--pf-s); }
+.pf-chart .xh { stroke: var(--ink2); stroke-width: 1; }
+.pf-tip { position: absolute; top: 2px; z-index: 2; min-width: 124px; padding: 8px 10px; border-radius: 10px; background: var(--sf); border: 1px solid var(--line); box-shadow: var(--shadow); font-size: 12.5px; line-height: 1.55; pointer-events: none; }
+.pf-tip .tp-d { color: var(--mut); font-size: 11.5px; }
+.pf-tip .tp-r { display: flex; align-items: center; gap: 6px; white-space: nowrap; color: var(--ink2); }
+.pf-tip .tp-r b { margin-left: auto; padding-left: 12px; color: var(--ink); font-weight: 700; font-variant-numeric: tabular-nums; }
+.pf-tbl { width: 100%; margin-top: 6px; border-collapse: collapse; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+.pf-tbl th { padding: 8px 4px; border-bottom: 1px solid var(--line); text-align: right; font-size: 12px; font-weight: 600; color: var(--mut); white-space: nowrap; }
+.pf-tbl td { padding: 10px 4px; border-bottom: 1px solid var(--line2); text-align: right; white-space: nowrap; }
+.pf-tbl th:first-child, .pf-tbl td:first-child { padding-left: 0; text-align: left; }
+.pf-tbl td:first-child { font-weight: 600; }
+.pf-tbl td i { font-style: normal; font-weight: 400; font-size: 11.5px; color: var(--mut); }
+.pf-tbl td b { font-weight: 700; }
+.pf-note { margin-top: 12px; font-size: 12.5px; line-height: 1.65; color: var(--mut); }
+.pf-foot { margin: 2px 16px 16px; font-size: 12px; line-height: 1.6; color: var(--mut); }
+.pf-prog { margin: -2px 0 14px; }
+.pf-prog-bar { height: 6px; border-radius: 3px; background: var(--track); overflow: hidden; }
+.pf-prog-bar i { display: block; height: 100%; border-radius: 3px; background: var(--pf-f); }
+.pf-prog-l { display: flex; justify-content: space-between; gap: 8px; margin-top: 6px; font-size: 12px; color: var(--mut); }
+.pf-prog-l b { color: var(--ink); font-weight: 700; }
+.pf-more { margin-top: 6px; }
+.pf-more > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 6px; min-height: 40px; font-size: 13.5px; font-weight: 600; color: var(--ink2); -webkit-tap-highlight-color: transparent; }
+.pf-more > summary::-webkit-details-marker { display: none; }
+.pf-more > summary::after { content: ""; width: 6px; height: 6px; border-right: 1.5px solid var(--mut); border-bottom: 1.5px solid var(--mut); transform: rotate(45deg) translateY(-2px); transition: transform .2s; }
+.pf-more[open] > summary::after { transform: rotate(-135deg); }
+/* 주제·티어 줄 — 이름 | 수익률 | 지수 대비 막대(가운데 0) | 값 | 펼침 */
+.pf-rows { margin: 0 -16px; border-top: 1px solid var(--line2); }
+.pf-row { display: grid; grid-template-columns: 48px 62px minmax(30px, 1fr) 68px 14px; align-items: center; gap: 8px; width: 100%; min-height: 50px; padding: 0 16px; border: 0; border-bottom: 1px solid var(--line2); background: none; text-align: left; font: inherit; font-size: 14px; color: var(--ink); cursor: pointer; -webkit-tap-highlight-color: transparent; }
+@media (hover: hover) { .pf-row:hover { background: var(--hov); } }
+.pf-row[aria-expanded="true"] { background: var(--sf2); }
+.pf-nm { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pf-ret, .pf-ex { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pf-ex { font-size: 13px; }
+.pf-ret.up, .pf-ex.up { color: var(--up); } .pf-ret.down, .pf-ex.down { color: var(--down); }
+.pf-bar { position: relative; height: 6px; }
+.pf-bar::before { content: ""; position: absolute; left: 50%; top: -7px; bottom: -7px; width: 1px; background: var(--line); }
+.pf-bar i { position: absolute; top: 0; height: 6px; }
+.pf-bar i.up { left: 50%; background: var(--up); border-radius: 0 3px 3px 0; }
+.pf-bar i.down { right: 50%; background: var(--down); border-radius: 3px 0 0 3px; }
+.pf-chev { display: inline-flex; color: var(--mut); transition: transform .15s; }
+.pf-chev svg { width: 14px; height: 14px; }
+.pf-row[aria-expanded="true"] .pf-chev { transform: rotate(90deg); }
+.pf-gh { padding: 14px 16px 6px; border-bottom: 1px solid var(--line2); font-size: 12px; font-weight: 600; color: var(--mut); }
+.pf-det { padding: 2px 16px 8px; background: var(--sf2); border-bottom: 1px solid var(--line2); }
+.pf-det .row { min-height: 60px; }
+.pf-facts { display: flex; flex-wrap: wrap; gap: 4px 14px; padding: 8px 0 2px; font-size: 12.5px; color: var(--ink2); }
+.pf-k[data-basis] { cursor: help; text-decoration: underline dotted; text-underline-offset: 3px; }
+.pf-gone { margin-top: 2px; }
+.r-sub b.up { color: var(--up); font-weight: 600; } .r-sub b.down { color: var(--down); font-weight: 600; }
+/* 교체 성과 */
+.pf-sw { padding: 12px 0; border-top: 1px solid var(--line2); }
+.pf-sw-h { display: flex; gap: 8px; margin-bottom: 6px; font-size: 12.5px; font-weight: 600; color: var(--ink2); }
+.pf-sw-w { margin-left: auto; font-weight: 400; color: var(--mut); white-space: nowrap; }
+.pf-sw-b { display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 8px; align-items: baseline; padding: 2px 0; font-size: 13.5px; }
+.pf-sw-k { color: var(--mut); font-size: 12px; }
+.pf-sw-n { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.pf-sw-b b { font-weight: 700; font-variant-numeric: tabular-nums; }
+.pf-sw-b b.up { color: var(--up); } .pf-sw-b b.down { color: var(--down); }
 .pr .r-px { font-size: 15.5px; }
 
 /* ── 과거 보기 ── */
@@ -746,15 +802,17 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
 @media (min-width: 640px) {
   .main { padding: 16px 16px 24px; }
   .blk { margin-bottom: 12px; padding: 20px; border-radius: 18px; }
-  .blk-chips { padding: 14px 20px; }
   .blk-mine-top { padding: 14px 20px 16px; }
-  .list, .tbl-x { margin-left: -20px; margin-right: -20px; }
-  .tbl-x { padding: 0 20px; }
+  .list { margin-left: -20px; margin-right: -20px; }
   .row { padding-left: 20px; padding-right: 20px; }
   .row + .row::before { left: 20px; right: 20px; }
   .gh { padding-left: 20px; }
   .cand-sub { padding-left: 20px; }
   .chips-x { margin: 0 -20px; padding: 0 20px; }
+  .pf-rows { margin: 0 -20px; }
+  .pf-row, .pf-gh, .pf-det { padding-left: 20px; padding-right: 20px; }
+  .pf-row { grid-template-columns: 64px 72px minmax(60px, 1fr) 76px 14px; }
+  .pf-foot { margin: 2px 4px 16px; }
   .blk-reco { padding-top: 0; }
   .ttabs { margin: 0 -20px 16px; padding: 0 10px; border-radius: 18px 18px 0 0; }
   .st { padding: 0 4px 10px; }
@@ -946,9 +1004,8 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     <div id="mineBody"></div>
   </section>
 
-  <!-- 성과 — 기간·주제 선택 · 요약 · 비교표 · 종목별 -->
+  <!-- 성과 — 추천 성적 · 3개월 검증 · 주제별 · 티어 · 교체 성과(data/perf.json) -->
   <section class="page" id="pg-perf" hidden>
-    <div class="blk blk-chips" id="perfChips"></div>
     <div id="perfBody"></div>
   </section>
 
@@ -1080,8 +1137,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     theme: "core",          // 추천 종목 탭 선택 — 주제 키 또는 "tier:1|2|3"(티어별 모아보기)
     mine: lsGet("ui.mine") === "hold" ? "hold" : "watch",
     mineEdit: false,        // 내 종목 편집(삭제 ✕·순서 손잡이 표시)
-    perfTheme: "core",      // 성과 탭 선택(주제·개인 목록·티어)
-    perfPeriod: "since"     // 성과 기준일: since(추천시점) | 1m | 2m | 3m | 6m | 1y
+    perf: true              // 성과 탭은 data/perf.json 을 그대로 그린다(선택 상태 없음 — 펼친 줄은 pfOpen)
   };
 
   var root = document.documentElement;
@@ -1130,7 +1186,8 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     info: SV + '<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.6v.1"/></svg>',
     search: SV + '<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>',
     ext: SV + '<path d="M14 4h6v6M20 4l-8.5 8.5"/><path d="M18 14v4.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H10"/></svg>',
-    send: SV + '<path d="M4 12l16-8-6 16-2.5-6.5z"/></svg>'
+    send: SV + '<path d="M4 12l16-8-6 16-2.5-6.5z"/></svg>',
+    chev: SV + '<path d="M9 6l6 6-6 6"/></svg>'
   };
   // 5단계 신호 → 색 분류(매수 계열 빨강 · 중립 회색 · 매도 계열 파랑, 국내 관례)
   var SIG_CLS = { "적극매수": "sb", "매수": "b", "중립": "n", "매도": "s", "적극매도": "ss" };
@@ -1595,6 +1652,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   }
   function fmtPct(v) {
     if (v == null) return "–";
+    if (Math.abs(v) < 0.05) return "0.0%";   // -0.02 → '-0.0%' 같은 표기를 막는다
     return (v > 0 ? "+" : "") + Number(v).toFixed(1) + "%";
   }
   // 일간 등락률(전일 종가 대비) — 상승 빨강·하락 파랑, 소수 둘째 자리(네이버와 같게). 값이 없으면 '–'.
@@ -3145,360 +3203,341 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     ensureLive(list, refreshLive);
   }
 
-  // ── 성과 탭 ──
-  var PERF_PERIODS = [
-    { key: "since", label: "추천시점" },
-    { key: "1m", label: "1개월", days: 21 },
-    { key: "2m", label: "2개월", days: 42 },
-    { key: "3m", label: "3개월", days: 63 },
-    { key: "6m", label: "6개월", days: 126 },
-    { key: "1y", label: "1년", days: 252 }
-  ];
-  function perfPeriodMeta(key) {
-    for (var i = 0; i < PERF_PERIODS.length; i++) if (PERF_PERIODS[i].key === key) return PERF_PERIODS[i];
-    return PERF_PERIODS[0];
+  // ── 성과 탭 — data/perf.json(scripts/perf-track.js, 매일 자동)을 그린다 ──
+  //   보유 기준(그날그날의 편성을 편출 종목까지 동일비중으로 이어 붙인 실제 성적)만 쓴다 — 지금 남은 종목의 과거 주가(생존 편향)는 쓰지 않는다.
+  //   순서: 추천 성적(한 줄 판정 → 숫자 → 누적 곡선 → 기간표) → 3개월 검증(추천 vs 그림자) → 주제별(누르면 종목) → 티어 → 교체 성과.
+  var PERF = null, perfReq = false, perfFail = false;
+  var pfOpen = {};   // 펼친 주제·티어 줄 — "korea|core"
+  var PFC = {};      // 그릴 꺾은선(id → spec) — innerHTML 로 자리를 만든 뒤 폭을 재서 그린다
+  function loadPerf() {
+    if (PERF || perfReq || typeof fetch !== "function") return;
+    perfReq = true;
+    fetch("data/perf.json", { cache: "no-cache" }).then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) { perfReq = false; if (j) PERF = j; else perfFail = true; if (state.tab === "perf") renderPerf(); })
+      .catch(function (e) { perfReq = false; perfFail = true; if (window.console) console.warn("perf.json", e); if (state.tab === "perf") renderPerf(); });
   }
-  // (A) 추천시점 대비 — history.js 스냅샷의 "첫 기록 시점" 기준
-  function computePerf(country) {
-    if (!H.length) return null;
-    var benchKey = country === "korea" ? "kospi" : "sp500";
-    var last = H[H.length - 1];
-    // 주말·휴장일 스냅샷은 지수값이 비어 있다(null) — 직전 기록값(=마지막 종가)을 이어 쓴다.
-    var benchAt = [], prevBench = null;
-    H.forEach(function (snap, i) {
-      if (snap[benchKey]) prevBench = snap[benchKey];
-      benchAt[i] = prevBench;
-    });
-    var firstSeen = {};
-    H.forEach(function (snap, i) {
-      snap.stocks.forEach(function (e) {
-        if (e.c !== country) return;
-        if (!firstSeen[e.t]) firstSeen[e.t] = { snap: snap, entry: e, bench: benchAt[i] };
-      });
-    });
-    var lastBench = benchAt[H.length - 1];
-    var rows = [];
-    last.stocks.forEach(function (e) {
-      if (e.c !== country) return;
-      var f = firstSeen[e.t]; if (!f) return;
-      var days = Math.round((new Date(last.date) - new Date(f.snap.date)) / 86400000);
-      var ret = (f.entry.p && e.p) ? (e.p - f.entry.p) / f.entry.p * 100 : null;
-      var benchRet = (f.bench && lastBench) ? (lastBench - f.bench) / f.bench * 100 : null;
-      // theme·tier 모두 '첫 기록 시점' 값으로 — 그 사이 주제가 바뀐 종목이 엉뚱한 주제×Tier 셀에 집계되지 않게(감사).
-      rows.push({ name: e.n, ticker: e.t, theme: f.entry.th, tier: f.entry.tier,
-        basePrice: f.entry.p, lastPrice: e.p, ret: days > 0 ? ret : null,
-        alpha: (days > 0 && ret != null && benchRet != null) ? ret - benchRet : null });
-    });
-    return { rows: rows, mode: "since", benchRet: null };
+  function fmtPp(v) { return v == null ? "–" : Math.abs(v) < 0.05 ? "0.0%p" : (v > 0 ? "+" : "") + Number(v).toFixed(1) + "%p"; }
+  function sgnCls(v) { return v == null || Math.abs(v) < 0.05 ? "" : v > 0 ? " up" : " down"; }   // 표시가 0.0 이면 색도 없다
+  function benchName(c) { return c === "korea" ? "KOSPI" : "S&P500"; }
+  // 접기 — 실시간 갱신 등으로 다시 그려도 열어 둔 것은 연 채로(OPEN, data-sk)
+  function pfDetails(k, cls) { return '<details class="pf-more' + (cls ? " " + cls : "") + '" data-sk="' + esc(k) + '"' + (OPEN[k] ? " open" : "") + ">"; }
+  function pBlk(title, sub, body, cls) {
+    return '<section class="blk' + (cls ? " " + cls : "") + '"><div class="blk-h"><h2>' + title + "</h2>" + (sub ? '<span class="blk-sub">' + sub + "</span>" : "") + "</div>" + body + "</section>";
   }
-  // (A-2) 실제 보유 기준 성적 — 매 스냅샷의 편성을 그대로 다음 스냅샷까지 동일비중 보유했다고 보고
-  // 일별 수익률을 이어 붙인다(편출 종목 포함 — 생존 편향 없음). 이 값이 추천의 실제 성적이다.
-  //  · themeKey 없으면 정식 편성 전체(관심·보유 제외), 있으면 그 날 그 주제였던 종목
-  //  · beta: 주간(7스냅샷) 수익률을 지수에 회귀 — 6주 미만이면 산출하지 않는다
-  //  · betaAlpha = 수익률 − β×지수수익률 · eq: 미국은 동일비중 S&P500(RSP) 대비
-  function computeHeld(country, themeKey) {
-    if (H.length < 2) return null;
-    var bk = country === "korea" ? "kospi" : "sp500";
-    var prev = {}, rets = [], brs = [], cum = 1, bcum = 1, ecum = 1, eqOk = country === "us";
-    var from = null, to = null;
-    function lv(snap, k) { if (snap[k]) prev[k] = snap[k]; return prev[k] || null; }
-    lv(H[0], bk); lv(H[0], "rsp");
-    for (var i = 1; i < H.length; i++) {
-      var a = H[i - 1], b = H[i];
-      var b0 = prev[bk] || null, e0 = prev.rsp || null;
-      var b1 = lv(b, bk), e1 = lv(b, "rsp");
-      var pb = {};
-      b.stocks.forEach(function (e) { if (e.c === country && e.p) pb[e.t] = e.p; });
-      var seen = {}, sum = 0, n = 0;
-      a.stocks.forEach(function (e) {
-        if (e.c !== country || seen[e.t] || !e.p || !pb[e.t]) return;
-        if (themeKey ? !inSel(themeKey, e.th, e.tier) : isPersonal(e.th)) return;
-        seen[e.t] = 1; sum += pb[e.t] / e.p - 1; n++;
-      });
-      if (!n) continue;
-      var r = sum / n, rb = (b0 && b1) ? b1 / b0 - 1 : 0, re = (e0 && e1) ? e1 / e0 - 1 : 0;
-      if (!e0 || !e1) eqOk = false;
-      if (!from) from = a.date;
-      to = b.date;
-      cum *= 1 + r; bcum *= 1 + rb; ecum *= 1 + re;
-      rets.push(r); brs.push(rb);
-    }
-    if (!rets.length) return null;
-    var beta = null;
-    var wp = [], wb = [];
-    for (var j = 0; j + 7 <= rets.length; j += 7) {
-      var x = 1, y = 1;
-      for (var k = j; k < j + 7; k++) { x *= 1 + rets[k]; y *= 1 + brs[k]; }
-      wp.push(x - 1); wb.push(y - 1);
-    }
-    if (wp.length >= 6) {
-      var mp = wp.reduce(function (s, v) { return s + v; }, 0) / wp.length;
-      var mb = wb.reduce(function (s, v) { return s + v; }, 0) / wb.length;
-      var cv = 0, vb = 0;
-      wp.forEach(function (v, q) { cv += (v - mp) * (wb[q] - mb); vb += (wb[q] - mb) * (wb[q] - mb); });
-      if (vb > 0) beta = cv / vb;
-    }
-    var ret = (cum - 1) * 100, bench = (bcum - 1) * 100;
-    return { ret: ret, bench: bench, excess: ret - bench, beta: beta,
-      betaAlpha: beta == null ? null : ret - beta * bench,
-      eq: eqOk ? (ecum - 1) * 100 : null, from: from, to: to };
+  var PF_SIG_TIP = "하루하루 차이가 흔들리는 폭에 비해 평균 차이가 얼마나 큰지(t)로 봅니다. |t| 가 2보다 작으면 같은 결과가 우연으로도 자주 생기는 수준이라 '실력'이라고 말할 수 없습니다. 기록이 쌓이면 바뀔 수 있습니다.";
+  // 우연 범위 칩 — t: 일간 차이의 t, days: 거래일 수
+  function pfSig(t, days) {
+    if (days == null || days < 20 || t == null) return '<span class="pf-chip" data-basis="' + esc("기록이 20거래일 이상 쌓여야 우연과 구별할 수 있습니다. " + PF_SIG_TIP) + '">판단 이름</span>';
+    var on = Math.abs(t) >= 2;
+    return '<span class="pf-chip' + (on ? " on" : "") + '" data-basis="' + esc(PF_SIG_TIP + " 지금 t " + t.toFixed(1) + ".") + '">' + (on ? "의미 있는 차이" : "우연 범위") + "</span>";
   }
-  // (B) 기간별(1·2·3·6개월·1년) — 실측 2년 일봉(closeSeries) 기준, 지수 대비 초과수익
-  function computePerfPeriod(country, P) {
-    var sym = indexSymbol(country), bc = indexCache[sym], benchRet = null;
-    if (Array.isArray(bc) && bc.length > P) { var b0 = bc[bc.length - 1 - P]; if (b0) benchRet = (bc[bc.length - 1] - b0) / b0 * 100; }
-    var rows = [], seen = {};
-    (D[country] || []).forEach(function (s) {
-      var key = s.ticker + ":" + s.theme; if (seen[key]) return; seen[key] = 1;
-      var cs = closeSeries(s), cl = cs.cl, ret = null, p0 = null, p1 = null;
-      if (cs.source === "live" && cl.length > P) { p0 = cl[cl.length - 1 - P]; p1 = cl[cl.length - 1]; if (p0) ret = (p1 - p0) / p0 * 100; }
-      rows.push({ name: s.name, ticker: s.ticker, theme: s.theme, tier: s.tier,
-        basePrice: p0, lastPrice: p1, ret: ret, alpha: (ret != null && benchRet != null) ? ret - benchRet : null });
-    });
-    return { rows: rows, mode: "period", benchRet: benchRet };
+  // "KOSPI보다 6.8%p 덜 빠졌습니다" — 둘 다 내린·오른 장에서 자연스러운 말로
+  function pfMove(ret, bench, ex, bn) {
+    var a = Math.abs(ex).toFixed(1) + "%p";
+    if (ex >= 0) return bn + "보다 " + a + (ret < 0 && bench < 0 ? " 덜 빠졌습니다" : ret > 0 && bench > 0 ? " 더 올랐습니다" : " 앞섰습니다");
+    return bn + "보다 " + a + (ret < 0 && bench < 0 ? " 더 빠졌습니다" : ret > 0 && bench > 0 ? " 덜 올랐습니다" : " 뒤졌습니다");
   }
-  // 티커 기준 중복 제거(첫 등장 유지) — 멀티테마 티커의 이중집계 방지
-  function dedupByTicker(rows) {
-    var seen = {}, out = [];
-    rows.forEach(function (r) { if (!seen[r.ticker]) { seen[r.ticker] = 1; out.push(r); } });
+  // 한 줄 판정 — 지수 대비 → (동일비중 S&P) → 시장 민감도(β)를 감안한 값 → 우연인지
+  function pfVerdict(s, c) {
+    if (!s) return "아직 성과 기록이 없습니다.";
+    if (s.days < 5) return "기록이 " + s.days + "거래일뿐이라 아직 판단하기 이릅니다.";
+    var out = "<b>" + esc(pfMove(s.ret, s.bench, s.excess, benchName(c))) + ".</b>";
+    if (s.vsEq != null) out += " 종목을 같은 비중으로 담은 S&P(RSP)와 비교하면 " + esc(fmtPp(s.vsEq)) + "입니다.";
+    if (s.beta != null && s.betaAlpha != null && Math.abs(s.beta - 1) >= 0.25)
+      out += " 다만 시장에 " + (s.beta < 1 ? "덜" : "더") + " 민감한 편성이라(β " + s.beta.toFixed(2) + ") 그 몫을 빼면 " + esc(fmtPp(s.betaAlpha)) + "입니다.";
+    if (s.days < 20 || s.tEx == null) out += " 20거래일이 쌓여야 우연과 구별할 수 있습니다.";
+    else out += Math.abs(s.tEx) < 2 && (s.tAlpha == null || Math.abs(s.tAlpha) < 2) ? " 아직 우연과 구별되지 않는 차이입니다." : " 우연으로 보기 어려운 차이입니다.";
     return out;
   }
-  function pBlk(title, sub, body, isList) {
-    return '<section class="blk' + (isList ? " blk-list" : "") + '"><div class="blk-h"><h2>' + title + "</h2>" + (sub ? '<span class="blk-sub">' + sub + "</span>" : "") + "</div>" + body + "</section>";
-  }
-  function perfView(country) {
-    var period = state.perfPeriod || "since";
-    if (period !== "since") { fetchHistory(D[country] || [], refreshLive); fetchIndexHistory(country, refreshLive); }
-    var data = period === "since" ? computePerf(country) : computePerfPeriod(country, perfPeriodMeta(period).days);
-    if (!data || !data.rows.length) return pBlk("성과", "", '<div class="empty">아직 성과 기록이 없습니다.</div>');
-    // 전체 기준으로 수익률이 하나도 없으면(첫날·시계열 미수신) 안내만 표시
-    if (!dedupByTicker(data.rows).some(function (r) { return r.ret != null; })) {
-      var msg = period === "since"
-        ? "기준점 기록 완료 — 다음 자동 갱신부터 수익률이 표시됩니다."
-        : "기간별 성과는 2년 실측 시계열을 불러온 뒤 표시됩니다… (시세 서버 연결 시 자동 표시)";
-      return pBlk("성과", "", '<div class="empty">' + esc(msg) + "</div>");
-    }
-    // 성과 요약은 선택한 '주제' 기준이다 — 주제마다 성격이 달라 전체를 섞은 평균으로는 각 주제가 잘 맞았는지 알 수 없다.
-    var sel = state.perfTheme;
-    var selTheme = themeMeta(sel);
-    var themeRows = data.rows.filter(function (r) { return inSel(sel, r.theme, r.tier); });
-    var isTierSel = isTierKey(sel), grpWord = isTierSel ? "티어" : "주제";
-    var st = perfStats(themeRows, data);
-    var themeTag = esc(selTheme.label);
-    var pm = perfPeriodMeta(period);
-    var desc = period !== "since"
-      ? "<strong>최근 " + esc(pm.label) + "</strong> · 실측 종가 기준(지수 대비 초과수익 포함)"
-      : "<strong>추천시점 대비</strong> · 추천(첫 기록) 시점부터의 실제 수익률 · 기록 " + H.length + "일치";
-    var tiles;
-    if (!st.n) {
-      tiles = '<div class="empty">' + themeTag + " " + grpWord + "는 아직 수익률이 산출된 종목이 없습니다.</div>";
-    } else if (data.mode === "period") {
-      var bLabel = country === "korea" ? "KOSPI" : "S&P500";
-      tiles = '<div class="tiles">' +
-        pTile("평균 수익률", fmtPct(st.avg), st.avg) +
-        pTile("승률", Math.round(st.wins / st.n * 100) + "% (" + st.wins + "/" + st.n + ")", st.wins / st.n - 0.5) +
-        pTile(bLabel + " 수익률", data.benchRet == null ? "–" : fmtPct(data.benchRet), data.benchRet) +
-        pTile("지수 대비 초과", st.alpha == null ? "–" : fmtPct(st.alpha), st.alpha) + "</div>";
-    } else {
-      // 추천시점 모드의 요약은 '실제 보유 기준'(편출 종목 포함) — 지금 남은 종목 평균은 생존 편향이 있어 보조 줄로 내린다.
-      var hd = computeHeld(country, sel);
-      var bName = country === "korea" ? "KOSPI" : "S&P500";
-      if (!hd) {
-        tiles = '<div class="empty">' + themeTag + " " + grpWord + "는 아직 보유 기록이 부족합니다.</div>";
-      } else {
-        tiles = '<div class="tiles">' +
-          pTile("보유 기준 수익률", fmtPct(hd.ret), hd.ret,
-            "그날그날의 편성(중간에 뺀 종목 포함)을 다음 기록일까지 동일비중으로 보유했다고 보고 이어 붙인 실제 성적입니다(" + hd.from + " ~ " + hd.to + ").") +
-          pTile(bName + " 같은 기간", fmtPct(hd.bench), hd.bench) +
-          pTile("지수 대비 초과", fmtPct(hd.excess), hd.excess) +
-          pTile("β 반영 초과" + (hd.beta == null ? "" : " (β " + hd.beta.toFixed(2) + ")"),
-            hd.betaAlpha == null ? "–" : fmtPct(hd.betaAlpha), hd.betaAlpha,
-            "시장에 덜·더 민감하게 움직인 몫(β×지수 수익률)을 뺀 순수 종목 선별 효과입니다. β 는 주간 수익률을 지수에 회귀한 값으로, 6주 이상 기록이 쌓여야 계산됩니다.") +
-          (hd.eq == null ? "" : pTile("동일비중 S&P 대비", fmtPct(hd.ret - hd.eq), hd.ret - hd.eq,
-            "S&P500 을 종목별 같은 비중으로 담은 지수(RSP)와 비교한 값 — 대형 기술주 몇 개에 끌려가는 시가총액 지수보다 공정한 비교입니다.")) + "</div>" +
-          '<div class="perf-note">' + esc(mdOf(hd.from)) + " ~ " + esc(mdOf(hd.to)) + " 보유 기준(편출 종목 포함) · 지금 남은 " + st.n + "종목만 보면 평균 " + fmtPct(st.avg) +
-          " · 승률 " + Math.round(st.wins / st.n * 100) + "%(편출 종목이 빠져 실제보다 좋게 보일 수 있음)</div>";
-      }
-    }
-    var periodNote = data.mode === "period"
-      ? '<div class="perf-note"><b>지금 편성된 종목</b>의 과거 주가 흐름입니다 — 그 기간의 추천 성적이 아닙니다(실제 성적은 \'추천시점\').</div>' : "";
-    var perfList = themeRows.length ? perfTable(themeRows, country, data.mode) : '<div class="empty">이 ' + grpWord + "의 성과 기록이 아직 없습니다.</div>";
-    return pBlk("성과 요약", themeTag, '<p class="perf-desc">' + desc + "</p>" + tiles + periodNote) +
-      pBlk(grpWord + "별 비교", "행을 누르면 그 " + grpWord + "로", data.mode === "period" ? perfThemeTable(data) : heldThemeTable(country)) +
-      pBlk("주제 × Tier", "평균 수익률 · 종목수", perfMatrix(data.rows)) +
-      pBlk("종목별 성과", themeTag, perfList, true);
+  var PF_BETA_TIP = "β(시장 민감도): 지수가 1% 움직일 때 이 편성이 평균 몇 % 움직였는지입니다. β 가 1보다 작으면 하락장에서 덜 빠지는 대신 상승장에서 덜 오릅니다. '감안하면'은 수익률에서 β×지수 수익률을 뺀 값 — 시장 민감도가 아니라 종목을 고른 효과입니다(거래일 일간 수익률로 계산, 20거래일 이상).";
+  var PF_HOW = "계산 방법: 기록일마다 그날의 편성(중간에 뺀 종목 포함)을 다음 기록일까지 같은 비중으로 보유했다고 보고 수익률을 이어 붙입니다(보유 기준). 뺀 종목의 마지막 하루는 그날 종가로 잽니다. 지수 대비는 같은 기간 KOSPI·S&P500 수익률과의 차이입니다. 매일 자동 계산되며 투자 권유가 아닙니다.";
 
-    function pTile(k, v, sign, tip) {
-      var cls = sign == null ? "" : (sign > 0 ? " up" : (sign < 0 ? " down" : ""));
-      return '<div class="tile"' + (tip ? ' data-basis="' + esc(tip) + '"' : "") + '><div class="k">' + esc(k) +
-        (tip ? '<i class="kv-i">' + ICON.info + "</i>" : "") + '</div><div class="v' + cls + '">' + v + "</div></div>";
-    }
-  }
-  // 한 묶음(주제 등)의 성과 지표 — 평균 수익률·승률·시장(지수) 대비 초과수익(티커 기준 유니크).
-  function perfStats(rows, data) {
-    var tr = dedupByTicker(rows).filter(function (r) { return r.ret != null; });
-    var n = tr.length;
-    if (!n) return { n: 0, avg: null, wins: 0, alpha: null };
-    var avg = tr.reduce(function (a, r) { return a + r.ret; }, 0) / n;
-    var wins = tr.filter(function (r) { return r.ret > 0; }).length;
-    var alpha = null;
-    if (data.mode === "period") alpha = data.benchRet == null ? null : avg - data.benchRet;
-    else {
-      var al = tr.filter(function (r) { return r.alpha != null; });
-      alpha = al.length ? al.reduce(function (a, r) { return a + r.alpha; }, 0) / al.length : null;
-    }
-    return { n: n, avg: avg, wins: wins, alpha: alpha };
-  }
-  // 비교표의 행 묶음 — 주제를 보고 있으면 주제별, 티어를 보고 있으면 Tier 1·2·3
-  function perfGroups() {
-    if (isTierKey(state.perfTheme)) return TIER_KEYS.map(function (k) { return themeMeta(k); });
-    return orderedThemes();
-  }
-  function pmNum(v) { return v == null ? '<td class="pm-na">–</td>' : '<td class="' + (v >= 0 ? "up" : "down") + '"><b>' + fmtPct(v) + "</b></td>"; }
-  function perfThemeTable(data) {
-    var themes = perfGroups(), word = isTierKey(state.perfTheme) ? "티어" : "주제";
-    var head = "<tr><th>" + word + "</th><th>평균</th><th>승률</th><th>" + (data.mode === "period" ? "지수 대비" : "시장 대비") + "</th><th>종목</th></tr>";
-    var body = themes.map(function (th) {
-      var s = perfStats(data.rows.filter(function (r) { return inSel(th.key, r.theme, r.tier); }), data);
-      var on = th.key === state.perfTheme ? " pt-on" : "";
-      var label = '<td class="pm-th">' + esc(th.label) + "</td>";
-      if (!s.n) return '<tr class="pt-row' + on + '" data-ptheme="' + esc(th.key) + '">' + label + '<td class="pm-na">–</td><td class="pm-na">–</td><td class="pm-na">–</td><td class="pm-na">0</td></tr>';
-      var wr = Math.round(s.wins / s.n * 100);
-      return '<tr class="pt-row' + on + '" data-ptheme="' + esc(th.key) + '">' + label + pmNum(s.avg) +
-        '<td class="' + (wr > 50 ? "up" : "down") + '"><b>' + wr + "%</b></td>" + pmNum(s.alpha) + "<td><b>" + s.n + "</b></td></tr>";
-    }).join("");
-    return '<div class="tbl-x"><table class="pm-tbl pt-tbl"><thead>' + head + "</thead><tbody>" + body + "</tbody></table></div>";
-  }
-  // 추천시점 모드의 주제별 비교 — 실제 보유 기준(편출 포함) 수익률·지수 대비·β 반영 초과·β. 맨 아래 정식 편성 전체.
-  function heldThemeTable(country) {
-    var themes = perfGroups(), word = isTierKey(state.perfTheme) ? "티어" : "주제";
-    function cells(h) {
-      if (!h) return '<td class="pm-na">–</td><td class="pm-na">–</td><td class="pm-na">–</td><td class="pm-na">–</td>';
-      return pmNum(h.ret) + pmNum(h.excess) + pmNum(h.betaAlpha) + '<td class="pt-b">' + (h.beta == null ? "–" : h.beta.toFixed(2)) + "</td>";
-    }
-    var head = "<tr><th>" + word + "</th><th>수익률</th><th>지수 대비</th><th>β 반영</th><th>β</th></tr>";
-    var body = themes.map(function (th) {
-      var on = th.key === state.perfTheme ? " pt-on" : "";
-      return '<tr class="pt-row' + on + '" data-ptheme="' + esc(th.key) + '"><td class="pm-th">' + esc(th.label) + "</td>" + cells(computeHeld(country, th.key)) + "</tr>";
-    }).join("");
-    var tot = '<tr class="pm-tot"><td>정식 전체</td>' + cells(computeHeld(country, null)) + "</tr>";
-    return '<div class="tbl-x"><table class="pm-tbl pt-tbl"><thead>' + head + "</thead><tbody>" + body + tot + "</tbody></table></div>";
-  }
-  // 주제 × Tier 매트릭스 (셀 = 평균 수익률 + 종목수)
-  function perfMatrix(rows) {
-    var themes = orderedThemes();
-    function avgOf(a) { var t = a.filter(function (r) { return r.ret != null; }); return t.length ? t.reduce(function (s, r) { return s + r.ret; }, 0) / t.length : null; }
-    function cnt(a) { return a.filter(function (r) { return r.ret != null; }).length; }
-    function cell(v, n) {
-      if (v == null) return '<td class="pm-na">–</td>';
-      return '<td class="' + (v >= 0 ? "up" : "down") + '"><b>' + fmtPct(v) + "</b><i>" + n + "종목</i></td>";
-    }
-    var head = "<tr><th>주제＼T</th><th>T1</th><th>T2</th><th>T3</th><th>전체</th></tr>";
-    var body = themes.map(function (th) {
-      var tr = rows.filter(function (r) { return r.theme === th.key; });
-      var cells = [1, 2, 3].map(function (t) { var g = tr.filter(function (r) { return r.tier === t; }); return cell(avgOf(g), cnt(g)); }).join("");
-      return '<tr><td class="pm-th">' + esc(th.label) + "</td>" + cells + cell(avgOf(tr), cnt(tr)) + "</tr>";
-    }).join("");
-    // 'Tier 전체' 합계행·우하단 총합은 티커 기준 유니크 집합에서(멀티테마 티커 이중집계 방지).
-    var uniq = dedupByTicker(rows);
-    var totRow = '<tr class="pm-tot"><td>전체</td>' +
-      [1, 2, 3].map(function (t) { var g = uniq.filter(function (r) { return r.tier === t; }); return cell(avgOf(g), cnt(g)); }).join("") +
-      cell(avgOf(uniq), cnt(uniq)) + "</tr>";
-    return '<div class="tbl-x"><table class="pm-tbl"><thead>' + head + "</thead><tbody>" + body + totRow + "</tbody></table></div>";
-  }
-  // 종목별 성과 — 2줄 행(티어 오름차순 · 티어 내 수익률 내림차순). 지금 편성에 있으면 눌러서 상세.
-  function perfTable(rows, country, mode) {
-    var seen = {}, uniq = [];
-    rows.forEach(function (r) { if (!seen[r.ticker]) { seen[r.ticker] = 1; uniq.push(r); } });
-    var alphaLbl = mode === "since" ? "시장대비" : "지수대비";
-    var body = uniq.slice().sort(function (a, b) {
-      return (a.tier || 9) - (b.tier || 9) || (b.ret == null ? -1e9 : b.ret) - (a.ret == null ? -1e9 : a.ret);
-    }).map(function (r) {
-      var thm = themeMeta(r.theme);
-      var retCls = r.ret == null ? "flat" : r.ret >= 0 ? "up" : "down";
-      var alpha = r.alpha == null ? "" : ' · <span class="' + (r.alpha >= 0 ? "up" : "down") + '">' + alphaLbl + " " + fmtPct(r.alpha) + "</span>";
-      var hit = findStock(country, r.ticker, r.theme);
-      var tag = isPersonal(r.theme) ? '<span class="wtag wt-light">' + esc(thm.label) + "</span>" : '<span class="tb t' + esc(r.tier) + '">T' + esc(r.tier) + "</span>";
-      return '<div class="row pr' + (hit ? "" : " no-open") + '"' + (hit ? openAttrs(country, r.ticker, hit.theme) : "") + ">" +
-        '<div class="r-l"><div class="r-nm"><span class="r-name">' + esc(r.name) + "</span></div>" +
-          '<div class="r-sub">' + tag + "<span>" + esc(thm.label) + alpha + "</span></div></div>" +
-        '<div class="r-r"><div class="r-px ' + retCls + '">' + (r.ret == null ? "–" : fmtPct(r.ret)) + "</div></div>" +
-      "</div>";
-    }).join("");
-    return '<div class="list" data-ctx="perf">' + body + "</div>";
-  }
-  function renderPerfChips() {
-    var p = state.perfPeriod || "since";
-    // 위: 기간(분절 버튼 한 줄) · 아래: 주제·개인 목록·티어(가로로 밀어 보는 한 줄 칩)
-    var chips = document.getElementById("perfChips");
-    var keepX = chips.querySelector(".pf-themes"); keepX = keepX ? keepX.scrollLeft : 0;
-    chips.innerHTML =
-      '<div class="seg seg-full seg-p" aria-label="기간">' + PERF_PERIODS.map(function (x) {
-        return '<button type="button" data-perfp="' + x.key + '"' + (x.key === p ? ' class="on"' : "") + ">" + esc(x.label) + "</button>";
-      }).join("") + "</div>" +
-      '<div class="chip-g chips-x pf-themes" aria-label="주제">' + orderedThemes().map(function (t) {
-        return '<button class="chip chip-s' + (t.key === state.perfTheme ? " on" : "") + '" data-ptheme="' + esc(t.key) + '" type="button">' + esc(t.label) + "</button>";
-      }).join("") + '<span class="ct-sep" aria-hidden="true"></span>' + TIER_KEYS.map(function (k) {
-        return '<button class="chip chip-s' + (k === state.perfTheme ? " on" : "") + '" data-ptheme="' + k + '" type="button">T' + tierOfKey(k) + "</button>";
-      }).join("") + "</div>";
-    var row = chips.querySelector(".pf-themes"); row.scrollLeft = keepX;   // 다시 그려도 가로 스크롤 위치 유지
-    var on = row.querySelector(".chip.on");
-    if (on && (on.offsetLeft < row.scrollLeft || on.offsetLeft + on.offsetWidth > row.scrollLeft + row.clientWidth)) row.scrollLeft = on.offsetLeft - 16;
-  }
   function renderPerf() {
-    renderPerfChips();
-    document.getElementById("perfBody").innerHTML = shadowBlk(state.country) + perfView(state.country);
-    markActiveRow();
-    loadShadow();
-  }
-  // ── 판단 검증 — 추천 편성 vs 그림자 포트폴리오(스크린 상위를 기계적으로 고른 편성, scripts/shadow-track.js) ──
-  //   2026-10-21 시작(같은 날 선정 규칙 동결). 추천이 그림자보다 꾸준히 나아야 '사람의 판단'이 가치를 더한 것이다.
-  var SHADOW = null, shadowReq = false;
-  function loadShadow() {
-    if (SHADOW || shadowReq || typeof fetch !== "function") return;
-    shadowReq = true;
-    fetch("data/shadow.json", { cache: "no-cache" }).then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (j) { if (j) { SHADOW = j; if (state.tab === "perf") renderPerf(); } }).catch(function (e) { if (window.console) console.warn("shadow.json", e); });
-  }
-  function sTile(k, v, sign, tip) {   // 성과 요약 칸과 같은 모양(그쪽 pTile 은 함수 안에 있어 따로 둔다)
-    var cls = sign == null ? "" : (sign > 0 ? " up" : (sign < 0 ? " down" : ""));
-    return '<div class="tile"' + (tip ? ' data-basis="' + esc(tip) + '"' : "") + '><div class="k">' + esc(k) +
-      (tip ? '<i class="kv-i">' + ICON.info + "</i>" : "") + '</div><div class="v' + cls + '">' + v + "</div></div>";
-  }
-  function shadowBlk(c) {
-    var C = SHADOW && SHADOW[c], sm = C && C.summary;
-    if (!C || !C.series || !C.series.length) return "";
-    var f = sm && sm.formal, sh = sm && sm.shadow, bName = c === "korea" ? "KOSPI" : "S&P500";
-    var TIP = "그림자 포트폴리오: 같은 스크린(주제 정의·건전성 필터·검증된 점수)에서 점수 상위를 사람 판단 없이 주제마다 9개씩 기계적으로 고른 편성(매주 월요일 재선정, 동일비중). " +
-      "추천 편성과 같은 날·같은 방식(끝난 장 종가, 동일비중 일별 연결)으로 잽니다. 추천이 그림자보다 꾸준히 앞서야 세션의 검증·판단이 실제로 가치를 더한 것입니다. " +
-      "기간이 짧으면 차이는 우연일 수 있습니다 — 최소 3개월은 지켜봐야 합니다.";
-    var body;
-    if (!f || C.series.length < 2) {
-      body = '<p class="perf-desc">' + esc(mdOf(C.series[0].d)) + " 종가부터 기록을 시작했습니다 — 다음 거래일부터 숫자가 쌓입니다.</p>";
-    } else {
-      body = '<div class="tiles">' +
-        sTile("추천 편성", fmtPct(f.ret), f.ret) +
-        sTile("그림자(기계적 선정)", fmtPct(sh.ret), sh.ret) +
-        sTile("판단의 기여", fmtPct(sm.edge), sm.edge, "추천 편성 수익률 − 그림자 수익률. 양(+)이면 사람의 검증·판단이 기계적 선정보다 나았다는 뜻입니다.") +
-        sTile(bName, fmtPct(f.idx), f.idx) +
-        (f.eq != null ? sTile("S&P 동일비중(RSP)", fmtPct(f.eq), f.eq, "S&P500 을 종목별 같은 비중으로 담은 지수 — 추천·그림자 모두 동일비중이라 시가총액 지수보다 공정한 비교 기준입니다.") : "") +
-        (f.betaAlpha != null ? sTile("β 반영 초과 (β " + f.beta.toFixed(2) + ")", fmtPct(f.betaAlpha), f.betaAlpha, "시장 민감도(β×지수) 몫을 뺀 선별 효과 — 6주 이상 쌓이면 계산됩니다.") : "") +
-        "</div>" + shadowThemeTable(sm.themes) +
-        '<div class="perf-note">' + esc(mdOf(f.from)) + " ~ " + esc(mdOf(f.to)) + " · " + (C.series.length - 1) + "거래일 · 선정 규칙은 2026-10-21부터 동결(3개월)</div>";
+    var host = document.getElementById("perfBody");
+    PFC = {};
+    if (!PERF) {
+      host.innerHTML = '<section class="blk"><div class="empty">' + (perfFail ? "성과 기록을 불러오지 못했습니다. 잠시 뒤 다시 열어 주세요." : "성과 기록을 불러오는 중…") + "</div></section>";
+      loadPerf();
+      return;
     }
-    return pBlk("판단 검증", "추천 vs 기계적 선정", body +
-      '<p class="perf-note">ⓘ <button class="lnk" type="button" data-basis="' + esc(TIP) + '">그림자 포트폴리오란?</button></p>');
+    var c = state.country, C = PERF[c];
+    if (!C || !C.groups || !C.groups.all) { host.innerHTML = '<section class="blk"><div class="empty">아직 성과 기록이 없습니다.</div></section>'; return; }
+    host.innerHTML = pfSummary(C, c) + pfVerify(C, c) + pfThemes(C, c) + pfTiers(C, c) + pfSwaps(C, c) + pfFoot(C, c);
+    pfDrawAll();
+    markActiveRow();
   }
-  // 주제별 판단 검증 — 추천 그 주제 9종목 vs 그림자 그 주제 9종목(같은 방식). 차이 = 추천 − 그림자.
-  function shadowThemeTable(th) {
-    if (!th) return "";
-    var rows = orderedThemes().filter(function (t) { return !isPersonal(t.key) && th[t.key]; }).map(function (t) {
-      var x = th[t.key];
-      return '<tr><td class="pm-th">' + esc(t.label) + "</td>" + pmNum(x.f) + pmNum(x.s) + pmNum(x.edge) + "</tr>";
+
+  // ① 추천 성적 — 정식 편성 전체(관심·보유 제외)
+  function pfSummary(C, c) {
+    var g = C.groups.all, s = g.w.all, bn = benchName(c);
+    var kpi = function (k, v, key) {
+      return '<div class="pf-kpi"><div class="k">' + (key ? '<i class="lk ' + key + '"></i>' : "") + esc(k) + '</div><div class="v' + sgnCls(v) + '">' + fmtPct(v) + "</div></div>";
+    };
+    var kpis = '<div class="pf-kpis">' + kpi("추천 편성", s.ret, "lk-f") + kpi(bn, s.bench, "lk-i") + (s.eq != null ? kpi("S&P 동일비중", s.eq, "") : "") + "</div>";
+    var chart = pfChartBox("main", C.dates, [
+      { k: "f", label: "추천 편성", vals: g.nav },
+      { k: "i", label: bn, vals: C.idx }
+    ], "추천 편성 " + fmtPct(s.ret) + ", " + bn + " " + fmtPct(s.bench));
+    // 기간표 — 곡선의 표 보기 겸 최근 흐름
+    var rows = [["전체", g.w.all, mdOf(s.from) + "~"]];
+    [["m1", "최근 1개월"], ["m3", "최근 3개월"], ["m6", "최근 6개월"], ["y1", "최근 1년"]].forEach(function (x) { if (g.w[x[0]]) rows.push([x[1], g.w[x[0]], ""]); });
+    var tbl = '<table class="pf-tbl"><thead><tr><th>기간</th><th>추천</th><th>' + esc(bn) + "</th><th>차이</th></tr></thead><tbody>" +
+      rows.map(function (r) {
+        var w = r[1];
+        return '<tr><td>' + esc(r[0]) + (r[2] ? ' <i>' + esc(r[2]) + "</i>" : "") + '</td><td class="' + sgnCls(w.ret).trim() + '">' + fmtPct(w.ret) +
+          '</td><td class="' + sgnCls(w.bench).trim() + '">' + fmtPct(w.bench) + '</td><td class="' + sgnCls(w.excess).trim() + '"><b>' + fmtPp(w.excess) + "</b></td></tr>";
+      }).join("") + "</tbody></table>";
+    var betaInText = s.beta != null && s.betaAlpha != null && Math.abs(s.beta - 1) >= 0.25;   // 판정 문장에 이미 나온 β 는 칩으로 다시 보이지 않는다
+    var beta = s.beta == null || betaInText ? "" : '<span class="pf-chip" data-basis="' + esc(PF_BETA_TIP) + '">β ' + s.beta.toFixed(2) + "</span>";
+    return pBlk("추천 성적", esc(mdOf(s.from)) + " ~ " + esc(mdOf(s.to)) + " · " + s.days + "거래일",
+      '<p class="pf-verdict">' + pfVerdict(s, c) + "</p>" +
+      '<div class="pf-tags">' + pfSig(s.tEx, s.days) + beta + "</div>" + kpis + chart + tbl);
+  }
+
+  // ② 3개월 검증 — 선정 규칙 동결 기간의 추천 vs 그림자(스크린 상위를 기계적으로 고른 편성)
+  var PF_SHADOW_TIP = "그림자 포트폴리오: 같은 스크린(주제 정의·건전성 필터·검증된 점수)에서 점수 상위를 사람 판단 없이 주제마다 9개씩 기계적으로 고른 편성(매주 월요일 재선정, 동일비중)입니다. 추천 편성과 같은 날·같은 방식으로 잽니다. 추천이 그림자보다 꾸준히 앞서야 검증·교체·티어 같은 사람의 판단이 실제로 가치를 더한 것입니다. 선정 규칙은 이 3개월 동안 바꾸지 않습니다.";
+  function pfVerify(C, c) {
+    var S = C.shadow, F = PERF.freeze;
+    if (!S) return "";
+    var bn = benchName(c), from = (F && F.from) || S.from, until = F && F.until;
+    var prog = "";
+    if (until) {
+      var t0 = Date.parse(from), t1 = Date.parse(until), now = Date.parse(S.to);
+      var pct = Math.max(2, Math.min(100, Math.round((now - t0) / (t1 - t0) * 100)));
+      prog = '<div class="pf-prog"><div class="pf-prog-bar"><i style="width:' + pct + '%"></i></div>' +
+        '<div class="pf-prog-l"><span>' + esc(mdOf(from)) + " 시작</span><b>" + S.days + "거래일째</b><span>" + esc(mdOf(until)) + " 판정</span></div></div>";
+    }
+    var withChart = S.series && S.series.length >= 11;   // 10거래일부터 곡선(그 전엔 점 몇 개라 읽을 게 없다) — 범례 키도 곡선이 있을 때만
+    var kpi = function (k, v, key) {
+      return '<div class="pf-kpi"><div class="k">' + (withChart ? '<i class="lk ' + key + '"></i>' : "") + esc(k) + '</div><div class="v' + sgnCls(v) + '">' + fmtPct(v) + "</div></div>";
+    };
+    var kpis = '<div class="pf-kpis">' + kpi("추천 편성", S.f, "lk-f") + kpi("그림자", S.s, "lk-s") + kpi(bn, S.i, "lk-i") + "</div>";
+    var head = "<b>판단의 기여(추천 − 그림자) " + esc(fmtPp(S.edge)) + ".</b> ";
+    if (S.days < 20 || S.tEdge == null) head += "아직 " + S.days + "거래일이라 판단하기 이릅니다 — 20거래일부터 흐름을 보고" + (until ? " " + esc(mdOf(until)) + "에 판정합니다." : " 3개월 뒤 판정합니다.");
+    else head += Math.abs(S.tEdge) < 2 ? "아직 우연과 구별되지 않는 차이입니다." : (S.edge > 0 ? "사람의 판단이 기계적 선정보다 나았다고 볼 만한 차이입니다." : "기계적 선정이 더 나았다고 볼 만한 차이입니다.");
+    var chart = withChart ? pfChartBox("shadow", S.series.map(function (x) { return x.d; }), [
+      { k: "f", label: "추천 편성", vals: S.series.map(function (x) { return x.f; }) },
+      { k: "s", label: "그림자", vals: S.series.map(function (x) { return x.s; }) },
+      { k: "i", label: bn, vals: S.series.map(function (x) { return x.i; }) }
+    ], "추천 " + fmtPct(S.f) + ", 그림자 " + fmtPct(S.s)) : "";
+    var th = "";
+    if (S.themes) {
+      var trs = recoThemes().filter(function (t) { return S.themes[t.key]; }).map(function (t) {
+        var x = S.themes[t.key];
+        return "<tr><td>" + esc(t.label) + '</td><td class="' + sgnCls(x.f).trim() + '">' + fmtPct(x.f) + '</td><td class="' + sgnCls(x.s).trim() + '">' + fmtPct(x.s) +
+          '</td><td class="' + sgnCls(x.edge).trim() + '"><b>' + fmtPp(x.edge) + "</b></td></tr>";
+      }).join("");
+      if (trs) th = pfDetails("pf-shadow-th-" + c, "") + '<summary>주제별 보기</summary><table class="pf-tbl"><thead><tr><th>주제</th><th>추천</th><th>그림자</th><th>차이</th></tr></thead><tbody>' + trs + "</tbody></table></details>";
+    }
+    return pBlk("3개월 검증", "사람의 판단 vs 기계적 선정",
+      prog + '<p class="pf-verdict">' + head + "</p>" + kpis + chart + th +
+      '<p class="pf-note"><button class="lnk" type="button" data-basis="' + esc(PF_SHADOW_TIP) + '">그림자 포트폴리오란?</button></p>');
+  }
+
+  // 주제·티어 한 줄 — 이름 | 수익률 | 지수 대비 막대(가운데 0) | 지수 대비 값 | 펼침
+  function pfRowHtml(c, key, label, w, scale) {
+    var open = !!pfOpen[c + "|" + key], ex = w ? w.excess : null;
+    var bar = "";
+    if (ex != null) {
+      var wpct = Math.min(50, Math.abs(ex) / scale * 50);
+      bar = '<i class="' + (ex >= 0 ? "up" : "down") + '" style="width:' + wpct.toFixed(1) + '%"></i>';
+    }
+    return '<button type="button" class="pf-row" data-pfopen="' + esc(key) + '" aria-expanded="' + open + '">' +
+      '<span class="pf-nm">' + esc(label) + "</span>" +
+      '<span class="pf-ret' + sgnCls(w && w.ret) + '">' + (w ? fmtPct(w.ret) : "–") + "</span>" +
+      '<span class="pf-bar" aria-hidden="true">' + bar + "</span>" +
+      '<span class="pf-ex' + sgnCls(ex) + '">' + fmtPp(ex) + "</span>" +
+      '<span class="pf-chev" aria-hidden="true">' + ICON.chev + "</span></button>" +
+      (open ? pfDetail(c, key) : "");
+  }
+  function pfScale(ws) {
+    var m = 5;
+    ws.forEach(function (w) { if (w && w.excess != null) m = Math.max(m, Math.abs(w.excess)); });
+    return m;
+  }
+  // ③ 주제별 성적 — 정식 5주제 + 개인 목록(관심·보유)
+  function pfThemes(C, c) {
+    var formal = recoThemes().filter(function (t) { return C.groups[t.key]; });
+    var personal = orderedThemes().filter(function (t) { return isPersonal(t.key) && C.groups[t.key]; });
+    var all = formal.concat(personal), scale = pfScale(all.map(function (t) { return C.groups[t.key].w.all; }));
+    var body = '<div class="pf-rows">' + formal.map(function (t) { return pfRowHtml(c, t.key, t.label, C.groups[t.key].w.all, scale); }).join("") +
+      (personal.length ? '<div class="pf-gh">내 종목</div>' + personal.map(function (t) { return pfRowHtml(c, t.key, t.label, C.groups[t.key].w.all, scale); }).join("") : "") + "</div>";
+    return pBlk("주제별 성적", "막대 = 같은 기간 " + esc(benchName(c)) + " 대비", body +
+      '<p class="pf-note">줄을 누르면 종목별 성적과 최근 편출 종목이 펼쳐집니다.</p>');
+  }
+  // ④ 티어 검증 — 정식 편성의 T1·T2·T3(품질 등급이 성과로 뒷받침되는지 — 참고, 등급을 성과로 바꾸지 않는다)
+  function pfTiers(C, c) {
+    var ts = TIER_KEYS.filter(function (k) { return C.groups[k]; });
+    if (!ts.length) return "";
+    var ws = ts.map(function (k) { return C.groups[k].w.all; }), scale = pfScale(ws);
+    var order = ts.slice().sort(function (a, b) { return C.groups[b].w.all.ret - C.groups[a].w.all.ret; });
+    var ok = order.join() === TIER_KEYS.filter(function (k) { return C.groups[k]; }).join();
+    var line = order.map(function (k) { return "T" + tierOfKey(k) + " " + fmtPct(C.groups[k].w.all.ret); }).join(" > ");
+    var verdict = "<b>" + esc(line) + "</b> — " + (ok ? "등급 순서대로 성과가 나고 있습니다." : "등급 순서와 성과 순서가 어긋나 있습니다.") +
+      " 품질 등급은 성과로 바꾸지 않으니 참고로만 보세요.";
+    return pBlk("티어 검증", "T1이 가장 좋아야 정상",
+      '<p class="pf-verdict">' + verdict + '</p><div class="pf-rows">' + ts.map(function (k) { return pfRowHtml(c, k, "T" + tierOfKey(k), C.groups[k].w.all, scale); }).join("") + "</div>");
+  }
+  // 펼친 줄 — 묶음의 β·최근 1개월·종목별(지금 편성) + 최근 90일 편출
+  function pfDetail(c, key) {
+    var C = PERF[c], g = C.groups[key], s = g.w.all, m1 = g.w.m1;
+    var facts = [];
+    if (s.beta != null) facts.push('<span data-basis="' + esc(PF_BETA_TIP) + '" class="pf-k">시장 민감도 β ' + s.beta.toFixed(2) + " · 감안하면 " + fmtPp(s.betaAlpha) + "</span>");
+    if (m1) facts.push('<span class="pf-k">최근 1개월 ' + fmtPct(m1.ret) + " (지수 대비 " + fmtPp(m1.excess) + ")</span>");
+    if (s.from && s.from !== PERF.base) facts.push('<span class="pf-k">' + esc(mdOf(s.from)) + "부터</span>");
+    var mine = (C.stocks || []).filter(function (r) { return LPinGroup(key, r.th, r.tier); })
+      .sort(function (a, b) { return (b.ret == null ? -1e9 : b.ret) - (a.ret == null ? -1e9 : a.ret); });
+    var list = mine.map(function (r) {
+      var hit = findStock(c, r.t, r.th), tag = isPersonal(r.th) ? '<span class="wtag wt-light">' + esc(themeMeta(r.th).label) + "</span>" : '<span class="tb t' + esc(r.tier) + '">T' + esc(r.tier) + "</span>";
+      var thl = isTierKey(key) ? esc(themeMeta(r.th).label) + " · " : "";
+      return '<div class="row pr' + (hit ? "" : " no-open") + '"' + (hit ? openAttrs(c, r.t, hit.theme) : "") + ">" +
+        '<div class="r-l"><div class="r-nm"><span class="r-name">' + esc(r.n) + "</span></div>" +
+        '<div class="r-sub">' + tag + "<span>" + thl + esc(mdOf(r.d0)) + "부터 · 지수 대비 " + '<b class="' + sgnCls(r.ex).trim() + '">' + fmtPp(r.ex) + "</b></span></div></div>" +
+        '<div class="r-r"><div class="r-px' + sgnCls(r.ret) + '">' + fmtPct(r.ret) + "</div></div></div>";
     }).join("");
-    if (!rows) return "";
-    return '<div class="tbl-x"><table class="pm-tbl"><thead><tr><th>주제</th><th>추천</th><th>그림자</th><th>차이</th></tr></thead><tbody>' + rows + "</tbody></table></div>";
+    var gone = (C.removed || []).filter(function (r) { return LPinGroup(key, r.th, r.tier); });
+    var goneHtml = gone.length ? pfDetails("pf-gone-" + c + "-" + key, "pf-gone") + "<summary>최근 90일 편출 " + gone.length + '종목</summary><div class="list">' + gone.map(function (r) {
+      var post = r.postEx == null ? '<div class="r-px flat">–</div>' : '<div class="r-px' + sgnCls(r.postEx) + '">' + fmtPp(r.postEx) + "</div>";
+      return '<div class="row pr no-open" data-basis="' + esc(r.n + " — " + mdOf(r.d0) + "~" + mdOf(r.d1) + " 보유 중 " + fmtPct(r.ret) + "(같은 기간 지수 대비 " + fmtPp(r.ex) + ")" +
+          (r.post != null ? ", 편출 뒤 " + fmtPct(r.post) + "(지수 대비 " + fmtPp(r.postEx) + ")" : "")) + '"><div class="r-l"><div class="r-nm"><span class="r-name">' + esc(r.n) + "</span></div>" +
+        '<div class="r-sub"><span>' + (isTierKey(key) ? esc(themeMeta(r.th).label) + " · " : "") + esc(mdOf(r.d1)) + " 편출 · 보유 중 " + fmtPct(r.ret) + "</span></div></div>" +
+        '<div class="r-r">' + post + '<div class="r-ch flat">편출 후</div></div></div>';
+    }).join("") + '</div><p class="pf-note">편출 후 = 뺀 날 종가부터 지금까지 지수 대비. 양수면 뺀 뒤에 지수보다 더 올랐다는 뜻입니다(누르면 자세히).</p></details>' : "";
+    return '<div class="pf-det">' + (facts.length ? '<div class="pf-facts">' + facts.join("") + "</div>" : "") +
+      (list ? '<div class="list" data-ctx="perf">' + list + "</div>" : '<div class="empty">지금 편성된 종목이 없습니다.</div>') + goneHtml + "</div>";
   }
+  function LPinGroup(key, th, tier) {
+    if (isTierKey(key)) return !isPersonal(th) && tier === tierOfKey(key);
+    return th === key;
+  }
+
+  // ⑤ 교체 성과 — 같은 날·같은 주제의 편입 ⇄ 편출 묶음, 교체일 종가부터 지수 대비
+  function pfSwaps(C, c) {
+    var W = C.swaps;
+    if (!W || !W.list || !W.list.length) return "";
+    var sm = W.summary, live = sm.n - sm.done, verdict;
+    if (sm.done) verdict = "<b>20거래일이 지난 교체 " + sm.done + "회 중 편입 종목이 더 나은 경우 " + sm.wins20 + "회</b>(평균 차이 " + esc(fmtPp(sm.diff20)) + ")" +
+      (live ? " · 진행 중 " + live + "회" : "") + ". 표본이 작아 방향만 참고하세요.";
+    else verdict = "아직 20거래일이 지난 교체가 없습니다(진행 중 " + live + "회). 교체일부터 지금까지의 차이는 아래와 같습니다.";
+    var rowOf = function (x) {
+      var nm = function (a) { return a.map(function (y) { return y.n; }).join(", "); };
+      // 20거래일이 지나면 그 시점 값으로 판정, 그 전은 '진행 중'(며칠짜리 차이는 승패를 매기지 않는다)
+      var done = x.add20 != null && x.rem20 != null, a = done ? x.add20 : x.addNow, r = done ? x.rem20 : x.remNow;
+      var state2 = done ? "20거래일 뒤 · " + (a > r ? "편입이 나음" : "편출이 나음") : "진행 중" + (x.days != null ? " · " + x.days + "거래일째" : "");
+      return '<div class="pf-sw' + (done ? "" : " pf-sw-live") + '"><div class="pf-sw-h"><span>' + esc(mdOf(x.d)) + "</span><span>" + esc(themeMeta(x.th).label) + "</span>" +
+        '<span class="pf-sw-w">' + esc(state2) + "</span></div>" +
+        '<div class="pf-sw-b"><span class="pf-sw-k">편입</span><span class="pf-sw-n">' + esc(nm(x.add)) + '</span><b class="' + sgnCls(a).trim() + '">' + fmtPp(a) + "</b></div>" +
+        '<div class="pf-sw-b"><span class="pf-sw-k">편출</span><span class="pf-sw-n">' + esc(nm(x.rem)) + '</span><b class="' + sgnCls(r).trim() + '">' + fmtPp(r) + "</b></div></div>";
+    };
+    var head = W.list.slice(0, 4).map(rowOf).join(""), rest = W.list.slice(4);
+    return pBlk("교체 성과", "편입 vs 편출 · " + esc(benchName(c)) + " 대비",
+      '<p class="pf-verdict">' + verdict + "</p>" + head +
+      (rest.length ? pfDetails("pf-sw-" + c, "") + "<summary>이전 교체 " + rest.length + "회 더 보기</summary>" + rest.map(rowOf).join("") + "</details>" : "") +
+      '<p class="pf-note">값은 교체일 종가부터의 수익률에서 같은 기간 지수 수익률을 뺀 것(묶음 평균)입니다. 20거래일이 지나면 그 시점으로 고정해 판정에 넣습니다.</p>');
+  }
+  function pfFoot(C, c) {
+    var asof = c === "us" ? mdOf(C.pd) + " 미국 종가" : mdOf(C.pd) + " 종가";
+    return '<p class="pf-foot">' + esc(asof) + " 기준 · 매일 자동 계산(편출 종목 포함, 같은 비중) · " +
+      '<button class="lnk" type="button" data-basis="' + esc(PF_HOW) + '">계산 방법</button></p>';
+  }
+
+  // ── 누적 수익 꺾은선 — 추천(강조색)·그림자(보조색)·지수(회색). 누르거나 올리면 그날 값(십자선) ──
+  function pfChartBox(id, dates, series, aria) {
+    PFC["pfc-" + id] = { dates: dates, series: series };
+    return '<div class="pf-chart" id="pfc-' + id + '" tabindex="0" role="group" aria-label="' + esc("누적 수익 곡선 — " + aria + " (좌우 화살표로 날짜 이동)") + '"></div>';
+  }
+  function pfDrawAll() { Object.keys(PFC).forEach(function (id) { var el = document.getElementById(id); if (el) pfDraw(el, PFC[id]); }); }
+  function niceTicks(mn, mx) {
+    var span = Math.max(mx - mn, 2), raw = span / 3, steps = [0.5, 1, 2, 2.5, 5, 10, 20, 25, 50, 100], st = steps[steps.length - 1];
+    for (var i = 0; i < steps.length; i++) if (steps[i] >= raw) { st = steps[i]; break; }
+    var lo = Math.floor(mn / st) * st, hi = Math.ceil(mx / st) * st, out = [];
+    for (var v = lo; v <= hi + 1e-9; v += st) out.push(Math.round(v * 100) / 100);
+    if (out.length < 2) out.push(lo + st);
+    return out;
+  }
+  function pfDraw(el, sp) {
+    var W = Math.max(240, Math.round(el.clientWidth || 320)), H = 168, L = 40, R = 12, T = 10, B = 24;
+    var n = sp.dates.length;
+    var ser = sp.series.map(function (s) {
+      var b = null;
+      return { k: s.k, label: s.label, ys: s.vals.map(function (v) { if (v == null) return null; if (b == null) b = v; return (v / b - 1) * 100; }) };
+    });
+    var mn = 0, mx = 0;
+    ser.forEach(function (s) { s.ys.forEach(function (y) { if (y != null) { if (y < mn) mn = y; if (y > mx) mx = y; } }); });
+    var ticks = niceTicks(mn, mx), y0 = ticks[0], y1 = ticks[ticks.length - 1];
+    var X = function (i) { return L + (W - L - R) * (n <= 1 ? 0 : i / (n - 1)); };
+    var Y = function (v) { return T + (H - T - B) * (1 - (v - y0) / (y1 - y0)); };
+    var svg = "";
+    ticks.forEach(function (t) {
+      var y = Y(t).toFixed(1);
+      svg += '<line class="' + (t === 0 ? "g0" : "gl") + '" x1="' + L + '" x2="' + (W - R) + '" y1="' + y + '" y2="' + y + '"/>' +
+        '<text class="yl" x="' + (L - 6) + '" y="' + y + '" dy="0.35em" text-anchor="end">' + (t > 0 ? "+" : "") + t + "%</text>";
+    });
+    [0, Math.floor((n - 1) / 2), n - 1].forEach(function (i, j) {
+      if (j === 1 && (n < 5)) return;
+      svg += '<text class="xl" x="' + X(i).toFixed(1) + '" y="' + (H - 6) + '" text-anchor="' + (j === 0 ? "start" : j === 2 ? "end" : "middle") + '">' + esc(mdOf(sp.dates[i])) + "</text>";
+    });
+    // 지수(회색)를 먼저, 추천(강조)을 맨 위에 그린다
+    var orderDraw = ser.slice().sort(function (a, b) { return (a.k === "f") - (b.k === "f"); });
+    orderDraw.forEach(function (s) {
+      var d = "", pen = false, lastI = -1;
+      s.ys.forEach(function (y, i) {
+        if (y == null) { pen = false; return; }
+        d += (pen ? "L" : "M") + X(i).toFixed(1) + " " + Y(y).toFixed(1); pen = true; lastI = i;
+      });
+      if (d) svg += '<path class="ln ln-' + s.k + '" d="' + d + '"/>';
+      if (lastI >= 0) svg += '<circle class="dot ln-' + s.k + '" cx="' + X(lastI).toFixed(1) + '" cy="' + Y(s.ys[lastI]).toFixed(1) + '" r="4"/>';
+    });
+    svg += '<g class="xh-g" style="display:none"><line class="xh" y1="' + T + '" y2="' + (H - B) + '"/>' +
+      ser.map(function (s) { return '<circle class="dot ln-' + s.k + '" r="4" data-k="' + s.k + '"/>'; }).join("") + "</g>";
+    el.innerHTML = '<svg viewBox="0 0 ' + W + " " + H + '" height="' + H + '" aria-hidden="true">' + svg + '</svg><div class="pf-tip" hidden></div>';
+    var sv = el.querySelector("svg"), g = sv.querySelector(".xh-g"), tip = el.querySelector(".pf-tip"), cur = -1;
+    function show(i) {
+      if (i < 0 || i >= n) return;
+      cur = i;
+      g.style.display = "";
+      var x = X(i);
+      g.querySelector(".xh").setAttribute("x1", x); g.querySelector(".xh").setAttribute("x2", x);
+      Array.prototype.forEach.call(g.querySelectorAll("circle"), function (cEl) {
+        var s = ser.filter(function (q) { return q.k === cEl.getAttribute("data-k"); })[0], y = s && s.ys[i];
+        if (y == null) { cEl.style.display = "none"; return; }
+        cEl.style.display = ""; cEl.setAttribute("cx", x); cEl.setAttribute("cy", Y(y));
+      });
+      tip.textContent = "";
+      var dEl = document.createElement("div"); dEl.className = "tp-d"; dEl.textContent = mdOf(sp.dates[i]); tip.appendChild(dEl);
+      ser.forEach(function (s) {
+        if (s.ys[i] == null) return;
+        var r = document.createElement("div"); r.className = "tp-r";
+        var k = document.createElement("i"); k.className = "lk lk-" + s.k; r.appendChild(k);
+        r.appendChild(document.createTextNode(s.label));
+        var b = document.createElement("b"); b.textContent = fmtPct(s.ys[i]); r.appendChild(b);
+        tip.appendChild(r);
+      });
+      tip.hidden = false;
+      var px = x / W * el.clientWidth, tw = tip.offsetWidth;
+      tip.style.left = Math.max(0, Math.min(el.clientWidth - tw, px > el.clientWidth / 2 ? px - tw - 10 : px + 10)) + "px";
+    }
+    function hide() { g.style.display = "none"; tip.hidden = true; cur = -1; }
+    function idxAt(ev) {
+      var rc = sv.getBoundingClientRect(), x = (ev.clientX - rc.left) * (W / rc.width);
+      return Math.max(0, Math.min(n - 1, Math.round((x - L) / (W - L - R) * (n - 1))));
+    }
+    sv.addEventListener("pointermove", function (ev) { show(idxAt(ev)); });
+    sv.addEventListener("pointerdown", function (ev) { show(idxAt(ev)); });
+    sv.addEventListener("pointerleave", hide);
+    el.addEventListener("blur", hide);
+    el.addEventListener("keydown", function (ev) {
+      if (ev.key !== "ArrowLeft" && ev.key !== "ArrowRight") return;
+      ev.preventDefault();
+      show(cur < 0 ? n - 1 : Math.max(0, Math.min(n - 1, cur + (ev.key === "ArrowLeft" ? -1 : 1))));
+    });
+  }
+  var pfResizeT = null;
+  window.addEventListener("resize", function () {
+    if (state.tab !== "perf" || !PERF) return;
+    clearTimeout(pfResizeT);
+    pfResizeT = setTimeout(pfDrawAll, 150);
+  });
 
   // 실시간 시세가 도착하면 보이는 화면(현재 탭·Top Pick·열린 상세)을 다시 그려 표시를 일치시킨다.
   // (모두 캐시된 뒤엔 ensureLive 의 todo 가 비어 재귀 호출이 즉시 멈춘다 — 무한 루프 없음)
@@ -3507,8 +3546,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     if (!window.__pastActive) {
       if (state.tab === "reco") renderReco();
       else if (state.tab === "mine") renderMine();
-      else if (state.tab === "perf") renderPerf();
-      renderTopPicks();
+      renderTopPicks();   // 성과 탭은 매일 계산값(perf.json)이라 실시간 시세로 다시 그리지 않는다
     }
     if (SH.open) renderSheet(true);
   }
@@ -4280,10 +4318,15 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       return;
     }
     if (!t.closest(".wl-search")) { var box = document.getElementById("wlSug"); if (box) box.hidden = true; }
-    var pp = t.closest("[data-perfp]");
-    if (pp) { state.perfPeriod = pp.dataset.perfp; renderPerf(); return; }
-    var pth = t.closest("[data-ptheme]");
-    if (pth) { var k = pth.getAttribute("data-ptheme"); if (k !== state.perfTheme) { state.perfTheme = k; renderPerf(); } return; }
+    var pfo = t.closest("[data-pfopen]");
+    if (pfo) {   // 성과 — 주제·티어 줄을 펼쳐 종목별 성적
+      var pfk = pfo.getAttribute("data-pfopen"), pid = state.country + "|" + pfk;
+      if (pfOpen[pid]) delete pfOpen[pid]; else pfOpen[pid] = 1;
+      renderPerf();
+      var again = document.querySelector('[data-pfopen="' + pfk + '"]');
+      if (again) again.focus({ preventScroll: true });
+      return;
+    }
     if (t.closest("#wlRestore")) {
       var rk = t.closest("#wlRestore").getAttribute("data-list") || state.mine;
       saveHidden(rk, getHidden(rk).filter(function (w) { return w.c !== state.country; }));
@@ -4983,7 +5026,6 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   // ── 시작 ──
   document.querySelectorAll("#countrySeg button").forEach(function (x) { x.classList.toggle("on", x.dataset.c === state.country); });
   state.theme = recoKeys()[0] || state.theme;            // 처음 선택 = 사용자가 정한 맨 앞 주제
-  state.perfTheme = themeKeysOrdered()[0] || state.perfTheme;
   renderMarketNote();
   renderLiquidity();
   renderIndexTA();

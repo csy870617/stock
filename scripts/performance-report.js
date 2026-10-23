@@ -173,52 +173,18 @@ Object.keys(byTheme).sort().forEach((gk) => {
 });
 
 // 실제 보유 기준 성적 — 매 스냅샷 편성을 다음 스냅샷까지 동일비중 보유했다고 보고 일별 수익률을 이어 붙인다
-// (앱 성과 탭 computeHeld 와 같은 계산). 위 avgReturn/avgExcess 는 '지금 남은 종목'만 세서 편출 종목의
-// 손익이 빠진다(생존 편향) — 추천의 실제 성적은 이쪽이다. beta 는 주간(7스냅샷) 회귀, 6주 미만이면 null.
-const PERSONAL = { watch: 1, hold: 1 };
+// (앱 성과 탭의 data/perf.json 과 같은 계산 — lib-perf.js). 위 avgReturn/avgExcess 는 '지금 남은 종목'만 세서 편출 종목의
+// 손익이 빠진다(생존 편향) — 추천의 실제 성적은 이쪽이다. 편출 종목의 마지막 하루는 perf.json 의 편출일 종가 캐시로 채우고,
+// β 는 거래일 일간 수익률 회귀(20거래일 미만이면 null — 2026-10-23 전엔 주간 7기록 묶음이라 오차가 컸다).
+const LP = require("./lib-perf");
+const PERF = (() => { try { return JSON.parse(fs.readFileSync(path.join(ROOT, "data", "perf.json"), "utf8")); } catch (_e) { return null; } })();
+const EXIT = (PERF && PERF.cache) || {};
+const exitPx = (c, t, i) => { const v = EXIT[c + ":" + t + "@" + H[i].date]; return v ? v.p : null; };
 function held(country, themeKey) {
-  const bk = country === "korea" ? "kospi" : "sp500";
-  const last = {};
-  const lv = (snap, k) => { if (snap[k]) last[k] = snap[k]; return last[k] || null; };
-  lv(H[0], bk); lv(H[0], "rsp");
-  const rets = [], brs = [];
-  let cum = 1, bcum = 1, ecum = 1, eqOk = country === "us";
-  for (let i = 1; i < H.length; i++) {
-    const a = H[i - 1], b = H[i];
-    const b0 = last[bk] || null, e0 = last.rsp || null;
-    const b1 = lv(b, bk), e1 = lv(b, "rsp");
-    const pb = {};
-    b.stocks.forEach((e) => { if (e.c === country && e.p) pb[e.t] = e.p; });
-    const seenT = {};
-    let sum = 0, n = 0;
-    a.stocks.forEach((e) => {
-      if (e.c !== country || seenT[e.t] || !e.p || !pb[e.t]) return;
-      if (themeKey ? e.th !== themeKey : PERSONAL[e.th]) return;
-      seenT[e.t] = 1; sum += pb[e.t] / e.p - 1; n++;
-    });
-    if (!n) continue;
-    const r = sum / n, rb = b0 && b1 ? b1 / b0 - 1 : 0, re = e0 && e1 ? e1 / e0 - 1 : 0;
-    if (!e0 || !e1) eqOk = false;
-    cum *= 1 + r; bcum *= 1 + rb; ecum *= 1 + re;
-    rets.push(r); brs.push(rb);
-  }
-  if (!rets.length) return null;
-  const wp = [], wb = [];
-  for (let j = 0; j + 7 <= rets.length; j += 7) {
-    let x = 1, y = 1;
-    for (let k = j; k < j + 7; k++) { x *= 1 + rets[k]; y *= 1 + brs[k]; }
-    wp.push(x - 1); wb.push(y - 1);
-  }
-  let beta = null;
-  if (wp.length >= 6) {
-    const mp = wp.reduce((x, y) => x + y, 0) / wp.length, mb = wb.reduce((x, y) => x + y, 0) / wb.length;
-    let cv = 0, vb = 0;
-    wp.forEach((v, q) => { cv += (v - mp) * (wb[q] - mb); vb += (wb[q] - mb) ** 2; });
-    if (vb > 0) beta = cv / vb;
-  }
-  const ret = (cum - 1) * 100, bench = (bcum - 1) * 100, r2 = (v) => (v == null ? null : +v.toFixed(2));
-  return { ret: r2(ret), bench: r2(bench), excess: r2(ret - bench), beta: r2(beta),
-    betaAlpha: beta == null ? null : r2(ret - beta * bench), vsEqualWeight: eqOk ? r2(ret - (ecum - 1) * 100) : null };
+  const s = LP.stats(LP.chain(H, country, themeKey || null, exitPx), 0, H[0].date);
+  if (!s) return null;
+  return { ret: s.ret, bench: s.bench, excess: s.excess, beta: s.beta, betaAlpha: s.betaAlpha, tExcess: s.tEx,
+    vsEqualWeight: s.vsEq != null ? s.vsEq : null };
 }
 const heldReport = {};
 ["korea", "us"].forEach((c) => {
@@ -252,7 +218,7 @@ const report = {
   },
   perfNote: "avgReturn 은 종목별 편입시점~현재 원수익률(편입 구간이 종목마다 달라 전체구간 벤치마크와 직접 비교는 왜곡). avgExcess/byTierExcess 는 각 종목 편입일에 맞춘 지수 대비 초과수익으로 like-for-like.",
   held: heldReport,
-  heldNote: "held = 실제 보유 기준(편출 종목 포함, 동일비중 일별 연결). betaAlpha = 수익률 − β×지수(시장 민감도 몫을 뺀 선별 효과). vsEqualWeight = 동일비중 S&P500(RSP) 대비(미국).",
+  heldNote: "held = 실제 보유 기준(편출 종목 포함, 동일비중 일별 연결 — lib-perf.js, 앱 성과 탭과 같은 값). betaAlpha = 수익률 − β×지수(시장 민감도 몫을 뺀 선별 효과, β 는 거래일 일간 회귀). tExcess = 일간 초과수익의 t(|t|<2 면 우연과 구별 안 됨). vsEqualWeight = 동일비중 S&P500(RSP) 대비(미국).",
   betaWarn,
   byTier: Object.fromEntries(Object.keys(byTier).sort().map((k) => [k, +avg(byTier[k]).toFixed(2)])),
   byTierExcess: Object.fromEntries(Object.keys(byTier).sort().map((k) => [k, avgEx(byTier[k]) == null ? null : +avgEx(byTier[k]).toFixed(2)])),

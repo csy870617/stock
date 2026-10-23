@@ -7,8 +7,8 @@ window.CANDIDATES = {
  "screenAsOf": "2026-10-23",
  "screenFresh": true,
  "beta": {
-  "korea": 0.47,
-  "us": 1
+  "korea": 0.45,
+  "us": 1.01
  },
  "groups": {
   "korea|core": {
