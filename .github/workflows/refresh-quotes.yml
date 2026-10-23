@@ -22,9 +22,22 @@ name: Refresh quotes (daily, token-free)
 # 참고: 예약(cron)·수동(dispatch) 실행은 이 워크플로우가 "기본 브랜치"에 존재해야 동작한다
 #       (GitHub 정책). 이 저장소의 기본 브랜치는 아래 TARGET_BRANCH 와 같으므로 병합하면 동작한다.
 on:
+  # 장 마감 직후 여러 슬롯 — GitHub 예약은 정각 슬롯에서 수 시간씩 밀리고 가끔 빠진다(2026-10 실측: 07:00 분이
+  # 12~14시, 21:00 분이 다음날 23~02시 UTC). 정각을 피한 분에 슬롯을 여럿 두고, gate 잡(close-gate.js)이 이미
+  # 처리한 마감이면 바로 끝낸다 — 먼저 도착한 슬롯 하나가 그 마감을 처리한다.
   schedule:
-    - cron: "0 7 * * 1-5"    # 평일 07:00 UTC ≈ 한국 장 마감 이후
-    - cron: "0 21 * * 1-5"   # 평일 21:00 UTC ≈ 미국 장 마감 이후
+    # 한국 마감 15:30 KST = 06:30 UTC
+    - cron: "41 6 * * 1-5"
+    - cron: "13 7 * * 1-5"
+    - cron: "47 7 * * 1-5"
+    - cron: "23 9 * * 1-5"
+    # 미국 마감 16:00 ET = 20:00 UTC(서머타임) / 21:00 UTC(표준시) — 게이트가 현지 시각으로 마감을 판정한다
+    - cron: "23 20 * * 1-5"
+    - cron: "52 20 * * 1-5"
+    - cron: "23 21 * * 1-5"
+    - cron: "52 21 * * 1-5"
+    - cron: "37 22 * * 1-5"
+    - cron: "17 0 * * 2-6"
   workflow_dispatch:
 
 permissions:
@@ -41,7 +54,29 @@ env:
   HAS_AI_KEY: ${{ secrets.ANTHROPIC_API_KEY != '' }}
 
 jobs:
+  # 새 마감이 없으면(이미 다른 슬롯이 처리) 갱신 잡을 건너뛴다. 수동 실행은 항상 돈다.
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      run: ${{ steps.g.outputs.run }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TARGET_BRANCH }}
+          fetch-depth: 1
+          sparse-checkout: |
+            scripts/close-gate.js
+            data/close-runs.json
+            data/quotes.js
+          sparse-checkout-cone-mode: false
+      - id: g
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then echo "run=true" >> "$GITHUB_OUTPUT"; echo "수동 실행 — 게이트 생략"; exit 0; fi
+          node scripts/close-gate.js >> "$GITHUB_OUTPUT"
+
   refresh:
+    needs: gate
+    if: needs.gate.outputs.run == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -159,7 +194,6 @@ jobs:
       # 관심종목 검색 사전(이름→코드) — 신규 상장 반영용, 월요일 아침 실행에서만 주 1회.
       # KRX 가 막히면 네이버로 폴백하고, 둘 다 실패한 국가는 기존 값을 유지한다(스크립트 내부 처리).
       - name: Refresh ticker dictionary (weekly, → data/tickers.js, token-free)
-        if: github.event.schedule == '0 7 * * 1-5'
         run: if [ "$(date -u +%u)" = "1" ]; then node scripts/gen-tickers.js; else echo "월요일만 실행 — 건너뜀"; fi
         continue-on-error: true
 
@@ -171,6 +205,11 @@ jobs:
       # data/perf.json 에 쓴다. 편출 종목의 마지막 하루·편출 후 성적은 야후 종가로 채운다(실패하면 지난 계산을 잇는다, 토큰 0).
       - name: Performance precompute (history·shadow → data/perf.json, token-free)
         run: node scripts/perf-track.js
+        continue-on-error: true
+
+      # 이번 실행이 잡은 마감(지수 종가일)을 기록 — 같은 마감의 다음 슬롯은 gate 에서 끝난다
+      - name: Mark processed closes (→ data/close-runs.json, token-free)
+        run: node scripts/close-gate.js --mark
         continue-on-error: true
 
       # 앱 상단 '데이터 신선도' 패널이 읽는 상태 파일 — 매일·회전 항목의 커버리지를 기록한다.
@@ -186,14 +225,14 @@ jobs:
       - name: Commit & push if changed
         id: commit
         run: |
-          if git diff --quiet -- data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/events.js data/fundamentals.js data/liquidity-auto.js data/watch-candidates.js data/discovery-candidates.js data/candidates.js data/coverage-status.js data/tickers.js data/consensus.js data/reco-ops.json data/chart data/liquidity.js data/index-notes.js data/candidate-notes.json data/news.js data/ai-status.js data/shadow.json data/perf.json; then
+          if git diff --quiet -- data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/events.js data/fundamentals.js data/liquidity-auto.js data/watch-candidates.js data/discovery-candidates.js data/candidates.js data/coverage-status.js data/tickers.js data/consensus.js data/reco-ops.json data/chart data/liquidity.js data/index-notes.js data/candidate-notes.json data/news.js data/ai-status.js data/shadow.json data/perf.json data/close-runs.json; then
             echo "변화 없음 — 커밋 생략"
             echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/events.js data/fundamentals.js data/liquidity-auto.js data/watch-candidates.js data/discovery-candidates.js data/candidates.js data/coverage-status.js data/tickers.js data/consensus.js data/reco-ops.json data/chart data/liquidity.js data/index-notes.js data/candidate-notes.json data/news.js data/ai-status.js data/shadow.json data/perf.json
+          git add data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/events.js data/fundamentals.js data/liquidity-auto.js data/watch-candidates.js data/discovery-candidates.js data/candidates.js data/coverage-status.js data/tickers.js data/consensus.js data/reco-ops.json data/chart data/liquidity.js data/index-notes.js data/candidate-notes.json data/news.js data/ai-status.js data/shadow.json data/perf.json data/close-runs.json
           git commit -m "매일 데이터 갱신 (자동) — 시세·기준일·스냅샷 (update-quotes + daily-maintenance)"
           # 다른 자동 커밋(LLM 재평가 Routine 등)과 경합해 push 가 거부될 수 있으므로,
           # 거부되면 원격 변경을 rebase 로 얹어 1회 재시도한다(그날 갱신이 조용히 유실되지 않도록).
@@ -207,7 +246,7 @@ jobs:
               git rebase --abort
               echo "::warning::rebase 충돌 — 원격 최신 위에 이번 실행 산출물을 다시 얹습니다"
               GEN="$RUNNER_TEMP/gen"; mkdir -p "$GEN"
-              cp data/quotes.js data/indices.js data/stock-ta.js data/events.js data/fundamentals.js data/liquidity-auto.js data/watch-candidates.js data/discovery-candidates.js data/tickers.js data/news.js data/ai-status.js data/shadow.json data/perf.json "$GEN/"
+              cp data/quotes.js data/indices.js data/stock-ta.js data/events.js data/fundamentals.js data/liquidity-auto.js data/watch-candidates.js data/discovery-candidates.js data/tickers.js data/news.js data/ai-status.js data/shadow.json data/perf.json data/close-runs.json "$GEN/"
               cp -r data/chart "$RUNNER_TEMP/gen-chart" 2>/dev/null || true
               git reset --hard FETCH_HEAD
               cp "$GEN"/* data/
@@ -222,7 +261,7 @@ jobs:
               node scripts/perf-track.js || true
               node scripts/check-defects.js || true
               node scripts/coverage.js --emit || true
-              git add data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/events.js data/fundamentals.js data/liquidity-auto.js data/watch-candidates.js data/discovery-candidates.js data/candidates.js data/coverage-status.js data/tickers.js data/consensus.js data/reco-ops.json data/chart data/liquidity.js data/index-notes.js data/candidate-notes.json data/news.js data/ai-status.js data/shadow.json data/perf.json
+              git add data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/events.js data/fundamentals.js data/liquidity-auto.js data/watch-candidates.js data/discovery-candidates.js data/candidates.js data/coverage-status.js data/tickers.js data/consensus.js data/reco-ops.json data/chart data/liquidity.js data/index-notes.js data/candidate-notes.json data/news.js data/ai-status.js data/shadow.json data/perf.json data/close-runs.json
               git diff --cached --quiet || git commit -m "매일 데이터 갱신 (자동) — 시세·기준일·스냅샷 (update-quotes + daily-maintenance)"
             fi
             # 원격 변경과 합쳐진 결과도 커밋 전과 같은 게이트를 통과해야 push 한다
