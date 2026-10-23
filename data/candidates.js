@@ -2,13 +2,13 @@
 // groups["<country>|<theme>"] = {defects 편성 결격(state 결격|점검 필요|감시), list 후보(status 검증 통과|보류|검증 대기)}
 // 세션 판정은 data/candidate-notes.json(CLAUDE.md §3-7) — 이 파일을 직접 고치지 않는다.
 window.CANDIDATES = {
- "asOf": "2026-10-22",
- "T": "2026-10-22",
+ "asOf": "2026-10-23",
+ "T": "2026-10-23",
  "screenAsOf": "2026-10-22",
  "screenFresh": true,
  "beta": {
-  "korea": 0.35,
-  "us": 1.27
+  "korea": 0.47,
+  "us": 1
  },
  "groups": {
   "korea|core": {
@@ -28,9 +28,9 @@ window.CANDIDATES = {
      "note": "ROE 6%·3년 평균 ROIC 5.7%(우량 정체성 미달) — 검증 통과 대체 없음",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-22",
+     "triedAt": "2026-10-23",
      "since": "2026-10-18",
-     "age": 4
+     "age": 5
     },
     {
      "ticker": "086790",
@@ -46,63 +46,34 @@ window.CANDIDATES = {
      ],
      "note": "중복 편성 — 저평가 주제에 남기고 이 주제는 다른 종목으로 교체",
      "dup": "value",
-     "triedAt": "2026-10-22",
+     "triedAt": "2026-10-23",
      "since": "2026-10-21",
-     "age": 1
+     "age": 2
     },
     {
      "ticker": "278470",
      "name": "에이피알",
      "state": "결격",
-     "flags": [],
+     "flags": [
+      {
+       "k": "trend",
+       "msg": "추세 붕괴(단·중·장기 모두 매도 이하)",
+       "fresh": false
+      }
+     ],
      "note": "단·중·장기 신호 모두 매도 이하(추세 붕괴) — 3분기 영업이익 추정 하향(원화 강세·유럽 물류비)으로 증권사 목표가 하향, 매출 성장은 유지돼 기초 체력 훼손은 아님 · 검증 통과 대체 후보 없어 감시",
      "judged": "2026-10-21",
      "verdict": "실질",
-     "triedAt": "2026-10-22",
+     "triedAt": "2026-10-23",
      "since": "2026-10-21",
-     "age": 1
+     "age": 2
     }
    ],
-   "list": [
-    {
-     "ticker": "028050",
-     "name": "삼성E&A",
-     "status": "검증 대기",
-     "why": "매출 성장 -9.4%",
-     "cap": "삼성그룹 상한",
-     "url": "https://m.stock.naver.com/domestic/stock/028050/total"
-    },
-    {
-     "ticker": "024110",
-     "name": "기업은행",
-     "status": "검증 대기",
-     "why": "3년 평균 ROIC 1% · 매출 성장 -9.9% · 주식 수 연 0%",
-     "cap": "금융 상한",
-     "url": "https://m.stock.naver.com/domestic/stock/024110/total"
-    }
-   ]
+   "list": []
   },
   "korea|growth": {
    "eligible": 46,
    "defects": [
-    {
-     "ticker": "207940",
-     "name": "삼성바이오로직스",
-     "state": "결격",
-     "verdict": "실질",
-     "flags": [
-      {
-       "k": "dup",
-       "msg": "중복 편성 — 우량 주제에도 있어 분산이 줄어든다",
-       "fresh": false
-      }
-     ],
-     "note": "중복 편성 — 우량 주제에 남기고 이 주제는 다른 종목으로 교체",
-     "dup": "core",
-     "triedAt": "2026-10-22",
-     "since": "2026-10-21",
-     "age": 1
-    },
     {
      "ticker": "298040",
      "name": "효성중공업",
@@ -115,20 +86,11 @@ window.CANDIDATES = {
    ],
    "list": [
     {
-     "ticker": "103590",
-     "name": "일진전기",
-     "status": "검증 통과",
-     "note": "2분기 영업이익 +91%·북미 수주잔고 확대, β 가 높아 한국 β 를 올리는 대체 — 10/22 최신 컨센서스(신뢰 출처 2곳)를 확인하지 못해 보류선, 성장 편성 전력기기가 이미 3종목이라 후순위",
-     "asOf": "2026-10-22",
-     "why": "3년 매출 연평균 20.6% · FCF 마진 3% · 3년 평균 ROIC 11.8%",
-     "url": "https://m.stock.naver.com/domestic/stock/103590/total"
-    },
-    {
      "ticker": "443060",
      "name": "HD현대마린솔루션",
      "status": "검증 통과",
-     "note": "3년 평균 ROIC 33%·FCF 마진 15.5% — HD 계열 결격 시 계열 비중을 늘리지 않는 대체",
-     "asOf": "2026-10-18",
+     "note": "3년 평균 ROIC 33%·FCF 마진 15.5% — HD현대그룹 상한으로 현재 불가, 계열 종목 결격 시 계열 내 교체용",
+     "asOf": "2026-10-23",
      "why": "3년 매출 연평균 14.1% · FCF 마진 15.5% · 3년 평균 ROIC 33.3%",
      "cap": "HD현대그룹 상한",
      "url": "https://m.stock.naver.com/domestic/stock/443060/total"
@@ -137,8 +99,8 @@ window.CANDIDATES = {
      "ticker": "003230",
      "name": "삼양식품",
      "status": "검증 통과",
-     "note": "3년 매출 연평균 37%·3년 평균 ROIC 19.5% — 어느 편성 결격에도 대체 1순위(한국 β 를 낮추는 점은 짝 교체로 상쇄)",
-     "asOf": "2026-10-18",
+     "note": "3년 매출 연평균 37%·3년 평균 ROIC 19.5% — 한국 β 를 낮추는 점(β 0.15)이 블로커, β 가 밴드 안으로 복귀하면 1순위 대체",
+     "asOf": "2026-10-23",
      "why": "3년 매출 연평균 37.3% · FCF 마진 -5.9% · 3년 평균 ROIC 19.5%",
      "url": "https://m.stock.naver.com/domestic/stock/003230/total"
     },
@@ -146,8 +108,8 @@ window.CANDIDATES = {
      "ticker": "010140",
      "name": "삼성중공업",
      "status": "검증 통과",
-     "note": "3년 매출 연평균 21.5%·FCF 마진 12.6% — HD현대중공업 결격 시 같은 업종 대체",
-     "asOf": "2026-10-18",
+     "note": "3년 매출 연평균 21.5%·FCF 마진 12.6% — 삼성그룹 상한으로 불가(삼성바이오가 우량에 남아 그룹 수가 줄지 않음)",
+     "asOf": "2026-10-23",
      "why": "3년 매출 연평균 21.5% · FCF 마진 12.6% · 3년 평균 ROIC 6.1%",
      "cap": "삼성그룹 상한",
      "url": "https://m.stock.naver.com/domestic/stock/010140/total"
@@ -213,6 +175,13 @@ window.CANDIDATES = {
      "status": "검증 대기",
      "why": "3년 매출 연평균 21.6% · FCF 마진 0.7% · 3년 평균 ROIC 6%",
      "url": "https://m.stock.naver.com/domestic/stock/000500/total"
+    },
+    {
+     "ticker": "011780",
+     "name": "금호석유화학",
+     "status": "검증 대기",
+     "why": "3년 매출 연평균 -4.6% · FCF 마진 7.5% · 3년 평균 ROIC 3.4%",
+     "url": "https://m.stock.naver.com/domestic/stock/011780/total"
     }
    ]
   },
@@ -410,9 +379,9 @@ window.CANDIDATES = {
      ],
      "note": "중복 편성 — 우량 주제에 남기고 이 주제는 다른 종목으로 교체",
      "dup": "core",
-     "triedAt": "2026-10-22",
+     "triedAt": "2026-10-23",
      "since": "2026-10-21",
-     "age": 1
+     "age": 2
     }
    ],
    "list": [
@@ -420,8 +389,8 @@ window.CANDIDATES = {
      "ticker": "383220",
      "name": "F&F",
      "status": "보류",
-     "note": "2분기 실적 부진·단일 브랜드 의존·인수 검토 — 3분기 중국 회복과 인수 철회 확인 시",
-     "asOf": "2026-10-21",
+     "note": "3분기 실적 발표 전(2분기는 컨센서스 하회, 중국 법인 성장 둔화). 테일러메이드 인수 여부 미정이고 2025 DPS를 신뢰 출처 2곳에서 확인하지 못해 보류. 비금융·비삼성 후보로 블로커 해소 시 1순위.",
+     "asOf": "2026-10-23",
      "why": "배당 비감소 4년 · 배당성향 25.4% · 배당 4.3%",
      "url": "https://m.stock.naver.com/domestic/stock/383220/total"
     },
@@ -429,8 +398,8 @@ window.CANDIDATES = {
      "ticker": "003690",
      "name": "코리안리",
      "status": "보류",
-     "note": "3년 연속 배당 최대, 컨센 출처 간 10% 괴리 — 세 번째 출처 필요",
-     "asOf": "2026-10-18",
+     "note": "금융(편중 유지)이며 컨센서스 신뢰 출처가 한화투자증권 1곳(매수)과 미래에셋 중립으로 갈려 2곳 교차확인 불가. 2025 DPS도 미확인. 올해 1분기 대형 사고가 적어 순이익이 크게 늘었으나 사고 변동이 큰 업종.",
+     "asOf": "2026-10-23",
      "why": "배당 비감소 3년 · 배당성향 31.3% · 배당 4%",
      "cap": "금융 상한",
      "url": "https://m.stock.naver.com/domestic/stock/003690/total"
@@ -439,11 +408,20 @@ window.CANDIDATES = {
      "ticker": "031210",
      "name": "서울보증보험",
      "status": "보류",
-     "note": "목표가 내는 증권사 1곳",
-     "asOf": "2026-10-18",
+     "note": "금융 업종 상한에 걸리고 목표가를 내는 증권사 1곳뿐인 블로커 유지.",
+     "asOf": "2026-10-23",
      "why": "배당 비감소 1년 · 배당성향 74.5% · 배당 6.9%",
      "cap": "금융 상한",
      "url": "https://m.stock.naver.com/domestic/stock/031210/total"
+    },
+    {
+     "ticker": "030000",
+     "name": "제일기획",
+     "status": "보류",
+     "note": "삼성그룹 계열이라 삼성그룹 상한 5 초과를 해소하지 못하고 2026E 영업이익 감익 추정 블로커 유지.",
+     "asOf": "2026-10-23",
+     "why": "배당 비감소 2년 · 배당성향 60% · 배당 6.3%",
+     "url": "https://m.stock.naver.com/domestic/stock/030000/total"
     },
     {
      "ticker": "047050",
@@ -479,9 +457,9 @@ window.CANDIDATES = {
      "note": "성장 숫자·PEG 미달 — 품질 최상위라 대체 확보 시 교체",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-22",
+     "triedAt": "2026-10-23",
      "since": "2026-10-18",
-     "age": 4
+     "age": 5
     },
     {
      "ticker": "064760",
@@ -497,9 +475,9 @@ window.CANDIDATES = {
      "note": "3년 매출 연평균 -1.9% — 근접 완화선 미달, 대체 후보 소진",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-22",
+     "triedAt": "2026-10-23",
      "since": "2026-10-18",
-     "age": 4
+     "age": 5
     },
     {
      "ticker": "403870",
@@ -515,9 +493,9 @@ window.CANDIDATES = {
      "note": "3년 성장 2.8%·1·2분기 매출·영업이익 감소",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-22",
+     "triedAt": "2026-10-23",
      "since": "2026-10-18",
-     "age": 4
+     "age": 5
     },
     {
      "ticker": "082920",
@@ -1059,9 +1037,9 @@ window.CANDIDATES = {
      "note": "⑨ 세액공제(45X) 의존 · 최근 낙폭은 회사 고유 악재 미확인(10/28 실적 발표 예정)",
      "judged": "2026-10-21",
      "verdict": "실질",
-     "triedAt": "2026-10-22",
+     "triedAt": "2026-10-23",
      "since": "2026-10-21",
-     "age": 1
+     "age": 2
     },
     {
      "ticker": "NVT",
@@ -1082,9 +1060,9 @@ window.CANDIDATES = {
      "note": "⑤ 재무 안전 조건 미달 — 미국 히든 후보 풀 소진",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-22",
+     "triedAt": "2026-10-23",
      "since": "2026-10-18",
-     "age": 4
+     "age": 5
     },
     {
      "ticker": "FSS",
@@ -1100,9 +1078,9 @@ window.CANDIDATES = {
      "note": "⑤ 재무 안전 조건 미달 — 미국 히든 후보 풀 소진",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-22",
+     "triedAt": "2026-10-23",
      "since": "2026-10-18",
-     "age": 4
+     "age": 5
     },
     {
      "ticker": "MKSI",
@@ -1123,9 +1101,9 @@ window.CANDIDATES = {
      "note": "⑤ 재무 안전 조건 미달 — 미국 히든 후보 풀 소진",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-22",
+     "triedAt": "2026-10-23",
      "since": "2026-10-18",
-     "age": 4
+     "age": 5
     },
     {
      "ticker": "AAON",
@@ -1141,9 +1119,9 @@ window.CANDIDATES = {
      "note": "⑤ 재무 안전 조건 미달 — 미국 히든 후보 풀 소진",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-22",
+     "triedAt": "2026-10-23",
      "since": "2026-10-18",
-     "age": 4
+     "age": 5
     },
     {
      "ticker": "RBC",
@@ -1159,9 +1137,9 @@ window.CANDIDATES = {
      "note": "⑤ 재무 안전 조건 미달 — 미국 히든 후보 풀 소진",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-22",
+     "triedAt": "2026-10-23",
      "since": "2026-10-18",
-     "age": 4
+     "age": 5
     },
     {
      "ticker": "NVMI",
@@ -1228,10 +1206,10 @@ window.CANDIDATES = {
  },
  "summary": {
   "review": 0,
-  "defect": 14,
+  "defect": 13,
   "watch": 17,
   "untried": 0,
-  "dup": 3,
+  "dup": 2,
   "long": 0
  }
 };

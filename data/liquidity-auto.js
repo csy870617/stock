@@ -2,14 +2,14 @@
 // Yahoo 시장지표(금리·일드커브·VIX·HY신용·달러·원달러·코스피)의 가중 합성 → 5단계.
 // 온디맨드 유동성(data/liquidity.js)이 있으면 그것을 우선 표시하고, 이 baseline 을 함께 보여준다.
 window.LIQUIDITY_AUTO = {
- "asOf": "2026-10-22",
+ "asOf": "2026-10-23",
  "note": "Yahoo 시장지표 기반 자동 baseline(금리·일드커브·VIX·HY신용·달러·원달러·코스피). 거시 이벤트·내러티브는 미반영 — 온디맨드 유동성이 보정.",
  "inputs": {
   "us10y": "4.95",
   "curve": "0.93",
   "vix": "19.0",
   "hyg20": "-0.6",
-  "dxy": "101.8",
+  "dxy": "101.6",
   "usdkrw": "1326"
  },
  "us": {
@@ -30,7 +30,7 @@ window.LIQUIDITY_AUTO = {
   "shortScore": -0.42,
   "midScore": -0.2,
   "drivers": [
-   "⚠ 코스피 급락 floor 발동 (20일 -20%)",
+   "⚠ 코스피 급락 floor 발동 (20일 -21%)",
    "코스피 모멘텀(20d) (−2)",
    "원/달러 추세 (+1)",
    "글로벌 신용(20d) (−1)",
@@ -38,7 +38,7 @@ window.LIQUIDITY_AUTO = {
   ]
  },
  "fed": {
-  "asOf": "2026-10-22",
+  "asOf": "2026-10-23",
   "current": 3.881,
   "meetings": [
    {
@@ -59,56 +59,56 @@ window.LIQUIDITY_AUTO = {
    },
    {
     "date": "2026-12-09",
-    "rate": 4.09,
-    "stepBp": 19,
-    "cumBp": 21,
+    "rate": 4.097,
+    "stepBp": 19.7,
+    "cumBp": 21.7,
     "outcomes": [
      {
       "n": 1,
-      "p": 84
+      "p": 87
      },
      {
       "n": 0,
-      "p": 16
+      "p": 13
      }
     ]
    },
    {
     "date": "2027-01-27",
-    "rate": 4.17,
-    "stepBp": 8,
-    "cumBp": 28.9,
+    "rate": 4.175,
+    "stepBp": 7.8,
+    "cumBp": 29.4,
     "outcomes": [
      {
       "n": 1,
-      "p": 84
+      "p": 82
      },
      {
       "n": 2,
-      "p": 16
+      "p": 18
      }
     ]
    },
    {
     "date": "2027-03-17",
-    "rate": 4.303,
-    "stepBp": 13.3,
-    "cumBp": 42.2,
+    "rate": 4.319,
+    "stepBp": 14.4,
+    "cumBp": 43.8,
     "outcomes": [
      {
       "n": 2,
-      "p": 69
+      "p": 75
      },
      {
       "n": 1,
-      "p": 31
+      "p": 25
      }
     ]
    },
    {
     "date": "2027-04-28",
     "rate": 4.385,
-    "stepBp": 8.2,
+    "stepBp": 6.6,
     "cumBp": 50.4,
     "outcomes": [
      {
@@ -123,33 +123,33 @@ window.LIQUIDITY_AUTO = {
    },
    {
     "date": "2027-06-09",
-    "rate": 4.464,
-    "stepBp": 7.9,
-    "cumBp": 58.3,
+    "rate": 4.471,
+    "stepBp": 8.6,
+    "cumBp": 59,
     "outcomes": [
      {
       "n": 2,
-      "p": 67
+      "p": 64
      },
      {
       "n": 3,
-      "p": 33
+      "p": 36
      }
     ]
    },
    {
     "date": "2027-07-28",
-    "rate": 4.495,
-    "stepBp": 3.1,
-    "cumBp": 61.4,
+    "rate": 4.5,
+    "stepBp": 2.9,
+    "cumBp": 61.9,
     "outcomes": [
      {
       "n": 2,
-      "p": 54
+      "p": 52
      },
      {
       "n": 3,
-      "p": 46
+      "p": 48
      }
     ]
    }
@@ -159,11 +159,11 @@ window.LIQUIDITY_AUTO = {
  "bok": {
   "asOf": "2026-10-22",
   "base": 3,
-  "call": 3.03,
+  "call": 3.032,
   "cd91": 3.26,
   "y1": 3.59,
-  "y2": 3.777,
-  "y3": 3.84,
+  "y2": 3.755,
+  "y3": 3.816,
   "exp3m": {
    "rate": 3.08,
    "chg": 0.08,
