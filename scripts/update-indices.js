@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // 지수 기술적 분석 자동 갱신 — LLM 토큰 0 (순수 스크립트, refresh-quotes Action에서 실행)
 //
-// 역할: 나스닥 종합(^IXIC)·다우존스(^DJI)·코스피(^KS11)·코스닥(^KQ11)의 5년치 일봉을
+// 역할: 나스닥 종합(^IXIC)·다우존스(^DJI)·코스피(^KS11)·코스닥(^KQ11)과 원/달러(KRW=X)·WTI(CL=F)의 10년치 일봉을
 //       Yahoo Finance 에서 받아, 공유 scripts/lib-ta.js 로 단기(일봉)·중기(주봉)·장기(월봉)
 //       기술적 분석(이동평균·RSI·추세·지지/저항·골든크로스·매매신호)을 "결정론적으로 계산"해
 //       data/indices.js(window.INDEX_TA)로 저장한다.
@@ -46,6 +46,17 @@ const INDICES = [
     chartUrl: "https://m.stock.naver.com/domestic/index/KOSPI/total" },
   { key: "kosdaq", name: "코스닥", flag: "🇰🇷", symbol: "^KQ11",
     chartUrl: "https://m.stock.naver.com/domestic/index/KOSDAQ/total" }
+];
+
+// 환율·유가(2026-10-23 사용자 요청 — 홈 '오늘의 시장'에 지수처럼) — window.INDEX_TA.macro 에 따로 둔다.
+//   indices 에 섞지 않는 이유: 외환·원유는 거의 24시간 거래라 마지막 봉 날짜가 주식 지수와 하루씩 어긋난다.
+//   asOf(지수 대응 게이트·기준일)는 주식 지수 4개로만 정하고, 환율·유가는 항목마다 자기 asOf 를 갖는다.
+//   이름은 네이버 증권 시장지표 표기('미국 USD' = 원/달러 환율). 시세는 야후(KRW=X 국제 시세, CL=F 근월물 연결).
+const MACRO = [
+  { key: "usdkrw", name: "미국 USD", sub: "원/달러 환율", unit: "원", symbol: "KRW=X", srDp: 0, moverCountry: "korea",
+    chartUrl: "https://m.stock.naver.com/marketindex/exchange/FX_USDKRW" },
+  { key: "wti", name: "WTI", sub: "서부텍사스산 원유 · 배럴당 달러(근월물)", unit: "달러", symbol: "CL=F", srDp: 2, moverCountry: null,
+    chartUrl: "https://m.stock.naver.com/marketindex/energy/CLcv1" }
 ];
 
 
@@ -123,7 +134,7 @@ async function fetchSeriesOnce(symbol, bustCache) {
 
 // 지수 1종목 분석 — 공유 lib-ta로 단기/중기/장기 기술적 분석을 계산해 카드 필드와 합친다.
 function analyze(cfg, rows, gapOkOverride) {
-  const a = TA.analyzeTimeframes(rows, { dp: 2, srDp: 0 });
+  const a = TA.analyzeTimeframes(rows, { dp: 2, srDp: cfg.srDp != null ? cfg.srDp : 0 });
   if (!a) return null;
   // 시리즈에 구멍이 있으면(중간 거래일 누락) 등락률이 여러 날치를 하루로 뭉뚱그린 값이 된다.
   // 틀린 숫자를 보여주느니 감춘다 — 지표(RSI·이동평균)는 1봉 누락에 둔감해 그대로 쓴다.
@@ -140,6 +151,101 @@ function analyze(cfg, rows, gapOkOverride) {
   };
 }
 
+// ── 환율·유가 '관련 정보' — 사실 숫자만(예측 아님): 기간 등락·52주 위치·이동평균 거리·변동성 국면·시장/편성 종목과 같이 움직인 정도 ──
+const rnd = (v, d) => (v == null || !isFinite(v) ? null : Math.round(v * Math.pow(10, d)) / Math.pow(10, d));
+const isoDay = (t, off) => new Date(t * 1000 + (off || 0)).toISOString().slice(0, 10);
+const sdOf = (a) => { if (a.length < 2) return null; const m = a.reduce((x, y) => x + y, 0) / a.length; return Math.sqrt(a.reduce((x, y) => x + (y - m) * (y - m), 0) / (a.length - 1)); };
+function macroFacts(rows) {
+  const off = rows.offMs || 0, c = rows.map((r) => r.close), n = c.length, last = c[n - 1];
+  const back = (k) => (n > k && c[n - 1 - k] > 0 ? (last / c[n - 1 - k] - 1) * 100 : null);
+  const yr = isoDay(rows[n - 1].t, off).slice(0, 4);
+  let ytdBase = null;
+  for (let i = n - 1; i >= 0; i--) if (isoDay(rows[i].t, off) < yr + "-01-01") { ytdBase = c[i]; break; }
+  const win = c.slice(-252), hi = Math.max.apply(null, win), lo = Math.min.apply(null, win);
+  const sma = (k) => (n >= k ? c.slice(-k).reduce((a, b) => a + b, 0) / k : null);
+  const lr = [];
+  for (let i = 1; i < n; i++) if (c[i] > 0 && c[i - 1] > 0) lr.push(Math.log(c[i] / c[i - 1]));
+  const v60 = lr.length >= 60 ? sdOf(lr.slice(-60)) : null;
+  // 지금 60일 변동성이 지난 10년(5거래일 간격 표본) 중 어디쯤인지 — 평소보다 출렁이는가
+  const hist = [];
+  for (let i = 60; i <= lr.length; i += 5) hist.push(sdOf(lr.slice(i - 60, i)));
+  const volPct = v60 != null && hist.length >= 20 ? Math.round(hist.filter((x) => x <= v60).length / hist.length * 100) : null;
+  const s50 = sma(50), s200 = sma(200);
+  return {
+    asOf: isoDay(rows[n - 1].t, off),
+    chg: { d1: rnd(back(1), 2), w1: rnd(back(5), 1), m1: rnd(back(21), 1), m3: rnd(back(63), 1), y1: rnd(back(252), 1),
+      ytd: rnd(ytdBase ? (last / ytdBase - 1) * 100 : null, 1) },
+    hi52: rnd(hi, 2), lo52: rnd(lo, 2), pos52: hi > lo ? Math.round((last - lo) / (hi - lo) * 100) : null,
+    ma50: rnd(s50 ? (last / s50 - 1) * 100 : null, 1), ma200: rnd(s200 ? (last / s200 - 1) * 100 : null, 1),
+    vol60: rnd(v60 != null ? v60 * Math.sqrt(252) * 100 : null, 1), volPct: volPct
+  };
+}
+// 주간 종가(월요일 시작 주 → 그 주 마지막 종가) — 시간대가 다른 시장(서울·런던·뉴욕)끼리 비교할 때 하루 어긋남을 줄인다
+const weekOf = (ymd) => { const d = new Date(ymd + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7)); return d.toISOString().slice(0, 10); };
+function weeklyFromRows(rows) {
+  const m = new Map(), off = rows.offMs || 0;
+  rows.forEach((r) => { if (r.close > 0) m.set(weekOf(isoDay(r.t, off)), r.close); });
+  return m;
+}
+function weeklyFromChart(w) {   // data/chart/<t>.json 의 w 행 [YYYYMMDD, 시, 고, 저, 종, 거래량]
+  const m = new Map();
+  (w || []).forEach((r) => { const s = String(r[0]); if (s.length === 8 && r[4] > 0) m.set(weekOf(s.slice(0, 4) + "-" + s.slice(4, 6) + "-" + s.slice(6, 8)), r[4]); });
+  return m;
+}
+function weekRets(m, fromKey) {
+  const out = new Map();
+  m.forEach((v, k) => {
+    if (fromKey && k < fromKey) return;
+    const d = new Date(k + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() - 7);
+    const p = m.get(d.toISOString().slice(0, 10));
+    if (p > 0) out.set(k, v / p - 1);
+  });
+  return out;
+}
+// 같이 움직인 정도 — 주간 수익률 상관과 β(macro 1% 움직일 때 상대가 평균 몇 % — 사후 기술 통계, 예측 아님)
+function corrBeta(base, other) {
+  const xs = [], ys = [];
+  base.forEach((x, k) => { const y = other.get(k); if (y != null && isFinite(y) && isFinite(x)) { xs.push(x); ys.push(y); } });
+  const n = xs.length;
+  if (n < 40) return null;
+  const mx = xs.reduce((a, b) => a + b, 0) / n, my = ys.reduce((a, b) => a + b, 0) / n;
+  let sxy = 0, sxx = 0, syy = 0;
+  for (let i = 0; i < n; i++) { sxy += (xs[i] - mx) * (ys[i] - my); sxx += (xs[i] - mx) * (xs[i] - mx); syy += (ys[i] - my) * (ys[i] - my); }
+  if (!(sxx > 0 && syy > 0)) return null;
+  return { corr: rnd(sxy / Math.sqrt(sxx * syy), 2), beta: rnd(sxy / sxx, 2), n: n };
+}
+const CORR_WEEKS = 104, MOVERS = 5, MOVER_MIN = 0.2;
+const THEME_KO = { core: "우량", growth: "성장", value: "저평가", dividend: "배당", rising: "히든", watch: "관심", hold: "보유" };
+function loadReco() {
+  try { const w = {}; new Function("window", fs.readFileSync(path.join(ROOT, "data", "recommendations.js"), "utf8"))(w); return w.STOCK_DATA || null; } catch (_e) { return null; }
+}
+// 편성·관심·보유 종목 중 이 지표와 같이(또는 반대로) 움직인 종목 — 차트 파일(update-stock-ta.js 가 쓴 주봉)로 계산
+function macroRelations(cfg, rows, idxRows) {
+  const mw = weeklyFromRows(rows), keys = [...mw.keys()].sort();
+  const from = keys.length > CORR_WEEKS ? keys[keys.length - CORR_WEEKS - 1] : null;
+  const base = weekRets(mw, from);
+  const market = {};
+  [["kospi", "코스피"], ["nasdaq", "나스닥"]].forEach(([k]) => { if (idxRows[k]) { const r = corrBeta(base, weekRets(weeklyFromRows(idxRows[k]), from)); if (r) market[k] = r; } });
+  const D = loadReco(), seen = new Map();
+  if (D) ["korea", "us"].forEach((c) => (D[c] || []).forEach((s) => {
+    if (cfg.moverCountry && c !== cfg.moverCountry) return;
+    const k = c + ":" + s.ticker, x = seen.get(k) || { c: c, t: s.ticker, name: s.name, th: [] };
+    if (!x.th.includes(s.theme)) x.th.push(s.theme);
+    seen.set(k, x);
+  }));
+  const res = [];
+  seen.forEach((x) => {
+    const f = path.join(ROOT, "data", "chart", String(x.t).replace(/[^A-Za-z0-9.\-]/g, "_") + ".json");
+    if (!fs.existsSync(f)) return;
+    let j; try { j = JSON.parse(fs.readFileSync(f, "utf8")); } catch (_e) { return; }
+    const r = corrBeta(base, weekRets(weeklyFromChart(j.w), from));
+    if (r) res.push({ c: x.c, t: x.t, name: x.name, th: x.th.map((t) => THEME_KO[t] || t).join("·"), corr: r.corr, beta: r.beta });
+  });
+  const pos = res.filter((x) => x.corr >= MOVER_MIN).sort((a, b) => b.corr - a.corr).slice(0, MOVERS);
+  const neg = res.filter((x) => x.corr <= -MOVER_MIN).sort((a, b) => a.corr - b.corr).slice(0, MOVERS);
+  return { weeks: base.size, market: market, pos: pos, neg: neg, universe: res.length };
+}
+
 function loadPrev() {
   if (!fs.existsSync(OUT)) return {};
   try {
@@ -148,7 +254,7 @@ function loadPrev() {
     require(OUT);
     const T = global.window.INDEX_TA;
     const map = {};
-    (T && T.indices || []).forEach((x) => { map[x.key] = x; });
+    (T && T.indices || []).concat((T && T.macro) || []).forEach((x) => { map[x.key] = x; });
     return map;
   } catch (_e) { return {}; }
 }
@@ -211,6 +317,26 @@ function loadPrevAsOf() {
     }
   }
 
+  // 환율·유가 — 지수와 같은 엔진·같은 차트 형식. asOf 는 항목마다(파일 asOf 에 섞지 않는다 — MACRO 주석)
+  const macro = [];
+  const idxRows = { kospi: fetched.kospi, nasdaq: fetched.nasdaq };
+  for (const cfg of MACRO) {
+    const rows = await fetchSeries(cfg.symbol);
+    const a = rows ? analyze(cfg, rows) : null;
+    if (a) {
+      let rel = null;
+      try { rel = macroRelations(cfg, rows, idxRows); } catch (e) { console.warn("  ⚠ " + cfg.key + " 관련 종목 계산 실패: " + e.message); }
+      delete a.flag; delete a.period;   // period 는 UTC 날짜라 런던·뉴욕 자정 봉에서 하루 어긋난다 — asOf 를 쓴다
+      macro.push(Object.assign(a, { sub: cfg.sub, unit: cfg.unit, symbol: cfg.symbol, asOf: rows.lastDate,
+        facts: Object.assign(macroFacts(rows), rel ? { rel: rel } : {}) }));
+      if (writeChart("idx-" + cfg.key, rows, 2)) charts++;
+      live++;
+    } else if (prev[cfg.key]) {
+      macro.push(Object.assign({}, prev[cfg.key], { change: "–", changeDir: "down" }));
+      fellBack++;
+    }
+  }
+
   // 폴백만 남은 경우(전 지수 조회 실패)엔 이전 asOf 를 유지해 신선도 오판을 막는다.
   const asOf = argVal("date") || lastBar || loadPrevAsOf() || new Date().toISOString().slice(0, 10);
 
@@ -219,16 +345,17 @@ function loadPrevAsOf() {
     // builtAt = 이 파일을 실제로 다시 만든 시각(asOf 는 마지막 봉의 거래일이라 다르다).
     builtAt: new Date().toISOString().slice(0, 19) + "Z",
     note: "기술적 지표는 Yahoo 일봉에서 매일 자동 계산(LLM 토큰 0). 이동평균(SMA·EMA)과 오실레이터(RSI·MACD·스토캐스틱·CCI·Williams %R·ADX·모멘텀)를 종합 투표한 5단계 신호 — 단기=일봉, 중기=주봉, 장기=월봉 3기간.",
-    indices: indices
+    indices: indices,
+    macro: macro
   };
 
   const body =
     "// 지수 기술적 분석 스냅샷 — scripts/update-indices.js 가 자동 생성 (LLM 토큰 0, 순수 스크립트)\n" +
-    "// 나스닥·다우·코스피·코스닥의 종가·이동평균·RSI·추세·지지/저항·신호를 매일 계산해 저장한다.\n" +
+    "// 나스닥·다우·코스피·코스닥(indices)과 원/달러·WTI(macro)의 종가·이동평균·RSI·추세·지지/저항·신호를 매일 계산해 저장한다.\n" +
     "// 거시 유동성 '게이지 등급'은 판단 영역이라 data/liquidity.js 에서 온디맨드로 남는다.\n" +
     "window.INDEX_TA = " + JSON.stringify(T, null, 1) + ";\n";
   fs.writeFileSync(OUT, body);
 
-  console.log("indices.js 갱신: " + indices.length + "개 지수 (" + asOf + ") — 실시간 " +
+  console.log("indices.js 갱신: " + indices.length + "개 지수 + 환율·유가 " + macro.length + " (" + asOf + ") — 실시간 " +
     live + " · 폴백 " + fellBack + " · 차트 " + charts);
 })();

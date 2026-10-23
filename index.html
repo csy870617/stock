@@ -348,6 +348,22 @@ svg { display: block; }
 .ix .sg i { width: 15px; height: 17px; font-size: 9.5px; border-radius: 4px; }
 .ix-lv { margin-top: 5px; font-size: 21px; font-weight: 800; letter-spacing: -0.04em; line-height: 1.2; }
 .ix-ch { margin-top: 1px; font-size: 13.5px; font-weight: 700; }
+.ix-ch .live-dot { margin-left: 5px; vertical-align: 2px; }
+.ix-u { margin-left: 2px; font-size: 12.5px; font-weight: 600; letter-spacing: 0; color: var(--mut); }
+/* 환율·유가 상세 — 관련 정보(기간 등락·52주 위치·금리 차·같이 움직인 종목) */
+.dt-u { margin-left: 3px; font-size: 15px; font-weight: 600; letter-spacing: 0; color: var(--mut); }
+.mc-bar { margin: 4px 0 6px; }
+.mc-ends { display: flex; justify-content: space-between; margin-top: 7px; font-size: 12px; color: var(--mut); }
+.mc-txt { margin-top: 10px; font-size: 14px; line-height: 1.65; color: var(--ink2); }
+.mc-txt b { color: var(--ink); }
+.mc-h { margin: 18px 0 6px; font-size: 13.5px; font-weight: 700; color: var(--ink2); }
+.mc-row { display: grid; grid-template-columns: minmax(0, 1fr) 64px 48px; gap: 8px; align-items: center; padding: 8px 0; border-top: 1px solid var(--line2); font-size: 14px; }
+.mc-nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mc-nm i { margin-left: 5px; font-style: normal; font-size: 12px; color: var(--mut); }
+.mc-cb { position: relative; height: 6px; border-radius: 3px; background: var(--track); }
+.mc-cb b { position: absolute; top: 0; bottom: 0; border-radius: 3px; }
+.mc-cb b.up { left: 50%; background: var(--up); } .mc-cb b.down { right: 50%; background: var(--down); }
+.mc-cv { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
 .liq-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 16px; margin-top: 14px; font-size: 13px; }
 .liq-row:empty { display: none; }
 .lq-k { font-weight: 700; color: var(--ink); }
@@ -2571,7 +2587,8 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   // ── 지수 상세(나스닥·다우·코스피·코스닥) — 캔들 차트(data/chart/idx-<key>.json, update-indices.js) + 엔진 신호 + 지수 대응 ──
   function indexOf(key) {
     var T = window.INDEX_TA;
-    return T && Array.isArray(T.indices) ? T.indices.filter(function (i) { return i.key === key; })[0] || null : null;
+    if (!T) return null;
+    return (T.indices || []).concat(T.macro || []).filter(function (i) { return i.key === key; })[0] || null;
   }
   // 지수 지역의 거시 유동성 단기 등급 칩(밸류 줄 앞)
   function idxLiqChip(key) {
@@ -2598,6 +2615,89 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     var acts = x.chartUrl ? '<div class="dt-act"><a class="btn" href="' + esc(safeUrl(x.chartUrl)) + '" target="_blank" rel="noopener" title="네이버 증권에서 보기">' + ICON.ext + " 네이버</a></div>" : "";
     return top + chartHtml("idx-" + x.key) + sig + notes +
       '<section class="dt-sec"><h3>AI에게 묻기</h3>' + aiSectionHtml("i:" + x.key, { kind: "index", key: x.key }) + "</section>" + acts;
+  }
+  // ── 환율·유가 상세 — 캔들 차트 + 단·중·장 신호 + 관련 정보(매일 자동 계산한 사실 숫자) + 분석(세션·AI) + AI 질문 ──
+  var MACRO_TXT = {
+    usdkrw: { sig: "등급은 달러 기준의 흐름 요약입니다 — 매수 쪽이면 원/달러가 오르는(원화 약세) 흐름, 매도 쪽이면 내리는(원화 강세) 흐름입니다.",
+      unitMove: 1, moveWord: "원/달러가 1% 오른 주에", pos: "원/달러와 같이 움직인 종목", posSub: "원화가 약할 때 오른 쪽",
+      neg: "반대로 움직인 종목", negSub: "원화가 강할 때 오른 쪽", scope: "한국 편성·관심·보유 종목" },
+    wti: { sig: "등급은 유가 흐름의 요약입니다 — 매수 쪽이면 오르는 흐름, 매도 쪽이면 내리는 흐름입니다(예측 아님).",
+      unitMove: 10, moveWord: "유가가 10% 오른 주에", pos: "유가와 같이 움직인 종목", posSub: "유가가 오를 때 오른 쪽",
+      neg: "반대로 움직인 종목", negSub: "유가가 오를 때 내린 쪽", scope: "한·미 편성·관심·보유 종목" }
+  };
+  function signedSpan(v, txt) { return '<span class="' + (v > 0 ? "up" : v < 0 ? "down" : "flat") + '">' + esc(txt) + "</span>"; }
+  function macroDetailHtml(m) {
+    var q = macroQuote(m), f = m.facts || {}, ch = f.chg || {}, X = MACRO_TXT[m.key] || MACRO_TXT.wti, rel = f.rel || {};
+    var srcTip = m.key === "usdkrw" ? "야후 국제 시세(KRW=X) — 은행 고시 환율과 조금 다를 수 있습니다." : "뉴욕상업거래소 WTI 근월물(CL=F) — 만기가 바뀌는 날 값이 한 번 건너뛸 수 있습니다.";
+    var top = '<div class="dt-top"><div class="dt-pxl"><span class="dt-pv">' + esc(q.lv) + '<small class="dt-u">' + esc(m.unit) + "</small></span>" + chgHtml(q.ch, "dt-ch") + "</div>" +
+      '<div class="dt-meta">' + (q.live ? '<span class="live-tx" title="실시간 시세 — 최대 20분가량 늦을 수 있습니다"><i class="live-dot"></i>실시간</span>' : esc(mdOf(m.asOf)) + " 마감") +
+      ' · 전일 대비 · <span title="' + esc(srcTip) + '">' + (m.key === "usdkrw" ? "국제 시세" : "근월물") + "</span></div></div>";
+    var sig = '<div class="dt-sum"><div class="dt-sig">' + [["단기", m.short, "일봉"], ["중기", m.mid, "주봉"], ["장기", m.long, "월봉"]].map(function (p) {
+      var g = p[1] && p[1].signal;
+      return '<div class="ds"><span class="ds-k">' + p[0] + " <i>" + p[2] + '</i></span><b class="ds-v t-' + (SIG_CLS[g] || "x") + '">' + esc(g || "–") + "</b></div>";
+    }).join("") + '</div><p class="kv-note">' + esc(X.sig) + "</p></div>";
+    // 관련 정보 — 기간 등락·변동성
+    var pc = function (k, v) { return kv(k, v == null ? "–" : signedSpan(v, (v > 0 ? "+" : "") + v.toFixed(1) + "%")); };
+    var volSub = f.volPct == null ? "" : (f.volPct >= 80 ? "평소보다 크게 출렁임" : f.volPct >= 60 ? "평소보다 조금 큼" : f.volPct <= 20 ? "평소보다 잔잔" : "평소 수준") + " · 10년 중 " + f.volPct + "백분위";
+    var grid = '<div class="kv">' + pc("1주", ch.w1) + pc("1개월", ch.m1) + pc("3개월", ch.m3) + pc("올해", ch.ytd) + pc("1년", ch.y1) +
+      kv("60일 변동성", f.vol60 == null ? "–" : esc(f.vol60.toFixed(1) + "%"), esc(volSub), "최근 60거래일 일간 변동을 1년 기준으로 환산한 값(연율). 백분위는 지난 10년의 60일 변동성 가운데 지금의 위치입니다.") + "</div>";
+    var bar = "";
+    if (f.hi52 != null && f.lo52 != null && f.pos52 != null) {
+      bar = '<div class="mc-h">52주 범위 <span class="md-as">종가 기준</span></div><div class="mc-bar"><div class="ol-bar"><span class="ol-now" style="left:' + Math.max(0, Math.min(100, f.pos52)) + '%"></span></div>' +
+        '<div class="mc-ends"><span>최저 ' + esc(num2(f.lo52)) + "</span><span>최고 " + esc(num2(f.hi52)) + "</span></div></div>" +
+        '<p class="mc-txt">지금은 52주 범위의 <b>' + (f.pos52 <= 10 ? "바닥권" : f.pos52 >= 90 ? "꼭대기권" : f.pos52 < 50 ? "아래쪽" : "위쪽") + "(" + f.pos52 + "%)</b>에 있습니다.";
+      if (f.ma50 != null && f.ma200 != null) {
+        var trend = f.ma50 < 0 && f.ma200 < 0 ? "두 이동평균 아래 — 하락 흐름" : f.ma50 > 0 && f.ma200 > 0 ? "두 이동평균 위 — 상승 흐름" :
+          f.ma50 > 0 ? "50일선 위·200일선 아래 — 하락 흐름 속 반등 시도" : "50일선 아래·200일선 위 — 상승 흐름 속 조정";
+        bar += " 50일선 대비 " + signedSpan(f.ma50, (f.ma50 > 0 ? "+" : "") + f.ma50.toFixed(1) + "%") + " · 200일선 대비 " + signedSpan(f.ma200, (f.ma200 > 0 ? "+" : "") + f.ma200.toFixed(1) + "%") + "(" + esc(trend) + ").";
+      }
+      bar += "</p>";
+    }
+    // 환율 전용 — 한·미 기준금리 차와 미국 주식의 원화 환산
+    var extra = "";
+    if (m.key === "usdkrw") {
+      var A = window.LIQUIDITY_AUTO || {}, fed = A.fed, bok = A.bok, lines = [];
+      if (fed && fed.current != null && bok && bok.base != null) {
+        var gap = fed.current - bok.base, yr = new Date(Date.now() + 365 * 86400000).toISOString().slice(0, 10), fy = null;
+        (fed.meetings || []).forEach(function (x) { if (x.date <= yr && x.rate != null) fy = x.rate; });
+        var by = bok.exp12m && bok.exp12m.rate;
+        lines.push("한·미 정책금리 차 <b>" + Math.abs(gap).toFixed(2) + "%p</b>(" + (gap >= 0 ? "미국이 높음" : "한국이 높음") + " — 연준 실효 " + fed.current.toFixed(2) + "% · 한국은행 " + Number(bok.base).toFixed(2) + "%)." +
+          (fy != null && by != null ? " 시장 금리에 반영된 1년 뒤 기대는 미국 " + fy.toFixed(2) + "% · 한국 " + by.toFixed(2) + "%로 차이 " + Math.abs(fy - by).toFixed(2) + "%p입니다." : "") +
+          " 미국 금리가 더 높을수록 달러 쪽에 자금이 머물 유인이 크다는 것이 일반적인 해석입니다.");
+      }
+      if (ch.ytd != null) lines.push("올해 원/달러 " + signedSpan(ch.ytd, (ch.ytd > 0 ? "+" : "") + ch.ytd.toFixed(1) + "%") + " — 미국 주식을 원화로 환산하면 달러 기준 수익보다 약 " + Math.abs(ch.ytd).toFixed(1) + "%p " + (ch.ytd < 0 ? "덜" : "더") + " 오른 셈입니다.");
+      if (lines.length) extra = '<div class="mc-h">금리 차와 원화 환산</div>' + lines.map(function (t) { return '<p class="mc-txt">' + t + "</p>"; }).join("");
+    }
+    // 시장·편성 종목과 같이 움직인 정도(최근 약 2년 주간 수익률)
+    var mk = rel.market || {}, mkLines = [["kospi", "코스피"], ["nasdaq", "나스닥"]].filter(function (p) { return mk[p[0]]; }).map(function (p) {
+      var r = mk[p[0]], move = r.beta * X.unitMove;
+      return '<p class="mc-txt">' + p[1] + ": 상관 <b>" + (r.corr > 0 ? "+" : "") + r.corr.toFixed(2) + "</b>" +
+        (Math.abs(r.corr) < 0.2 ? " — 뚜렷한 관계 없음" : " — " + X.moveWord + " 평균 " + signedSpan(move, (move > 0 ? "+" : "") + move.toFixed(1) + "%")) + "</p>";
+    }).join("");
+    var rowOf = function (x) {
+      var w = Math.min(50, Math.abs(x.corr) * 50);
+      return '<div class="mc-row"><span class="mc-nm">' + esc(x.name) + "<i>" + esc((x.c === "korea" ? "한국" : "미국") + " · " + x.th) + '</i></span><span class="mc-cb"><b class="' + (x.corr > 0 ? "up" : "down") + '" style="width:' + w + '%"></b></span>' +
+        '<span class="mc-cv ' + (x.corr > 0 ? "up" : "down") + '">' + (x.corr > 0 ? "+" : "") + x.corr.toFixed(2) + "</span></div>";
+    };
+    var movers = "";
+    if (rel.universe) {
+      movers = (rel.pos && rel.pos.length ? '<div class="mc-h">' + esc(X.pos) + ' <span class="md-as">' + esc(X.posSub) + "</span></div>" + rel.pos.map(rowOf).join("") : "") +
+        (rel.neg && rel.neg.length ? '<div class="mc-h">' + esc(X.neg) + ' <span class="md-as">' + esc(X.negSub) + "</span></div>" + rel.neg.map(rowOf).join("") : "") +
+        (!(rel.pos && rel.pos.length) && !(rel.neg && rel.neg.length) ? '<p class="mc-txt">' + esc(X.scope) + " 중 뚜렷하게(상관 0.2 이상) 같이 움직인 종목이 없습니다.</p>" : "") +
+        '<p class="kv-note">최근 ' + rel.weeks + "주 주간 수익률의 상관(−1~+1) · " + esc(X.scope) + " " + rel.universe + "개 중 — 과거에 같이 움직인 정도일 뿐 앞으로도 그렇다는 보장은 없습니다.</p>";
+    }
+    var facts = '<section class="dt-sec"><h3>관련 정보 <span class="md-as">' + esc(mdOf(f.asOf || m.asOf)) + " 마감 · 매일 자동 계산</span></h3>" + grid + bar + extra +
+      (mkLines || movers ? '<div class="mc-h">시장과의 관계 <span class="md-as">최근 약 2년 주간</span></div>' + mkLines + movers : "") + "</section>";
+    // 분석(세션·AI 가 쓰는 문장 — index-notes.js 의 같은 키)
+    var n = ((window.INDEX_NOTES && window.INDEX_NOTES.items) || {})[m.key], nAs = window.INDEX_NOTES && window.INDEX_NOTES.asOf, asOf = window.INDEX_TA && window.INDEX_TA.asOf;
+    var line = function (k, v, g) { return v ? '<div class="tn-line"><span class="tn-k">' + k + '</span><span class="tn-v">' + (g ? sigBadge(g) : "") + esc(v) + "</span></div>" : ""; };
+    var notes = n && (n.value || n.short || n.mid || n.long)
+      ? '<section class="dt-sec"><h3>분석' + (aiWrote("indexNotes", (((window.INDEX_NOTES || {}).items || {}).kospi || {}).short) ? " " + AI_TAG : "") + (nAs ? ' <span class="md-as">작성 ' + esc(mdOf(nAs)) + "</span>" : "") +
+        (nAs && asOf && nAs < asOf ? ' <span class="tn-stale" title="오늘 데이터(' + esc(asOf) + ')로 아직 갱신되지 않았습니다.">미갱신</span>' : "") + "</h3>" +
+        line("영향", n.value) + line("단기", n.short, n.sigShort) + line("중기", n.mid, n.sigMid) + line("장기", n.long, n.sigLong) + "</section>" : "";
+    var acts = m.chartUrl ? '<div class="dt-act"><a class="btn" href="' + esc(safeUrl(m.chartUrl)) + '" target="_blank" rel="noopener" title="네이버 증권에서 보기">' + ICON.ext + " 네이버</a></div>" : "";
+    return top + chartHtml("idx-" + m.key) + sig + notes + facts +
+      '<section class="dt-sec"><h3>AI에게 묻기</h3>' + aiSectionHtml("i:" + m.key, { kind: "macro", key: m.key }) + "</section>" + acts;
   }
   function lightDetailHtml(item) {
     var pm = plist(item.k), c = item.c, d = wlCache[c + ":" + item.t];
@@ -3848,11 +3948,12 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     if (it.idx) {   // 지수 상세 — 오늘의 시장 지수 칸
       var ix = indexOf(it.idx);
       document.getElementById("shName").textContent = ix ? ix.name : it.idx;
-      document.getElementById("shCode").textContent = "지수 · " + (it.c === "korea" ? "한국" : "미국");
+      document.getElementById("shCode").textContent = ix && ix.sub ? ix.sub : "지수 · " + (it.c === "korea" ? "한국" : "미국");
       document.getElementById("shPos").textContent = SH.ctx.length > 1 ? (SH.idx + 1) + "/" + SH.ctx.length : "";
       document.getElementById("shPrev").disabled = SH.idx <= 0;
       document.getElementById("shNext").disabled = SH.idx >= SH.ctx.length - 1;
-      shBody.innerHTML = ix ? indexDetailHtml(ix) : '<div class="empty">지수 정보를 찾을 수 없습니다.</div>';
+      shBody.innerHTML = ix ? (ix.facts ? macroDetailHtml(ix) : indexDetailHtml(ix)) : '<div class="empty">지수 정보를 찾을 수 없습니다.</div>';
+      if (ix && ix.facts) ensureMacroLive();
       mountChart(it);
       shBody.scrollTop = top;
       return;
@@ -4337,11 +4438,58 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       return '<div class="ix" role="button" tabindex="0" data-open="1" data-idx="' + esc(x.key) + '" data-c="' + esc(IDX_REGION[x.key] || "us") +
         '" data-t="idx-' + esc(x.key) + '" data-th="idx" title="' + esc(x.name) + ' 차트 보기">' + inner + "</div>";
     }
+    // 환율·유가 칸 — 두 나라 화면 모두에(지수 칸 뒤). 거의 24시간 거래라 시세 서버 값이 있으면 그것을(점 표시), 없으면 마지막 마감값
+    function macroTile(m) {
+      var q = macroQuote(m), dir = q.ch == null ? "flat" : (q.ch > 0 ? "up" : q.ch < 0 ? "down" : "flat");
+      var inner = '<div class="ix-top"><span class="ix-nm">' + esc(m.name) + "</span>" +
+        sigStrip({ sigShort: m.short && m.short.signal, sigMid: m.mid && m.mid.signal, sigLong: m.long && m.long.signal }) + "</div>" +
+        '<div class="ix-lv">' + esc(q.lv) + '<span class="ix-u">' + esc(m.unit) + "</span></div>" +
+        '<div class="ix-ch ' + dir + '">' + esc(q.chTxt) + (q.live ? '<i class="live-dot" title="실시간 시세(최대 20분가량 늦을 수 있음)"></i>' : "") + "</div>";
+      return '<div class="ix" role="button" tabindex="0" data-open="1" data-idx="' + esc(m.key) + '" data-c="' + esc(state.country) +
+        '" data-t="idx-' + esc(m.key) + '" data-th="idx" title="' + esc(m.name + " · " + m.sub + (q.live ? " · 실시간" : " · " + mdOf(m.asOf) + " 마감")) + ' — 차트 보기">' + inner + "</div>";
+    }
     var shown = T.indices.filter(function (x) { return IDX_REGION[x.key] === state.country; });
     if (!shown.length) shown = T.indices;   // 매핑 밖이면 전체 폴백
     document.getElementById("mktAs").textContent = (T.asOf ? T.asOf.slice(5).replace("-", "/") + " 종가 기준" : "");
-    grid.innerHTML = shown.map(tile).join("");
+    grid.innerHTML = shown.map(tile).join("") + macroList().map(macroTile).join("");
     syncMktBox();
+    ensureMacroLive();
+  }
+
+  // ── 환율·유가(INDEX_TA.macro — update-indices.js: 원/달러 KRW=X·WTI CL=F) ──
+  function macroList() { var T = window.INDEX_TA; return T && Array.isArray(T.macro) ? T.macro : []; }
+  function num2(v) { return Number(v).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function pct2(v) { return v == null || !isFinite(v) ? "–" : (v > 0 ? "+" : "") + Number(v).toFixed(2) + "%"; }
+  // 시세 서버(quotesApi)의 실시간 값 — 5분마다 다시 받는다(실패하면 1분 뒤 재시도). 없으면 indices.js 의 마지막 마감값
+  var MACRO_LIVE = {}, macroLiveAt = 0, macroLiveBusy = false;
+  function ensureMacroLive() {
+    var ms = macroList();
+    if (!liveSupported || !ms.length || macroLiveBusy || Date.now() - macroLiveAt < 300000) return;
+    macroLiveBusy = true;
+    var url = QUOTES_API + (QUOTES_API.indexOf("?") >= 0 ? "&" : "?") + "symbols=" + encodeURIComponent(ms.map(function (m) { return m.symbol; }).join(","));
+    var ctrl = new AbortController(), to = setTimeout(function () { ctrl.abort(); }, 9000);
+    fetch(url, { signal: ctrl.signal, cache: "no-store" })
+      .then(function (r) { if (!r.ok) throw new Error("http " + r.status); return r.json(); })
+      .then(function (map) {
+        var any = false;
+        ms.forEach(function (m) {
+          var v = map && map[m.symbol];
+          if (v && typeof v.price === "number" && isFinite(v.price) && liveFresh(v.date)) {
+            MACRO_LIVE[m.key] = { price: v.price, date: v.date, chg: typeof v.changePct === "number" && isFinite(v.changePct) ? v.changePct : null };
+            any = true;
+          }
+        });
+        macroLiveAt = Date.now();
+        if (any) { renderIndexTA(); var cur = SH.open && SH.ctx[SH.idx]; if (cur && cur.idx && MACRO_LIVE[cur.idx]) renderSheet(true); }
+      })
+      .catch(function () { macroLiveAt = Date.now() - 240000; })
+      .then(function () { clearTimeout(to); macroLiveBusy = false; });
+  }
+  function macroQuote(m) {
+    var L = MACRO_LIVE[m.key];
+    if (L) return { lv: num2(L.price), ch: L.chg, chTxt: pct2(L.chg), live: true, date: L.date };
+    var ch = chgNum(m.change);
+    return { lv: m.level, ch: ch, chTxt: ch == null ? "–" : pct2(ch), live: false, date: m.asOf };
   }
 
   // ══ AI(Claude API) — 이 기기 키로 묻기 · 서버 자동 분석 상태 · 뉴스 한 줄 · AI 작성 표시 ══
@@ -4506,6 +4654,24 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       n ? "앱의 지수 대응(" + (window.INDEX_NOTES.asOf || "") + "): 밸류 — " + n.value + " | 단기 — " + n.short + " | 중기 — " + n.mid + " | 장기 — " + n.long : "",
       liqTxt(reg)].filter(Boolean).join("\n");
   }
+  // 환율·유가 — 시세·신호·관련 정보(사실 숫자)·앱의 분석 문장
+  function ctxMacro(key) {
+    var m = indexOf(key); if (!m) return "";
+    var q = macroQuote(m), f = m.facts || {}, ch = f.chg || {}, rel = f.rel || {}, n = ((window.INDEX_NOTES || {}).items || {})[key];
+    var mk = rel.market || {}, A = window.LIQUIDITY_AUTO || {};
+    var mv = function (a) { return (a || []).map(function (x) { return x.name + "(" + x.th + ", 상관 " + x.corr + ")"; }).join(", "); };
+    return [
+      m.name + "(" + m.sub + "): " + q.lv + m.unit + " " + q.chTxt + (q.live ? " (실시간)" : " (" + m.asOf + " 마감)") +
+        " · 신호 단기 " + ((m.short || {}).signal || "–") + " / 중기 " + ((m.mid || {}).signal || "–") + " / 장기 " + ((m.long || {}).signal || "–"),
+      "기간 등락: 1주 " + pctTxt(ch.w1) + " · 1개월 " + pctTxt(ch.m1) + " · 3개월 " + pctTxt(ch.m3) + " · 올해 " + pctTxt(ch.ytd) + " · 1년 " + pctTxt(ch.y1) +
+        " · 52주 최저 " + f.lo52 + " ~ 최고 " + f.hi52 + "(현재 " + f.pos52 + "% 위치) · 50일선 대비 " + pctTxt(f.ma50) + " · 200일선 대비 " + pctTxt(f.ma200) + " · 60일 변동성 " + f.vol60 + "%(10년 중 " + f.volPct + "백분위)",
+      (mk.kospi || mk.nasdaq) ? "최근 약 2년 주간 상관: " + [["kospi", "코스피"], ["nasdaq", "나스닥"]].filter(function (p) { return mk[p[0]]; }).map(function (p) { return p[1] + " " + mk[p[0]].corr + "(β " + mk[p[0]].beta + ")"; }).join(" · ") : "",
+      (rel.pos || []).length ? "같이 움직인 편성·관심·보유 종목: " + mv(rel.pos) : "",
+      (rel.neg || []).length ? "반대로 움직인 종목: " + mv(rel.neg) : "",
+      key === "usdkrw" && A.fed && A.bok ? "정책금리: 연준 실효 " + A.fed.current + "% · 한국은행 " + A.bok.base + "% · 한국 1년 기대 " + ((A.bok.exp12m || {}).rate || "–") + "%" : "",
+      n ? "앱의 분석(" + (window.INDEX_NOTES.asOf || "") + "): 영향 — " + n.value + " | 단기 — " + n.short + " | 중기 — " + n.mid + " | 장기 — " + n.long : ""
+    ].filter(Boolean).join("\n");
+  }
   function ctxMarket(c) {
     var T = window.INDEX_TA, reg = c === "us" ? "us" : "korea";
     var tp = (D.topPicks || {})[reg] || [];
@@ -4513,6 +4679,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       "기준: " + (T && T.asOf ? T.asOf + " 종가" : "") + " · 보고 있는 나라 " + (c === "us" ? "미국" : "한국"),
       "시황(통합): " + (D.marketNote || "–"), "시황(미국): " + (D.marketNoteUS || "–"), "시황(한국): " + (D.marketNoteKR || "–"),
       T && T.indices ? "지수: " + T.indices.map(idxLine).join("\n") : "",
+      macroList().length ? "환율·유가: " + macroList().map(function (m) { var q = macroQuote(m); return m.name + "(" + m.sub + ") " + q.lv + m.unit + " " + q.chTxt; }).join(" · ") : "",
       liqTxt("us"), liqTxt("korea"),
       tp.length ? "오늘의 Top Pick(" + (c === "us" ? "미국" : "한국") + "): " + tp.map(function (x) { return x.name + " — " + x.reason; }).join(" / ") : ""
     ].filter(Boolean).join("\n");
@@ -4522,12 +4689,14 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     if (i.kind === "stock") return ctxStock(i.c, i.t, i.th);
     if (i.kind === "light") return ctxLight(i.c, i.t, i.n);
     if (i.kind === "index") return ctxIndex(i.key);
+    if (i.kind === "macro") return ctxMacro(i.key);
     return ctxMarket(i.c || state.country);
   }
   var AI_CHIPS = {
     stock: ["추천 근거를 쉽게 설명해줘", "지금 가장 큰 리스크는 뭐야?", "최근 뉴스와 실적을 정리해줘", "신호와 변동 범위는 어떻게 읽어?"],
     light: ["이 종목을 간단히 분석해줘", "최근 실적과 뉴스는?", "어떤 리스크를 봐야 해?"],
     index: ["지금 이 지수 흐름을 설명해줘", "이번 주 주목할 일정은?", "유동성 판단과 어떻게 연결돼?"],
+    macro: ["최근 움직임의 원인을 설명해줘", "내 편성 종목에 어떤 영향이 있어?", "앞으로 확인할 일정·변수는?"],
     market: ["오늘 시장을 3줄로 요약해줘", "금리 전망이 주식에 주는 영향은?", "유동성 판단 근거를 설명해줘", "Top Pick 은 왜 골랐어?"]
   };
 
@@ -4535,7 +4704,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   function aiSectionHtml(ctx, info) {
     AI.info[ctx] = info;
     if (!aiKey()) {
-      return '<div class="aq-off"><p>Claude API 키를 연결하면 이 ' + (info.kind === "index" ? "지수" : info.kind === "market" ? "시장" : "종목") +
+      return '<div class="aq-off"><p>Claude API 키를 연결하면 이 ' + (info.kind === "index" ? "지수" : info.kind === "macro" ? "지표" : info.kind === "market" ? "시장" : "종목") +
         "에 대해 바로 물어볼 수 있습니다. 앱 데이터(카드·실적·신호·뉴스)를 함께 보내 답하고, 필요하면 최신 뉴스를 검색합니다.</p>" +
         '<button class="btn pri" type="button" data-ai-open="1">AI 연결</button></div>';
     }

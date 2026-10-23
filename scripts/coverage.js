@@ -22,7 +22,7 @@
 //   topPicks·liquidity·시황 : asOf ≥ T(최신 거래일) — '== 오늘'이 아니다(2026-10-03 개정).
 //                주말·휴장일엔 T 가 그대로라 직전 거래일 판단이 그대로 유효하다. 예전 '== 오늘' 게이트는
 //                새 데이터가 없는 토요일에도 tier 90종목·시황·유동성을 날짜만 바꿔 다시 찍게 만들었다.
-//   indexNotes : INDEX_NOTES.asOf == indices.js asOf + 4개 지수 5개 필드
+//   indexNotes : INDEX_NOTES.asOf == indices.js asOf + 4개 지수·환율·유가 7개 필드
 //   topPicks   : topPicks.asOf == 오늘 + korea/us 각 3종목
 //   liquidity  : liquidity.js asOf == 오늘 + 통합·미국·한국 headline
 //   backbone   : stock-ta.js·indices.js 의 builtAt(재생성 시각)이 오늘 — 이 단계를 건너뛰면
@@ -171,7 +171,8 @@ const tierQueue = [].concat(...tierQueueGroups.map((g) => tierGroups[g]));
 
 // ── 문서 단위 항목 ──
 const IX_ASOF = IX && IX.asOf;
-const idxKeys = ["nasdaq", "dow", "kospi", "kosdaq"];
+// 지수 4개 + 환율·유가(indices.js macro — 2026-10-23~, 같은 형식의 분석을 index-notes.js 에 함께 쓴다)
+const idxKeys = ["nasdaq", "dow", "kospi", "kosdaq"].concat(((IX && IX.macro) || []).map((m) => m.key));
 const missIdx = [];
 if (!IN) missIdx.push("index-notes.js 없음");
 else {
@@ -337,7 +338,7 @@ if (process.argv.includes("--emit")) {
     daily: [
       { key: "techNote",  label: "기술 대응",   done: N - missTech.length,  total: N },
       { key: "valueNote", label: "밸류 설명",   done: N - missValue.length, total: N },
-      { key: "indexNotes", label: "지수 대응",  done: missIdx.length ? 0 : 4, total: 4 },
+      { key: "indexNotes", label: "지수 대응",  done: missIdx.length ? 0 : idxKeys.length, total: idxKeys.length },
       { key: "topPicks",  label: "Top Pick",   done: missTop.length ? 0 : 6, total: 6 },
       { key: "liquidity", label: "유동성 판단", done: missLiq.length ? 0 : 1, total: 1 },
       { key: "market",    label: "시황",        done: missMarket.length ? 0 : 1, total: 1 },
