@@ -56,6 +56,8 @@
   --ev:        #6741d9;
   --ev-soft:   #f1edfd;
   --pf-f: #6741d9; --pf-s: #0c8f6a; --pf-i: #8b95a1;   /* 성과 곡선: 추천 · 그림자 · 지수 */
+  --pf-c0: #2a78d6; --pf-c1: #eb6834; --pf-c2: #1baf7a; --pf-c3: #eda100; --pf-c4: #e87ba4;   /* 주제 비교(dataviz 기본 1~5번) */
+  --pf-t1: #3b2a99; --pf-t2: #6741d9; --pf-t3: #a99bf0;   /* 티어 비교 — 한 색의 진하기(순서) */
   --t1bg: #191f28; --t1fg: #ffffff;
   --t2bg: #6b7684; --t2fg: #ffffff;
   --t3bg: #eef0f3; --t3fg: #4e5968;
@@ -93,7 +95,7 @@
   --warn-soft: rgba(255,146,43,0.14);
   --ev:        #9775fa;
   --ev-soft:   rgba(151,117,250,0.16);
-  --pf-f: #9775fa; --pf-s: #20a77c; --pf-i: #7e868f;
+  --pf-f: #9775fa; --pf-s: #20a77c; --pf-i: #7e868f; --pf-c0: #3987e5; --pf-c1: #d95926; --pf-c2: #199e70; --pf-c3: #c98500; --pf-c4: #d55181; --pf-t1: #c4b8ff; --pf-t2: #9775fa; --pf-t3: #5f4bc0;
   --t1bg: #ececef; --t1fg: #111214;
   --t2bg: #8b939c; --t2fg: #111214;
   --t3bg: #2c2f34; --t3fg: #b1b8c0;
@@ -128,7 +130,7 @@
     --warn-soft: rgba(255,146,43,0.14);
     --ev:        #9775fa;
     --ev-soft:   rgba(151,117,250,0.16);
-    --pf-f: #9775fa; --pf-s: #20a77c; --pf-i: #7e868f;
+    --pf-f: #9775fa; --pf-s: #20a77c; --pf-i: #7e868f; --pf-c0: #3987e5; --pf-c1: #d95926; --pf-c2: #199e70; --pf-c3: #c98500; --pf-c4: #d55181; --pf-t1: #c4b8ff; --pf-t2: #9775fa; --pf-t3: #5f4bc0;
     --t1bg: #ececef; --t1fg: #111214;
     --t2bg: #8b939c; --t2fg: #111214;
     --t3bg: #2c2f34; --t3fg: #b1b8c0;
@@ -500,6 +502,17 @@ svg { display: block; }
 .pf-chart .ln-s { stroke: var(--pf-s); }
 .pf-chart circle.dot { stroke: var(--sf); stroke-width: 2; }
 .pf-chart circle.ln-f { fill: var(--pf-f); } .pf-chart circle.ln-i { fill: var(--pf-i); } .pf-chart circle.ln-s { fill: var(--pf-s); }
+.pf-chart .ln-c0 { stroke: var(--pf-c0); } .pf-chart circle.ln-c0 { fill: var(--pf-c0); } .lk.lk-c0 { border-top-color: var(--pf-c0); }
+.pf-chart .ln-c1 { stroke: var(--pf-c1); } .pf-chart circle.ln-c1 { fill: var(--pf-c1); } .lk.lk-c1 { border-top-color: var(--pf-c1); }
+.pf-chart .ln-c2 { stroke: var(--pf-c2); } .pf-chart circle.ln-c2 { fill: var(--pf-c2); } .lk.lk-c2 { border-top-color: var(--pf-c2); }
+.pf-chart .ln-c3 { stroke: var(--pf-c3); } .pf-chart circle.ln-c3 { fill: var(--pf-c3); } .lk.lk-c3 { border-top-color: var(--pf-c3); }
+.pf-chart .ln-c4 { stroke: var(--pf-c4); } .pf-chart circle.ln-c4 { fill: var(--pf-c4); } .lk.lk-c4 { border-top-color: var(--pf-c4); }
+.pf-chart .ln-t1 { stroke: var(--pf-t1); } .pf-chart circle.ln-t1 { fill: var(--pf-t1); } .lk.lk-t1 { border-top-color: var(--pf-t1); }
+.pf-chart .ln-t2 { stroke: var(--pf-t2); } .pf-chart circle.ln-t2 { fill: var(--pf-t2); } .lk.lk-t2 { border-top-color: var(--pf-t2); }
+.pf-chart .ln-t3 { stroke: var(--pf-t3); } .pf-chart circle.ln-t3 { fill: var(--pf-t3); } .lk.lk-t3 { border-top-color: var(--pf-t3); }
+.pf-lg { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 12px 0 -6px; font-size: 12.5px; color: var(--ink2); }
+.pf-lg span { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
+.pf-lg b { font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
 .pf-chart .xh { stroke: var(--ink2); stroke-width: 1; }
 .pf-tip { position: absolute; top: 2px; z-index: 2; min-width: 124px; padding: 8px 10px; border-radius: 10px; background: var(--sf); border: 1px solid var(--line); box-shadow: var(--shadow); font-size: 12.5px; line-height: 1.55; pointer-events: none; }
 .pf-tip .tp-d { color: var(--mut); font-size: 11.5px; }
@@ -3281,19 +3294,28 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     };
     var kpis = '<div class="pf-kpis">' + kpi("추천 편성", s.ret, "lk-f") + kpi(bn, s.bench, "lk-i") + (s.eq != null ? kpi("S&P 동일비중", s.eq, "") : "") + "</div>";
     // 곡선 고르기 — 정식 전체·주제별·티어별(그 묶음을 처음 담은 날부터, 같은 기간 지수와 함께)
-    var opts = [["all", "전체"]].concat(recoThemes().filter(function (t) { return C.groups[t.key]; }).map(function (t) { return [t.key, t.label]; }),
+    var opts = [["all", "전체"], ["cmp-theme", "주제 비교"], ["cmp-tier", "티어 비교"]].concat(recoThemes().filter(function (t) { return C.groups[t.key]; }).map(function (t) { return [t.key, t.label]; }),
       TIER_KEYS.filter(function (k) { return C.groups[k]; }).map(function (k) { return [k, "T" + tierOfKey(k)]; }),
       orderedThemes().filter(function (t) { return isPersonal(t.key) && C.groups[t.key]; }).map(function (t) { return [t.key, t.label]; }));
-    var sel = C.groups[pfSel[c]] ? pfSel[c] : "all", gs = C.groups[sel], ws = gs.w.all;
+    var cmp = pfSel[c] === "cmp-theme" || pfSel[c] === "cmp-tier";
+    var sel = cmp ? pfSel[c] : (C.groups[pfSel[c]] ? pfSel[c] : "all"), gs = C.groups[cmp ? "all" : sel], ws = gs.w.all;
     var lbl = sel === "all" ? "추천 편성" : (opts.filter(function (o) { return o[0] === sel; })[0] || [0, sel])[1];
-    var i0 = 0; while (i0 < gs.nav.length && gs.nav[i0] == null) i0++;
+    var i0 = 0; while (!cmp && i0 < gs.nav.length && gs.nav[i0] == null) i0++;
     var chips = '<div class="chip-g chips-x pf-sel" role="tablist" aria-label="곡선 고르기">' + opts.map(function (o, i) {
       var sep = i > 0 && ((isTierKey(o[0]) && !isTierKey(opts[i - 1][0])) || (isPersonal(o[0]) && !isPersonal(opts[i - 1][0]))) ? '<span class="ct-sep" aria-hidden="true"></span>' : "";
       return sep + '<button class="chip chip-s' + (o[0] === sel ? " on" : "") + '" type="button" role="tab" aria-selected="' + (o[0] === sel) + '" data-pfsel="' + esc(o[0]) + '">' + esc(o[1]) + "</button>";
     }).join("") + "</div>";
-    var cap = sel === "all" ? "" : '<p class="pf-cap"><b>' + esc(lbl) + "</b> " + fmtPct(ws.ret) + " · " + esc(bn) + " " + fmtPct(ws.bench) +
+    var cap = sel === "all" || cmp ? "" : '<p class="pf-cap"><b>' + esc(lbl) + "</b> " + fmtPct(ws.ret) + " · " + esc(bn) + " " + fmtPct(ws.bench) +
       ' · 차이 <b class="' + sgnCls(ws.excess).trim() + '">' + fmtPp(ws.excess) + "</b>" + (ws.from && ws.from !== PERF.base ? " · " + esc(mdOf(ws.from)) + "부터" : "") + "</p>";
-    var chart = chips + cap + pfChartBox("main", C.dates.slice(i0), [
+    if (cmp) {   // 겹쳐 보기 — 묶음마다 처음 담은 날부터의 누적(늦게 시작한 묶음은 그날 0%), 지수는 회색
+      var ks = sel === "cmp-theme" ? recoThemes().filter(function (t) { return C.groups[t.key]; }).slice(0, 5).map(function (t, i) { return [t.key, t.label, "c" + i]; })
+        : TIER_KEYS.filter(function (k) { return C.groups[k]; }).map(function (k) { return [k, "T" + tierOfKey(k), "t" + tierOfKey(k)]; });
+      var sers = ks.map(function (x) { return { k: x[2], label: x[1], vals: C.groups[x[0]].nav }; }).concat([{ k: "i", label: bn, vals: C.idx }]);
+      var lg = '<div class="pf-lg">' + ks.map(function (x) { var w = C.groups[x[0]].w.all; return '<span><i class="lk lk-' + x[2] + '"></i>' + esc(x[1]) + " <b>" + fmtPct(w.ret) + "</b></span>"; }).join("") +
+        '<span><i class="lk lk-i"></i>' + esc(bn) + " <b>" + fmtPct(s.bench) + "</b></span></div>";
+      var chartC = chips + lg + pfChartBox("main", C.dates, sers, (sel === "cmp-theme" ? "주제별" : "티어별") + " 누적 수익 비교");
+    }
+    var chart = cmp ? chartC : chips + cap + pfChartBox("main", C.dates.slice(i0), [
       { k: "f", label: lbl, vals: gs.nav.slice(i0) },
       { k: "i", label: bn, vals: C.idx.slice(i0) }
     ], lbl + " " + fmtPct(ws.ret) + ", " + bn + " " + fmtPct(ws.bench));
@@ -3475,7 +3497,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     return out;
   }
   function pfDraw(el, sp) {
-    var W = Math.max(240, Math.round(el.clientWidth || 320)), H = 168, L = 40, R = 12, T = 10, B = 24;
+    var W = Math.max(240, Math.round(el.clientWidth || 320)), H = sp.series.length > 3 ? 210 : 168,   /* 겹쳐 보기는 조금 높게 */ L = 40, R = 12, T = 10, B = 24;
     var n = sp.dates.length;
     var ser = sp.series.map(function (s) {
       var b = null;
@@ -3497,7 +3519,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       svg += '<text class="xl" x="' + X(i).toFixed(1) + '" y="' + (H - 6) + '" text-anchor="' + (j === 0 ? "start" : j === 2 ? "end" : "middle") + '">' + esc(mdOf(sp.dates[i])) + "</text>";
     });
     // 지수(회색)를 먼저, 추천(강조)을 맨 위에 그린다
-    var orderDraw = ser.slice().sort(function (a, b) { return (a.k === "f") - (b.k === "f"); });
+    var orderDraw = ser.slice().sort(function (a, b) { return (b.k === "i") - (a.k === "i") || (a.k === "f") - (b.k === "f"); });
     orderDraw.forEach(function (s) {
       var d = "", pen = false, lastI = -1;
       s.ys.forEach(function (y, i) {
