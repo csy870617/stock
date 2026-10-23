@@ -485,6 +485,9 @@ svg { display: block; }
 .lk { flex: none; display: inline-block; width: 14px; height: 0; border-top: 2.5px solid var(--pf-f); border-radius: 2px; vertical-align: middle; }
 .lk.lk-i { border-top: 2px solid var(--pf-i); }
 .lk.lk-s { border-top-color: var(--pf-s); }
+.pf-sel { margin-top: 14px; }
+.pf-cap { margin: 10px 0 -4px; font-size: 13px; color: var(--ink2); }
+.pf-cap b { font-weight: 700; color: var(--ink); } .pf-cap b.up { color: var(--up); } .pf-cap b.down { color: var(--down); }
 .pf-chart { position: relative; margin: 14px 0 4px; outline: none; touch-action: pan-y; -webkit-tap-highlight-color: transparent; }
 .pf-chart:focus-visible { box-shadow: 0 0 0 2px var(--ink2); border-radius: 8px; }
 .pf-chart svg { display: block; width: 100%; }
@@ -3208,6 +3211,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   //   순서: 추천 성적(한 줄 판정 → 숫자 → 누적 곡선 → 기간표) → 3개월 검증(추천 vs 그림자) → 주제별(누르면 종목) → 티어 → 교체 성과.
   var PERF = null, perfReq = false, perfFail = false;
   var pfOpen = {};   // 펼친 주제·티어 줄 — "korea|core"
+  var pfSel = {};    // 누적 곡선에 그릴 묶음(나라별) — "all" | 주제 | "tier:N" | 관심·보유
   var PFC = {};      // 그릴 꺾은선(id → spec) — innerHTML 로 자리를 만든 뒤 폭을 재서 그린다
   function loadPerf() {
     if (PERF || perfReq || typeof fetch !== "function") return;
@@ -3264,6 +3268,8 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     if (!C || !C.groups || !C.groups.all) { host.innerHTML = '<section class="blk"><div class="empty">아직 성과 기록이 없습니다.</div></section>'; return; }
     host.innerHTML = pfSummary(C, c) + pfVerify(C, c) + pfThemes(C, c) + pfTiers(C, c) + pfSwaps(C, c) + pfFoot(C, c);
     pfDrawAll();
+    var sr = host.querySelector(".pf-sel"), so = sr && sr.querySelector(".chip.on");   // 고른 칩이 가로 목록 밖이면 보이게
+    if (so && (so.offsetLeft + so.offsetWidth > sr.clientWidth || so.offsetLeft < sr.scrollLeft)) sr.scrollLeft = so.offsetLeft - 16;
     markActiveRow();
   }
 
@@ -3274,10 +3280,23 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       return '<div class="pf-kpi"><div class="k">' + (key ? '<i class="lk ' + key + '"></i>' : "") + esc(k) + '</div><div class="v' + sgnCls(v) + '">' + fmtPct(v) + "</div></div>";
     };
     var kpis = '<div class="pf-kpis">' + kpi("추천 편성", s.ret, "lk-f") + kpi(bn, s.bench, "lk-i") + (s.eq != null ? kpi("S&P 동일비중", s.eq, "") : "") + "</div>";
-    var chart = pfChartBox("main", C.dates, [
-      { k: "f", label: "추천 편성", vals: g.nav },
-      { k: "i", label: bn, vals: C.idx }
-    ], "추천 편성 " + fmtPct(s.ret) + ", " + bn + " " + fmtPct(s.bench));
+    // 곡선 고르기 — 정식 전체·주제별·티어별(그 묶음을 처음 담은 날부터, 같은 기간 지수와 함께)
+    var opts = [["all", "전체"]].concat(recoThemes().filter(function (t) { return C.groups[t.key]; }).map(function (t) { return [t.key, t.label]; }),
+      TIER_KEYS.filter(function (k) { return C.groups[k]; }).map(function (k) { return [k, "T" + tierOfKey(k)]; }),
+      orderedThemes().filter(function (t) { return isPersonal(t.key) && C.groups[t.key]; }).map(function (t) { return [t.key, t.label]; }));
+    var sel = C.groups[pfSel[c]] ? pfSel[c] : "all", gs = C.groups[sel], ws = gs.w.all;
+    var lbl = sel === "all" ? "추천 편성" : (opts.filter(function (o) { return o[0] === sel; })[0] || [0, sel])[1];
+    var i0 = 0; while (i0 < gs.nav.length && gs.nav[i0] == null) i0++;
+    var chips = '<div class="chip-g chips-x pf-sel" role="tablist" aria-label="곡선 고르기">' + opts.map(function (o, i) {
+      var sep = i > 0 && ((isTierKey(o[0]) && !isTierKey(opts[i - 1][0])) || (isPersonal(o[0]) && !isPersonal(opts[i - 1][0]))) ? '<span class="ct-sep" aria-hidden="true"></span>' : "";
+      return sep + '<button class="chip chip-s' + (o[0] === sel ? " on" : "") + '" type="button" role="tab" aria-selected="' + (o[0] === sel) + '" data-pfsel="' + esc(o[0]) + '">' + esc(o[1]) + "</button>";
+    }).join("") + "</div>";
+    var cap = sel === "all" ? "" : '<p class="pf-cap"><b>' + esc(lbl) + "</b> " + fmtPct(ws.ret) + " · " + esc(bn) + " " + fmtPct(ws.bench) +
+      ' · 차이 <b class="' + sgnCls(ws.excess).trim() + '">' + fmtPp(ws.excess) + "</b>" + (ws.from && ws.from !== PERF.base ? " · " + esc(mdOf(ws.from)) + "부터" : "") + "</p>";
+    var chart = chips + cap + pfChartBox("main", C.dates.slice(i0), [
+      { k: "f", label: lbl, vals: gs.nav.slice(i0) },
+      { k: "i", label: bn, vals: C.idx.slice(i0) }
+    ], lbl + " " + fmtPct(ws.ret) + ", " + bn + " " + fmtPct(ws.bench));
     // 기간표 — 곡선의 표 보기 겸 최근 흐름
     var rows = [["전체", g.w.all, mdOf(s.from) + "~"]];
     [["m1", "최근 1개월"], ["m3", "최근 3개월"], ["m6", "최근 6개월"], ["y1", "최근 1년"]].forEach(function (x) { if (g.w[x[0]]) rows.push([x[1], g.w[x[0]], ""]); });
@@ -4318,6 +4337,8 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       return;
     }
     if (!t.closest(".wl-search")) { var box = document.getElementById("wlSug"); if (box) box.hidden = true; }
+    var pfs = t.closest("[data-pfsel]");
+    if (pfs) { pfSel[state.country] = pfs.getAttribute("data-pfsel"); renderPerf(); return; }
     var pfo = t.closest("[data-pfopen]");
     if (pfo) {   // 성과 — 주제·티어 줄을 펼쳐 종목별 성적
       var pfk = pfo.getAttribute("data-pfopen"), pid = state.country + "|" + pfk;
