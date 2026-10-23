@@ -912,6 +912,27 @@ window.CANDIDATES = {
    "eligible": 70,
    "defects": [
     {
+     "ticker": "LMT",
+     "name": "Lockheed Martin",
+     "state": "점검 필요",
+     "flags": [
+      {
+       "k": "theme",
+       "msg": "주제 기준 미달 — 정체성 조건 미달",
+       "fresh": false
+      },
+      {
+       "k": "earn",
+       "msg": "실적 발표(10/22) · EPS 서프라이즈 6.4% · 전년 대비 EBIT -11% — 가이던스·논거 확인",
+       "fresh": true
+      }
+     ],
+     "note": "2026년 2분기 매출은 +10.5%였으나 EBIT가 -11%로 줄어 주제 기준 미달 신호가 떴다. 순이익 +436.8%는 전년 대규모 손실 기저 효과일 수 있고 EBIT 감소 원인이 확인되지 않아, 확인 전까지 감시한다.",
+     "judged": "2026-10-23",
+     "verdict": "형식",
+     "by": "ai"
+    },
+    {
      "ticker": "KO",
      "name": "Coca-Cola",
      "state": "감시",
@@ -945,22 +966,6 @@ window.CANDIDATES = {
      "note": "주가 상승",
      "judged": "2026-10-18",
      "verdict": "형식"
-    },
-    {
-     "ticker": "LMT",
-     "name": "Lockheed Martin",
-     "state": "감시",
-     "flags": [
-      {
-       "k": "theme",
-       "msg": "주제 기준 미달 — 정체성 조건 미달",
-       "fresh": false
-      }
-     ],
-     "note": "2026년 2분기 매출은 +10.5%였으나 EBIT가 -11%로 줄어 주제 기준 미달 신호가 떴다. 순이익 +436.8%는 전년 대규모 손실 기저 효과일 수 있고 EBIT 감소 원인이 확인되지 않아, 확인 전까지 감시한다.",
-     "judged": "2026-10-23",
-     "verdict": "형식",
-     "by": "ai"
     }
    ],
    "list": [
@@ -1168,6 +1173,21 @@ window.CANDIDATES = {
      "age": 5
     },
     {
+     "ticker": "APPF",
+     "name": "AppFolio",
+     "state": "점검 필요",
+     "flags": [
+      {
+       "k": "earn",
+       "msg": "실적 발표(10/22) · EPS 서프라이즈 0.8% — 가이던스·논거 확인",
+       "fresh": true
+      }
+     ],
+     "note": "근접 후보",
+     "judged": "2026-10-18",
+     "verdict": "형식"
+    },
+    {
      "ticker": "NVMI",
      "name": "Nova Ltd.",
      "state": "감시",
@@ -1192,15 +1212,6 @@ window.CANDIDATES = {
        "fresh": false
       }
      ],
-     "note": "근접 후보",
-     "judged": "2026-10-18",
-     "verdict": "형식"
-    },
-    {
-     "ticker": "APPF",
-     "name": "AppFolio",
-     "state": "감시",
-     "flags": [],
      "note": "근접 후보",
      "judged": "2026-10-18",
      "verdict": "형식"
@@ -1231,9 +1242,9 @@ window.CANDIDATES = {
   }
  },
  "summary": {
-  "review": 0,
+  "review": 2,
   "defect": 13,
-  "watch": 18,
+  "watch": 16,
   "untried": 0,
   "dup": 2,
   "long": 0
