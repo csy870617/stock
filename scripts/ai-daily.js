@@ -30,7 +30,7 @@ const IF_STALE = args.includes("--if-stale"), REAPPLY = args.includes("--reapply
 const today = new Date().toISOString().slice(0, 10);
 const THEME_KO = { core: "우량", growth: "성장", value: "저평가", dividend: "배당", rising: "히든" };
 const IDX_KEYS = ["nasdaq", "dow", "kospi", "kosdaq"];
-const MACRO_KEYS = ["usdkrw", "wti"];   // 환율·유가(indices.js macro, 2026-10-23~) — 지수와 같은 형식의 분석을 index-notes.js 에 함께 쓴다
+const MACRO_KEYS = ["usdkrw", "dxy", "wti", "gold"];   // 환율·원자재(indices.js macro, 2026-10-23~) — 지수와 같은 형식의 분석을 index-notes.js 에 함께 쓴다
 const ITEMS = ["market", "liquidity", "indexNotes", "topPicks"];
 
 let IX_CACHE = null;
@@ -103,7 +103,7 @@ function indexBlock(IX) {
     return "- " + i.key + " (" + i.name + "): " + i.level + " " + i.change + " (" + (i.period || "") + ")\n" + lines.join("\n");
   }).join("\n") + macroBlock(IX);
 }
-// 환율·유가 — 엔진 등급(USD 는 달러 기준: 매수 쪽 = 원/달러 상승·원화 약세)과 관련 정보(사실 숫자)
+// 환율·원자재 — 엔진 등급(USD 는 달러 기준: 매수 쪽 = 원/달러 상승·원화 약세)과 관련 정보(사실 숫자)
 function macroBlock(IX) {
   const per = { short: "단기(일봉)", mid: "중기(주봉)", long: "장기(월봉)" };
   const pc = (v) => (v == null ? "–" : (v > 0 ? "+" : "") + v + "%");
@@ -195,7 +195,7 @@ const SCHEMA = obj({
   marketNote: STR, marketNoteUS: STR, marketNoteKR: STR,
   liquidity: obj({ headline: STR, headlineUS: STR, headlineKR: STR, us: region, korea: region, nextCheck: STR, sources: IDXS }),
   policyNews: obj({ us: obj({ stance: STANCE, note: STR, sources: IDXS }), korea: obj({ stance: STANCE, note: STR, sources: IDXS }) }),
-  indexNotes: obj({ nasdaq: idxNote, dow: idxNote, kospi: idxNote, kosdaq: idxNote, usdkrw: idxNote, wti: idxNote }),
+  indexNotes: obj({ nasdaq: idxNote, dow: idxNote, kospi: idxNote, kosdaq: idxNote, usdkrw: idxNote, dxy: idxNote, wti: idxNote, gold: idxNote }),
   topPicks: obj({ note: STR, korea: { type: "array", items: pick }, us: { type: "array", items: pick } }),
 });
 
@@ -219,7 +219,7 @@ function researchPrompt(S, ctx) {
     "3. 연준: 최근 7일 위원 발언·의사록·결정과 다음 FOMC 에 대한 시장 해석.",
     "4. 한국은행: 최근 7일 총재·위원 발언·금통위 결정·일정.",
     "5. 이번 주 남은 주요 일정: 미국·한국 거시 지표, 중앙은행 회의, 대형 실적 발표.",
-    "6. 원/달러 환율과 국제 유가(WTI): 최근 며칠 움직임의 원인(달러 흐름·연준/한은·외국인 수급·당국 발언 / OPEC+·재고·지정학·수요 전망).",
+    "6. 원/달러 환율·달러인덱스와 국제 유가(WTI)·금: 최근 며칠 움직임의 원인(달러 흐름·연준/한은·외국인 수급·당국 발언 / OPEC+·재고·지정학·수요 전망 / 실질금리·안전자산 수요·중앙은행 매입).",
     "",
     "검색은 꼭 필요한 만큼만 한다. 신뢰할 만한 언론·기관(로이터·블룸버그·CNBC·WSJ·연합뉴스·한국경제·매일경제·연준·한국은행 등)을 우선한다.",
   ].join("\n");
@@ -243,12 +243,13 @@ const COMPOSE_SYSTEM = [
   "  baseline 과 다른 등급을 주면 drivers 에 그 근거 수치를 쓴다. drivers 는 나라별 2~4개, 각 1문장.",
   "  headline(통합 1문장)·headlineUS·headlineKR(각 1~2문장). nextCheck: 다음에 확인할 가격·지표·일정 1문장.",
   "- policyNews: 연준·한국은행 각각 stance(매파·중립·비둘기파)와 note(누가·무엇을 말하거나 결정했는지 사실 1~2문장). 조사 메모에 근거가 없으면 note 에 직전 판단을 유지한다고 쓰지 말고 sources 를 빈 배열로 둔다.",
-  "- indexNotes: 나스닥·다우·코스피·코스닥(+ 아래 환율·유가) 각각",
+  "- indexNotes: 나스닥·다우·코스피·코스닥(+ 아래 환율·원자재) 각각",
   "  value = 지수 밸류(멀티플은 메모에 수치가 있을 때만)와 그 지역 유동성 국면 1~2문장(미국=나스닥·다우, 한국=코스피·코스닥),",
   "  short/mid/long = 일봉·주봉·월봉 등급과 그 근거(이평·구름·지지/저항·RSI 등 [데이터]의 사실) 1~2문장. 등급 이름은 [데이터]의 등급을 그대로 쓴다.",
-  "  usdkrw(원/달러 환율)·wti(국제 유가)도 같은 형식으로 쓴다 — value 는 '영향': 최근 움직임의 원인(조사 메모)과 그것이 한국·미국 주식에 주는 영향",
+  "  usdkrw(원/달러 환율)·dxy(달러인덱스)·wti(국제 유가)·gold(국제 금)도 같은 형식으로 쓴다 — value 는 '영향': 최근 움직임의 원인(조사 메모)과 그것이 한국·미국 주식에 주는 영향",
   "  (환율: 수출주·외국인 수급·미국 주식의 원화 환산 수익 / 유가: 물가·금리·에너지·운송) 1~2문장, [데이터]의 관련 정보(상관·같이 움직인 종목)를 근거로.",
-  "  usdkrw 등급은 달러 기준이다(매수 쪽 = 원/달러 상승·원화 약세). 환율·유가의 방향을 예측하지 않는다.",
+  "  (달러인덱스: 원화·신흥국 자금·원자재 / 금: 실질금리·안전자산 수요)",
+  "  usdkrw 등급은 달러 기준이다(매수 쪽 = 원/달러 상승·원화 약세). 환율·원자재의 방향을 예측하지 않는다.",
   "- topPicks: 한국·미국 각 정확히 3종목, [Top Pick 후보]에 있는 티커만. 예측이 아니라 '지금 편성에서 균형이 좋은 종목' 큐레이션이다.",
   "  품질(tier)·최근 분기 실적·이익 전망(한국 다음 분기 컨센서스, 미국 최근 4주 EPS 추정 상향/하향)·변동성·밸류를 함께 본다.",
   "  상승여력 크기로 순위를 매기지 않고, 장기(월봉) 신호를 주 근거로 쓰지 않는다.",

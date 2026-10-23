@@ -23,8 +23,8 @@ window.COVERAGE_STATUS = {
   {
    "key": "indexNotes",
    "label": "지수 대응",
-   "done": 6,
-   "total": 6,
+   "done": 8,
+   "total": 8,
    "ok": true
   },
   {

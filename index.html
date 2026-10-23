@@ -340,6 +340,7 @@ svg { display: block; }
 
 /* ── 홈: 오늘의 시장 ── */
 .idx-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+@media (min-width: 600px) { .idx-row { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .ix { display: block; min-width: 0; padding: 12px 12px 11px; border-radius: 14px; background: var(--sf2); }
 .ix[data-open] { cursor: pointer; -webkit-tap-highlight-color: transparent; }
 @media (hover: hover) { .ix[data-open]:hover { background: var(--sf3); } }
@@ -350,7 +351,7 @@ svg { display: block; }
 .ix-ch { margin-top: 1px; font-size: 13.5px; font-weight: 700; }
 .ix-ch .live-dot { margin-left: 5px; vertical-align: 2px; }
 .ix-u { margin-left: 2px; font-size: 12.5px; font-weight: 600; letter-spacing: 0; color: var(--mut); }
-/* 환율·유가 상세 — 관련 정보(기간 등락·52주 위치·금리 차·같이 움직인 종목) */
+/* 환율·원자재 상세 — 관련 정보(기간 등락·52주 위치·금리 차·같이 움직인 종목) */
 .dt-u { margin-left: 3px; font-size: 15px; font-weight: 600; letter-spacing: 0; color: var(--mut); }
 .mc-bar { margin: 4px 0 6px; }
 .mc-ends { display: flex; justify-content: space-between; margin-top: 7px; font-size: 12px; color: var(--mut); }
@@ -1065,13 +1066,17 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     }
   })();
 
-  // 이 기기에서만 기억하는 화면 선택(국가·탭·관심/보유) — 저장소가 막혀 있으면 기본값으로 연다
+  // 이 기기에서만 기억하는 화면 선택(국가·관심/보유) — 저장소가 막혀 있으면 기본값으로 연다
   function lsGet(k) { try { return localStorage.getItem(k); } catch (_e) { return null; } }
   function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (_e) {} }
+  // 탭은 이 창(세션)에서만 기억한다 — 새로고침은 보던 탭을 유지하고, 앱·창을 완전히 닫았다 다시 열면 홈에서 시작(2026-10-23 사용자 요청).
+  function ssGet(k) { try { return sessionStorage.getItem(k); } catch (_e) { return null; } }
+  function ssSet(k, v) { try { sessionStorage.setItem(k, v); } catch (_e) {} }
+  try { localStorage.removeItem("ui.tab"); } catch (_e) {}   // 예전엔 localStorage 에 남겨 다시 열어도 마지막 탭이었다
   var TABS = ["home", "reco", "mine", "perf"];
   var state = {
     country: lsGet("ui.country") === "us" ? "us" : "korea",
-    tab: TABS.indexOf(lsGet("ui.tab")) >= 0 ? lsGet("ui.tab") : "home",
+    tab: TABS.indexOf(ssGet("ui.tab")) >= 0 ? ssGet("ui.tab") : "home",
     theme: "core",          // 추천 종목 탭 선택 — 주제 키 또는 "tier:1|2|3"(티어별 모아보기)
     mine: lsGet("ui.mine") === "hold" ? "hold" : "watch",
     mineEdit: false,        // 내 종목 편집(삭제 ✕·순서 손잡이 표시)
@@ -2616,11 +2621,17 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     return top + chartHtml("idx-" + x.key) + sig + notes +
       '<section class="dt-sec"><h3>AI에게 묻기</h3>' + aiSectionHtml("i:" + x.key, { kind: "index", key: x.key }) + "</section>" + acts;
   }
-  // ── 환율·유가 상세 — 캔들 차트 + 단·중·장 신호 + 관련 정보(매일 자동 계산한 사실 숫자) + 분석(세션·AI) + AI 질문 ──
+  // ── 환율·원자재(원/달러·달러인덱스·WTI·금) 상세 — 캔들 차트 + 단·중·장 신호 + 관련 정보(매일 자동 계산한 사실 숫자) + 분석(세션·AI) + AI 질문 ──
   var MACRO_TXT = {
     usdkrw: { sig: "등급은 달러 기준의 흐름 요약입니다 — 매수 쪽이면 원/달러가 오르는(원화 약세) 흐름, 매도 쪽이면 내리는(원화 강세) 흐름입니다.",
       unitMove: 1, moveWord: "원/달러가 1% 오른 주에", pos: "원/달러와 같이 움직인 종목", posSub: "원화가 약할 때 오른 쪽",
       neg: "반대로 움직인 종목", negSub: "원화가 강할 때 오른 쪽", scope: "한국 편성·관심·보유 종목" },
+    dxy: { sig: "등급은 달러 가치 흐름의 요약입니다 — 매수 쪽이면 달러 강세, 매도 쪽이면 달러 약세 흐름입니다(예측 아님).",
+      unitMove: 1, moveWord: "달러인덱스가 1% 오른 주에", pos: "달러인덱스와 같이 움직인 종목", posSub: "달러가 강할 때 오른 쪽",
+      neg: "반대로 움직인 종목", negSub: "달러가 약할 때 오른 쪽", scope: "한·미 편성·관심·보유 종목" },
+    gold: { sig: "등급은 금값 흐름의 요약입니다 — 매수 쪽이면 오르는 흐름, 매도 쪽이면 내리는 흐름입니다(예측 아님).",
+      unitMove: 5, moveWord: "금값이 5% 오른 주에", pos: "금값과 같이 움직인 종목", posSub: "금값이 오를 때 오른 쪽",
+      neg: "반대로 움직인 종목", negSub: "금값이 오를 때 내린 쪽", scope: "한·미 편성·관심·보유 종목" },
     wti: { sig: "등급은 유가 흐름의 요약입니다 — 매수 쪽이면 오르는 흐름, 매도 쪽이면 내리는 흐름입니다(예측 아님).",
       unitMove: 10, moveWord: "유가가 10% 오른 주에", pos: "유가와 같이 움직인 종목", posSub: "유가가 오를 때 오른 쪽",
       neg: "반대로 움직인 종목", negSub: "유가가 오를 때 내린 쪽", scope: "한·미 편성·관심·보유 종목" }
@@ -2628,10 +2639,16 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   function signedSpan(v, txt) { return '<span class="' + (v > 0 ? "up" : v < 0 ? "down" : "flat") + '">' + esc(txt) + "</span>"; }
   function macroDetailHtml(m) {
     var q = macroQuote(m), f = m.facts || {}, ch = f.chg || {}, X = MACRO_TXT[m.key] || MACRO_TXT.wti, rel = f.rel || {};
-    var srcTip = m.key === "usdkrw" ? "야후 국제 시세(KRW=X) — 은행 고시 환율과 조금 다를 수 있습니다." : "뉴욕상업거래소 WTI 근월물(CL=F) — 만기가 바뀌는 날 값이 한 번 건너뛸 수 있습니다.";
-    var top = '<div class="dt-top"><div class="dt-pxl"><span class="dt-pv">' + esc(q.lv) + '<small class="dt-u">' + esc(m.unit) + "</small></span>" + chgHtml(q.ch, "dt-ch") + "</div>" +
+    var SRC = {
+      usdkrw: ["국제 시세", "야후 국제 시세(KRW=X) — 은행 고시 환율과 조금 다를 수 있습니다."],
+      dxy: ["ICE 달러인덱스", "ICE 미국 달러인덱스(DX-Y.NYB) — 유로·엔·파운드·캐나다달러·크로나·스위스프랑 대비 달러 가치(1973년 3월 = 100)."],
+      wti: ["근월물", "뉴욕상업거래소 WTI 근월물(CL=F) — 만기가 바뀌는 날 값이 한 번 건너뛸 수 있습니다."],
+      gold: ["근월물", "뉴욕상품거래소 금 선물 근월물(GC=F) — 현물 시세와 조금 다르고, 만기가 바뀌는 날 값이 한 번 건너뛸 수 있습니다."]
+    }[m.key] || ["", ""];
+    var srcTip = SRC[1];
+    var top = '<div class="dt-top"><div class="dt-pxl"><span class="dt-pv">' + esc(q.lv) + (m.unit ? '<small class="dt-u">' + esc(m.unit) + "</small>" : "") + "</span>" + chgHtml(q.ch, "dt-ch") + "</div>" +
       '<div class="dt-meta">' + (q.live ? '<span class="live-tx" title="실시간 시세 — 최대 20분가량 늦을 수 있습니다"><i class="live-dot"></i>실시간</span>' : esc(mdOf(m.asOf)) + " 마감") +
-      ' · 전일 대비 · <span title="' + esc(srcTip) + '">' + (m.key === "usdkrw" ? "국제 시세" : "근월물") + "</span></div></div>";
+      ' · 전일 대비' + (SRC[0] ? ' · <span title="' + esc(srcTip) + '">' + esc(SRC[0]) + "</span>" : "") + "</div></div>";
     var sig = '<div class="dt-sum"><div class="dt-sig">' + [["단기", m.short, "일봉"], ["중기", m.mid, "주봉"], ["장기", m.long, "월봉"]].map(function (p) {
       var g = p[1] && p[1].signal;
       return '<div class="ds"><span class="ds-k">' + p[0] + " <i>" + p[2] + '</i></span><b class="ds-v t-' + (SIG_CLS[g] || "x") + '">' + esc(g || "–") + "</b></div>";
@@ -3861,7 +3878,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     if (window.__pastActive) pastApi.exit();
     if (!init && t === state.tab) { window.scrollTo({ top: 0, behavior: "smooth" }); return; }   // 같은 탭을 다시 누르면 맨 위로
     if (!init) tabScroll[state.tab] = window.scrollY;
-    state.tab = t; lsSet("ui.tab", t);
+    state.tab = t; ssSet("ui.tab", t);
     document.querySelectorAll("#tabbar [data-tab]").forEach(function (b) {
       var on = b.dataset.tab === t;
       b.classList.toggle("on", on);
@@ -4438,12 +4455,12 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       return '<div class="ix" role="button" tabindex="0" data-open="1" data-idx="' + esc(x.key) + '" data-c="' + esc(IDX_REGION[x.key] || "us") +
         '" data-t="idx-' + esc(x.key) + '" data-th="idx" title="' + esc(x.name) + ' 차트 보기">' + inner + "</div>";
     }
-    // 환율·유가 칸 — 두 나라 화면 모두에(지수 칸 뒤). 거의 24시간 거래라 시세 서버 값이 있으면 그것을(점 표시), 없으면 마지막 마감값
+    // 환율·원자재 칸 — 두 나라 화면 모두에(지수 칸 뒤). 거의 24시간 거래라 시세 서버 값이 있으면 그것을(점 표시), 없으면 마지막 마감값
     function macroTile(m) {
       var q = macroQuote(m), dir = q.ch == null ? "flat" : (q.ch > 0 ? "up" : q.ch < 0 ? "down" : "flat");
       var inner = '<div class="ix-top"><span class="ix-nm">' + esc(m.name) + "</span>" +
         sigStrip({ sigShort: m.short && m.short.signal, sigMid: m.mid && m.mid.signal, sigLong: m.long && m.long.signal }) + "</div>" +
-        '<div class="ix-lv">' + esc(q.lv) + '<span class="ix-u">' + esc(m.unit) + "</span></div>" +
+        '<div class="ix-lv">' + esc(q.lv) + (m.unit ? '<span class="ix-u">' + esc(m.unit) + "</span>" : "") + "</div>" +
         '<div class="ix-ch ' + dir + '">' + esc(q.chTxt) + (q.live ? '<i class="live-dot" title="실시간 시세(최대 20분가량 늦을 수 있음)"></i>' : "") + "</div>";
       return '<div class="ix" role="button" tabindex="0" data-open="1" data-idx="' + esc(m.key) + '" data-c="' + esc(state.country) +
         '" data-t="idx-' + esc(m.key) + '" data-th="idx" title="' + esc(m.name + " · " + m.sub + (q.live ? " · 실시간" : " · " + mdOf(m.asOf) + " 마감")) + ' — 차트 보기">' + inner + "</div>";
@@ -4456,7 +4473,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     ensureMacroLive();
   }
 
-  // ── 환율·유가(INDEX_TA.macro — update-indices.js: 원/달러 KRW=X·WTI CL=F) ──
+  // ── 환율·원자재(INDEX_TA.macro — update-indices.js: 원/달러 KRW=X·달러인덱스 DX-Y.NYB·WTI CL=F·금 GC=F) ──
   function macroList() { var T = window.INDEX_TA; return T && Array.isArray(T.macro) ? T.macro : []; }
   function num2(v) { return Number(v).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
   function pct2(v) { return v == null || !isFinite(v) ? "–" : (v > 0 ? "+" : "") + Number(v).toFixed(2) + "%"; }
@@ -4654,7 +4671,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       n ? "앱의 지수 대응(" + (window.INDEX_NOTES.asOf || "") + "): 밸류 — " + n.value + " | 단기 — " + n.short + " | 중기 — " + n.mid + " | 장기 — " + n.long : "",
       liqTxt(reg)].filter(Boolean).join("\n");
   }
-  // 환율·유가 — 시세·신호·관련 정보(사실 숫자)·앱의 분석 문장
+  // 환율·원자재 — 시세·신호·관련 정보(사실 숫자)·앱의 분석 문장
   function ctxMacro(key) {
     var m = indexOf(key); if (!m) return "";
     var q = macroQuote(m), f = m.facts || {}, ch = f.chg || {}, rel = f.rel || {}, n = ((window.INDEX_NOTES || {}).items || {})[key];
@@ -4679,7 +4696,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       "기준: " + (T && T.asOf ? T.asOf + " 종가" : "") + " · 보고 있는 나라 " + (c === "us" ? "미국" : "한국"),
       "시황(통합): " + (D.marketNote || "–"), "시황(미국): " + (D.marketNoteUS || "–"), "시황(한국): " + (D.marketNoteKR || "–"),
       T && T.indices ? "지수: " + T.indices.map(idxLine).join("\n") : "",
-      macroList().length ? "환율·유가: " + macroList().map(function (m) { var q = macroQuote(m); return m.name + "(" + m.sub + ") " + q.lv + m.unit + " " + q.chTxt; }).join(" · ") : "",
+      macroList().length ? "환율·원자재: " + macroList().map(function (m) { var q = macroQuote(m); return m.name + "(" + m.sub + ") " + q.lv + m.unit + " " + q.chTxt; }).join(" · ") : "",
       liqTxt("us"), liqTxt("korea"),
       tp.length ? "오늘의 Top Pick(" + (c === "us" ? "미국" : "한국") + "): " + tp.map(function (x) { return x.name + " — " + x.reason; }).join(" / ") : ""
     ].filter(Boolean).join("\n");

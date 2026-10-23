@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // 지수 기술적 분석 자동 갱신 — LLM 토큰 0 (순수 스크립트, refresh-quotes Action에서 실행)
 //
-// 역할: 나스닥 종합(^IXIC)·다우존스(^DJI)·코스피(^KS11)·코스닥(^KQ11)과 원/달러(KRW=X)·WTI(CL=F)의 10년치 일봉을
+// 역할: 나스닥 종합(^IXIC)·다우존스(^DJI)·코스피(^KS11)·코스닥(^KQ11)과 원/달러(KRW=X)·달러인덱스(DX-Y.NYB)·WTI(CL=F)·금(GC=F)의 10년치 일봉을
 //       Yahoo Finance 에서 받아, 공유 scripts/lib-ta.js 로 단기(일봉)·중기(주봉)·장기(월봉)
 //       기술적 분석(이동평균·RSI·추세·지지/저항·골든크로스·매매신호)을 "결정론적으로 계산"해
 //       data/indices.js(window.INDEX_TA)로 저장한다.
@@ -48,15 +48,20 @@ const INDICES = [
     chartUrl: "https://m.stock.naver.com/domestic/index/KOSDAQ/total" }
 ];
 
-// 환율·유가(2026-10-23 사용자 요청 — 홈 '오늘의 시장'에 지수처럼) — window.INDEX_TA.macro 에 따로 둔다.
+// 환율·원자재(2026-10-23 사용자 요청 — 홈 '오늘의 시장'에 지수처럼) — window.INDEX_TA.macro 에 따로 둔다.
 //   indices 에 섞지 않는 이유: 외환·원유는 거의 24시간 거래라 마지막 봉 날짜가 주식 지수와 하루씩 어긋난다.
-//   asOf(지수 대응 게이트·기준일)는 주식 지수 4개로만 정하고, 환율·유가는 항목마다 자기 asOf 를 갖는다.
+//   asOf(지수 대응 게이트·기준일)는 주식 지수 4개로만 정하고, 환율·원자재는 항목마다 자기 asOf 를 갖는다.
 //   이름은 네이버 증권 시장지표 표기('미국 USD' = 원/달러 환율). 시세는 야후(KRW=X 국제 시세, CL=F 근월물 연결).
+//   달러인덱스(DX-Y.NYB)·국제 금(GC=F 근월물 연결)은 2026-10-23 같은 날 추가 요청. 칸 순서 = 환율 둘 → 원자재 둘.
 const MACRO = [
   { key: "usdkrw", name: "미국 USD", sub: "원/달러 환율", unit: "원", symbol: "KRW=X", srDp: 0, moverCountry: "korea",
     chartUrl: "https://m.stock.naver.com/marketindex/exchange/FX_USDKRW" },
+  { key: "dxy", name: "달러인덱스", sub: "주요 6개 통화 대비 달러 가치", unit: "", symbol: "DX-Y.NYB", srDp: 2, moverCountry: null,
+    chartUrl: "https://m.stock.naver.com/marketindex/exchange/.DXY" },
   { key: "wti", name: "WTI", sub: "서부텍사스산 원유 · 배럴당 달러(근월물)", unit: "달러", symbol: "CL=F", srDp: 2, moverCountry: null,
-    chartUrl: "https://m.stock.naver.com/marketindex/energy/CLcv1" }
+    chartUrl: "https://m.stock.naver.com/marketindex/energy/CLcv1" },
+  { key: "gold", name: "국제 금", sub: "금 선물 · 트로이온스당 달러(근월물)", unit: "달러", symbol: "GC=F", srDp: 0, moverCountry: null,
+    chartUrl: "https://m.stock.naver.com/marketindex/metals/GCcv1" }
 ];
 
 
@@ -151,7 +156,7 @@ function analyze(cfg, rows, gapOkOverride) {
   };
 }
 
-// ── 환율·유가 '관련 정보' — 사실 숫자만(예측 아님): 기간 등락·52주 위치·이동평균 거리·변동성 국면·시장/편성 종목과 같이 움직인 정도 ──
+// ── 환율·원자재 '관련 정보' — 사실 숫자만(예측 아님): 기간 등락·52주 위치·이동평균 거리·변동성 국면·시장/편성 종목과 같이 움직인 정도 ──
 const rnd = (v, d) => (v == null || !isFinite(v) ? null : Math.round(v * Math.pow(10, d)) / Math.pow(10, d));
 const isoDay = (t, off) => new Date(t * 1000 + (off || 0)).toISOString().slice(0, 10);
 const sdOf = (a) => { if (a.length < 2) return null; const m = a.reduce((x, y) => x + y, 0) / a.length; return Math.sqrt(a.reduce((x, y) => x + (y - m) * (y - m), 0) / (a.length - 1)); };
@@ -317,7 +322,7 @@ function loadPrevAsOf() {
     }
   }
 
-  // 환율·유가 — 지수와 같은 엔진·같은 차트 형식. asOf 는 항목마다(파일 asOf 에 섞지 않는다 — MACRO 주석)
+  // 환율·원자재 — 지수와 같은 엔진·같은 차트 형식. asOf 는 항목마다(파일 asOf 에 섞지 않는다 — MACRO 주석)
   const macro = [];
   const idxRows = { kospi: fetched.kospi, nasdaq: fetched.nasdaq };
   for (const cfg of MACRO) {
@@ -351,11 +356,11 @@ function loadPrevAsOf() {
 
   const body =
     "// 지수 기술적 분석 스냅샷 — scripts/update-indices.js 가 자동 생성 (LLM 토큰 0, 순수 스크립트)\n" +
-    "// 나스닥·다우·코스피·코스닥(indices)과 원/달러·WTI(macro)의 종가·이동평균·RSI·추세·지지/저항·신호를 매일 계산해 저장한다.\n" +
+    "// 나스닥·다우·코스피·코스닥(indices)과 원/달러·달러인덱스·WTI·금(macro)의 종가·이동평균·RSI·추세·지지/저항·신호를 매일 계산해 저장한다.\n" +
     "// 거시 유동성 '게이지 등급'은 판단 영역이라 data/liquidity.js 에서 온디맨드로 남는다.\n" +
     "window.INDEX_TA = " + JSON.stringify(T, null, 1) + ";\n";
   fs.writeFileSync(OUT, body);
 
-  console.log("indices.js 갱신: " + indices.length + "개 지수 + 환율·유가 " + macro.length + " (" + asOf + ") — 실시간 " +
+  console.log("indices.js 갱신: " + indices.length + "개 지수 + 환율·원자재 " + macro.length + " (" + asOf + ") — 실시간 " +
     live + " · 폴백 " + fellBack + " · 차트 " + charts);
 })();
