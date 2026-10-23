@@ -96,7 +96,12 @@ function stats(days, from, base) {
   const w = days.slice(i0);
   if (!w.length) return null;
   let c = 1, cb = 1, ce = 1, eq = true;
-  w.forEach((x) => { c *= 1 + x.r; cb *= 1 + x.rb; ce *= 1 + x.re; eq = eq && x.eq; });
+  // 최대 낙폭(직전 고점 대비 가장 깊은 하락) — 같은 수익이라도 중간에 얼마나 깊게 빠졌는지가 버틸 수 있는 편성인지를 가른다
+  let pk = 1, pkb = 1, mdd = 0, mddB = 0;
+  w.forEach((x) => {
+    c *= 1 + x.r; cb *= 1 + x.rb; ce *= 1 + x.re; eq = eq && x.eq;
+    pk = Math.max(pk, c); pkb = Math.max(pkb, cb); mdd = Math.min(mdd, c / pk - 1); mddB = Math.min(mddB, cb / pkb - 1);
+  });
   const ret = (c - 1) * 100, bench = (cb - 1) * 100;
   const g = reg(w.map((x) => x.r), w.map((x) => x.rb));
   const out = {
@@ -104,7 +109,8 @@ function stats(days, from, base) {
     ret: r2(ret), bench: r2(bench), excess: r2(ret - bench),
     beta: g ? r2(g.beta) : null, seBeta: g ? r2(g.seBeta) : null,
     betaAlpha: g ? r2(ret - g.beta * bench) : null,
-    tEx: r2(tMean(w.map((x) => x.r - x.rb))), tAlpha: g ? r2(g.tAlpha) : null
+    tEx: r2(tMean(w.map((x) => x.r - x.rb))), tAlpha: g ? r2(g.tAlpha) : null,
+    mdd: r2(mdd * 100), mddB: r2(mddB * 100)
   };
   if (eq) { out.eq = r2((ce - 1) * 100); out.vsEq = r2(ret - (ce - 1) * 100); }
   return out;

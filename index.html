@@ -525,6 +525,7 @@ svg { display: block; }
 .pf-tbl td:first-child { font-weight: 600; }
 .pf-tbl td i { font-style: normal; font-weight: 400; font-size: 11.5px; color: var(--mut); }
 .pf-tbl td b { font-weight: 700; }
+.pf-tbl tr.pf-mdd td { border-top: 1px solid var(--line); }
 .pf-note { margin-top: 12px; font-size: 12.5px; line-height: 1.65; color: var(--mut); }
 .pf-foot { margin: 2px 16px 16px; font-size: 12px; line-height: 1.6; color: var(--mut); }
 .pf-prog { margin: -2px 0 14px; }
@@ -3327,7 +3328,10 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
         var w = r[1];
         return '<tr><td>' + esc(r[0]) + (r[2] ? ' <i>' + esc(r[2]) + "</i>" : "") + '</td><td class="' + sgnCls(w.ret).trim() + '">' + fmtPct(w.ret) +
           '</td><td class="' + sgnCls(w.bench).trim() + '">' + fmtPct(w.bench) + '</td><td class="' + sgnCls(w.excess).trim() + '"><b>' + fmtPp(w.excess) + "</b></td></tr>";
-      }).join("") + "</tbody></table>";
+      }).join("") +
+      // 최대 낙폭 — 수익률만으로 안 보이는 위험(중간에 얼마나 깊게 빠졌나). 차이가 양수면 지수보다 덜 빠졌다
+      (s.mdd != null ? '<tr class="pf-mdd"><td><span class="pf-k" data-basis="' + esc("최대 낙폭: 기간 중 직전 고점에서 가장 깊게 빠진 폭입니다. 같은 수익이라도 낙폭이 작아야 끝까지 들고 갈 수 있습니다. 차이가 양수면 지수보다 덜 빠졌다는 뜻입니다.") + '">최대 낙폭</span></td><td class="down">' + fmtPct(s.mdd) +
+        '</td><td class="down">' + fmtPct(s.mddB) + '</td><td class="' + sgnCls(s.mdd - s.mddB).trim() + '"><b>' + fmtPp(s.mdd - s.mddB) + "</b></td></tr>" : "") + "</tbody></table>";
     var betaInText = s.beta != null && s.betaAlpha != null && Math.abs(s.beta - 1) >= 0.25;   // 판정 문장에 이미 나온 β 는 칩으로 다시 보이지 않는다
     var beta = s.beta == null || betaInText ? "" : '<span class="pf-chip" data-basis="' + esc(PF_BETA_TIP) + '">β ' + s.beta.toFixed(2) + "</span>";
     return pBlk("추천 성적", esc(mdOf(s.from)) + " ~ " + esc(mdOf(s.to)) + " · " + s.days + "거래일",
