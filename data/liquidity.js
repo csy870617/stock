@@ -1,47 +1,45 @@
 // 유동성 판단(온디맨드) — 시장지표 baseline(data/liquidity-auto.js, 매일 자동)을 거시 이벤트·내러티브로 보정/덮어쓰기.
 // 앱은 이 파일이 있으면 우선 표시하고 baseline 을 병기, 없으면 baseline 을 게이지로 쓴다.
 window.LIQUIDITY_DATA = {
- "asOf": "2026-10-23",
- "headline": "미국은 10년물이 5% 아래지만 연방기금 선물이 12월 인상을 87% 반영해 '신중'이고, 한국은 코스피 20일 -21% 급락 floor로 단기 '매우 부정'입니다.",
- "headlineUS": "10/22 기준 10년물은 4.95%로 5% 아래지만 연방기금 선물이 10/28 동결 92%·12/9 인상 87%를 반영하고 HY 채권도 약해 단기·중기 모두 '신중'으로 봅니다.",
- "headlineKR": "코스피 20일 -21% 급락으로 floor가 유지돼 단기는 '매우 부정'입니다. 10/23은 장중 4% 급락 뒤 5,550으로 회복했지만 외국인이 1조원 안팎 순매도했고, 1년 금리 기대가 3.54%라 중기는 '신중'입니다.",
+ "asOf": "2026-10-24",
+ "headline": "유가 100달러 돌파와 연준 12월 인상 기대(86%)로 미국은 단기 신중·중기 부정, 코스피 20일 -21% 급락과 외국인 매도가 겹친 한국은 단기 매우 부정·중기 부정입니다.",
+ "headlineUS": "자동 지표는 단기 우호를 가리키지만, 미 10년물 4.99% 반등과 연방기금 선물의 12월 인상 확률 86%·내년 3월 기대금리 4.32%를 반영해 단기 신중, 중기 부정으로 봅니다.",
+ "headlineKR": "코스피 20일 -21% 급락과 외국인 9,810억원 순매도로 단기는 매우 부정입니다. 한국은행 1년 금리 기대가 인상 약 2.1회분을 반영하고 국제 유가가 급등해 중기도 부정입니다.",
  "us": {
   "shortTerm": "신중",
-  "midTerm": "신중",
+  "midTerm": "부정",
   "drivers": [
-   "미 10년물이 4.95%로 내려오고 장단기 금리차가 0.93%p라 baseline은 단기 '우호'지만, 금리 수준 자체가 여전히 높아 한 단계 낮춰 봅니다.",
-   "연방기금 선물은 10/28 동결 92%, 12/9 +25bp 인상 87%, 2027년 3월 기대 금리 4.3%로 추가 인상을 반영하고 있습니다.",
-   "HY 채권 20일 수익률 -0.6%, VIX 19.0으로 신용·변동성 여건이 약해졌고, 유가는 5개월 만의 최고치에 올랐습니다.",
-   "JP모건 트레이더들은 중간선거 이후 이란과의 군사 충돌 위험이 다시 거론된 점을 하락 요인으로 꼽았습니다."
+   "연방기금 선물은 10/28 동결(90%) 뒤 12/9 인상 확률 86%, 2027년 3월 기대금리 4.32%를 반영해 긴축 경로가 이어지고 있습니다.",
+   "WTI가 하루 3.82% 오른 103.27달러, 브렌트가 116.72달러로 4년여 만의 최고치에 오르면서 10년물이 4.99%로 반등해 baseline 의 10년물 추세 가점을 그대로 읽기 어렵습니다.",
+   "HY 채권이 20일 -0.6%로 신용 여건이 다소 약해졌고 VIX는 19.5로 중립 수준입니다.",
+   "금리 예측 모델의 12개월 전망 4.64%와 테일러 준칙 4.39%가 현재 실효금리 3.88%보다 높아 중기 부담이 큽니다."
   ]
  },
  "korea": {
   "shortTerm": "매우 부정",
-  "midTerm": "신중",
+  "midTerm": "부정",
   "drivers": [
-   "코스피가 20일 기준 -21% 떨어져 급락 floor가 유지되고 있습니다. 10/23은 장중 5,306까지 밀렸다가 5,550.30(+0.30%)으로 마감했습니다.",
-   "금통위는 기준금리를 3.00%로 동결했지만, 시장의 1년 기대 금리는 3.54%로 약 2.2회 인상분을 반영하고 있습니다.",
-   "원/달러가 1,324.2원으로 5거래일 연속 내린(원화 강세) 점은 완충 요인입니다.",
-   "외국인이 10/23에도 약 1조원 순매도했고(기관은 약 8,700억원 순매수), 삼성전자·SK하이닉스 자사주 매입 종료로 수급 버팀목이 약해졌습니다."
+   "코스피는 20일 -21% 급락 floor가 발동된 상태이고 10/23에도 장중 -4.12%까지 밀렸습니다.",
+   "외국인은 직전 일주일(10/16~22) 5,800억원 순매수 뒤 10/23 9,810억원 순매도로 돌아서 수급 회복이 이어지지 못했습니다.",
+   "한국은행 기준금리 3%에 대해 시장은 1년 평균 기대금리 3.523%로 인상 약 2.1회분을 반영하고 있습니다.",
+   "원/달러가 3개월 -8.8%로 원화 강세가 이어진 점은 우호 요인이지만, WTI 올해 +79.9% 급등이 물가 부담을 키우고 있습니다."
   ]
  },
- "nextCheck": "10/28 FOMC 결과와 12월 인상 확률 변화, 나스닥 일봉 지지 25,918 유지 여부, 코스피 일봉 저항 5,628 회복 여부, 한국 3분기 GDP·10월 물가를 확인합니다.",
+ "nextCheck": "10/28 FOMC 결정과 12월 인상 확률(현재 86%), WTI의 110.48달러 저항 돌파 여부, 코스피가 5,306 지지 위에서 버티는지를 확인합니다.",
  "sources": [
-  "https://finance.yahoo.com/markets/stocks/articles/nasdaq-futures-drop-over-1-093849296.html",
-  "https://www.cnbc.com/2026/10/21/stock-market-today-live-updates.html",
-  "https://pro.thestreet.com/stock-market-today/2026-10-22",
-  "https://gvwire.com/2026/10/22/wall-street-sinks-as-nasdaq-falls-over-2-on-ai-cost-worries/",
-  "https://fnnews.com/news/202610231541257462",
-  "https://www.newspim.com/news/view/20261023001023"
+  "http://www.idahopress.com/ap_news/us/wall-street-loses-ground-under-pressure-from-rising-oil-prices/article_928170fe-05b3-59f5-a8fc-e253aee1bde2.html",
+  "https://finance.yahoo.com/markets/world-indices/articles/major-us-stock-indexes-fared-201458598.html",
+  "https://www.munhwa.com/article/11625899",
+  "https://www.fnnews.com/news/202610231637254942"
  ],
  "policyNews": {
-  "asOf": "2026-10-22",
+  "asOf": "2026-10-24",
   "us": {
    "stance": "매파",
-   "note": "10/7 공개된 FOMC 의사록에는 위원들이 추가 인상을 예상하지만 시점은 정하지 않은 것으로 나옵니다. 워시 의장은 10/16 IMF 행사에서 어느 쪽 결정도 시사하지 않는다고 말했고, CNBC는 높은 물가와 느슨한 금융여건이 추가 인상의 근거가 될 수 있다고 분석했습니다.",
+   "note": "연준은 9월 15~16일 회의에서 금리를 0.25%p 올려 3.75~4.00%로 만들었고, 10/27~28 FOMC(결정 10/28)를 앞두고 로이터 설문에서 이코노미스트 100명 중 94명이 동결을 예상했습니다. 연방기금 선물은 10월 동결 90% 뒤 12/9 회의 인상 확률 86%를 반영하고 있습니다.",
    "sources": [
-    "https://www.cnbc.com/2026/10/07/fed-officials-see-another-hike-coming-but-no-sign-as-to-when-minutes-show.html",
-    "https://www.cnbc.com/2026/10/16/kevin-warsh-fed-october-rate-hike-interest-rates-markets.html"
+    "https://www.raisin.com/en-us/news/pre-fomc-preview-positioning-cash-october-2026/",
+    "https://www.noradarealestate.com/blog/fed-interest-rate-predictions-october-2026/"
    ]
   },
   "korea": {

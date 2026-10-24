@@ -4,7 +4,7 @@
 window.CANDIDATES = {
  "asOf": "2026-10-24",
  "T": "2026-10-23",
- "screenAsOf": "2026-10-23",
+ "screenAsOf": "2026-10-24",
  "screenFresh": true,
  "beta": {
   "korea": 0.45,
@@ -453,7 +453,7 @@ window.CANDIDATES = {
      "flags": [
       {
        "k": "theme",
-       "msg": "주제 기준 미달 — 매출 성장 미달(3년 4.9%·향후 18.4%), PEG 1.77",
+       "msg": "주제 기준 미달 — 매출 성장 미달(3년 4.9%·향후 18.4%), PEG 1.53",
        "fresh": false
       }
      ],
@@ -489,7 +489,7 @@ window.CANDIDATES = {
      "flags": [
       {
        "k": "theme",
-       "msg": "주제 기준 미달 — 매출 성장 미달(3년 2.8%·향후 48%)",
+       "msg": "주제 기준 미달 — 매출 성장 미달(3년 2.8%·향후 48.8%)",
        "fresh": false
       }
      ],
@@ -513,10 +513,17 @@ window.CANDIDATES = {
      "ticker": "095340",
      "name": "ISC",
      "state": "감시",
-     "flags": [],
-     "note": "근접 후보(3년 평균 ROIC 14.4%)",
-     "judged": "2026-10-18",
-     "verdict": "형식"
+     "flags": [
+      {
+       "k": "theme",
+       "msg": "주제 기준 미달 — ROIC 미달(3년 평균 14.4%)",
+       "fresh": false
+      }
+     ],
+     "note": "3년 평균 ROIC 14.4%로 기준 15%에 0.6%p 못 미치나, 2023년 업황 저점이 평균에 남은 산식 효과다. 2026.06 분기 매출 +41%, 영업이익 +55.5%로 개선 중이며, 원인 확인 전까지 감시한다.",
+     "judged": "2026-10-24",
+     "verdict": "형식",
+     "by": "ai"
     }
    ],
    "list": [
@@ -537,6 +544,23 @@ window.CANDIDATES = {
      "asOf": "2026-10-17",
      "why": "3년 매출 연평균 21.1% · 3년 평균 ROIC 40.7% · PEG 0.4",
      "url": "https://m.stock.naver.com/domestic/stock/003350/total"
+    },
+    {
+     "ticker": "278470",
+     "name": "에이피알",
+     "status": "검증 대기",
+     "why": "3년 매출 연평균 56.6% · 3년 평균 ROIC 67.7% · PEG 0.6",
+     "near": "시총 범위 밖",
+     "alsoIn": "core",
+     "url": "https://m.stock.naver.com/domestic/stock/278470/total"
+    },
+    {
+     "ticker": "084370",
+     "name": "유진테크",
+     "status": "검증 대기",
+     "why": "3년 매출 연평균 4.1% · 3년 평균 ROIC 16.8% · PEG 1.4",
+     "near": "매출 성장 미달(3년 4.1%·향후 40.5%)",
+     "url": "https://m.stock.naver.com/domestic/stock/084370/total"
     }
    ]
   },
@@ -633,23 +657,23 @@ window.CANDIDATES = {
      "url": "https://m.stock.naver.com/worldstock/stock/MRK/total"
     },
     {
+     "ticker": "NVS",
+     "name": "Novartis",
+     "status": "검증 대기",
+     "why": "매출 성장 8.9%",
+     "url": "https://m.stock.naver.com/worldstock/stock/NVS/total"
+    },
+    {
      "ticker": "BHP",
      "name": "BHP",
      "status": "검증 대기",
      "why": "매출 성장 14.6%",
      "url": "https://m.stock.naver.com/worldstock/stock/BHP/total"
-    },
-    {
-     "ticker": "CSCO",
-     "name": "Cisco Systems",
-     "status": "검증 대기",
-     "why": "3년 평균 ROIC 25.7% · 매출 성장 5.3% · 주식 수 연 -1.6%",
-     "url": "https://m.stock.naver.com/worldstock/stock/CSCO.O/total"
     }
    ]
   },
   "us|growth": {
-   "eligible": 66,
+   "eligible": 65,
    "defects": [
     {
      "ticker": "META",
@@ -729,18 +753,18 @@ window.CANDIDATES = {
      "url": "https://m.stock.naver.com/worldstock/stock/MCO/total"
     },
     {
-     "ticker": "VRT",
-     "name": "Vertiv",
-     "status": "검증 대기",
-     "why": "3년 매출 연평균 21.6% · FCF 마진 18.5% · 3년 평균 ROIC 23.3%",
-     "url": "https://m.stock.naver.com/worldstock/stock/VRT/total"
-    },
-    {
      "ticker": "GE",
      "name": "General Electric",
      "status": "검증 대기",
      "why": "3년 매출 연평균 16.3% · FCF 마진 15.8%",
      "url": "https://m.stock.naver.com/worldstock/stock/GE/total"
+    },
+    {
+     "ticker": "VRT",
+     "name": "Vertiv",
+     "status": "검증 대기",
+     "why": "3년 매출 연평균 21.6% · FCF 마진 18.5% · 3년 평균 ROIC 23.3%",
+     "url": "https://m.stock.naver.com/worldstock/stock/VRT/total"
     },
     {
      "ticker": "SCCO",
@@ -750,18 +774,6 @@ window.CANDIDATES = {
      "url": "https://m.stock.naver.com/worldstock/stock/SCCO.K/total"
     },
     {
-     "ticker": "ASX",
-     "name": "ASE Technology",
-     "status": "검증 대기",
-     "url": "https://m.stock.naver.com/worldstock/stock/ASX/total"
-    },
-    {
-     "ticker": "ARGX",
-     "name": "argenx",
-     "status": "검증 대기",
-     "url": "https://m.stock.naver.com/worldstock/stock/ARGX.O/total"
-    },
-    {
      "ticker": "FAST",
      "name": "Fastenal",
      "status": "검증 대기",
@@ -769,10 +781,23 @@ window.CANDIDATES = {
      "url": "https://m.stock.naver.com/worldstock/stock/FAST.O/total"
     },
     {
+     "ticker": "ASX",
+     "name": "ASE Technology",
+     "status": "검증 대기",
+     "url": "https://m.stock.naver.com/worldstock/stock/ASX/total"
+    },
+    {
      "ticker": "RIO",
      "name": "Rio Tinto",
      "status": "검증 대기",
      "url": "https://m.stock.naver.com/worldstock/stock/RIO/total"
+    },
+    {
+     "ticker": "GEV",
+     "name": "GE Vernova",
+     "status": "검증 대기",
+     "why": "3년 매출 연평균 8.7% · FCF 마진 9.7% · 3년 평균 ROIC 18.2%",
+     "url": "https://m.stock.naver.com/worldstock/stock/GEV/total"
     }
    ]
   },
@@ -817,7 +842,7 @@ window.CANDIDATES = {
      "status": "보류",
      "note": "EBIT/EV 문턱 미달(FCF 로만 통과)·오피오이드 소송",
      "asOf": "2026-10-18",
-     "why": "EBIT/EV 3.7% · FCF/시총 5% · 매출 성장 9.3%",
+     "why": "EBIT/EV 3.8% · FCF/시총 5.1% · 매출 성장 9.3%",
      "url": "https://m.stock.naver.com/worldstock/stock/COR/total"
     },
     {
@@ -853,7 +878,7 @@ window.CANDIDATES = {
      "status": "보류",
      "note": "분사로 재무 왜곡",
      "asOf": "2026-10-18",
-     "why": "EBIT/EV 6.3% · FCF/시총 7.1% · 매출 성장 7.7%",
+     "why": "EBIT/EV 6.4% · FCF/시총 7.2% · 매출 성장 7.7%",
      "url": "https://m.stock.naver.com/worldstock/stock/FDX/total"
     },
     {
@@ -891,7 +916,7 @@ window.CANDIDATES = {
      "ticker": "XYZ",
      "name": "Block",
      "status": "검증 대기",
-     "why": "EBIT/EV 3.5% · FCF/시총 5.1% · 매출 성장 0.3%",
+     "why": "EBIT/EV 3.6% · FCF/시총 5.3% · 매출 성장 0.3%",
      "url": "https://m.stock.naver.com/worldstock/stock/XYZ/total"
     },
     {
@@ -1043,24 +1068,30 @@ window.CANDIDATES = {
      "url": "https://m.stock.naver.com/worldstock/stock/CM/total"
     },
     {
-     "ticker": "TRP",
-     "name": "TC Energy",
+     "ticker": "IX",
+     "name": "ORIX CORPORATION",
      "status": "검증 대기",
-     "why": "배당성향 66% · 배당 4%",
-     "url": "https://m.stock.naver.com/worldstock/stock/TRP/total"
+     "why": "배당성향 0.2% · 배당 2.7%",
+     "url": "https://m.stock.naver.com/worldstock/stock/IX/total"
     }
    ]
   },
   "us|rising": {
-   "eligible": 11,
+   "eligible": 0,
    "defects": [
     {
      "ticker": "NXT",
      "name": "Nextpower",
      "state": "결격",
-     "flags": [],
-     "note": "⑨ 세액공제(45X) 의존 · 최근 낙폭은 회사 고유 악재 미확인(10/28 실적 발표 예정)",
-     "judged": "2026-10-21",
+     "flags": [
+      {
+       "k": "theme",
+       "msg": "주제 기준 미달 — SEC 재무 없음(해외 공시 등), 영업이익 3년 연속 흑자 아님, 최근 연도 순이익 적자, FCF 적자, 매출 성장 미달(3년 –%·최근 –%), ROIC 미달(3년 평균 –%)",
+       "fresh": false
+      }
+     ],
+     "note": "⑨ 세액공제(45X) 의존 · 최근 낙폭은 회사 고유 악재 미확인(10/28 실적 발표 예정) · 새 신호: 2026.07 분기 매출 +8.2%, EBIT +6.2%, 순이익 +5.2%로 흑자 성장을 유지했고 FY2027 가이던스도 상향됐다. 다만 재무 데이터 공백으로 기준 충족 여부는 확인 전이라 10-28 실적 발표까지 감시한다.",
+     "judged": "2026-10-24",
      "verdict": "실질",
      "triedAt": "2026-10-23",
      "since": "2026-10-21",
@@ -1073,7 +1104,7 @@ window.CANDIDATES = {
      "flags": [
       {
        "k": "theme",
-       "msg": "주제 기준 미달 — 시총 범위 밖, 순차입금 > 영업현금흐름, ROIC 미달(3년 평균 8.3%)",
+       "msg": "주제 기준 미달 — 시총 범위 밖, SEC 재무 없음(해외 공시 등), 영업이익 3년 연속 흑자 아님, 최근 연도 순이익 적자, FCF 적자, 매출 성장 미달(3년 –%·최근 –%), ROIC 미달(3년 평균 –%)",
        "fresh": false
       }
      ],
@@ -1091,7 +1122,7 @@ window.CANDIDATES = {
      "flags": [
       {
        "k": "theme",
-       "msg": "주제 기준 미달 — 순차입금 > 영업현금흐름, 매출 성장 미달(3년 15%·최근 17.1%), ROIC 미달(3년 평균 15%), PEG 2.18",
+       "msg": "주제 기준 미달 — SEC 재무 없음(해외 공시 등), 영업이익 3년 연속 흑자 아님, 최근 연도 순이익 적자, FCF 적자, 매출 성장 미달(3년 –%·최근 –%), ROIC 미달(3년 평균 –%), PEG 2.18",
        "fresh": false
       }
      ],
@@ -1109,7 +1140,7 @@ window.CANDIDATES = {
      "flags": [
       {
        "k": "theme",
-       "msg": "주제 기준 미달 — 시총 범위 밖, 영업이익 3년 연속 흑자 아님, 순차입금 > 영업현금흐름, 매출 성장 미달(3년 3.5%·최근 9.6%), ROIC 미달(3년 평균 -1.6%)",
+       "msg": "주제 기준 미달 — SEC 재무 없음(해외 공시 등), 영업이익 3년 연속 흑자 아님, 최근 연도 순이익 적자, FCF 적자, 매출 성장 미달(3년 –%·최근 –%), ROIC 미달(3년 평균 –%)",
        "fresh": false
       }
      ],
@@ -1145,7 +1176,7 @@ window.CANDIDATES = {
      "flags": [
       {
        "k": "theme",
-       "msg": "주제 기준 미달 — 시총 범위 밖, 순차입금 > 영업현금흐름, 매출 성장 미달(3년 8.4%·최근 14.3%), ROIC 미달(3년 평균 6.5%), PEG 3.48, 희석 주식 수 연 4.1% 증가",
+       "msg": "주제 기준 미달 — 시총 범위 밖, SEC 재무 없음(해외 공시 등), 영업이익 3년 연속 흑자 아님, 최근 연도 순이익 적자, FCF 적자, 매출 성장 미달(3년 –%·최근 –%), ROIC 미달(3년 평균 –%), PEG 3.34",
        "fresh": false
       }
      ],
@@ -1160,10 +1191,17 @@ window.CANDIDATES = {
      "ticker": "NVMI",
      "name": "Nova Ltd.",
      "state": "감시",
-     "flags": [],
-     "note": "근접 후보",
-     "judged": "2026-10-18",
-     "verdict": "형식"
+     "flags": [
+      {
+       "k": "theme",
+       "msg": "주제 기준 미달 — SEC 재무 없음(해외 공시 등), 영업이익 3년 연속 흑자 아님, 최근 연도 순이익 적자, FCF 적자, 매출 성장 미달(3년 –%·최근 –%), ROIC 미달(3년 평균 –%)",
+       "fresh": false
+      }
+     ],
+     "note": "SEC 재무 수치가 비어 있어 기준 미달로 잡혔으나, 2026.06 분기 매출 +15.9%, 순이익 +9.8%로 흑자 성장은 유지 중이다. 회사 고유 악재는 확인되지 않아 11월 5일 실적 발표까지 감시한다.",
+     "judged": "2026-10-24",
+     "verdict": "형식",
+     "by": "ai"
     },
     {
      "ticker": "POWL",
@@ -1172,7 +1210,7 @@ window.CANDIDATES = {
      "flags": [
       {
        "k": "theme",
-       "msg": "주제 기준 미달 — 매출 성장 미달(3년 27.5%·최근 9.1%)",
+       "msg": "주제 기준 미달 — SEC 재무 없음(해외 공시 등), 영업이익 3년 연속 흑자 아님, 최근 연도 순이익 적자, FCF 적자, 매출 성장 미달(3년 –%·최근 –%), ROIC 미달(3년 평균 –%)",
        "fresh": false
       }
      ],
@@ -1186,14 +1224,20 @@ window.CANDIDATES = {
      "state": "감시",
      "flags": [
       {
+       "k": "theme",
+       "msg": "주제 기준 미달 — SEC 재무 없음(해외 공시 등), 영업이익 3년 연속 흑자 아님, 최근 연도 순이익 적자, FCF 적자, 매출 성장 미달(3년 –%·최근 –%), ROIC 미달(3년 평균 –%), PEG 1.75",
+       "fresh": false
+      },
+      {
        "k": "earn",
        "msg": "실적 발표(10/22) · EPS 서프라이즈 0.8% — 가이던스·논거 확인",
        "fresh": false
       }
      ],
-     "note": "근접 후보 — 10월 22일 3분기 매출 +19%로 활주로 기준(20%)에 근소하게 못 미치는 상태가 이어지고, 연간 매출 전망 하단을 올려 가이던스 하향은 아니다.",
-     "judged": "2026-10-23",
-     "verdict": "형식"
+     "note": "주제 기준 미달 신호는 대부분 값이 비어 있어 데이터 공백으로 보이며, 2026년 6월 분기 매출 +19.3%·영업이익 +30.8%·순이익 +15.5%로 흑자 성장이 이어진다. 3분기 원문 확인 전까지 감시한다.",
+     "judged": "2026-10-24",
+     "verdict": "형식",
+     "by": "ai"
     }
    ],
    "list": [
@@ -1203,8 +1247,6 @@ window.CANDIDATES = {
      "status": "보류",
      "note": "숫자는 근접 — ⑦ 해자 근거 부족, 신뢰 출처 확보 시 MKSI 대체 1순위",
      "asOf": "2026-10-18",
-     "why": "3년 매출 연평균 15.7% · 3년 평균 ROIC 24.9% · PEG 2",
-     "near": "PEG 1.95",
      "url": "https://finance.yahoo.com/quote/FIVE"
     },
     {
@@ -1213,8 +1255,6 @@ window.CANDIDATES = {
      "status": "보류",
      "note": "⑨ 단일 제품 의존 — 12-17 신약 승인 결정 뒤",
      "asOf": "2026-10-18",
-     "why": "3년 매출 연평균 23.7% · 3년 평균 ROIC 36.4% · PEG 0.9",
-     "near": "희석 주식 수 연 3.6% 증가",
      "url": "https://finance.yahoo.com/quote/CORT"
     }
    ]
