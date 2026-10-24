@@ -2,7 +2,7 @@
 // groups["<country>|<theme>"] = {defects 편성 결격(state 결격|점검 필요|감시), list 후보(status 검증 통과|보류|검증 대기)}
 // 세션 판정은 data/candidate-notes.json(CLAUDE.md §3-7) — 이 파일을 직접 고치지 않는다.
 window.CANDIDATES = {
- "asOf": "2026-10-23",
+ "asOf": "2026-10-24",
  "T": "2026-10-23",
  "screenAsOf": "2026-10-23",
  "screenFresh": true,
