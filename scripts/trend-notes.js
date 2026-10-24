@@ -99,7 +99,11 @@ function queue() {
     if (why < 0) return;
     q.push({ f, m, why, formal: formal[m.t] ? 0 : 1, age });
   });
-  q.sort((x, y) => x.why - y.why || x.formal - y.formal || y.age - x.age);
+  // 같은 순위 안에서는 오래된 순, 한국·미국을 번갈아(CLAUDE.md §3-1 '한국·미국 동등')
+  q.sort((x, y) => x.why - y.why || x.formal - y.formal || y.age - x.age || (x.f < y.f ? -1 : 1));
+  const rank = {};
+  q.forEach((x) => { const g = x.why + "|" + x.formal + "|" + x.m.c; x.r = rank[g] = (rank[g] || 0) + 1; });
+  q.sort((x, y) => x.why - y.why || x.formal - y.formal || x.r - y.r || (x.m.c === "korea" ? -1 : 1));
   const todo = q.slice(0, max);
   const WHY = ["설명 없음", "추세 바뀜", "핵심 날짜 바뀜", AGE_DAYS + "일 지남"];
   console.log("추세 설명: 지금 추세에 맞는 설명 " + have + "/" + total + "종목 · 필요 " + q.length + "종목 → 이번 " + todo.length + "종목");
