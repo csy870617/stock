@@ -189,13 +189,21 @@ const G5 = { type: "string", enum: ["매우 우호", "우호", "신중", "부정
 const STANCE = { type: "string", enum: ["매파", "중립", "비둘기파"] };
 const obj = (p) => ({ type: "object", properties: p, required: Object.keys(p), additionalProperties: false });
 const region = obj({ shortTerm: G5, midTerm: G5, drivers: { type: "array", items: STR } });
-const idxNote = obj({ value: STR, short: STR, mid: STR, long: STR });
 const pick = obj({ ticker: STR, reason: STR });
+// 모델 출력(indexNotes 배열) → 내부 형식(indexNotes 지도). 같은 key 가 두 번 오면 앞의 것을 쓴다.
+function normIdx(data) {
+  if (!data || !Array.isArray(data.indexNotes)) return data;
+  const m = {};
+  data.indexNotes.forEach((x) => { if (x && x.key && !m[x.key]) m[x.key] = { value: x.value, short: x.short, mid: x.mid, long: x.long }; });
+  return Object.assign({}, data, { indexNotes: m });
+}
 const SCHEMA = obj({
   marketNote: STR, marketNoteUS: STR, marketNoteKR: STR,
   liquidity: obj({ headline: STR, headlineUS: STR, headlineKR: STR, us: region, korea: region, nextCheck: STR, sources: IDXS }),
   policyNews: obj({ us: obj({ stance: STANCE, note: STR, sources: IDXS }), korea: obj({ stance: STANCE, note: STR, sources: IDXS }) }),
-  indexNotes: obj({ nasdaq: idxNote, dow: idxNote, kospi: idxNote, kosdaq: idxNote, usdkrw: idxNote, dxy: idxNote, wti: idxNote, gold: idxNote }),
+  // 항목마다 같은 객체를 8번 펼치면 structured outputs 문법이 너무 커져 400 으로 거부된다(2026-10-23 23:16Z 실측 —
+  //   환율·원자재 4개를 더한 뒤 "compiled grammar is too large"). key 가 든 배열 하나로 받고 normIdx 로 지도형으로 바꾼다.
+  indexNotes: { type: "array", items: obj({ key: { type: "string", enum: IDX_KEYS.concat(MACRO_KEYS) }, value: STR, short: STR, mid: STR, long: STR }) },
   topPicks: obj({ note: STR, korea: { type: "array", items: pick }, us: { type: "array", items: pick } }),
 });
 
@@ -484,14 +492,14 @@ async function main() {
     let prompt = composePrompt(S, P, memo, urls, picks);
     let c1 = await L.compose(cl, { model, system: COMPOSE_SYSTEM, prompt, schema: SCHEMA, effort: "high" });
     usage = L.mergeUsage(usage, c1.usage);
-    let out = c1.data, err = check(out, picks);
+    let out = normIdx(c1.data), err = check(out, picks);
     if (errCount(err)) {
       const list = Object.values(err).flat();
       console.log("ai-daily: 검사 오류 " + list.length + "건 — 한 번 고쳐 쓰게 한다\n  - " + list.join("\n  - "));
-      const fix = prompt + "\n\n[직전 출력]\n" + JSON.stringify(out) + "\n\n[직전 출력의 문제 — 이것만 고쳐 같은 형식으로 다시 써라]\n- " + list.join("\n- ");
+      const fix = prompt + "\n\n[직전 출력]\n" + JSON.stringify(c1.data) + "\n\n[직전 출력의 문제 — 이것만 고쳐 같은 형식으로 다시 써라]\n- " + list.join("\n- ");
       const c2 = await L.compose(cl, { model, system: COMPOSE_SYSTEM, prompt: fix, schema: SCHEMA, effort: "high" });
       usage = L.mergeUsage(usage, c2.usage);
-      out = c2.data; err = check(out, picks);
+      out = normIdx(c2.data); err = check(out, picks);
     }
     const ok = {};
     ITEMS.forEach((k) => { ok[k] = todo.includes(k) && !err[k].length; });
