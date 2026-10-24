@@ -5,13 +5,13 @@ name: Refresh quotes (daily, token-free)
 #   1-2) update-consensus.js → data/consensus.js + recommendations.js targetPrice (네이버 컨센서스)
 #   2) update-indices.js → data/indices.js (지수 단기/장기 이동평균·RSI·추세·지지/저항·신호)
 #   3) update-stock-ta.js → data/stock-ta.js (개별 종목 단기/장기 기술적 분석) + data/chart/<ticker>.json (종목 상세 캔들 차트 — 일·주·월봉)
-#   3-2) update-moves.js → data/move/<ticker>.json (종목 상세 '6개월 흐름' — 상승·하락·보합 판정과 시장 몫·핵심 날짜·구간·수급·공시)
+#   3-2) update-trend.js → data/trend/<ticker>.json (종목 상세 '현재 추세' — 상승·하락·보합 판정과 시작점, 시장 몫·핵심 날짜·단계·수급·공시)
 #   4) update-liquidity-gauge.js → data/liquidity-auto.js (시장지표 기반 유동성 게이지 baseline)
 #   5) screen-watch.js → data/watch-candidates.js (관심종목 차트 후보: 턴어라운드·신고가 + 기존 태그 유효성)
 #   5-2) screen-discovery.js(매일, 히든 6일마다) → check-defects.js → data/candidates.js (주제별 후보 + 편성 결격 점검)
 #   5-3) AI 단계(Claude API — 저장소 Secrets 에 ANTHROPIC_API_KEY 가 있을 때만, 2026-10-21~):
 #        ai-defects.js(점검 필요 → 실질·형식·없음 판정) → ai-daily.js(시황·유동성·연준/한은·지수 대응·Top Pick) → ai-news.js(종목 뉴스 한 줄)
-#        → ai-moves.js(6개월 흐름의 구간·핵심 날짜를 기사로 확인한 '뉴스로 본 이유')
+#        ('현재 추세'의 기사 설명은 API 가 아니라 매일 루틴 세션이 trend-notes.js 로 쓴다 — CLAUDE.md §3-4c)
 #   (월) gen-tickers.js → data/tickers.js (관심종목 검색 사전, 주 1회)
 #   6) daily-maintenance.js → recommendations.js generatedAt(오늘) + 지수·스냅샷(history.js)
 # 이렇게 하면 LLM 추천 Routine이 실패해도 앱은 매일 오늘자 날짜·시세·지수 기술적 분석·유동성 baseline·스냅샷을 유지한다.
@@ -129,11 +129,11 @@ jobs:
         run: node scripts/gen-technote.js
         continue-on-error: true
 
-      # 종목 상세 '6개월 흐름' — 일봉(data/chart)·지수(코스피·코스닥 차트, S&P 500 야후)로 상승·하락·보합 판정, 시장 몫(β) vs 종목 고유,
-      # 구간·핵심 날짜를 계산하고 한국 투자자별 매매·공시(네이버)·미국 8-K(SEC)·실적 발표 반응을 붙인다(토큰 0, 약 1분).
-      # 이전 파일의 AI 설명(ai-moves.js)은 이어 붙인다. update-stock-ta·update-events 다음에 돌아야 같은 거래일 숫자로 쓴다.
-      - name: Update 6-month move analysis (chart·Naver·SEC → data/move/<ticker>.json, token-free)
-        run: node scripts/update-moves.js
+      # 종목 상세 '현재 추세' — 야후 5년 일봉·지수로 지금 추세(상승·하락·보합)와 시작점(되돌림 기준 전환점 + 3개월 정체)을 정하고,
+      # 그 추세 구간의 시장 몫(β) vs 종목 고유·단계·핵심 날짜를 계산해 한국 투자자별 매매·공시(네이버)·미국 8-K(SEC)·실적 발표 반응을 붙인다(토큰 0, 약 1분).
+      # 이전 파일의 기사 설명(루틴 세션이 trend-notes.js 로 쓴 ai)은 이어 붙인다. update-stock-ta·update-events 다음에 돌린다.
+      - name: Update current-trend analysis (Yahoo·Naver·SEC → data/trend/<ticker>.json, token-free)
+        run: node scripts/update-trend.js
         continue-on-error: true
 
       - name: Update liquidity gauge baseline (Yahoo → data/liquidity-auto.js, token-free)
@@ -200,15 +200,6 @@ jobs:
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
 
-      # '6개월 흐름'의 구간·핵심 날짜가 왜 그렇게 움직였는지 기사로 확인(Sonnet 5.5, 종목당 검색 ≤4, 실행당 ≤16종목) → data/move/<ticker>.json 의 ai.
-      # 설명이 없는 종목 → 판정·핵심 날짜가 바뀐 종목(지문) → 21일 지난 종목 순. 확인 못 한 날은 '원인 보도 확인 안 됨'으로 둔다.
-      - name: AI move narratives (6개월 흐름 → data/move)
-        if: env.HAS_AI_KEY == 'true'
-        run: node scripts/ai-moves.js
-        continue-on-error: true
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
-
       # 관심종목 검색 사전(이름→코드) — 신규 상장 반영용, 월요일 아침 실행에서만 주 1회.
       # KRX 가 막히면 네이버로 폴백하고, 둘 다 실패한 국가는 기존 값을 유지한다(스크립트 내부 처리).
       - name: Refresh ticker dictionary (weekly, → data/tickers.js, token-free)
@@ -243,14 +234,14 @@ jobs:
       - name: Commit & push if changed
         id: commit
         run: |
-          if git diff --quiet -- data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/events.js data/fundamentals.js data/liquidity-auto.js data/watch-candidates.js data/discovery-candidates.js data/candidates.js data/coverage-status.js data/tickers.js data/consensus.js data/reco-ops.json data/chart data/move data/liquidity.js data/index-notes.js data/candidate-notes.json data/news.js data/ai-status.js data/shadow.json data/perf.json data/close-runs.json; then
+          if git diff --quiet -- data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/events.js data/fundamentals.js data/liquidity-auto.js data/watch-candidates.js data/discovery-candidates.js data/candidates.js data/coverage-status.js data/tickers.js data/consensus.js data/reco-ops.json data/chart data/trend data/liquidity.js data/index-notes.js data/candidate-notes.json data/news.js data/ai-status.js data/shadow.json data/perf.json data/close-runs.json; then
             echo "변화 없음 — 커밋 생략"
             echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/events.js data/fundamentals.js data/liquidity-auto.js data/watch-candidates.js data/discovery-candidates.js data/candidates.js data/coverage-status.js data/tickers.js data/consensus.js data/reco-ops.json data/chart data/move data/liquidity.js data/index-notes.js data/candidate-notes.json data/news.js data/ai-status.js data/shadow.json data/perf.json data/close-runs.json
+          git add data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/events.js data/fundamentals.js data/liquidity-auto.js data/watch-candidates.js data/discovery-candidates.js data/candidates.js data/coverage-status.js data/tickers.js data/consensus.js data/reco-ops.json data/chart data/trend data/liquidity.js data/index-notes.js data/candidate-notes.json data/news.js data/ai-status.js data/shadow.json data/perf.json data/close-runs.json
           git commit -m "매일 데이터 갱신 (자동) — 시세·기준일·스냅샷 (update-quotes + daily-maintenance)"
           # 다른 자동 커밋(LLM 재평가 Routine 등)과 경합해 push 가 거부될 수 있으므로,
           # 거부되면 원격 변경을 rebase 로 얹어 1회 재시도한다(그날 갱신이 조용히 유실되지 않도록).
@@ -266,14 +257,12 @@ jobs:
               GEN="$RUNNER_TEMP/gen"; mkdir -p "$GEN"
               cp data/quotes.js data/indices.js data/stock-ta.js data/events.js data/fundamentals.js data/liquidity-auto.js data/watch-candidates.js data/discovery-candidates.js data/tickers.js data/news.js data/ai-status.js data/shadow.json data/perf.json data/close-runs.json "$GEN/"
               cp -r data/chart "$RUNNER_TEMP/gen-chart" 2>/dev/null || true
-              cp -r data/move "$RUNNER_TEMP/gen-move" 2>/dev/null || true
               git reset --hard FETCH_HEAD
               cp "$GEN"/* data/
               # 종목 상세 차트(data/chart/<ticker>.json)도 이번 실행 산출물로 — 폴더째 바꾼다
               if [ -d "$RUNNER_TEMP/gen-chart" ]; then rm -rf data/chart && cp -r "$RUNNER_TEMP/gen-chart" data/chart; fi
-              # 6개월 흐름도(이번 실행의 AI 설명 포함) — 원격 편성에 맞춰 종목을 다시 맞춘다(AI 설명은 이어 붙인다)
-              if [ -d "$RUNNER_TEMP/gen-move" ]; then rm -rf data/move && cp -r "$RUNNER_TEMP/gen-move" data/move; fi
-              node scripts/update-moves.js || true
+              # 현재 추세는 원격(루틴이 쓴 설명 포함)을 기준으로 다시 계산한다 — 설명(ai)은 이어 붙고 편성 변화도 맞춰진다
+              node scripts/update-trend.js || true
               node scripts/update-consensus.js || true
               node scripts/gen-technote.js || true
               # AI 결과는 API 를 다시 부르지 않고 이번 실행분(.ai-cache)을 다시 얹는다 — 원격에 같은 날 이후로 쓴 항목은 원격을 남긴다
@@ -283,7 +272,7 @@ jobs:
               node scripts/perf-track.js || true
               node scripts/check-defects.js || true
               node scripts/coverage.js --emit || true
-              git add data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/events.js data/fundamentals.js data/liquidity-auto.js data/watch-candidates.js data/discovery-candidates.js data/candidates.js data/coverage-status.js data/tickers.js data/consensus.js data/reco-ops.json data/chart data/move data/liquidity.js data/index-notes.js data/candidate-notes.json data/news.js data/ai-status.js data/shadow.json data/perf.json data/close-runs.json
+              git add data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/events.js data/fundamentals.js data/liquidity-auto.js data/watch-candidates.js data/discovery-candidates.js data/candidates.js data/coverage-status.js data/tickers.js data/consensus.js data/reco-ops.json data/chart data/trend data/liquidity.js data/index-notes.js data/candidate-notes.json data/news.js data/ai-status.js data/shadow.json data/perf.json data/close-runs.json
               git diff --cached --quiet || git commit -m "매일 데이터 갱신 (자동) — 시세·기준일·스냅샷 (update-quotes + daily-maintenance)"
             fi
             # 원격 변경과 합쳐진 결과도 커밋 전과 같은 게이트를 통과해야 push 한다
