@@ -1,4 +1,4 @@
-// Claude API 공용 도구 — AI 단계(ai-daily·ai-defects·ai-news)가 함께 쓴다.
+// Claude API 공용 도구 — AI 단계(ai-daily·ai-defects·ai-news·ai-moves)가 함께 쓴다.
 // 키는 환경변수 ANTHROPIC_API_KEY(GitHub Secrets)에서만 읽는다. 키가 없으면 client() 가 null 을 돌려주고
 // 각 스크립트는 아무것도 바꾸지 않고 끝난다(그날 몫은 지금처럼 A 루틴 세션이 쓴다).
 //
@@ -19,6 +19,7 @@ const MODELS = {
   daily: process.env.AI_MODEL_DAILY || "claude-opus-5-5",      // 시황·유동성·지수 대응·Top Pick — 판단의 질이 중요
   defects: process.env.AI_MODEL_DEFECTS || "claude-sonnet-5-5", // 결격 점검 판정 — 종목당 짧은 조사
   news: process.env.AI_MODEL_NEWS || "claude-haiku-5-5",        // 뉴스 한 줄 요약 — 100종목 이상, 검색 없음
+  moves: process.env.AI_MODEL_MOVES || "claude-sonnet-5-5",     // 6개월 흐름의 '뉴스로 본 이유' — 종목당 짧은 조사
 };
 // 100만 토큰당 달러(입력·출력·캐시 읽기, 2026-10 공시가) — ai-status.js 의 비용 추정용
 const PRICE = {
@@ -173,7 +174,7 @@ function readStatus() { return loadWin("ai-status.js", "AI_STATUS") || {}; }
 function writeStatus(part, obj) {
   const st = readStatus();
   st[part] = obj;
-  const head = "// AI 자동 분석 상태 — scripts/ai-daily.js·ai-defects.js·ai-news.js 가 기록(Claude API, 키는 GitHub Secrets ANTHROPIC_API_KEY).\n" +
+  const head = "// AI 자동 분석 상태 — scripts/ai-daily.js·ai-defects.js·ai-news.js·ai-moves.js 가 기록(Claude API, 키는 GitHub Secrets ANTHROPIC_API_KEY).\n" +
     "// 앱 'AI 연결' 창이 '매일 자동 분석' 칸에 보여 준다. 비용은 토큰 기준 추정(웹 검색은 횟수만 — 검색당 요금 별도).\n";
   fs.writeFileSync(STATUS, head + "window.AI_STATUS = " + JSON.stringify(st, null, 1) + ";\n");
 }

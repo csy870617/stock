@@ -1,7 +1,7 @@
 // 서비스워커 — 앱 설치(PWA) 및 오프라인 대비 캐시
 // 전략: 네트워크 우선(항상 최신 데이터를 먼저 시도), 실패 시에만 캐시 사용.
 // 데이터 정확성이 최우선이므로 캐시가 최신 데이터를 가리는 일이 없도록 한다.
-var CACHE = "mystock-v61";
+var CACHE = "mystock-v62";
 // index.html 이 로드하는 스크립트 전부를 프리캐시해야 오프라인에서 앱이 온전히 뜬다
 // (하나라도 빠지면 오프라인 첫 로드에서 그 데이터 레이어가 통째로 비어 보인다).
 var SHELL = [
@@ -57,7 +57,7 @@ self.addEventListener("fetch", function (e) {
       // 정상 응답(2xx, 기본 타입)만 캐시 — 404/500 등 오류 응답이 오프라인 캐시를 오염시키지 않도록
       if (res && res.ok && res.type === "basic") {
         var copy = res.clone();
-        // 버전 꼬리표(?v=…)는 떼고 저장한다 — 종목 차트(data/chart/*.json?v=갱신시각)의 옛 버전이 기기에 쌓이지 않게.
+        // 버전 꼬리표(?v=…)는 떼고 저장한다 — 종목 차트·6개월 흐름(data/chart·data/move/*.json?v=갱신시각)의 옛 버전이 기기에 쌓이지 않게.
         // 오프라인 폴백은 ignoreSearch 로 찾으므로 그대로 맞는다.
         var key = e.request.url.split("?")[0];
         caches.open(CACHE).then(function (c) { c.put(key, copy); });

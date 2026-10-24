@@ -518,6 +518,67 @@ svg { display: block; }
 .pf-tip .tp-d { color: var(--mut); font-size: 11.5px; }
 .pf-tip .tp-r { display: flex; align-items: center; gap: 6px; white-space: nowrap; color: var(--ink2); }
 .pf-tip .tp-r b { margin-left: auto; padding-left: 12px; color: var(--ink); font-weight: 700; font-variant-numeric: tabular-nums; }
+/* 6개월 흐름(종목 상세) — 판정 칩·차트(성과 탭 곡선과 같은 색 규칙)·무엇이 움직였나(로그 기준 막대)·구간·핵심 날짜 */
+.mv-hd { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 8px; }
+.mv-v { flex: none; display: inline-flex; align-items: center; height: 24px; padding: 0 8px; border-radius: 6px; font-size: 13px; font-weight: 700; background: var(--sf3); color: var(--ink2); }
+.mv-v.mv-up { background: var(--up-soft); color: var(--up); } .mv-v.mv-down { background: var(--down-soft); color: var(--down); }
+.mv-r { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
+.mv-r.flat { color: var(--ink); }
+.mv-p { font-size: 13px; color: var(--mut); }
+.mv-i { margin-left: auto; padding: 4px; cursor: help; }
+.mv-sub { margin-top: 4px; font-size: 13.5px; line-height: 1.6; color: var(--ink2); }
+.mv-sub b { font-weight: 700; color: var(--ink); }
+.mv-lead { margin-top: 12px; font-size: 15px; line-height: 1.7; color: var(--ink); }
+.mv-chart { margin-top: 12px; }
+.mv-chart .mv-b-up { fill: var(--up); fill-opacity: 0.07; } .mv-chart .mv-b-down { fill: var(--down); fill-opacity: 0.07; }
+.mv-chart circle.mv-m { fill: var(--pf-f); } .mv-chart circle.mv-m-k { fill: var(--pf-i); }
+.mv-chart .mv-ml { fill: var(--ink2); font-size: 11px; font-weight: 700; }
+.mv-lg { margin-bottom: 2px; }
+.mv-sw { display: inline-block; width: 12px; height: 10px; border-radius: 2px; opacity: 0.28; }
+.mv-sw-up { background: var(--up); } .mv-sw-down { background: var(--down); }
+.mv-kd { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--pf-f); }
+.mv-h4 { display: flex; align-items: center; gap: 4px; margin: 24px 0 10px; font-size: 14.5px; font-weight: 700; color: var(--ink); }
+.mv-h4 .kv-i { cursor: help; padding: 2px; }
+.mv-att { display: grid; gap: 11px; }
+.mv-ar { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) 62px; align-items: center; gap: 10px; }
+.mv-ak { min-width: 0; font-size: 13.5px; font-weight: 600; color: var(--ink); }
+.mv-ak i { display: block; font-style: normal; font-weight: 400; font-size: 12px; line-height: 1.45; color: var(--mut); }
+.mv-ab { position: relative; height: 8px; }
+.mv-ab::before { content: ""; position: absolute; left: 50%; top: -6px; bottom: -6px; width: 1px; background: var(--line); }
+.mv-ab i { position: absolute; top: 0; height: 8px; }
+.mv-ab i.up { left: 50%; background: var(--up); border-radius: 0 4px 4px 0; }
+.mv-ab i.down { right: 50%; background: var(--down); border-radius: 4px 0 0 4px; }
+.mv-ar > b { text-align: right; font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.mv-tot { padding-top: 11px; border-top: 1px solid var(--line); }
+.mv-list { list-style: none; }
+.mv-it { padding: 12px 0; border-top: 1px solid var(--line2); }
+.mv-it:first-child { padding-top: 2px; border-top: 0; }
+.mv-ih { display: flex; align-items: center; gap: 8px; }
+.mv-id { min-width: 0; font-size: 14px; font-weight: 600; color: var(--ink); }
+.mv-id i { font-style: normal; font-weight: 400; font-size: 12px; color: var(--mut); }
+.mv-ih > b { margin-left: auto; padding-left: 8px; font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.mv-ih > b.flat { color: var(--ink); }
+.mv-im { margin-top: 3px; font-size: 12.5px; line-height: 1.6; color: var(--ink2); }
+.mv-n { flex: none; display: inline-grid; place-items: center; width: 20px; height: 20px; border-radius: 50%; background: var(--pf-f); color: var(--sf); font-size: 11.5px; font-weight: 800; }
+.mv-n.mv-nm { background: var(--pf-i); }
+.mv-tags { margin-top: 5px; font-size: 12.5px; line-height: 1.7; color: var(--ink2); }
+.mv-tag { display: inline-flex; align-items: center; height: 19px; padding: 0 6px; margin: 0 4px 0 0; border-radius: 5px; background: var(--sf3); color: var(--ink2); font-size: 11.5px; font-weight: 700; vertical-align: 1px; }
+.mv-tags .mv-tag ~ .mv-tag { margin-left: 6px; }
+.mv-why { margin-top: 6px; font-size: 14px; line-height: 1.65; color: var(--ink); }
+.mv-src { font-size: 12px; color: var(--mut); text-decoration: underline; text-underline-offset: 2px; white-space: nowrap; }
+.mv-sum { list-style: none; display: grid; gap: 7px; }
+.mv-sum li { position: relative; padding-left: 12px; font-size: 14px; line-height: 1.65; color: var(--ink); }
+.mv-sum li::before { content: ""; position: absolute; left: 2px; top: 0.72em; width: 4px; height: 4px; border-radius: 50%; background: var(--mut); }
+.mv-foot { margin-top: 18px; font-size: 12px; line-height: 1.6; color: var(--mut); }
+.mv-empty { font-size: 14px; color: var(--mut); }
+.mv-mini { display: flex; align-items: center; gap: 6px; padding: 11px 14px; border-top: 1px solid var(--line); font-size: 13px; color: var(--ink2); }
+.mv-mini[hidden] { display: none; }
+.mv-mini .mv-mk { flex: none; font-size: 12.5px; color: var(--mut); }
+.mv-mini .mv-v { height: 22px; font-size: 12.5px; }
+.mv-mini > b { flex: none; font-size: 15px; font-weight: 700; }
+.mv-mini .mv-ms { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mv-mini > svg { flex: none; margin-left: auto; width: 16px; height: 16px; color: var(--mut); }
+.dt-sum.mv-only { display: none; } .dt-sum.mv-only.on { display: block; } .dt-sum.mv-only .mv-mini { border-top: 0; }
 .pf-tbl { width: 100%; margin-top: 6px; border-collapse: collapse; font-size: 13.5px; font-variant-numeric: tabular-nums; }
 .pf-tbl th { padding: 8px 4px; border-bottom: 1px solid var(--line); text-align: right; font-size: 12px; font-weight: 600; color: var(--mut); white-space: nowrap; }
 .pf-tbl td { padding: 10px 4px; border-bottom: 1px solid var(--line2); text-align: right; white-space: nowrap; }
@@ -2545,6 +2606,257 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   function redrawChart() { var st = CH.cur; if (st && st.src && st.el.isConnected) drawChart(st); }
   if (window.matchMedia) { try { window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", redrawChart); } catch (_e) {} }
 
+  // ── 6개월 흐름 — 상승·하락·보합과 그 이유 ──
+  //   data/move/<ticker>.json(update-moves.js 가 매일 계산: 판정·시장 몫 vs 종목 고유(β)·구간·핵심 날짜·수급·공시·실적 반응,
+  //   ai-moves.js 가 기사로 확인한 '뉴스로 본 이유')을 종목을 열 때만 받아 상세 '6개월 흐름' 섹션을 채운다.
+  //   이미 일어난 움직임을 나눠 본 것이지 예측이 아니다. 차트는 종목(보라)·지수(회색)를 시작일 0%로 맞춘 한 축 — 구간은 옅은 빨강(상승)·
+  //   파랑(하락) 띠, 핵심 날짜는 번호 점(누르면 그날 값). 색 규칙은 성과 탭 곡선과 같다(dataviz 검증 팔레트).
+  var MV = { data: {}, inflight: {}, cur: null };
+  var MV_CLS = { "상승": "up", "하락": "down", "보합": "flat" };
+  var MV_AI_TAG = '<span class="ai-tag" data-basis="Claude API 가 핵심 날짜·구간을 기사로 검색해 쓴 설명입니다(scripts/ai-moves.js). 확인되지 않은 것은 \'원인 보도 확인 안 됨\'으로 둡니다 — 출처 링크를 확인하세요.">AI</span>';
+  function moveFileOf(t) { return "data/move/" + encodeURIComponent(String(t).replace(/[^A-Za-z0-9.\-]/g, "_")) + ".json"; }
+  // 받은 파일은 기억한다(없으면 null — 막 편입된 종목, 네트워크 오류는 다음에 다시)
+  function loadMoveData(t, cb) {
+    if (MV.data[t] !== undefined) { cb(MV.data[t]); return; }
+    if (MV.inflight[t]) { MV.inflight[t].push(cb); return; }
+    MV.inflight[t] = [cb];
+    var v = (window.STOCK_TA && (window.STOCK_TA.builtAt || window.STOCK_TA.asOf)) || "";
+    var got;
+    fetch(moveFileOf(t) + (v ? "?v=" + encodeURIComponent(v) : ""))
+      .then(function (r) { if (r.status === 404) { got = null; return null; } if (!r.ok) throw new Error("http " + r.status); return r.json(); })
+      .then(function (j) { if (j) got = j && j.series && j.legs ? j : null; if (got !== undefined) MV.data[t] = got; })
+      .catch(function () {})
+      .then(function () { var q = MV.inflight[t] || []; delete MV.inflight[t]; q.forEach(function (f) { f(got === undefined ? null : got); }); });
+  }
+  var mvPct = function (v) { return v == null || !isFinite(v) ? "–" : fmtPct(v * 100); };
+  var mvSg = function (v) { return signedSpan(v, mvPct(v)); };
+  var mvD = function (n) { var s = String(n); return s.length === 8 ? s.slice(0, 4) + "-" + s.slice(4, 6) + "-" + s.slice(6) : s; };
+  function mvWon(v) {
+    var a = Math.abs(v), t = a >= 1e12 ? (a / 1e12).toFixed(1).replace(/\.0$/, "") + "조" : a >= 1e8 ? Math.round(a / 1e8).toLocaleString("ko-KR") + "억" : Math.round(a / 1e4).toLocaleString("ko-KR") + "만";
+    return signedSpan(v, (v >= 0 ? "+" : "-") + t);
+  }
+  function mvSrc(list) {
+    return (list || []).slice(0, 3).map(function (u, i) { return ' <a class="mv-src" href="' + esc(safeUrl(u)) + '" target="_blank" rel="noopener">출처' + (i + 1) + "</a>"; }).join("");
+  }
+  // AI 설명 맞추기 — 구간은 날짜가 절반 넘게 겹치면, 핵심 날짜는 시작일이 같으면(창이 하루씩 밀려도 이어진다)
+  function mvAiLeg(m, L) {
+    var A = m.ai && m.ai.legs; if (!A) return null;
+    var s = L.s, e = L.e, best = null, bo = 0;
+    A.forEach(function (x) {
+      var lo = x.s > s ? x.s : s, hi = x.e < e ? x.e : e;
+      if (hi <= lo) return;
+      var ov = (Date.parse(hi) - Date.parse(lo)) / Math.max(1, Date.parse(e) - Date.parse(s));
+      if (ov > bo) { bo = ov; best = x; }
+    });
+    return bo >= 0.5 ? best : null;
+  }
+  function mvAiDay(m, k) { return ((m.ai && m.ai.days) || []).filter(function (x) { return x.s === k.s; })[0] || null; }
+  function mvDayLabel(k) {
+    var d0 = mvD(k.s), w = WD_K[new Date(d0 + "T00:00:00Z").getUTCDay()];
+    return mdOf(d0) + (k.n > 1 ? "~" + mdOf(mvD(k.e)) : "") + (k.n > 1 ? "" : "(" + w + ")");
+  }
+  function mvTip(m) {
+    return "6개월 수익률을 이 종목이 6개월 동안 보통 움직이는 폭(일간 변동성으로 잰 ±" + Math.round((m.sig6 || 0) * 100) + "%)과 견줍니다 — 그 3분의 1인 ±" +
+      (Math.round((m.band || 0) * 1000) / 10) + "%를 넘으면 상승·하락, 안이면 보합(±5% 안은 늘 보합, ±10% 밖은 늘 상승·하락). '시장보다'는 지수와의 차이가 ±" +
+      Math.round((m.relBand || 0.05) * 100) + "%를 넘었는지로 봅니다. 이미 일어난 움직임의 정리이며 앞으로의 방향을 예측하지 않습니다.";
+  }
+  var MV_ATT_TIP = "6개월 수익을 나눕니다. 시장 영향 = 지수가 움직인 만큼 이 종목이 평소 민감도(β — 최근 1년 일간 수익을 지수에 회귀)대로 따라간 몫. " +
+    "나머지가 종목 고유 몫이며, 그중 시장 대비 유난히 크게 움직인 날(초과수익이 기간 표준편차의 2.2배·2.5% 이상)을 급등·급락한 날로 따로 셉니다. " +
+    "수익은 곱으로 쌓여 각 줄의 단순 합은 합계와 조금 다를 수 있습니다(막대 길이는 로그 기준이라 정확히 더해집니다).";
+  function mvAtt(m) {
+    var a = m.att; if (!a) return "";
+    var ex = function (x) { return Math.exp(x) - 1; };
+    // 넷째 칸 = 표시값(시장 영향은 서버 문장과 같은 m.mkt — 반올림한 로그에서 되돌리면 0.1%p 어긋날 수 있다)
+    var rows = [["시장 영향", m.bench.name + " " + mvPct(m.mret) + " × β " + (+m.beta).toFixed(2), a.mkt, m.mkt]];
+    if (a.upN) rows.push(["급등한 날", a.upN + "일", a.up]);
+    if (a.downN) rows.push(["급락한 날", a.downN + "일", a.down]);
+    rows.push([a.upN || a.downN ? "그 밖의 날들" : "종목 고유", a.upN || a.downN ? "평소 흐름" : "시장 몫을 뺀 나머지", a.rest]);
+    var mx = Math.max.apply(null, rows.map(function (r) { return Math.abs(r[2]); }).concat([Math.abs(a.tot || 0), 0.001]));
+    var bar = function (x) { return '<span class="mv-ab"><i class="' + (x >= 0 ? "up" : "down") + '" style="width:' + (Math.abs(x) / mx * 50).toFixed(1) + '%"></i></span>'; };
+    return '<div class="mv-att">' + rows.map(function (r) {
+      return '<div class="mv-ar"><span class="mv-ak">' + esc(r[0]) + "<i>" + esc(r[1]) + "</i></span>" + bar(r[2]) + "<b>" + mvSg(r[3] != null ? r[3] : ex(r[2])) + "</b></div>";
+    }).join("") + '<div class="mv-ar mv-tot"><span class="mv-ak">6개월 합계</span>' + bar(a.tot) + "<b>" + mvSg(m.ret) + "</b></div></div>";
+  }
+  function mvHtml(m) {
+    var cls = MV_CLS[m.cls] || "flat", ai = m.ai && m.ai.summary ? m.ai : null, sum = m.sum || [];
+    var head = '<div class="mv-hd"><span class="mv-v mv-' + cls + '">' + esc(m.cls) + '</span><b class="mv-r ' + cls + '">' + esc(mvPct(m.ret)) + "</b>" +
+      '<span class="mv-p">' + esc(mdOf(m.from) + " → " + mdOf(m.to)) + '</span><i class="kv-i mv-i" data-basis="' + esc(mvTip(m)) + '" role="button" tabindex="0" aria-label="판정 방법">' + ICON.info + "</i></div>" +
+      '<div class="mv-sub">' + esc(m.bench.name) + " " + mvSg(m.mret) + " · " + mvRel(m, true) +
+      (m.mdd && m.mdd.v <= -0.1 ? " · 기간 중 최대 낙폭 " + mvSg(m.mdd.v) : "") + "</div>";
+    var lead = ai ? '<p class="mv-lead">' + esc(ai.summary) + " " + MV_AI_TAG + "</p>" : (sum[0] ? '<p class="mv-lead">' + esc(sum[0]) + "</p>" : "");
+    var hasUp = m.legs.some(function (L) { return L.cls === "상승"; }), hasDn = m.legs.some(function (L) { return L.cls === "하락"; });
+    var chart = '<div class="pf-chart mv-chart" tabindex="0" role="group" aria-label="' + esc("6개월 주가와 " + m.bench.name + " — 시작일을 0%로 맞춤(좌우 화살표로 날짜 이동)") + '"></div>' +
+      '<div class="pf-lg mv-lg"><span><i class="lk"></i>' + esc(m.name || "종목") + '</span><span><i class="lk lk-i"></i>' + esc(m.bench.name) + "</span>" +
+      (hasUp ? '<span><i class="mv-sw mv-sw-up"></i>상승 구간</span>' : "") + (hasDn ? '<span><i class="mv-sw mv-sw-down"></i>하락 구간</span>' : "") +
+      (m.keys.length ? '<span><i class="mv-kd"></i>핵심 날짜</span>' : "") + "</div>";
+    var att = '<h4 class="mv-h4">무엇이 움직였나 <i class="kv-i" data-basis="' + esc(MV_ATT_TIP) + '" role="button" tabindex="0" aria-label="계산 방법">' + ICON.info + "</i></h4>" + mvAtt(m);
+    var fl = m.flow;
+    var legs = '<h4 class="mv-h4">' + (m.legs.length > 1 ? "구간별 흐름" : "6개월 흐름") + '</h4><ol class="mv-list">' + m.legs.map(function (L, i) {
+      var c2 = MV_CLS[L.cls] || "flat", x = mvAiLeg(m, L), lf = fl && fl.legs && fl.legs[i];
+      return '<li class="mv-it"><div class="mv-ih"><span class="mv-v mv-' + c2 + '">' + esc(L.cls) + '</span><span class="mv-id">' + esc(mdOf(L.s) + " ~ " + mdOf(L.e)) +
+        " <i>" + L.len + '거래일</i></span><b class="' + c2 + '">' + esc(mvPct(L.ret)) + "</b></div>" +
+        '<div class="mv-im">' + esc(m.bench.name) + " " + mvSg(L.mret) + " · 종목 고유 " + mvSg(L.spec) +
+        (lf ? " · 외국인 " + mvWon(lf.f) + " · 기관 " + mvWon(lf.o) : "") + "</div>" +
+        (x ? '<p class="mv-why">' + esc(x.why) + mvSrc(x.src) + "</p>" : "") + "</li>";
+    }).join("") + "</ol>";
+    var dayItem = function (k, lab, mk) {
+      var x = mvAiDay(m, k), c2 = k.ret >= 0 ? "up" : "down";
+      var meta = [esc(m.bench.name) + " " + mvSg(k.mret), "시장 대비 " + mvSg(Math.exp(k.ar) - 1)];
+      if (k.vr) meta.push("거래량 " + k.vr.toFixed(1) + "배");
+      if (k.gap != null && Math.abs(k.gap) >= 0.02) meta.push("시가 갭 " + mvSg(k.gap));
+      return '<li class="mv-it"><div class="mv-ih"><span class="mv-n' + (mk ? " mv-nm" : "") + '">' + esc(lab) + '</span><span class="mv-id">' + esc(mvDayLabel(k)) +
+        (mk ? " <i>시장 급변일</i>" : "") + '</span><b class="' + c2 + '">' + esc(mvPct(k.ret)) + "</b></div>" +
+        '<div class="mv-im">' + meta.join(" · ") + "</div>" +
+        (k.tags && k.tags.length ? '<div class="mv-tags">' + k.tags.map(function (g) { return '<span class="mv-tag">' + esc(g.k) + "</span>" + esc(g.t); }).join(" ") + "</div>" : "") +
+        (x ? '<p class="mv-why">' + esc(x.why) + mvSrc(x.src) + "</p>" : "") + "</li>";
+    };
+    var days = m.keys.length || (m.mktDays || []).length ? '<h4 class="mv-h4">핵심 날짜 <i class="kv-i" data-basis="' +
+      esc("시장(β×지수)보다 유난히 크게 움직인 날을 크기순으로 — 같은 방향으로 이어진 날은 최대 3일로 묶습니다. 같은 때 나온 공시(한국 네이버 공시·미국 SEC 8-K)와 실적 발표를 붙입니다. '시장 급변일'은 종목도 크게 움직였지만 대부분 시장 전체 움직임이었던 날입니다.") +
+      '" role="button" tabindex="0" aria-label="설명">' + ICON.info + '</i></h4><ol class="mv-list">' +
+      m.keys.map(function (k, i) { return dayItem(k, String(i + 1), false); }).join("") +
+      (m.mktDays || []).map(function (k) { return dayItem(k, "M", true); }).join("") + "</ol>" : "";
+    var rest = ai ? sum : sum.slice(1);
+    var nums = rest.length ? '<h4 class="mv-h4">숫자로 본 이유</h4><ul class="mv-sum">' + rest.map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("") + "</ul>" : "";
+    var foot = '<p class="mv-foot">이미 일어난 움직임을 나눠 본 것이며 앞으로의 방향을 예측하지 않습니다.' +
+      (ai ? " AI 설명은 " + esc(mdOf(String(ai.at || "").slice(0, 10))) + " 기사 검색으로 작성 — 출처를 확인하세요." : " 기사로 확인한 이유(AI)는 매일 자동 분석에서 차례로 채워집니다.") + "</p>";
+    return head + lead + chart + att + legs + days + nums + foot;
+  }
+  // 상세 위 요약 카드의 한 줄(누르면 '6개월 흐름' 섹션으로)
+  function mvMiniHtml(m) {
+    var cls = MV_CLS[m.cls] || "flat";
+    return '<span class="mv-mk">6개월</span><span class="mv-v mv-' + cls + '">' + esc(m.cls) + '</span><b class="' + cls + '">' + esc(mvPct(m.ret)) + "</b>" +
+      '<span class="mv-ms">' + esc(m.bench.name) + " " + mvSg(m.mret) + " · " + mvRel(m, false) + "</span>" + ICON.chev;
+  }
+  // '시장보다 강함·약함' / '시장과 비슷'
+  function mvRel(m, bold) {
+    var w = bold ? "<b>" + esc(m.rel) + "</b>" : esc(m.rel);
+    return (m.rel === "비슷" ? "시장과 " : "시장보다 ") + w;
+  }
+  function mvDraw(el, m) {
+    var S = m.series, n = S.t.length;
+    if (!el || n < 2) return;
+    var c0 = S.c[0], b0 = null;
+    var ys = S.c.map(function (c) { return (c / c0 - 1) * 100; });
+    var ym = S.m.map(function (v) { if (v == null) return null; if (b0 == null) b0 = v; return (v / b0 - 1) * 100; });
+    var mn = 0, mx = 0;
+    ys.concat(ym).forEach(function (y) { if (y != null) { if (y < mn) mn = y; if (y > mx) mx = y; } });
+    // 칸 4개 목표(3개면 +138% 같은 급등주가 -100~+200% 축이 돼 아래 3분의 1이 빈다) · 왼쪽 여백은 가장 긴 눈금 글자에 맞춘다(+200% 가 잘리지 않게)
+    var ticks = niceTicks(mn, mx, 4), y0 = ticks[0], y1 = ticks[ticks.length - 1];
+    var tl = ticks.map(function (t) { return (t > 0 ? "+" : "") + t + "%"; });
+    var W = Math.max(240, Math.round(el.clientWidth || 320)), H = 184, Rm = 12, T = 14, B = 24;
+    var Lm = Math.max(34, Math.ceil(10 + 6.8 * Math.max.apply(null, tl.map(function (s) { return s.length; }))));
+    var X = function (i) { return Lm + (W - Lm - Rm) * (i / (n - 1)); };
+    var Y = function (v) { return T + (H - T - B) * (1 - (v - y0) / (y1 - y0)); };
+    var svg = "";
+    m.legs.forEach(function (L) {   // 구간 띠(보합은 띠 없음)
+      if (L.cls === "보합") return;
+      svg += '<rect class="mv-b mv-b-' + MV_CLS[L.cls] + '" x="' + X(L.si).toFixed(1) + '" y="' + T + '" width="' + Math.max(1, X(L.ei) - X(L.si)).toFixed(1) + '" height="' + (H - T - B) + '"/>';
+    });
+    ticks.forEach(function (t, j) {
+      var y = Y(t).toFixed(1);
+      svg += '<line class="' + (t === 0 ? "g0" : "gl") + '" x1="' + Lm + '" x2="' + (W - Rm) + '" y1="' + y + '" y2="' + y + '"/>' +
+        '<text class="yl" x="' + (Lm - 6) + '" y="' + y + '" dy="0.35em" text-anchor="end">' + tl[j] + "</text>";
+    });
+    [0, Math.floor((n - 1) / 2), n - 1].forEach(function (i, j) {
+      svg += '<text class="xl" x="' + X(i).toFixed(1) + '" y="' + (H - 6) + '" text-anchor="' + (j === 0 ? "start" : j === 2 ? "end" : "middle") + '">' + esc(mdOf(mvD(S.t[i]))) + "</text>";
+    });
+    var path = function (arr) {
+      var d = "", pen = false;
+      arr.forEach(function (y, i) { if (y == null) { pen = false; return; } d += (pen ? "L" : "M") + X(i).toFixed(1) + " " + Y(y).toFixed(1); pen = true; });
+      return d;
+    };
+    svg += '<path class="ln ln-i" d="' + path(ym) + '"/><path class="ln ln-f" d="' + path(ys) + '"/>';
+    // 핵심 날짜 번호 점(묶인 날은 마지막 날에) · 시장 급변일은 회색 점
+    var marks = m.keys.map(function (k, i) { return { i: k.ei, lab: String(i + 1), up: k.ret >= 0, mk: false }; })
+      .concat((m.mktDays || []).map(function (k) { return { i: k.ei, lab: "M", up: k.ret >= 0, mk: true }; }));
+    marks.forEach(function (p) {
+      if (p.i < 0 || p.i >= n) return;
+      var x = X(p.i), y = Y(ys[p.i]), ly = p.up ? y - 9 : y + 16;
+      if (ly < 10) ly = y + 16; if (ly > H - B - 2) ly = y - 9;
+      svg += '<circle class="dot mv-m' + (p.mk ? " mv-m-k" : "") + '" cx="' + x.toFixed(1) + '" cy="' + y.toFixed(1) + '" r="4"/>' +
+        '<text class="mv-ml" x="' + x.toFixed(1) + '" y="' + ly.toFixed(1) + '" text-anchor="middle">' + p.lab + "</text>";
+    });
+    svg += '<g class="xh-g" style="display:none"><line class="xh" y1="' + T + '" y2="' + (H - B) + '"/><circle class="dot ln-i" r="4" data-k="i"/><circle class="dot ln-f" r="4" data-k="f"/></g>';
+    el.innerHTML = '<svg viewBox="0 0 ' + W + " " + H + '" height="' + H + '" aria-hidden="true">' + svg + '</svg><div class="pf-tip" hidden></div>';
+    var sv = el.querySelector("svg"), g = sv.querySelector(".xh-g"), tip = el.querySelector(".pf-tip"), cur = -1;
+    var dayAt = function (i) {
+      var k = null;
+      m.keys.forEach(function (x, j) { if (!k && i >= x.si && i <= x.ei) k = { lab: (j + 1) + "번 핵심 날짜", x: x }; });
+      (m.mktDays || []).forEach(function (x) { if (!k && i >= x.si && i <= x.ei) k = { lab: "시장 급변일", x: x }; });
+      return k;
+    };
+    function show(i) {
+      if (i < 0 || i >= n) return;
+      cur = i;
+      g.style.display = "";
+      var x = X(i);
+      g.querySelector(".xh").setAttribute("x1", x); g.querySelector(".xh").setAttribute("x2", x);
+      var cf = g.querySelector('[data-k="f"]'), ci = g.querySelector('[data-k="i"]');
+      cf.setAttribute("cx", x); cf.setAttribute("cy", Y(ys[i]));
+      if (ym[i] == null) ci.style.display = "none"; else { ci.style.display = ""; ci.setAttribute("cx", x); ci.setAttribute("cy", Y(ym[i])); }
+      tip.textContent = "";
+      var dEl = document.createElement("div"); dEl.className = "tp-d"; dEl.textContent = chDate(S.t[i], "d", true); tip.appendChild(dEl);
+      [["f", m.name || "종목", ys[i]], ["i", m.bench.name, ym[i]]].forEach(function (r) {
+        if (r[2] == null) return;
+        var row = document.createElement("div"); row.className = "tp-r";
+        var k = document.createElement("i"); k.className = "lk" + (r[0] === "i" ? " lk-i" : ""); row.appendChild(k);
+        row.appendChild(document.createTextNode(r[1]));
+        var b = document.createElement("b"); b.textContent = fmtPct(r[2]); row.appendChild(b);
+        tip.appendChild(row);
+      });
+      var kd = dayAt(i);
+      if (kd) {
+        var e2 = document.createElement("div"); e2.className = "tp-d";
+        e2.textContent = kd.lab + " · " + (kd.x.n > 1 ? mdOf(mvD(kd.x.s)) + "~" + mdOf(mvD(kd.x.e)) + " " : "") + mvPct(kd.x.ret);
+        tip.appendChild(e2);
+      }
+      tip.hidden = false;
+      var px = x / W * el.clientWidth, tw = tip.offsetWidth;
+      tip.style.left = Math.max(0, Math.min(el.clientWidth - tw, px > el.clientWidth / 2 ? px - tw - 10 : px + 10)) + "px";
+    }
+    function hide() { g.style.display = "none"; tip.hidden = true; cur = -1; }
+    function idxAt(ev) {
+      var rc = sv.getBoundingClientRect(), x = (ev.clientX - rc.left) * (W / rc.width);
+      return Math.max(0, Math.min(n - 1, Math.round((x - Lm) / (W - Lm - Rm) * (n - 1))));
+    }
+    sv.addEventListener("pointermove", function (ev) { show(idxAt(ev)); });
+    sv.addEventListener("pointerdown", function (ev) { show(idxAt(ev)); });
+    sv.addEventListener("pointerleave", hide);
+    el.addEventListener("blur", hide);
+    el.addEventListener("keydown", function (ev) {
+      if (ev.key !== "ArrowLeft" && ev.key !== "ArrowRight") return;
+      ev.preventDefault();
+      show(cur < 0 ? n - 1 : Math.max(0, Math.min(n - 1, cur + (ev.key === "ArrowLeft" ? -1 : 1))));
+    });
+  }
+  // 상세를 그린 뒤 '6개월 흐름' 섹션·요약 줄을 채운다(같은 종목이면 받은 파일을 다시 쓴다)
+  function mountMove(it) {
+    MV.cur = null;
+    var sec = shBody.querySelector(".mv"), mini = shBody.querySelector(".mv-mini");
+    if (!sec || it.light || it.idx) return;
+    var st = { t: it.t, sec: sec };
+    MV.cur = st;
+    loadMoveData(it.t, function (m) {
+      if (MV.cur !== st || !sec.isConnected) return;
+      if (!m) {
+        sec.innerHTML = '<p class="mv-empty">6개월 흐름 분석이 아직 없습니다 — 매일 자동 갱신 때 만들어집니다(막 편입된 종목이거나 상장 6개월 미만).</p>';
+        return;
+      }
+      st.m = m;
+      sec.innerHTML = mvHtml(m);
+      var as = shBody.querySelector("#dt-move .md-as");
+      if (as) as.textContent = "기준 " + mdOf(m.asOf);
+      if (mini) { mini.innerHTML = mvMiniHtml(m); mini.hidden = false; if (mini.parentNode && mini.parentNode.classList.contains("mv-only")) mini.parentNode.classList.add("on"); }
+      mvDraw(sec.querySelector(".mv-chart"), m);
+    });
+  }
+  var mvResizeT = null;
+  window.addEventListener("resize", function () {
+    var st = MV.cur; if (!st || !st.m) return;
+    clearTimeout(mvResizeT);
+    mvResizeT = setTimeout(function () { if (MV.cur === st && st.sec.isConnected) mvDraw(st.sec.querySelector(".mv-chart"), st.m); }, 150);
+  });
+
   // ── 종목 상세(시트) 내용 ──
   //   위: 현재가·등락·배지 / (Top Pick 이유) / 단·중·장 신호 / 1개월 범위
   //   아래(섹션 + 위쪽 고정 탭): 투자정보 · 투자 포인트 · 변동 범위 · 기술 대응 · 실적·밸류 · 리스크 / 출처 / 하단 고정 버튼
@@ -2638,8 +2950,9 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     var sig = (n.sigShort || n.sigMid || n.sigLong) ? '<div class="dt-sig">' + [["단기", n.sigShort, "일봉"], ["중기", n.sigMid, "주봉"], ["장기", n.sigLong, "월봉"]].map(function (p) {
         return '<div class="ds"><span class="ds-k">' + p[0] + " <i>" + p[2] + '</i></span><b class="ds-v t-' + (SIG_CLS[p[1]] || "x") + '">' + esc(p[1] || "–") + "</b></div>";
       }).join("") + "</div>" : "";
-    var rg = rangeHeroHtml(s, e, c), sum = sig || rg ? '<div class="dt-sum">' + sig + rg + "</div>" : "";
-    var secs = [["info", "투자정보", infoGrid(s, c, e)]];
+    var rg = rangeHeroHtml(s, e, c), mini = '<a class="mv-mini" href="#dt-move" data-sec="dt-move" hidden></a>';
+    var sum = sig || rg ? '<div class="dt-sum">' + sig + rg + mini + "</div>" : '<div class="dt-sum mv-only">' + mini + "</div>";
+    var secs = [["info", "투자정보", infoGrid(s, c, e)], ["move", '6개월 흐름 <span class="md-as"></span>', '<div class="mv"><p class="mv-empty">불러오는 중…</p></div>']];
     if (s.thesis) secs.push(["thesis", "투자 포인트", '<p class="dt-txt">' + esc(s.thesis) + "</p>"]);
     var rb = rangeBody(s, c, e); if (rb) secs.push(["range", "변동 범위", rb]);
     var tb = techBody(s, c, e); if (tb) secs.push(["tech", "기술 대응" + (techStale(s) ? ' <span class="tn-stale">미갱신</span>' : ""), tb]);
@@ -2649,7 +2962,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     if (rk.length) secs.push(["risk", "리스크", '<ul class="risk-list">' + rk.map(function (r) { return "<li>" + esc(r) + "</li>"; }).join("") + "</ul>"]);
     secs.push(["ai", "AI에게 묻기", aiSectionHtml("s:" + c + ":" + s.ticker + ":" + s.theme, { kind: "stock", c: c, t: s.ticker, th: s.theme })]);
     // 위쪽 고정 탭은 짧은 이름(한 줄에 모두 보이게), 섹션 제목은 원래 이름
-    var NAV = { info: "투자정보", thesis: "포인트", range: "범위", tech: "기술", fin: "실적", risk: "리스크", ai: "AI" };
+    var NAV = { info: "투자정보", move: "흐름", thesis: "포인트", range: "범위", tech: "기술", fin: "실적", risk: "리스크", ai: "AI" };
     var nav = '<nav class="dt-nav" aria-label="상세 항목">' + secs.map(function (x, i) {
       return '<a href="#dt-' + x[0] + '" data-sec="dt-' + x[0] + '"' + (i === 0 ? ' class="on"' : "") + ">" + NAV[x[0]] + "</a>";
     }).join("") + "</nav>";
@@ -3492,8 +3805,8 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     return '<div class="pf-chart" id="pfc-' + id + '" tabindex="0" role="group" aria-label="' + esc("누적 수익 곡선 — " + aria + " (좌우 화살표로 날짜 이동)") + '"></div>';
   }
   function pfDrawAll() { Object.keys(PFC).forEach(function (id) { var el = document.getElementById(id); if (el) pfDraw(el, PFC[id]); }); }
-  function niceTicks(mn, mx) {
-    var span = Math.max(mx - mn, 2), raw = span / 3, steps = [0.5, 1, 2, 2.5, 5, 10, 20, 25, 50, 100], st = steps[steps.length - 1];
+  function niceTicks(mn, mx, k) {   // k = 목표 칸 수(기본 3)
+    var span = Math.max(mx - mn, 2), raw = span / (k || 3), steps = [0.5, 1, 2, 2.5, 5, 10, 20, 25, 50, 100], st = steps[steps.length - 1];
     for (var i = 0; i < steps.length; i++) if (steps[i] >= raw) { st = steps[i]; break; }
     var lo = Math.floor(mn / st) * st, hi = Math.ceil(mx / st) * st, out = [];
     for (var v = lo; v <= hi + 1e-9; v += st) out.push(Math.round(v * 100) / 100);
@@ -4065,6 +4378,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     shBody.innerHTML = it.light ? lightDetailHtml({ c: it.c, t: it.t, n: it.n, k: it.k })
       : (s ? detailHtml(s, it.c, it) : '<div class="empty">종목 정보를 찾을 수 없습니다(편성에서 빠졌을 수 있습니다).</div>');
     mountChart(it);
+    if (s) mountMove(it);
     shBody.scrollTop = top;
     spySync();
     markActiveRow();
@@ -4096,7 +4410,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   });
   // 상세 안 항목 탭 — 누르면 그 섹션으로, 스크롤하면 지금 보는 섹션에 밑줄
   shBody.addEventListener("click", function (e) {
-    var a = e.target.closest(".dt-nav a"); if (!a) return;
+    var a = e.target.closest(".dt-nav a, .mv-mini"); if (!a) return;
     e.preventDefault();
     var sec = document.getElementById(a.getAttribute("data-sec")), nav = shBody.querySelector(".dt-nav");
     if (!sec) return;
@@ -4933,18 +5247,18 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   }
   var AI_WROTE = { market: "시황", liquidity: "유동성", indexNotes: "지수 대응", topPicks: "Top Pick" };
   function serverAiHtml() {
-    var S = window.AI_STATUS || {}, d = S.daily, df = S.defects, nw = S.news;
-    var any = d || df || nw, bad = (d && d.error && !d.ok) || (df && df.error && !df.ok) || (nw && nw.error);
+    var S = window.AI_STATUS || {}, d = S.daily, df = S.defects, nw = S.news, mv = S.moves;
+    var any = d || df || nw || mv, bad = (d && d.error && !d.ok) || (df && df.error && !df.ok) || (nw && nw.error) || (mv && mv.error && !mv.ok);
     var chip = !any ? '<span class="ai-st">미연결</span>' : bad ? '<span class="ai-st err">오류</span>' : '<span class="ai-st ok">작동 중</span>';
     var h = '<div class="ai-sec"><div class="ai-h">매일 자동 분석(서버) ' + chip + "</div>" +
-      '<p class="ai-p">GitHub Action 이 평일 아침·저녁 시세 갱신 직후 Claude 로 <b>시황·거시 유동성·연준/한은 판단·지수 대응·Top Pick</b>을 쓰고, <b>결격 점검 신호</b>를 판정하고, 종목마다 <b>최근 뉴스 한 줄</b>을 붙입니다.</p>';
+      '<p class="ai-p">GitHub Action 이 평일 아침·저녁 시세 갱신 직후 Claude 로 <b>시황·거시 유동성·연준/한은 판단·지수 대응·Top Pick</b>을 쓰고, <b>결격 점검 신호</b>를 판정하고, 종목마다 <b>최근 뉴스 한 줄</b>을 붙이고, <b>6개월 흐름</b>의 구간·핵심 날짜가 왜 움직였는지 기사로 확인합니다.</p>';
     if (!any) {
       return h + '<ol class="ai-steps"><li>console.anthropic.com 에서 API 키를 만든다(위와 같은 키도 되지만 서버용 키를 따로 두는 편이 안전).</li>' +
         "<li>GitHub 저장소 → Settings → Secrets and variables → Actions → <b>New repository secret</b></li>" +
         "<li>이름 <code>ANTHROPIC_API_KEY</code>, 값에 키를 붙여 넣고 저장</li>" +
         "<li>다음 자동 실행(한국·미국 장 마감 직후)부터 작동 — Actions 탭에서 'Refresh quotes'를 수동 실행해도 된다</li></ol>" +
         '<div class="ai-row"><a class="btn" href="https://github.com/csy870617/stock/settings/secrets/actions/new" target="_blank" rel="noopener">' + ICON.ext + " GitHub 키 등록 열기</a></div>" +
-        '<p class="ai-help">키를 이 앱이나 채팅에 붙여 넣지 말고 GitHub 화면에만 입력하세요. 예상 비용은 하루 1~2달러 안팎(Opus 5.5 하루 2회 분석 기준, 토큰 사용량에 따라 다름)입니다.</p></div>';
+        '<p class="ai-help">키를 이 앱이나 채팅에 붙여 넣지 말고 GitHub 화면에만 입력하세요. 예상 비용은 하루 3~6달러 안팎입니다(시황 분석 Opus 5.5 하루 최대 2회 약 1.5달러씩 + 결격 판정·종목 뉴스·6개월 흐름 설명 — 실측 기준, 토큰·검색 사용량에 따라 다름). 연결 뒤에는 이 창에 실행마다 추정치가 보입니다.</p></div>';
     }
     var rows = [];
     if (d && d.at) rows.push(["시황·Top Pick", d.ok ? fmtWhen(d.at) + " · " + ((d.wrote || []).map(function (k) { return AI_WROTE[k] || k; }).join("·") || "변경 없음") + (d.usage ? " · " + usd(d.usage) : "")
@@ -4953,7 +5267,8 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     if (d && d.note) rows.push(["참고", esc(d.note), true]);
     if (df) rows.push(["결격 판정", (df.error && !df.ok ? '<span class="bad">' + esc(df.error) + "</span>" : esc(fmtWhen(df.at) + " · 판정 " + (df.judged || 0) + "건" + (df.pending > df.judged ? " · 대기 " + (df.pending - df.judged) + "건" : "") + (df.usage ? " · " + usd(df.usage) : ""))), true]);
     if (nw) rows.push(["종목 뉴스", (nw.error ? '<span class="bad">' + esc(nw.error) + "</span>" : esc(fmtWhen(nw.at) + " · 뉴스 " + (nw.lines || 0) + "종목" + (nw.usage ? " · " + usd(nw.usage) : ""))), true]);
-    var models = [d && d.model, df && df.model, nw && nw.model].filter(Boolean).filter(function (m, i, a) { return a.indexOf(m) === i; }).map(aiModelLabel);
+    if (mv) rows.push(["6개월 흐름", (mv.error && !mv.ok ? '<span class="bad">' + esc(mv.error) + "</span>" : esc(fmtWhen(mv.at) + " · 설명 " + (mv.done || 0) + "종목" + (mv.pending ? " · 남은 " + mv.pending + "종목" : "") + (mv.usage ? " · " + usd(mv.usage) : ""))), true]);
+    var models = [d && d.model, df && df.model, nw && nw.model, mv && mv.model].filter(Boolean).filter(function (m, i, a) { return a.indexOf(m) === i; }).map(aiModelLabel);
     if (models.length) rows.push(["모델", esc(models.join(" · ")), true]);
     return h + '<dl class="ai-kv">' + rows.map(function (r) { return "<dt>" + esc(r[0]) + "</dt><dd>" + (r[2] ? r[1] : esc(r[1])) + "</dd>"; }).join("") + "</dl>" +
       '<p class="ai-help">비용은 토큰 기준 추정이며 웹 검색은 횟수만 셉니다(검색당 요금 별도). 서버 키는 GitHub Secrets <code>ANTHROPIC_API_KEY</code> 에 있고 이 화면에서 바꿀 수 없습니다 — ' +
