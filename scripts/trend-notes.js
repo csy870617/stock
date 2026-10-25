@@ -7,9 +7,10 @@
 //       설명이 필요한 종목을 고르고 종목마다 조사 묶음(<폴더>/<티커>.md)과 목록(<폴더>/queue.json)을 쓴다.
 //       순서: 설명 없음 → 추세가 바뀜(판정·시작일) → 지문(핵심 날짜 상위 3)이 바뀜 → 21일 지남. 같은 순위면 정식 편성 먼저.
 //   node scripts/trend-notes.js --apply <결과.json> [--queue <폴더>/queue.json]
-//       서브에이전트가 돌려준 {티커: {fp, summary, legs:[{n,why,sources}], days:[{id,why,sources}]}} 를 검사해
+//       서브에이전트가 돌려준 {티커: {fp, headline, summary, legs:[{n,why,sources}], days:[{id,why,short,sources}]}} 를 검사해
 //       data/trend/<티커>.json 의 ai 에 쓴다. 검사(가격 의존 수치·매매 지시·전망 문구·길이·차단 출처)에 걸린 항목은 빼고,
 //       요약이 걸리면 그 종목은 쓰지 않는다. 그사이 추세가 바뀐 종목(판정·시작일 불일치)도 쓰지 않는다.
+//       앱은 headline(한 문장)과 확인된 날의 short(짧은 이유)만 먼저 보이고, 요약·단계·날짜 설명 전문은 '자세히'에 둔다(2026-10-25 '길고 복잡하다').
 //   node scripts/trend-notes.js --status
 //
 // 왜 루틴인가(2026-10-24 사용자 결정 '루틴으로 완전히 바꿔줘'): 설명은 하루 늦어도 되는 정보라 API 비용(종목당 약 $0.1)을 쓰지 않고
@@ -63,7 +64,8 @@ function packet(m) {
   L.push("기준일 " + m.asOf + " · 비교 지수 " + m.bench.name + " · fp `" + m.fp + "`");
   L.push("");
   L.push("## 현재 추세: " + m.cls + " — " + m.from + " " + (KIND[m.kind] || "") + " " + m.n + "거래일, 시작점 대비 " + pct(m.ret));
-  L.push("- 같은 기간 " + m.bench.name + " " + pct(m.mret) + ", 시장 민감도 β " + m.beta + " → 시장만 따랐다면 " + pct(m.mkt) + ", 종목 고유 " + pct(m.spec) + " · 시장 대비 " + m.rel);
+  L.push("- 같은 기간 " + m.bench.name + " " + pct(m.mret) + " → 앱 표시: 시장" + (m.rel === "비슷" ? "과 비슷" : "보다 " + m.rel) + "(단순 비교, ±5%p 기준 — headline 의 시장 비교는 이 방향으로)");
+  L.push("- 참고(자세히 화면): 시장 민감도 β " + m.beta + " → 시장만 따랐다면 " + pct(m.mkt) + ", 종목 고유 " + pct(m.spec));
   if (m.cls === "상승" && m.fromHi <= -0.05) L.push("- 추세 중 고점 " + m.hi.d + " 대비 " + pct(m.fromHi) + " (상승 추세 속 조정)");
   if (m.cls === "하락" && m.fromLo >= 0.05) L.push("- 추세 중 저점 " + m.lo.d + " 대비 " + pct(m.fromLo) + " (하락 추세 속 반등)");
   if (m.box) L.push("- 박스권: 고점 " + m.hi.d + " · 저점 " + m.lo.d + " · 폭 " + pct(m.box.width));
@@ -124,6 +126,8 @@ function queue() {
 // 전망·추측 문구 — 이미 일어난 일만 쓰게 한다
 const FORECAST = /(?:오를|내릴|상승할|하락할|반등할|회복할|개선될|악화될)\s*(?:것|가능성|전망)|(?:것으로|으로)\s*(?:보인다|예상된다|전망된다|기대된다)|기대된다|전망이다/;
 const NONE = "원인 보도 확인 안 됨";
+// 글자 수 상한 — headline·short 는 첫 화면에 그대로 보인다(휴대폰 두 줄·한 줄)
+const LIMIT = { headline: 60, summary: 300, summaryMax: 420, why: 240, short: 40 };
 function textProblems(k, t, maxLen) {
   const p = [], s = String(t || "");
   if (!/[가-힣]/.test(s)) p.push(k + " 가 비었거나 한국어가 아님");
@@ -160,25 +164,39 @@ function apply() {
     const q = Q[t] || { fp: m.fp, cls: m.cls, from: m.from, legs: m.legs.map((g, i) => ({ n: i + 1, s: g.s, e: g.e })),
       days: m.keys.map((k, i) => ({ id: LABELS[i], s: k.s, e: k.e })).concat((m.mktDays || []).map((k, i) => ({ id: "M" + (i + 1), s: k.s, e: k.e }))) };
     if (q.cls !== m.cls || q.from !== m.from) { skip++; notes.push(t + ": 조사 뒤 추세가 바뀜(" + q.cls + " " + q.from + " → " + m.cls + " " + m.from + ") — 다음 회차에 다시"); return; }
-    const sp = textProblems("summary", r.summary, 420);
+    // 요약은 '자세히' 안에 있어 300자는 권장선(넘으면 알리기만), 420자 넘거나 금지 문구면 그 종목을 쓰지 않는다
+    const sp = textProblems("summary", r.summary, LIMIT.summaryMax);
     if (sp.length) { skip++; notes.push(t + ": 요약 검사 미통과 — " + sp.join(" · ")); return; }
+    if (String(r.summary).trim().length > LIMIT.summary) notes.push(t + ": 요약이 김(" + String(r.summary).trim().length + "자, " + LIMIT.summary + "자 권장) — 반영은 함");
+    // 한 문장 요약 — 걸리면 그것만 빼고(앱은 요약 첫 문장으로 대신한다) 종목은 쓴다
+    let headline = String(r.headline || "").trim();
+    if (headline) {
+      const hp = textProblems("headline", headline, LIMIT.headline);
+      if (hp.length) { headline = ""; dropped++; notes.push(t + ": " + hp.join(" · ")); }
+    } else notes.push(t + ": headline 없음 — 앱은 요약 첫 문장을 대신 보인다");
     const legs = [], days = [];
     (Array.isArray(r.legs) ? r.legs : []).forEach((x) => {
       const g = q.legs.find((y) => y.n === +x.n);
-      const why = String(x.why || "").trim(), p = g ? textProblems("legs." + x.n, why, 240) : ["legs." + x.n + " 은 없는 단계"];
+      const why = String(x.why || "").trim(), p = g ? textProblems("legs." + x.n, why, LIMIT.why) : ["legs." + x.n + " 은 없는 단계"];
       if (p.length) { dropped++; notes.push(t + ": " + p.join(" · ")); return; }
       legs.push({ s: g.s, e: g.e, why, src: why === NONE ? [] : cleanSrc(x.sources) });
     });
     (Array.isArray(r.days) ? r.days : []).forEach((x) => {
       const g = q.days.find((y) => y.id === String(x.id));
-      const why = String(x.why || "").trim(), p = g ? textProblems("days." + x.id, why, 240) : ["days." + x.id + " 은 없는 라벨"];
+      const why = String(x.why || "").trim(), p = g ? textProblems("days." + x.id, why, LIMIT.why) : ["days." + x.id + " 은 없는 라벨"];
       if (p.length) { dropped++; notes.push(t + ": " + p.join(" · ")); return; }
-      days.push({ s: g.s, e: g.e, why, src: why === NONE ? [] : cleanSrc(x.sources) });
+      const d = { s: g.s, e: g.e, why, src: why === NONE ? [] : cleanSrc(x.sources) };
+      const short = String(x.short || "").trim();
+      if (short && why !== NONE) {
+        const sp2 = textProblems("days." + x.id + ".short", short, LIMIT.short);
+        if (sp2.length) { dropped++; notes.push(t + ": " + sp2.join(" · ")); } else d.short = short;
+      }
+      days.push(d);
     });
     // 출처 없는 원인 설명은 '확인 안 됨'으로 낮춘다(검색 결과로 확인한 것만 원인으로 쓴다)
-    legs.concat(days).forEach((x) => { if (x.why !== NONE && !x.src.length) { x.why = NONE; dropped++; notes.push(t + ": 출처 없는 설명 → '" + NONE + "'"); } });
-    m.ai = { at: new Date().toISOString().slice(0, 19) + "Z", asOf: m.asOf, fp: q.fp, by: "routine", cls: m.cls, from: m.from, to: m.to,
-      summary: String(r.summary).trim(), legs, days };
+    legs.concat(days).forEach((x) => { if (x.why !== NONE && !x.src.length) { x.why = NONE; delete x.short; dropped++; notes.push(t + ": 출처 없는 설명 → '" + NONE + "'"); } });
+    m.ai = Object.assign({ at: new Date().toISOString().slice(0, 19) + "Z", asOf: m.asOf, fp: q.fp, by: "routine", cls: m.cls, from: m.from, to: m.to },
+      headline ? { headline } : {}, { summary: String(r.summary).trim(), legs, days });
     fs.writeFileSync(f, JSON.stringify(m));
     ok++;
   });
@@ -198,6 +216,10 @@ function status() {
   console.log("추세 설명: " + have + "/" + total + "종목이 지금 추세에 맞는 설명 보유(그중 갱신 대상 " + stale + ")");
 }
 
-if (args.includes("--queue")) queue();
-else if (args.includes("--apply")) apply();
-else status();
+module.exports = { textProblems, cleanSrc, NONE, LIMIT };
+if (require.main === module) {
+  // --apply 를 먼저 본다(--apply 결과 --queue 목록 처럼 함께 줄 때 큐 모드로 빠지지 않게)
+  if (args.includes("--apply")) apply();
+  else if (args.includes("--queue")) queue();
+  else status();
+}

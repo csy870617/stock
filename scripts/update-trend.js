@@ -138,13 +138,29 @@ const KR_TAGS = [
   ["상장", /해외증권시장|상장\s*결정|상장결정/],
 ];
 const KR_SKIP = /가격제한폭|배당락|기준가격|주주명부폐쇄|기업설명회|소유주식|소유상황|대량보유|공매도|투자주의|투자경고|투자위험|단기과열|매매거래정지|첨부|추가상장|발행실적|기업지배구조|대규모기업집단|특수관계인|동일인|주주총회|감사보고서|사업보고서|분기보고서|반기보고서|자회사의 주요경영사항/;
-function krTitle(t, name) {
-  let s = String(t || "").replace(/^[^\s]*?\(주\)\s*/, "");
+// 제목 앞 법인명('(주)KB금융지주 ', '주식회사 카카오뱅크 ', '에스케이아이이테크놀로지 주식회사 ') — 앱 이름(KB금융)과 달라
+// 이름으로는 못 뗀다. 같은 회사 공시 제목에서 가장 흔한 첫 낱말(주식회사가 붙으면 두 낱말)이 법인명이다(거래소 공시처럼 없는 제목도 있다)
+function krPrefix(titles) {
+  const cnt = {};
+  titles.forEach((t) => {
+    const w = String(t || "").trim().split(/\s+/);
+    if (w.length < 2) return;
+    const p = (w[0] === "주식회사" || w[1] === "주식회사") && w.length > 2 ? w[0] + " " + w[1] : w[0];
+    cnt[p] = (cnt[p] || 0) + 1;
+  });
+  let best = null, n = 0;
+  Object.keys(cnt).forEach((k) => { if (cnt[k] > n) { best = k; n = cnt[k]; } });
+  return best && n >= Math.max(3, titles.length * 0.4) ? best + " " : null;
+}
+function krTitle(t, name, prefix) {
+  let s = String(t || "").trim();
+  if (prefix && s.indexOf(prefix) === 0) s = s.slice(prefix.length);
+  s = s.replace(/^[^\s]*?\(주\)\s*/, "");
   if (name && s.indexOf(name + " ") === 0) s = s.slice(name.length + 1);
   return s.replace(/\((?:공정|안내|자율)공시\)/g, "").replace(/^\(정정\)\s*/, "").replace(/\s+/g, " ").trim().slice(0, 40);
 }
 async function krDisclosures(code, name, fromStr) {
-  const out = [], seen = {};
+  const raw = [];
   let got = false;
   for (let p = 1; p <= 6; p++) {
     const j = await getJson("https://m.stock.naver.com/api/stock/" + code + "/disclosure?page=" + p + "&pageSize=100");
@@ -152,18 +168,22 @@ async function krDisclosures(code, name, fromStr) {
     got = true;
     let oldest = "9999";
     j.forEach((x) => {
-      const title = String(x.title || ""), d = dstr(x.datetime);
+      const d = dstr(x.datetime);
       if (d && d < oldest) oldest = d;
-      if (!d || KR_SKIP.test(title)) return;
-      const tag = KR_TAGS.find((g) => g[1].test(title));
-      if (!tag) return;
-      const t = krTitle(title, name), k = d + "|" + t;
-      if (seen[k]) return;
-      seen[k] = 1;
-      out.push({ d, k: tag[0], t, corr: /\(정정\)/.test(title) || undefined });
+      raw.push({ title: String(x.title || ""), d });
     });
     if (oldest < fromStr || j.length < 100) break;
   }
+  const prefix = krPrefix(raw.map((x) => x.title)), out = [], seen = {};
+  raw.forEach(({ title, d }) => {
+    if (!d || KR_SKIP.test(title)) return;
+    const tag = KR_TAGS.find((g) => g[1].test(title));
+    if (!tag) return;
+    const t = krTitle(title, name, prefix), k = d + "|" + t;
+    if (seen[k]) return;
+    seen[k] = 1;
+    out.push({ d, k: tag[0], t, corr: /\(정정\)/.test(title) || undefined });
+  });
   return got ? out : null;
 }
 
