@@ -476,7 +476,7 @@ function build(stock, a, extra) {
     const keep = new Set(list.map((s) => path.basename(fileOf(s.ticker))));
     fs.readdirSync(DIR).forEach((f) => { if (/\.json$/.test(f) && !keep.has(f)) { fs.unlinkSync(path.join(DIR, f)); removed++; } });
   }
-  // 전 종목 요약(data/trend-summary.js) — 목록에서 종목마다 추세를 바로 보이고(추세추종용), AI 질문 맥락에 넣는다. 지금 폴더의 파일 전체로 다시 쓴다
+  // 전 종목 요약(data/trend-summary.js) — 목록 '추' 칸·홈 '최근 추세 전환'(확인 뒤 거래일 수 n)·AI 질문 맥락. 지금 폴더의 파일 전체로 다시 쓴다
   const SUM = {};
   let sumAsOf = "";
   fs.readdirSync(DIR).filter((f) => /\.json$/.test(f)).forEach((f) => {
@@ -484,7 +484,7 @@ function build(stock, a, extra) {
     try { j = JSON.parse(fs.readFileSync(path.join(DIR, f), "utf8")); } catch (_e) { return; }
     if (!j || !j.t || !j.cls) return;
     if (j.asOf > sumAsOf) sumAsOf = j.asOf;
-    SUM[j.t] = { c: j.c, cls: j.cls, from: j.from, kind: j.kind, ret: j.ret, conf: j.conf ? { d: j.conf.d, ret: j.conf.ret } : null,
+    SUM[j.t] = { c: j.c, cls: j.cls, from: j.from, kind: j.kind, ret: j.ret, conf: j.conf ? { d: j.conf.d, ret: j.conf.ret, n: j.conf.n } : null,
       flip: j.flip ? { px: j.flip.px, pct: j.flip.pct } : null, quiet: j.quiet || null, asOf: j.asOf };
   });
   fs.writeFileSync(path.join(ROOT, "data", "trend-summary.js"), "// update-trend.js 가 쓴다 — 종목별 현재 추세 요약(목록·AI 질문용). 손으로 고치지 않는다.\n" +

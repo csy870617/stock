@@ -525,7 +525,9 @@ svg { display: block; }
 .mv-v { flex: none; display: inline-flex; align-items: center; height: 24px; padding: 0 8px; border-radius: 6px; font-size: 13px; font-weight: 700; background: var(--sf3); color: var(--ink2); }
 .mv-v.mv-up { background: var(--up-soft); color: var(--up); } .mv-v.mv-down { background: var(--down-soft); color: var(--down); }
 .mv-r { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
-.mv-v.mv-q { font-weight: 600; }   /* 'N개월째 새 고점 없음' — 사실 표시(판정 칩보다 가볍게, 중립색) */
+.mv-v.mv-q { font-weight: 600; }
+.row.tc .tc-v { margin-left: auto; }   /* 홈 '최근 추세 전환' — 오른쪽에 바뀐 판정 */
+.tc-more { margin-top: 2px; }   /* 'N개월째 새 고점 없음' — 사실 표시(판정 칩보다 가볍게, 중립색) */
 .mv-r.flat { color: var(--ink); }
 .mv-p { font-size: 13px; color: var(--mut); }
 .mv-i { margin-left: 2px; padding: 2px 4px; cursor: help; vertical-align: -3px; }
@@ -1006,7 +1008,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
 </nav>
 
 <main class="main" id="main">
-  <!-- 홈 — 업데이트 상태 · 오늘의 시장 · Top Pick · 종목 업데이트 -->
+  <!-- 홈 — 업데이트 상태 · 오늘의 시장 · Top Pick · 최근 추세 전환 · 종목 업데이트 -->
   <section class="page" id="pg-home">
     <div class="st" id="statusBlk">
       <details class="fresh" id="freshPanel">
@@ -1027,6 +1029,10 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     <section class="blk blk-list" id="picksBox" style="display:none">
       <div class="blk-h"><h2>오늘의 Top Pick</h2><button class="ic-tip" type="button" id="picksTip" aria-label="선정 기준 보기"></button><span class="blk-sub" id="picksSub"></span></div>
       <div class="list" id="picksList" data-ctx="picks"></div>
+    </section>
+    <section class="blk blk-list" id="trendBox" style="display:none">
+      <div class="blk-h"><h2>최근 추세 전환</h2><button class="ic-tip" type="button" id="trendTip" aria-label="추세 전환 기준 보기"></button><span class="blk-sub" id="trendSub"></span></div>
+      <div class="list" id="trendList" data-ctx="trend"></div>
     </section>
     <section class="blk" id="rosterBox" style="display:none">
       <div class="blk-h"><h2>종목 업데이트</h2><select class="mini-sel" id="rosterDate" aria-label="변경 날짜 선택"></select></div>
@@ -2703,7 +2709,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     var c = m.conf, f = m.flip; if (!c || !f) return "";
     var up = m.cls === "상승";
     return "<b>" + esc(mvDate(c.d, m.to)) + "</b> " + (up ? "저점보다 " + esc(mvPct(f.up)) + " 넘게 오른 날" : "고점보다 " + esc(mvPct(-f.dn)) + " 넘게 내린 날") +
-      ' <span class="mv-pm">· 그 뒤 ' + mvSg(c.ret) + "</span>";
+      (c.n > 0 ? ' <span class="mv-pm">· 그 뒤 ' + mvSg(c.ret) + "</span>" : ' <span class="mv-pm">· 마지막 거래일</span>');
   }
   function mvFlipText(m) {
     var f = m.flip; if (!f) return "";
@@ -3534,6 +3540,56 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       '<div class="r-r"><div class="r-px">' + pxText(e.price, cc) + (e.live ? '<i class="live-dot" title="장중 시세(지연 가능)"></i>' : "") + "</div>" + chgHtml(e.chg, "r-ch") + "</div>" +
     "</div>";
   }
+  // ── 홈: 최근 추세 전환 ──
+  //   최근 10거래일(약 2주) 안에 '현재 추세' 판정이 바뀐(규칙상 확인된) 편성·관심·보유 종목 — data/trend-summary.js 의 conf.n(확인 뒤 거래일 수).
+  //   2026-10-25 사용자 '홈에 최근 추세 바뀐 종목 목록'. 최신순, 처음엔 5개(더 보기로 전부). 누르면 종목 상세의 '추세' 섹션으로 연다
+  var TC_DAYS = 10, TC_SHOW = 5, tcAll = false;
+  var TC_TIP = "최근 10거래일(약 2주) 안에 '현재 추세' 판정이 바뀐 종목입니다(추천 편성·관심·보유). '확인'은 추세 고점(하락 추세면 저점)에서 그 종목 기준 전환폭을 넘겨 " +
+    "판정이 바뀐 날, '그 뒤'는 그날 종가 대비 지금입니다. 판정을 다시 바꾸는 가격(전환 기준가)은 종목 상세 '추세'에 있습니다.\n\n" +
+    "2019~2026년 한·미 956종목에서 이 판정대로 상승 추세일 때만 들고 여러 종목에 나눠 적용했다면 최대 낙폭은 한국 −40%→−15%·미국 −38%→−16% 로 줄었고 연수익도 29%→19%·22%→13% 로 줄었습니다. " +
+    "거래의 절반 넘게는 작게 지고(평균 −12%) 소수의 긴 추세가 크게 벌었습니다(평균 +50%). 판정 규칙의 사실이며 매매 권유가 아닙니다.";
+  function trendChangeRows(cc) {
+    var T = window.TREND_SUMMARY, best = bestByTicker(cc), out = [];
+    if (!T || !T.items) return out;
+    Object.keys(T.items).forEach(function (t) {
+      var m = T.items[t];
+      if (!m || m.c !== cc || !m.conf || m.conf.n == null || m.conf.n > TC_DAYS || (m.cls !== "상승" && m.cls !== "하락")) return;
+      var s = best[t] || (D[cc] || []).filter(function (x) { return x.ticker === t; })[0];
+      if (s) out.push({ s: s, m: m });
+    });
+    out.sort(function (a, b) { return (a.m.conf.n - b.m.conf.n) || byName(a.s, b.s); });
+    return out;
+  }
+  function trendChangeRow(r, cc) {
+    var s = r.s, m = r.m, up = m.cls === "상승";
+    var th = isPersonal(s.theme) ? plist(s.theme).label : themeMeta(s.theme).label + " · T" + s.tier;
+    return '<div class="row tc"' + openAttrs(cc, s.ticker, s.theme, ' data-sec="dt-trend"') + ">" +
+      '<div class="r-l"><div class="r-nm"><span class="r-name">' + esc(s.name) + '</span><span class="pk-th">' + esc(th) + "</span></div>" +
+        '<div class="r-sub"><span>' + esc(mdOf(m.conf.d)) + " 확인" + (m.conf.n > 0 ? " · 그 뒤 " + signedSpan(m.conf.ret, fmtPct(m.conf.ret * 100)) : " · 마지막 거래일") + "</span></div></div>" +
+      '<span class="mv-v ' + (up ? "mv-up" : "mv-down") + ' tc-v">' + (up ? "상승 추세로" : "하락 추세로") + "</span>" +
+    "</div>";
+  }
+  function renderTrendChanges() {
+    var box = document.getElementById("trendBox");
+    if (!box || window.__pastActive) return;
+    if (!window.TREND_SUMMARY) { box.style.display = "none"; return; }
+    var cc = state.country, rows = trendChangeRows(cc);
+    var nUp = rows.filter(function (r) { return r.m.cls === "상승"; }).length;
+    box.style.display = "";
+    var tip = document.getElementById("trendTip");
+    tip.innerHTML = ICON.info; tip.setAttribute("data-basis", TC_TIP);
+    document.getElementById("trendSub").textContent = "최근 2주 · 상승 " + nUp + " · 하락 " + (rows.length - nUp);
+    var list = document.getElementById("trendList");
+    if (!rows.length) { list.innerHTML = '<div class="empty">최근 2주 동안 추세가 바뀐 종목이 없습니다.</div>'; return; }
+    var shown = tcAll ? rows : rows.slice(0, TC_SHOW);
+    list.innerHTML = shown.map(function (r) { return trendChangeRow(r, cc); }).join("") +
+      (rows.length > TC_SHOW ? '<button class="cand-more tc-more" type="button" id="tcMore">' + (tcAll ? "접기" : (rows.length - TC_SHOW) + "개 더 보기") + "</button>" : "");
+  }
+  document.getElementById("trendList").addEventListener("click", function (e) {
+    if (!e.target.closest("#tcMore")) return;
+    e.stopPropagation();
+    tcAll = !tcAll; renderTrendChanges();
+  });
   // 국가별 상위 3 폴백(큐레이션 데이터 없을 때) — 그 국가 정식 추천 중 종합점수 상위 3
   // 같은 티커가 두 주제에 있으면(예: 하나금융 — 저평가 T1·우량 T3) 가장 높은 티어의 편성을 대표로 쓴다(관심·보유 제외)
   // 같은 종목이 여러 주제에 있으면 대표 하나 — check-defects 의 중복 판정이 '남길 곳'으로 정한 주제를 따른다
@@ -4367,7 +4423,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   // ── 탭·국가 전환 ──
   var tabScroll = {};
   function renderTab() {
-    if (state.tab === "home") renderTopPicks();
+    if (state.tab === "home") { renderTopPicks(); renderTrendChanges(); }
     else if (state.tab === "reco") renderReco();
     else if (state.tab === "mine") renderMine();
     else if (state.tab === "perf") renderPerf();
@@ -4396,6 +4452,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     renderLiquidity();
     renderIndexTA();
     renderTopPicks();
+    renderTrendChanges();
     updateMineCounts();
     if (state.tab !== "home") renderTab();
   }
@@ -4409,7 +4466,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   function itemOf(el) {
     return { c: el.getAttribute("data-c"), t: el.getAttribute("data-t"), th: el.getAttribute("data-th"),
       light: el.getAttribute("data-light") === "1", k: el.getAttribute("data-k") || el.getAttribute("data-th"),
-      n: el.getAttribute("data-n") || "", why: el.getAttribute("data-why") || "", idx: el.getAttribute("data-idx") || "" };
+      n: el.getAttribute("data-n") || "", why: el.getAttribute("data-why") || "", idx: el.getAttribute("data-idx") || "", sec: el.getAttribute("data-sec") || "" };
   }
   function openFromEl(el) {
     var host = el.closest("[data-ctx]");
@@ -4485,10 +4542,21 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     mountChart(it);
     if (s) mountTrend(it);
     shBody.scrollTop = top;
+    if (s && it.sec && !keep) jumpToSec(it.sec);
     spySync();
     markActiveRow();
     if (s) ensureLive([s], refreshLive);
     else if (it.light) fetchWatchOne({ c: it.c, t: it.t, n: it.n, k: it.k }, function () { lightRepaint({ c: it.c, t: it.t, n: it.n, k: it.k }); });
+  }
+  // 홈 '최근 추세 전환'처럼 특정 섹션을 보려고 연 종목 — 그 섹션으로 내려 둔다(추세 내용이 뒤늦게 채워지면 한 번 더 맞춘다)
+  function jumpToSec(id) {
+    var go = function () {
+      var sec = document.getElementById(id), nav = shBody.querySelector(".dt-nav");
+      if (sec) shBody.scrollTop = Math.max(0, sec.offsetTop - (nav ? nav.offsetHeight : 0) + 1);
+    };
+    go();
+    var want = SH.ctx[SH.idx], y0 = shBody.scrollTop;
+    setTimeout(function () { if (SH.open && SH.ctx[SH.idx] === want && Math.abs(shBody.scrollTop - y0) < 4) go(); }, 450);
   }
   function stepSheet(d) {
     var j = SH.idx + d;
@@ -5496,6 +5564,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   renderIndexTA();
   renderRoster();
   renderTopPicks();
+  renderTrendChanges();
   updateMineCounts();
   setTab(state.tab, true);
 
