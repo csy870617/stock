@@ -1087,7 +1087,7 @@ window.CANDIDATES = {
      "note": "⑨ 세액공제(45X) 의존 · 최근 낙폭은 회사 고유 악재 미확인(10/28 실적 발표 예정) · 새 신호: 2026.07 분기 매출 +8.2%, EBIT +6.2%, 순이익 +5.2%로 흑자 성장을 유지했고 FY2027 가이던스도 상향됐다. 다만 재무 데이터 공백으로 기준 충족 여부는 확인 전이라 10-28 실적 발표까지 감시한다.",
      "judged": "2026-10-24",
      "verdict": "실질",
-     "triedAt": "2026-10-23",
+     "triedAt": "2026-10-25",
      "since": "2026-10-21",
      "age": 2
     },
@@ -1102,10 +1102,10 @@ window.CANDIDATES = {
        "fresh": false
       }
      ],
-     "note": "⑤ 재무 안전 조건 미달 — 미국 히든 후보 풀 소진",
+     "note": "⑤ 재무 안전 조건 미달 — 남은 대체 후보는 모두 집중 리스크(⑨)·추세 붕괴로 막힘",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-23",
+     "triedAt": "2026-10-25",
      "since": "2026-10-18",
      "age": 5
     },
@@ -1120,28 +1120,10 @@ window.CANDIDATES = {
        "fresh": false
       }
      ],
-     "note": "⑤ 재무 안전 조건 미달 — 미국 히든 후보 풀 소진",
+     "note": "⑤ 재무 안전 조건 미달 — 남은 대체 후보는 모두 집중 리스크(⑨)·추세 붕괴로 막힘",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-23",
-     "since": "2026-10-18",
-     "age": 5
-    },
-    {
-     "ticker": "MKSI",
-     "name": "MKS Inc.",
-     "state": "결격",
-     "flags": [
-      {
-       "k": "theme",
-       "msg": "주제 기준 미달 — 영업이익 3년 연속 흑자 아님, 순차입금 > 영업현금흐름, 매출 성장 미달(3년 3.5%·최근 9.6%), ROIC 미달(3년 평균 -1.6%)",
-       "fresh": false
-      }
-     ],
-     "note": "⑤ 재무 안전 조건 미달 — 미국 히든 후보 풀 소진",
-     "judged": "2026-10-18",
-     "verdict": "실질",
-     "triedAt": "2026-10-23",
+     "triedAt": "2026-10-25",
      "since": "2026-10-18",
      "age": 5
     },
@@ -1156,28 +1138,10 @@ window.CANDIDATES = {
        "fresh": false
       }
      ],
-     "note": "⑤ 재무 안전 조건 미달 — 미국 히든 후보 풀 소진",
+     "note": "⑤ 재무 안전 조건 미달 — 남은 대체 후보는 모두 집중 리스크(⑨)·추세 붕괴로 막힘",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-23",
-     "since": "2026-10-18",
-     "age": 5
-    },
-    {
-     "ticker": "RBC",
-     "name": "RBC Bearings",
-     "state": "결격",
-     "flags": [
-      {
-       "k": "theme",
-       "msg": "주제 기준 미달 — 시총 범위 밖, 순차입금 > 영업현금흐름, 매출 성장 미달(3년 8.4%·최근 14.3%), ROIC 미달(3년 평균 6.5%), PEG 3.34, 희석 주식 수 연 4.1% 증가",
-       "fresh": false
-      }
-     ],
-     "note": "⑤ 재무 안전 조건 미달 — 미국 히든 후보 풀 소진",
-     "judged": "2026-10-18",
-     "verdict": "실질",
-     "triedAt": "2026-10-23",
+     "triedAt": "2026-10-25",
      "since": "2026-10-18",
      "age": 5
     },
@@ -1230,16 +1194,6 @@ window.CANDIDATES = {
    ],
    "list": [
     {
-     "ticker": "FIVE",
-     "name": "Five Below",
-     "status": "보류",
-     "note": "숫자는 근접 — ⑦ 해자 근거 부족, 신뢰 출처 확보 시 MKSI 대체 1순위",
-     "asOf": "2026-10-18",
-     "why": "3년 매출 연평균 15.7% · 3년 평균 ROIC 24.9% · PEG 2",
-     "near": "PEG 1.98",
-     "url": "https://finance.yahoo.com/quote/FIVE"
-    },
-    {
      "ticker": "CORT",
      "name": "Corcept Therapeutics Incorporated",
      "status": "보류",
@@ -1252,7 +1206,9 @@ window.CANDIDATES = {
     {
      "ticker": "CAMT",
      "name": "Camtek",
-     "status": "검증 대기",
+     "status": "보류",
+     "note": "⑨ 2025년 매출의 약 49%가 중국이고 미국 수출 규제 영향권 — 중국 비중이 1/3 안팎으로 내려가고 GAAP 이익이 다시 늘면 재검토",
+     "asOf": "2026-10-25",
      "why": "3년 매출 연평균 15.6% · 3년 평균 ROIC 21.5% · PEG 1.5",
      "near": "매출 성장 미달(3년 15.6%·최근 15.6%)",
      "url": "https://finance.yahoo.com/quote/CAMT"
@@ -1262,7 +1218,7 @@ window.CANDIDATES = {
  },
  "summary": {
   "review": 0,
-  "defect": 13,
+  "defect": 11,
   "watch": 18,
   "untried": 0,
   "dup": 2,

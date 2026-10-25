@@ -5,7 +5,7 @@
 //   price·date 는 조회 시각의 현재가(장중이면 장중가), close·closeDate 는 마지막으로 끝난 정규장 종가(스냅샷 기록용)
 // indices: 성과 기준 지수(kospi ^KS11·sp500 ^GSPC·rsp RSP) — 같은 형식, snapshot.js 가 종목 종가와 짝지어 기록
 window.STOCK_QUOTES = {
- "generatedAt": "2026-10-24",
+ "generatedAt": "2026-10-25",
  "quotes": {
   "103590": {
    "price": 57700,
@@ -637,13 +637,6 @@ window.STOCK_QUOTES = {
    "close": 113.23,
    "closeDate": "2026-10-23"
   },
-  "MKSI": {
-   "price": 196.55,
-   "date": "2026-10-23",
-   "changePct": 0.2,
-   "close": 196.55,
-   "closeDate": "2026-10-23"
-  },
   "AAON": {
    "price": 68.85,
    "date": "2026-10-23",
@@ -677,13 +670,6 @@ window.STOCK_QUOTES = {
    "date": "2026-10-23",
    "changePct": 4.5,
    "close": 51.39,
-   "closeDate": "2026-10-23"
-  },
-  "RBC": {
-   "price": 471.98,
-   "date": "2026-10-23",
-   "changePct": -1.3,
-   "close": 471.98,
    "closeDate": "2026-10-23"
   },
   "GS": {
@@ -810,6 +796,20 @@ window.STOCK_QUOTES = {
    "date": "2026-10-23",
    "changePct": -3.1,
    "close": 149.7,
+   "closeDate": "2026-10-23"
+  },
+  "FIVE": {
+   "price": 223.24,
+   "date": "2026-10-23",
+   "changePct": -1.2,
+   "close": 223.24,
+   "closeDate": "2026-10-23"
+  },
+  "STRL": {
+   "price": 355.3,
+   "date": "2026-10-23",
+   "changePct": -4.7,
+   "close": 355.3,
    "closeDate": "2026-10-23"
   }
  },
