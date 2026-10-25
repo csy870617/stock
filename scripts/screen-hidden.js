@@ -12,7 +12,7 @@
 //   한국 — 네이버 시가총액 순위(유니버스) + 네이버 기업현황(WiseReport) 연간 요약(매출·영업이익·순이익·자본·이자발생부채·
 //          영업현금흐름·CAPEX·FCF·EPS·발행주식수, 5년 실적 + 3년 컨센서스)·재무상태표(현금·단기금융자산)·최대주주 지분율·WICS 업종
 //   미국 — 나스닥 전 종목 스크리너(유니버스·시총·업종) + SEC XBRL frames(전 상장사 연간 매출·영업이익·순이익·영업현금흐름·CAPEX·
-//          희석 주식 수, 연말 현금·단기투자·차입금·자본) + SEC 검색(티커→CIK) + 나스닥 연간 EPS 컨센서스(PEG)
+//          희석 주식 수, 연말 현금·단기투자·차입금·자본) + SEC 공식 티커 표(티커→CIK, 없으면 검색) + 나스닥 연간 EPS 컨센서스(PEG)
 //
 // ★ 후보 생성용이다(CLAUDE.md §6 — 편입·교체는 세션 검증과 §5 기준으로만). 숫자는 집계·자동 추출이라 틀릴 수 있다.
 //
@@ -85,6 +85,11 @@ async function mapLimit(items, limit, fn) {
   await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
   return out;
 }
+// SEC 공정 접근 정책은 초당 10건 이하 — 2026-10-24 Action 실행에서 screen-factors 의 SEC 요청 직후 검색 색인(efts)에 1,662종목을
+//   6개씩 동시에 물어 대부분 거절됐고(티커→CIK 1,626건 실패), 미국 히든이 '적격 0'으로 기록됐다. SEC 요청은 이 속도 제한을 거친다.
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+function rateLimiter(perSec) { let next = 0; return async () => { const now = Date.now(); const at = Math.max(now, next); next = at + 1000 / perSec; if (at > now) await sleep(at - now); }; }
+const secLim = rateLimiter(5);
 const num = (v) => { if (v == null) return null; const n = parseFloat(String(v).replace(/[,%$배원]/g, "").trim()); return isFinite(n) ? n : null; };
 const cagr = (a, b, yrs) => (a != null && b != null && a > 0 && b > 0 && yrs > 0 ? Math.pow(b / a, 1 / yrs) - 1 : null);
 const r1 = (v, d = 1) => (v == null || !isFinite(v) ? null : Math.round(v * Math.pow(10, d)) / Math.pow(10, d));
@@ -248,7 +253,22 @@ async function universeUS() {
     fullName: r.name, price: num(r.lastsale), mcap: num(r.marketCap), sector: r.sector, industry: r.industry, country: r.country }))
     .filter((s) => s.ticker && !/[\^/]/.test(s.ticker));
 }
+// 티커→CIK: SEC 공식 표(한 번에 1만여 종목 — screen-factors.js 와 같다) → 표에 없을 때만 검색 색인(efts).
+//   www.sec.gov 파일은 '이름 연락처' 형식의 User-Agent 만 받는다(data.sec.gov·efts 는 기존 SEC_UA 로 된다).
+let CIK_TABLE = null;
+const tickerKey = (t) => String(t).toUpperCase().replace(/[.\s/]+/g, "-");
+async function cikTable() {
+  if (CIK_TABLE) return CIK_TABLE;
+  await secLim();
+  const tj = await getJson("https://www.sec.gov/files/company_tickers.json", "stock-dashboard-screen admin@stock-dashboard.dev");
+  CIK_TABLE = new Map();
+  Object.values(tj || {}).forEach((r) => { if (r && r.ticker) CIK_TABLE.set(tickerKey(r.ticker), Number(r.cik_str)); });
+  return CIK_TABLE;
+}
 async function cikOf(sym) {
+  const known = (await cikTable()).get(tickerKey(sym));
+  if (known) return known;
+  await secLim();
   const j = await getJson("https://efts.sec.gov/LATEST/search-index?keysTyped=" + encodeURIComponent(sym), SEC_UA);
   const hits = (j && j.hits && j.hits.hits) || [];
   const want = sym.toUpperCase().replace(".", "-");
@@ -263,6 +283,7 @@ const FRAME = {};
 async function frame(concept, period) {
   const k = concept + "|" + period;
   if (FRAME[k]) return FRAME[k];
+  await secLim();
   const j = await getJson("https://data.sec.gov/api/xbrl/frames/us-gaap/" + concept + "/USD/" + period + ".json", SEC_UA);
   const m = new Map();
   ((j && j.data) || []).forEach((d) => m.set(d.cik, d.val));
@@ -272,6 +293,7 @@ async function frame(concept, period) {
 async function frameShares(concept, period) {
   const k = concept + "|" + period;
   if (FRAME[k]) return FRAME[k];
+  await secLim();
   const j = await getJson("https://data.sec.gov/api/xbrl/frames/us-gaap/" + concept + "/shares/" + period + ".json", SEC_UA);
   const m = new Map();
   ((j && j.data) || []).forEach((d) => m.set(d.cik, d.val));
@@ -461,6 +483,13 @@ async function hiddenUS(D, log) {
   await loadFrames();
   log("SEC frames " + Object.keys(FRAME).length + "개 — 티커→CIK 매핑 중…");
   await mapLimit(band, 6, async (s) => { s.cik = await cikOf(s.ticker); });
+  // SEC 접속이 막히면 거의 모든 종목이 'SEC 재무 없음'으로 떨어져 '적격 0'이 기록된다(2026-10-24) — 그런 결과는 쓰지 않고 실패로 넘긴다
+  //   (screen-discovery.js 는 이전 히든 그룹을 유지하고 다음 날 다시 시도한다).
+  const mapped = band.filter((s) => s.cik).length;
+  const core = ["OperatingIncomeLoss|CY2025", "NetIncomeLoss|CY2025", "NetCashProvidedByUsedInOperatingActivities|CY2025", "StockholdersEquity|CY2025Q4I"];
+  const thin = core.filter((k) => !(FRAME[k] && FRAME[k].size >= 1000));
+  log("티커→CIK " + mapped + "/" + band.length + (thin.length ? " · 비어 있는 핵심 SEC frames: " + thin.join(", ") : ""));
+  if (mapped < band.length * 0.7 || thin.length) throw new Error("SEC 자료 부족(티커→CIK " + mapped + "/" + band.length + (thin.length ? " · frames " + thin.join(", ") : "") + ")");
   const pool = band.map((s) => { const m = metricsUS(s); return { s, m, why: judgeUS(s, m, false), whyR: judgeUS(s, m, false, RELAX) }; });
   const pre = pool.filter((x) => !x.whyR.length || members.some((mm) => mm.ticker === x.s.ticker));
   log("미국 1차(SEC) 통과·편성 " + pre.length + " — 나스닥 EPS 컨센서스로 PEG 계산");

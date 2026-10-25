@@ -4,7 +4,7 @@
  "note": "선정 규칙 동결(CLAUDE.md §6) — 아래 파일·주제 정의가 기준선과 다르면 validate-reco 가 경고한다. 받아들인 변경은 accepted 에 사유와 함께 남는다.",
  "baseline": {
   "scripts/screen-discovery.js": "42d1c1d22f2d8958",
-  "scripts/screen-hidden.js": "d7ad263f0a46b646",
+  "scripts/screen-hidden.js": "b325a08be46c6828",
   "scripts/screen-factors.js": "343af9eeaec1acdc",
   "scripts/lib-factors.js": "022c5e81e2c7d0f5",
   "scripts/check-defects.js": "a04407f3fa2551d2",
@@ -14,5 +14,13 @@
   "docs/DEEP-DISCOVERY-AGENT.md": "d12ae0dc75221330",
   "recommendations.js themes": "8eb27174d8ccbe5f"
  },
- "accepted": []
+ "accepted": [
+  {
+   "at": "2026-10-25",
+   "items": [
+    "scripts/screen-hidden.js"
+   ],
+   "reason": "버그 수정: screen-hidden.js 미국 티커→CIK 를 SEC 공식 티커 표로(검색 색인은 표에 없을 때만), SEC 요청 초당 5건 제한, CIK·핵심 frames 가 비면 결과를 쓰지 않고 실패 — 10/24 Action 에서 검색 색인이 거절돼 1,626/1,662종목이 'SEC 재무 없음'으로 적격 0 이 기록됨. 선정 기준(숫자·문턱)은 그대로"
+  }
+ ]
 }
