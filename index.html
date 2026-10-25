@@ -270,7 +270,7 @@ svg { display: block; }
 .cs-wait { background: var(--sf3); color: var(--mut); }
 .cand-more { display: block; width: calc(100% - 32px); margin: 6px 16px 4px; height: 38px; border-radius: 8px; background: var(--sf3); color: var(--ink2); font-size: 13.5px; font-weight: 600; }
 
-/* 단·중·장 신호 칸 — 연한 바탕 + 글자색(매수 계열 빨강 · 매도 계열 파랑), '적극'은 바탕만 한 단계 진하게.
+/* 단·중·장 추세 상태 칸 — 연한 바탕 + 글자색(상승세 빨강 · 하락세 파랑), '강한'은 바탕만 한 단계 진하게.
    꽉 찬 색 칸은 목록에서 시선을 과하게 끌어 쓰지 않는다(신호는 예측이 아닌 현재 상태 요약). */
 .sg { flex: none; display: inline-flex; gap: 2px; }
 .sg i { font-style: normal; width: 18px; height: 20px; border-radius: 5px; display: grid; place-items: center; font-size: 10.5px; font-weight: 700; }
@@ -1106,12 +1106,12 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   <section class="past" id="pastView" hidden></section>
 
   <footer class="foot" id="foot">
-    <p><b>투자 권유가 아닌 참고 정보입니다.</b> 기술 신호 등급(적극매수~적극매도)은 이미 일어난 움직임을 요약한 '현재 상태'이지 예측이 아닙니다.</p>
+    <p><b>투자 권유가 아닌 참고 정보입니다.</b> 단·중·장 추세 상태(강한 상승세~강한 하락세)는 이미 일어난 움직임의 요약이지 매수·매도 시점이 아닙니다.</p>
     <p><span id="routineTime">매일 한국시간 오전 7시·오후 6시</span> 정기 분석 · 시세·지표는 장 마감 직후 자동 갱신 · 가격 옆 점(●)은 장중 시세(최대 20분가량 지연 가능) — 장이 닫히면 마지막 종가</p>
     <details class="foot-more" data-sk="foot-more">
       <summary>안내 · 신호·범위·목표가를 읽는 법</summary>
       <p id="disclaimer"></p>
-      <p><b>기술 신호 등급</b>은 이동평균선·일목균형표·매물대 가중 종합에 상위 기간 추세를 반영한 값입니다(단기=일·주·월봉 5:3:2, 중기=주·월봉 7:3). 등급이 매수 쪽으로 바뀌기 전 20거래일에 이미 지수 대비 평균 +2.5~4.3% 올랐고 바뀐 뒤 1개월 초과수익은 평균 -1.1~-0.2%였으며, 한·미 881종목(2023~2026)에 적용하면 일·주·월봉 어느 등급도 시장 대비 종목 선별력이 0에 가까웠습니다. 기술 대응 문장은 이 숫자(이평·구름·지지/저항·매물대·수급·예상 범위)로 매일 자동 작성합니다.</p>
+      <p><b>추세 상태</b>(강한 상승세·상승세·횡보·하락세·강한 하락세)는 이동평균선·일목균형표·매물대 가중 종합에 상위 기간 추세를 반영한 값입니다(단기=일·주·월봉 5:3:2, 중기=주·월봉 7:3). 상태가 상승 쪽으로 바뀌기 전 20거래일에 이미 지수 대비 평균 +2.5~4.3% 올라 있고, 2019~2026년 한·미 995종목(30만 건)에서 다섯 상태의 이후 1·3개월 시장 대비 수익과 3개월 안 최대 하락이 서로 같았습니다(−10% 이상 하락 경험 42~44%). 52주 고점 근처의 강한 상승세도, RSI 70 이상 과열권도 이후 성과가 나쁘지 않았습니다. 그래서 '매수·매도' 대신 지금 모양의 이름으로 부릅니다. 기술 대응 문장은 이 숫자(이평·구름·지지/저항·매물대·수급·예상 범위)로 매일 자동 작성합니다.</p>
       <p><b>매물대</b>는 '어느 가격에서 거래가 많았나'를 보여 주는 지도입니다 — 2016~2026년 991종목 검증에서 거래가 몰린 가격대가 다른 가격대보다 지지·저항으로 더 잘 버티지는 않았습니다.</p>
       <p>종목 상세의 <b>변동 범위</b>는 방향 대신 검증된 것만 보여 줍니다: 다음 1·3개월 <b>절반 확률(50%)·80% 범위</b>(60일 변동성 기반 — 표본 밖 적중 50~55%·78~82%)와 공지된 <b>실적 일정</b>. 범위의 폭은 그 종목이 실제로 흔들리는 정도라서, 모든 종목에 같은 폭을 쓰면 조용한 종목은 92~96%·변동이 큰 종목은 54~57%만 맞는 반면 이 범위는 변동성 수준과 관계없이 고르게 맞습니다(폭 자체가 위험 정보). 시장이 크게 흔들리는 구간에는 범위도 넓어지고, 가라앉으면 좁아집니다.</p>
       <p>유일하게 일관된 방향 신호는 한국 <b>수급 과열</b>(외국인+기관 20일 순매수가 거래량의 6.3% 이상)로, 통념과 반대로 이후 1·3개월 지수 대비 성과가 나머지보다 약했습니다(2016~2026 세 구간 모두).</p>
@@ -1285,6 +1285,11 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   };
   // 5단계 신호 → 색 분류(매수 계열 빨강 · 중립 회색 · 매도 계열 파랑, 국내 관례)
   var SIG_CLS = { "적극매수": "sb", "매수": "b", "중립": "n", "매도": "s", "적극매도": "ss" };
+  // 화면 이름은 추세 상태로(2026-10-25 — 사용자 '고점에서 적극매수로 보이는 게 위험하지 않나'): 2019~2026 995종목 30만 건에서
+  //   다섯 등급의 이후 1·3개월 수익·낙폭이 같았다(scripts/research/ta-highs) — '매수·매도'라는 이름이 약속하는 예측력이 없어
+  //   지금 모양을 그대로 부른다. 데이터 값(적극매수~적극매도)과 그 값을 쓰는 규칙(추세 붕괴·Top Pick 제외)은 그대로다.
+  var SIG_WORD = { "적극매수": "강한 상승세", "매수": "상승세", "중립": "횡보", "매도": "하락세", "적극매도": "강한 하락세" };
+  function sigWord(g) { return SIG_WORD[g] || g || "–"; }
 
   // ── 기준일 선택 — 과거 스냅샷(history.js) 읽기 전용 보기 ──────────────────────────
   // 히스토리에는 그날의 편성·tier·가격·목표가·신호등급과 문서 단위 요약(시황·유동성·Top Pick)만
@@ -1459,7 +1464,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       var order = (D.themes || []).map(function (t) { return t.key; });
       function themeRank(k) { var i = order.indexOf(k); return i < 0 ? 99 : i; }
       function stockRow(s) {
-        var sig = [s.ss, s.sm, s.sl].filter(Boolean).join(" · ");
+        var sig = [s.ss, s.sm, s.sl].filter(Boolean).map(sigWord).join(" · ");
         return '<tr data-pt="' + esc(s.t) + '">' +
           "<td>" + esc(s.n) +
             (s.tier ? ' <span class="tb t' + esc(s.tier) + ' pv-tier">T' + esc(s.tier) + "</span>" : "") +
@@ -2126,7 +2131,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     var n = s.techNote, T = window.STOCK_TA, taAsOf = T && T.asOf;
     return !!(n && n.asOf && taAsOf && n.asOf < taAsOf);
   }
-  function sigBadge(g) { return g ? '<span class="tn-sig t-' + (SIG_CLS[g] || "x") + '">' + esc(g) + "</span>" : ""; }
+  function sigBadge(g) { return g ? '<span class="tn-sig t-' + (SIG_CLS[g] || "x") + '">' + esc(sigWord(g)) + "</span>" : ""; }
   function techBody(s, country, e) {
     var n = s.techNote;
     if (!n || (!n.short && !n.mid && !n.long)) return vpRow(s, country, e) + flowRow(s, country);
@@ -3053,7 +3058,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       '<div class="dt-meta">' + meta + "</div>" + (badges ? '<div class="dt-bd">' + badges + "</div>" : "") + alerts + "</div>";
     var why = it && it.why ? '<div class="dt-why"><span class="dt-why-k">Top Pick 선정 이유</span>' + esc(it.why) + "</div>" : "";
     var sig = (n.sigShort || n.sigMid || n.sigLong) ? '<div class="dt-sig">' + [["단기", n.sigShort, "일봉"], ["중기", n.sigMid, "주봉"], ["장기", n.sigLong, "월봉"]].map(function (p) {
-        return '<div class="ds"><span class="ds-k">' + p[0] + " <i>" + p[2] + '</i></span><b class="ds-v t-' + (SIG_CLS[p[1]] || "x") + '">' + esc(p[1] || "–") + "</b></div>";
+        return '<div class="ds"><span class="ds-k">' + p[0] + " <i>" + p[2] + '</i></span><b class="ds-v t-' + (SIG_CLS[p[1]] || "x") + '">' + esc(sigWord(p[1])) + "</b></div>";
       }).join("") + "</div>" : "";
     var rg = rangeHeroHtml(s, e, c), mini = '<a class="mv-mini" href="#dt-trend" data-sec="dt-trend" hidden></a>';
     var sum = sig || rg ? '<div class="dt-sum">' + sig + rg + mini + "</div>" : '<div class="dt-sum mv-only">' + mini + "</div>";
@@ -3102,7 +3107,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       '<div class="dt-meta">' + (asOf ? esc(mdOf(asOf)) + " 종가" : "") + " · 전일 대비</div></div>";
     var sig = '<div class="dt-sum"><div class="dt-sig">' + [["단기", x.short, "일봉"], ["중기", x.mid, "주봉"], ["장기", x.long, "월봉"]].map(function (p) {
       var g = p[1] && p[1].signal;
-      return '<div class="ds"><span class="ds-k">' + p[0] + " <i>" + p[2] + '</i></span><b class="ds-v t-' + (SIG_CLS[g] || "x") + '">' + esc(g || "–") + "</b></div>";
+      return '<div class="ds"><span class="ds-k">' + p[0] + " <i>" + p[2] + '</i></span><b class="ds-v t-' + (SIG_CLS[g] || "x") + '">' + esc(sigWord(g)) + "</b></div>";
     }).join("") + "</div></div>";
     var n = ((window.INDEX_NOTES && window.INDEX_NOTES.items) || {})[x.key], nAs = window.INDEX_NOTES && window.INDEX_NOTES.asOf;
     var line = function (k, v, g, lead) { return v ? '<div class="tn-line"><span class="tn-k">' + k + '</span><span class="tn-v">' + (lead || "") + (g ? sigBadge(g) : "") + esc(v) + "</span></div>" : ""; };
@@ -3116,16 +3121,16 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   }
   // ── 환율·원자재(원/달러·달러인덱스·WTI·금) 상세 — 캔들 차트 + 단·중·장 신호 + 관련 정보(매일 자동 계산한 사실 숫자) + 분석(세션·AI) + AI 질문 ──
   var MACRO_TXT = {
-    usdkrw: { sig: "등급은 달러 기준의 흐름 요약입니다 — 매수 쪽이면 원/달러가 오르는(원화 약세) 흐름, 매도 쪽이면 내리는(원화 강세) 흐름입니다.",
+    usdkrw: { sig: "상태는 달러 기준의 흐름 요약입니다 — 상승세면 원/달러가 오르는(원화 약세) 흐름, 하락세면 내리는(원화 강세) 흐름입니다(예측 아님).",
       unitMove: 1, moveWord: "원/달러가 1% 오른 주에", pos: "원/달러와 같이 움직인 종목", posSub: "원화가 약할 때 오른 쪽",
       neg: "반대로 움직인 종목", negSub: "원화가 강할 때 오른 쪽", scope: "한국 편성·관심·보유 종목" },
-    dxy: { sig: "등급은 달러 가치 흐름의 요약입니다 — 매수 쪽이면 달러 강세, 매도 쪽이면 달러 약세 흐름입니다(예측 아님).",
+    dxy: { sig: "상태는 달러 가치 흐름의 요약입니다 — 상승세면 달러 강세, 하락세면 달러 약세 흐름입니다(예측 아님).",
       unitMove: 1, moveWord: "달러인덱스가 1% 오른 주에", pos: "달러인덱스와 같이 움직인 종목", posSub: "달러가 강할 때 오른 쪽",
       neg: "반대로 움직인 종목", negSub: "달러가 약할 때 오른 쪽", scope: "한·미 편성·관심·보유 종목" },
-    gold: { sig: "등급은 금값 흐름의 요약입니다 — 매수 쪽이면 오르는 흐름, 매도 쪽이면 내리는 흐름입니다(예측 아님).",
+    gold: { sig: "상태는 금값 흐름의 요약입니다 — 상승세면 오르는 흐름, 하락세면 내리는 흐름입니다(예측 아님).",
       unitMove: 5, moveWord: "금값이 5% 오른 주에", pos: "금값과 같이 움직인 종목", posSub: "금값이 오를 때 오른 쪽",
       neg: "반대로 움직인 종목", negSub: "금값이 오를 때 내린 쪽", scope: "한·미 편성·관심·보유 종목" },
-    wti: { sig: "등급은 유가 흐름의 요약입니다 — 매수 쪽이면 오르는 흐름, 매도 쪽이면 내리는 흐름입니다(예측 아님).",
+    wti: { sig: "상태는 유가 흐름의 요약입니다 — 상승세면 오르는 흐름, 하락세면 내리는 흐름입니다(예측 아님).",
       unitMove: 10, moveWord: "유가가 10% 오른 주에", pos: "유가와 같이 움직인 종목", posSub: "유가가 오를 때 오른 쪽",
       neg: "반대로 움직인 종목", negSub: "유가가 오를 때 내린 쪽", scope: "한·미 편성·관심·보유 종목" }
   };
@@ -3144,7 +3149,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       ' · 전일 대비' + (SRC[0] ? ' · <span title="' + esc(srcTip) + '">' + esc(SRC[0]) + "</span>" : "") + "</div></div>";
     var sig = '<div class="dt-sum"><div class="dt-sig">' + [["단기", m.short, "일봉"], ["중기", m.mid, "주봉"], ["장기", m.long, "월봉"]].map(function (p) {
       var g = p[1] && p[1].signal;
-      return '<div class="ds"><span class="ds-k">' + p[0] + " <i>" + p[2] + '</i></span><b class="ds-v t-' + (SIG_CLS[g] || "x") + '">' + esc(g || "–") + "</b></div>";
+      return '<div class="ds"><span class="ds-k">' + p[0] + " <i>" + p[2] + '</i></span><b class="ds-v t-' + (SIG_CLS[g] || "x") + '">' + esc(sigWord(g)) + "</b></div>";
     }).join("") + '</div><p class="kv-note">' + esc(X.sig) + "</p></div>";
     // 관련 정보 — 기간 등락·변동성
     var pc = function (k, v) { return kv(k, v == null ? "–" : signedSpan(v, (v > 0 ? "+" : "") + v.toFixed(1) + "%")); };
@@ -3293,8 +3298,9 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     renderReco();
   }
   // 목록 위 '단·중·장' 안내 — 칸의 뜻과 색을 한 번에(누르면 설명)
-  var SIG_HELP = "목록의 세 칸은 단기(일봉)·중기(주봉)·장기(월봉) 기술 신호입니다. 빨강 계열은 매수 쪽, 파랑 계열은 매도 쪽, 회색은 중립이고 바탕이 진하면 '적극'입니다.\n\n" +
-    "이미 일어난 움직임을 요약한 '현재 상태'이지 예측이 아닙니다 — 2023~2026년 한·미 881종목에서 어느 기간의 등급도 시장 대비 종목 선별력이 0에 가까웠습니다.";
+  var SIG_HELP = "목록의 세 칸은 단기(일봉)·중기(주봉)·장기(월봉) 추세 상태입니다. 빨강 계열은 상승세, 파랑 계열은 하락세, 회색은 횡보이고 바탕이 진하면 '강한'입니다.\n\n" +
+    "지금 차트의 모양(이동평균선·일목균형표·매물대)을 요약한 것이지 매수·매도 시점이 아닙니다 — 2019~2026년 한·미 995종목(30만 건)에서 강한 하락세부터 강한 상승세까지 다섯 상태의 이후 1개월 시장 대비 수익 차이가 0.3%p 안, 3개월 안에 −10% 이상 빠진 비율이 42~44%로 같았습니다. " +
+    "52주 고점 근처의 강한 상승세도 이후 수익·낙폭이 다른 때와 같았습니다(고점이라서 더 위험하지도, 더 좋지도 않았다).";
   (function () {
     var b = document.getElementById("sigHelp");
     b.innerHTML = sigStrip({ sigShort: "적극매수", sigMid: "중립", sigLong: "매도" }).replace(/ title="[^"]*"/g, "").replace(/ aria-label="[^"]*"/, ' aria-hidden="true"') +
@@ -3430,8 +3436,8 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   function sigStrip(n) {
     var parts = [["단", n.sigShort], ["중", n.sigMid], ["장", n.sigLong]];
     if (!parts.some(function (p) { return p[1]; })) return '<span class="sg sg-na" title="기술 신호 없음">–</span>';
-    return '<span class="sg" aria-label="' + esc(parts.map(function (p) { return p[0] + "기 " + (p[1] || "없음"); }).join(", ")) + '">' + parts.map(function (p) {
-      return '<i class="g-' + (SIG_CLS[p[1]] || "x") + '" title="' + esc(p[0] + "기 " + (p[1] || "없음")) + '">' + p[0] + "</i>";
+    return '<span class="sg" aria-label="' + esc(parts.map(function (p) { return p[0] + "기 " + (p[1] ? sigWord(p[1]) : "없음"); }).join(", ")) + '">' + parts.map(function (p) {
+      return '<i class="g-' + (SIG_CLS[p[1]] || "x") + '" title="' + esc(p[0] + "기 " + (p[1] ? sigWord(p[1]) : "없음")) + '">' + p[0] + "</i>";
     }).join("") + "</span>";
   }
   // 추천·편성 종목 한 줄 — o = {c, k(개인 목록 키), pkey(순서 저장 키), edit(편집 모드), noTag(티어 소제목 아래라 티어 표시 생략)}
@@ -5037,7 +5043,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     "- 핵심을 첫 문장에 두고 3~8문장 또는 짧은 글머리표로 간결하게 쓴다. 사용자가 자세히 원하면 길게 써도 된다.",
     "- 숫자는 데이터나 검색 결과에 있는 것만 쓴다. 모르면 모른다고 말한다. 날짜가 중요한 사실은 날짜를 붙인다.",
     "- 사실과 해석을 구분한다. '사라·팔아라' 같은 매매 지시나 '오를 것' 같은 확정적 전망을 하지 않고, 근거·리스크·확인할 점을 정리해 판단을 돕는다.",
-    "- 이 앱의 기술 신호 등급(적극매수~적극매도)은 이미 일어난 움직임의 요약이며 넓은 표본에서 종목 선별력이 0에 가까웠다. 증권사 목표가는 체계적으로 낙관적이다(한국 리포트 1.8만 건: 12개월 뒤 목표가 이상 36%, 실현 수익 중앙 +13%). 필요할 때 이 점을 짚는다.",
+    "- 이 앱의 단·중·장 추세 상태는 데이터 값이 적극매수~적극매도지만 화면에서는 강한 상승세·상승세·횡보·하락세·강한 하락세로 부른다 — 너도 이 이름으로 부르고 매수·매도 권유로 쓰지 않는다. 이미 일어난 움직임의 요약이며 2019~2026 한·미 995종목에서 다섯 상태의 이후 1·3개월 수익과 낙폭이 같았다(52주 고점 근처의 강한 상승세도 마찬가지). 증권사 목표가는 체계적으로 낙관적이다(한국 리포트 1.8만 건: 12개월 뒤 목표가 이상 36%, 실현 수익 중앙 +13%). 필요할 때 이 점을 짚는다.",
     "- 투자 권유가 아닌 참고 정보라는 전제를 지키되, 매 답변마다 면책 문구를 반복하지는 않는다."
   ].join("\n");
 

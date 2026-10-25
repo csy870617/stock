@@ -33,6 +33,9 @@ function load(rel, key) {
 }
 
 const GV = { "적극매도": -2, "매도": -1, "중립": 0, "매수": 1, "적극매수": 2 };
+// 문장에 쓰는 이름 — 추세 상태(앱 표시와 같다, index.html SIG_WORD). 다섯 등급의 이후 수익·낙폭이 같아(scripts/research/ta-highs)
+// '매수·매도'로 부르지 않는다. 데이터 값(sigShort 등)은 그대로 엔진 등급이다.
+const WORD = { "적극매수": "강한 상승세", "매수": "상승세", "중립": "횡보", "매도": "하락세", "적극매도": "강한 하락세" };
 const isKr = (c) => c === "korea";
 // 가격 표기 — 한국 원(정수, 천 단위 쉼표), 미국 달러(소수 2자리)
 const P = (v, c) => (v == null || !isFinite(v) ? "–" : isKr(c) ? Math.round(v).toLocaleString("ko-KR") + "원" : "$" + v.toFixed(2));
@@ -68,8 +71,8 @@ function shape(c, f) {
 function gradeWhy(sh, g, upper) {
   const v = GV[g];
   if (v == null || !upper) return "";
-  if (sh <= -2 && v >= 0) return " — " + upper + " 상승 추세가 받쳐 종합 " + g;
-  if (sh >= 2 && v <= 0) return " — " + upper + " 추세가 약해 종합 " + g;
+  if (sh <= -2 && v >= 0) return " — " + upper + " 상승 추세가 받쳐 종합 " + (WORD[g] || g);
+  if (sh >= 2 && v <= 0) return " — " + upper + " 추세가 약해 종합 " + (WORD[g] || g);
   return "";
 }
 // 단기 지지·저항 — 가장 가까운 이평·최근 저/고점(엔진 sr). 등급 방향에 따라 어느 쪽이 '근거가 바뀌는 가격'인지만 덧붙인다.
