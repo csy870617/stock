@@ -4,7 +4,7 @@
 // 현재 추세 — 지금 상승·하락 중 어느 추세인지, 언제 시작됐는지, 그 추세를 무엇이 만들었는지 숫자로 정리한다
 // (LLM 토큰 0, refresh-quotes Action·세션 backbone)
 //
-//   node scripts/update-trend.js            → data/trend/<ticker>.json (편성·관심·보유 전 종목)
+//   node scripts/update-trend.js            → data/trend/<ticker>.json (편성·관심·보유 전 종목) + data/trend-summary.js(전 종목 요약)
 //   node scripts/update-trend.js 005930 NVDA  → 그 종목만
 //
 // 계산(scripts/lib-trend.js): 추세 판정·시작점(되돌림 기준 지그재그의 마지막 다리) → 그 추세 구간의 시장 몫 vs 종목 고유(β)·
@@ -375,8 +375,10 @@ function build(stock, a, extra) {
     sum.push(startTxt + " " + dur + "째 " + a.cls + " 추세다 — 시작점 대비 " + pct(a.ret) + ".");
     const pull = up ? a.fromHi : a.fromLo;
     if (pull != null && Math.abs(pull) >= 0.05 && (up ? a.hi.d : a.lo.d) !== a.to)
-      sum.push(up ? "추세 중 고점(" + mdy(a.hi.d, y0) + ")보다 " + abs(pull) + " 낮다 — 상승 추세 속 조정이다(이 종목의 추세 전환 기준인 고점 대비 -" + abs(a.h) + "에는 못 미침)."
+      sum.push(up ? "추세 중 고점(" + mdy(a.hi.d, y0) + ")보다 " + abs(pull) + " 낮다 — 상승 추세 속 조정이다(이 종목의 추세 전환 기준인 고점 대비 -" + abs(a.flip ? a.flip.dn : a.h) + "에는 못 미침)."
         : "추세 중 저점(" + mdy(a.lo.d, y0) + ")보다 " + abs(pull) + " 높다 — 하락 추세 속 반등이다(이 종목의 추세 전환 기준인 저점 대비 +" + abs(a.h) + "에는 못 미침).");
+    if (a.conf) sum.push("추세 확인: " + mdy(a.conf.d, y0) + "(" + (up ? "저점보다 " + pct(a.h) + " 넘게 오른 날" : "고점보다 -" + abs(a.flip ? a.flip.dn : a.h) + " 넘게 내린 날") + ") 이후 " + pct(a.conf.ret) + ".");
+    if (a.flip) sum.push("전환 기준: 종가가 " + a.flip.px + (up ? " 아래로 마감하면 하락 추세" : " 위로 마감하면 상승 추세") + "로 바뀐다(지금보다 " + pct(a.flip.pct) + ").");
     if (a.quiet) sum.push("추세 중 " + (up ? "고점" : "저점") + "(" + mdy(a.quiet.d, y0) + ") 이후 " + durTxt(a.quiet.d, a.to) + "째 새 " + (up ? "고점" : "저점") + "이 없다(" + a.quiet.n + "거래일).");
   }
   sum.push("같은 기간 " + bn + " " + pct(a.mret) + " · 시장 민감도 β " + a.beta.toFixed(2) + " → 시장만 따랐다면 " + pct(a.mkt) + ". 실제 " + pct(a.ret) +
@@ -474,6 +476,19 @@ function build(stock, a, extra) {
     const keep = new Set(list.map((s) => path.basename(fileOf(s.ticker))));
     fs.readdirSync(DIR).forEach((f) => { if (/\.json$/.test(f) && !keep.has(f)) { fs.unlinkSync(path.join(DIR, f)); removed++; } });
   }
+  // 전 종목 요약(data/trend-summary.js) — 목록에서 종목마다 추세를 바로 보이고(추세추종용), AI 질문 맥락에 넣는다. 지금 폴더의 파일 전체로 다시 쓴다
+  const SUM = {};
+  let sumAsOf = "";
+  fs.readdirSync(DIR).filter((f) => /\.json$/.test(f)).forEach((f) => {
+    let j = null;
+    try { j = JSON.parse(fs.readFileSync(path.join(DIR, f), "utf8")); } catch (_e) { return; }
+    if (!j || !j.t || !j.cls) return;
+    if (j.asOf > sumAsOf) sumAsOf = j.asOf;
+    SUM[j.t] = { c: j.c, cls: j.cls, from: j.from, kind: j.kind, ret: j.ret, conf: j.conf ? { d: j.conf.d, ret: j.conf.ret } : null,
+      flip: j.flip ? { px: j.flip.px, pct: j.flip.pct } : null, quiet: j.quiet || null, asOf: j.asOf };
+  });
+  fs.writeFileSync(path.join(ROOT, "data", "trend-summary.js"), "// update-trend.js 가 쓴다 — 종목별 현재 추세 요약(목록·AI 질문용). 손으로 고치지 않는다.\n" +
+    "window.TREND_SUMMARY = " + JSON.stringify({ asOf: sumAsOf, builtAt: new Date().toISOString().slice(0, 19) + "Z", items: SUM }) + ";\n");
   const miss = [...need].filter((k) => !bench[k]).map((k) => BN[k]);
   console.log("data/trend 갱신: " + wrote + "/" + list.length + "종목 (이전 유지 " + kept + " · 판정 불가 " + skipped + " · 설명 이어붙임 " + aiKept +
     (short ? " · 1년 일봉으로 대신 " + short : "") + (removed ? " · 정리 " + removed : "") + ")" + (miss.length ? " · 지수 조회 실패: " + miss.join("·") : "") +

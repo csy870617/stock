@@ -57,7 +57,8 @@ function ols(y, x) {
 const bandOf = (sigD, n, lo, hi) => clamp(sigD * Math.sqrt(Math.max(1, n)) / 3, lo, hi);
 const clsOf = (ret, band) => (ret >= band ? "상승" : ret <= -band ? "하락" : "보합");
 
-// ── 1) 지그재그 — 로그 가격 y 에서 H(로그) 넘게 되돌린 고점·저점. → { piv:[{i,k:'H'|'L'}], dir: 지금 다리 방향(1·-1·0), ext: 지금 다리의 극점 }
+// ── 1) 지그재그 — 로그 가격 y 에서 H(로그) 넘게 되돌린 고점·저점. → { piv:[{i,k:'H'|'L',c}], dir: 지금 다리 방향(1·-1·0), ext: 지금 다리의 극점 }
+//   c = 그 전환점이 확정된 날(전환점에서 H 넘게 움직인 첫날 — 추세추종 규칙이 판정을 바꾸는 날)
 function zigzag(y, H) {
   const n = y.length, piv = [];
   let hiI = 0, loI = 0, t = 1, dir = 0, ext = 0;
@@ -65,8 +66,8 @@ function zigzag(y, H) {
     if (y[t] > y[hiI]) hiI = t;
     if (y[t] < y[loI]) loI = t;
     if (y[hiI] - y[loI] >= H) {
-      if (hiI < loI) { piv.push({ i: hiI, k: "H" }); dir = -1; ext = loI; }
-      else { piv.push({ i: loI, k: "L" }); dir = 1; ext = hiI; }
+      if (hiI < loI) { piv.push({ i: hiI, k: "H", c: t }); dir = -1; ext = loI; }
+      else { piv.push({ i: loI, k: "L", c: t }); dir = 1; ext = hiI; }
       break;
     }
   }
@@ -74,17 +75,17 @@ function zigzag(y, H) {
   for (t = t + 1; t < n; t++) {
     if (dir > 0) {
       if (y[t] > y[ext]) ext = t;
-      else if (y[ext] - y[t] >= H) { piv.push({ i: ext, k: "H" }); dir = -1; ext = t; }
+      else if (y[ext] - y[t] >= H) { piv.push({ i: ext, k: "H", c: t }); dir = -1; ext = t; }
     } else {
       if (y[t] < y[ext]) ext = t;
-      else if (y[t] - y[ext] >= H) { piv.push({ i: ext, k: "L" }); dir = 1; ext = t; }
+      else if (y[t] - y[ext] >= H) { piv.push({ i: ext, k: "L", c: t }); dir = 1; ext = t; }
     }
   }
   return { piv, dir, ext };
 }
 
 // ── 2) 지금 추세 — 지그재그의 마지막 다리. 시작 = 마지막 전환점, 직전 추세 = 그 앞 다리 ──
-//   → { cls, s(시작 인덱스), kind(시작점 종류: low 저점부터 · high 고점부터 · window 창 시작부터), prev:{cls,s,e,kind}|null }
+//   → { cls, s(시작 인덱스), kind(시작점 종류: low 저점부터 · high 고점부터 · window 창 시작부터), conf(추세가 확정된 날 인덱스), prev:{cls,s,e,kind}|null }
 const WORD = (d) => (d > 0 ? "상승" : "하락");
 function regime(y, H) {
   const z = zigzag(y, H);
@@ -92,7 +93,7 @@ function regime(y, H) {
   const P = z.piv[z.piv.length - 1];
   const prev = z.piv.length >= 2 ? { cls: WORD(-z.dir), s: z.piv[z.piv.length - 2].i, e: P.i, kind: z.dir > 0 ? "high" : "low" }
     : { cls: WORD(-z.dir), s: 0, e: P.i, kind: "window" };
-  return { cls: WORD(z.dir), s: P.i, kind: z.dir > 0 ? "low" : "high", prev };
+  return { cls: WORD(z.dir), s: P.i, kind: z.dir > 0 ? "low" : "high", conf: P.c, prev };
 }
 
 // ── 3) 로그 가격 꺾은선 근사 — 구간 끝점은 실제 종가, 오차 제곱합 최소. → 끝점 인덱스 배열 ──
@@ -228,6 +229,13 @@ function analyze(bars, bench, opts) {
   // 추세 방향으로 새 극점이 없는 기간(2026-10-25 사용자 요청 '보합 대신 N개월째 새 고점 없음 표시') — 마지막 극점 날짜와 그 뒤 거래일 수
   const ext = rg.cls === "상승" ? hi : rg.cls === "하락" ? lo : -1;
   const quiet = ext >= 0 && last - ext >= QUIET ? { n: last - ext, d: ymd(bars[ext].t) } : null;
+  // 추세추종에 쓰는 규칙의 사실(2026-10-25 사용자 '추세추종으로 투자가 가능하도록'): 확인 = 전환점에서 h 를 넘겨 추세가 확정된 날(그 뒤 수익),
+  //   전환 기준 = 종가가 그 아래(상승)·위(하락)로 마감하면 판정이 바뀌는 가격. 지그재그는 로그 H = ln(1+h) 로 되돌림을 재므로
+  //   상승 추세는 고점 ÷ (1+h) 아래(고점 대비 −h/(1+h)), 하락 추세는 저점 × (1+h) 위에서 바뀐다.
+  const sig6 = (v) => (v == null || !isFinite(v) ? null : +v.toPrecision(6));
+  const conf = rg.conf != null && rg.conf <= last ? { d: ymd(bars[rg.conf].t), c: bars[rg.conf].c, ret: r4(now.c / bars[rg.conf].c - 1), n: last - rg.conf } : null;
+  const flipPx = rg.cls === "상승" ? bars[hi].c / (1 + h) : rg.cls === "하락" ? bars[lo].c * (1 + h) : null;
+  const flip = flipPx ? { px: sig6(flipPx), pct: r4(flipPx / now.c - 1), dn: r4(1 - 1 / (1 + h)), up: r4(h) } : null;
 
   // 핵심 날짜(종목 고유) — 초과수익이 큰 날, 같은 방향으로 이어진 날은 최대 3일로 묶는다
   const volMed = median(days.map((d) => d.v));
@@ -301,7 +309,7 @@ function analyze(bars, bench, opts) {
     rel, relRaw: r4(relRaw), relBand: REL_BAND,
     hi: { d: ymd(bars[hi].t), c: bars[hi].c }, lo: { d: ymd(bars[lo].t), c: bars[lo].c },
     fromHi: r4(now.c / bars[hi].c - 1), fromLo: r4(now.c / bars[lo].c - 1),
-    mdd: mddFrom ? { v: r4(mdd), from: ymd(mddFrom), to: ymd(mddTo) } : null, quiet,
+    mdd: mddFrom ? { v: r4(mdd), from: ymd(mddFrom), to: ymd(mddTo) } : null, quiet, conf, flip,
     box, prev: pv,
     att: { mkt: r4(att.mkt), up: r4(att.up), upN: att.upN, down: r4(att.down), downN: att.downN, rest: r4(att.rest), spec: r4(logSpec), tot: r4(logTot) },
     keyShare: r4(keyShare), character, upVol: r4(upVol), volTrend: r2(volTrend),

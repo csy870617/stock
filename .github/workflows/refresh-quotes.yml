@@ -234,14 +234,14 @@ jobs:
       - name: Commit & push if changed
         id: commit
         run: |
-          if git diff --quiet -- data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/events.js data/fundamentals.js data/liquidity-auto.js data/watch-candidates.js data/discovery-candidates.js data/candidates.js data/coverage-status.js data/tickers.js data/consensus.js data/reco-ops.json data/chart data/trend data/liquidity.js data/index-notes.js data/candidate-notes.json data/news.js data/ai-status.js data/shadow.json data/perf.json data/close-runs.json; then
+          if git diff --quiet -- data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/events.js data/fundamentals.js data/liquidity-auto.js data/watch-candidates.js data/discovery-candidates.js data/candidates.js data/coverage-status.js data/tickers.js data/consensus.js data/reco-ops.json data/chart data/trend data/trend-summary.js data/liquidity.js data/index-notes.js data/candidate-notes.json data/news.js data/ai-status.js data/shadow.json data/perf.json data/close-runs.json; then
             echo "변화 없음 — 커밋 생략"
             echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/events.js data/fundamentals.js data/liquidity-auto.js data/watch-candidates.js data/discovery-candidates.js data/candidates.js data/coverage-status.js data/tickers.js data/consensus.js data/reco-ops.json data/chart data/trend data/liquidity.js data/index-notes.js data/candidate-notes.json data/news.js data/ai-status.js data/shadow.json data/perf.json data/close-runs.json
+          git add data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/events.js data/fundamentals.js data/liquidity-auto.js data/watch-candidates.js data/discovery-candidates.js data/candidates.js data/coverage-status.js data/tickers.js data/consensus.js data/reco-ops.json data/chart data/trend data/trend-summary.js data/liquidity.js data/index-notes.js data/candidate-notes.json data/news.js data/ai-status.js data/shadow.json data/perf.json data/close-runs.json
           git commit -m "매일 데이터 갱신 (자동) — 시세·기준일·스냅샷 (update-quotes + daily-maintenance)"
           # 다른 자동 커밋(LLM 재평가 Routine 등)과 경합해 push 가 거부될 수 있으므로,
           # 거부되면 원격 변경을 rebase 로 얹어 1회 재시도한다(그날 갱신이 조용히 유실되지 않도록).
@@ -272,7 +272,7 @@ jobs:
               node scripts/perf-track.js || true
               node scripts/check-defects.js || true
               node scripts/coverage.js --emit || true
-              git add data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/events.js data/fundamentals.js data/liquidity-auto.js data/watch-candidates.js data/discovery-candidates.js data/candidates.js data/coverage-status.js data/tickers.js data/consensus.js data/reco-ops.json data/chart data/trend data/liquidity.js data/index-notes.js data/candidate-notes.json data/news.js data/ai-status.js data/shadow.json data/perf.json data/close-runs.json
+              git add data/quotes.js data/recommendations.js data/history.js data/tp-history.json data/indices.js data/stock-ta.js data/events.js data/fundamentals.js data/liquidity-auto.js data/watch-candidates.js data/discovery-candidates.js data/candidates.js data/coverage-status.js data/tickers.js data/consensus.js data/reco-ops.json data/chart data/trend data/trend-summary.js data/liquidity.js data/index-notes.js data/candidate-notes.json data/news.js data/ai-status.js data/shadow.json data/perf.json data/close-runs.json
               git diff --cached --quiet || git commit -m "매일 데이터 갱신 (자동) — 시세·기준일·스냅샷 (update-quotes + daily-maintenance)"
             fi
             # 원격 변경과 합쳐진 결과도 커밋 전과 같은 게이트를 통과해야 push 한다

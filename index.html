@@ -281,6 +281,7 @@ svg { display: block; }
 .g-s  { background: var(--down-soft); color: var(--down); }
 .g-ss { background: var(--down-mid); color: var(--down); font-weight: 800; }
 .g-x  { background: transparent; color: var(--mut); box-shadow: inset 0 0 0 1px var(--line); }
+.sg i.g-tr { margin-left: 4px; }   /* '추' — 현재 추세(추세추종 판정), 단·중·장과 한 칸 띄운다 */
 .t-sb, .t-b { color: var(--up); } .t-n, .t-x { color: var(--ink2); } .t-s, .t-ss { color: var(--down); }
 
 /* ── 칩(주제·티어·기간) ── */
@@ -1145,6 +1146,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
 <script src="data/ai-status.js"></script>
 <script src="data/quotes.js"></script>
 <script src="data/history.js"></script>
+<script src="data/trend-summary.js"></script>
 <!-- 티커 사전(~360KB)은 관심종목 '검색' 입력 때만 쓰이므로 defer 로 빼 초기 렌더를 막지 않는다
      (아래 메인 스크립트는 인라인이라 defer 보다 먼저 실행되지만, TICKER_DICT 는 입력 이벤트에서만 참조) -->
 <script src="data/tickers.js" defer></script>
@@ -2685,14 +2687,35 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     return mvDate(k.s, ref) + (k.n > 1 ? "~" + mdOf(k.e) : "(" + w + ")");
   }
   function mvTip(m) {
-    return "추세는 되돌림으로 나눕니다 — 마지막 고점(하락 추세면 저점)에서 이 종목 기준 " + Math.round((m.h || 0) * 100) + "% 넘게 되돌리면 추세가 바뀐 것으로 봅니다" +
-      "(일간 변동성 × 10 = 약 100거래일 움직임의 1표준편차, 10~35%로 묶음). 그보다 작은 되돌림은 추세 속 조정·반등이라, 몇 달째 새 고점이 없어도 그만큼 밀리지 않았다면 상승 추세입니다" +
+    var up = Math.round((m.h || 0) * 1000) / 10, dn = Math.round((m.flip ? m.flip.dn : (m.h || 0) / (1 + (m.h || 0))) * 1000) / 10;
+    return "추세는 되돌림으로 나눕니다 — 상승 추세는 추세 중 고점보다 종가가 " + dn + "% 넘게 내려가면, 하락 추세는 추세 중 저점보다 " + up + "% 넘게 올라가면 바뀝니다" +
+      "(이 종목 기준 — 일간 변동성 × 10 = 약 100거래일 움직임의 1표준편차, 10~35%로 묶음. 내릴 때가 조금 작은 것은 같은 비율의 되돌림을 로그로 재기 때문). " +
+      "그 가격이 '전환 기준'이고, 전환점에서 그만큼 움직여 추세가 확정된 날이 '확인'입니다. 그보다 작은 되돌림은 추세 속 조정·반등이라, 몇 달째 새 고점이 없어도 그만큼 밀리지 않았다면 상승 추세입니다" +
       "(2019~2026 한·미 955종목 비교에서 '3개월 정체 = 보합' 규칙을 둔 방식보다 판정이 덜 뒤집혔습니다). 추세 시작 = 그 전환점이라 기간은 종목마다 다릅니다. " +
       "추세 중 고점(하락 추세면 저점) 뒤 60거래일(약 3개월) 넘게 새 고점이 없으면 'N개월째 새 고점 없음'을 함께 보입니다 — 사실 표시일 뿐 추세가 끝났다는 판정이 아닙니다" +
       "(같은 비교에서 이런 정체 뒤에도 원래 방향으로 움직인 경우가 조금 더 많았습니다, 약 54%). '시장보다'는 같은 기간 지수와의 차이가 ±5%를 넘었는지로 봅니다. " +
       "이미 일어난 움직임의 정리이며 앞으로의 방향을 예측하지 않습니다.";
   }
   function mvChip(m) { return m.cls === "보합" ? "보합(박스권)" : m.cls + " 추세"; }
+  // 추세추종에 쓰는 규칙의 사실(2026-10-25 사용자 '추세추종으로 투자가 가능하도록') — 확인: 전환점에서 기준만큼 움직여 추세가 확정된 날과 그 뒤 수익,
+  //   전환 기준: 종가가 그 아래(상승)·위(하락)로 마감하면 판정이 바뀌는 가격. 매매 권유가 아니라 판정 규칙을 그대로 보인다
+  function mvConfText(m) {
+    var c = m.conf, f = m.flip; if (!c || !f) return "";
+    var up = m.cls === "상승";
+    return "<b>" + esc(mvDate(c.d, m.to)) + "</b> " + (up ? "저점보다 " + esc(mvPct(f.up)) + " 넘게 오른 날" : "고점보다 " + esc(mvPct(-f.dn)) + " 넘게 내린 날") +
+      ' <span class="mv-pm">· 그 뒤 ' + mvSg(c.ret) + "</span>";
+  }
+  function mvFlipText(m) {
+    var f = m.flip; if (!f) return "";
+    var up = m.cls === "상승";
+    return "종가 <b>" + esc(fmtPrice(f.px, m.c)) + "</b> " + (up ? "아래로 마감하면 하락 추세" : "위로 마감하면 상승 추세") + ' <span class="mv-pm">· 지금보다 ' + mvSg(f.pct) + "</span>";
+  }
+  // 추세추종 검증 요약(scripts/research/trend-follow — 사전 등록 기준 통과, 2019~2026 956종목)
+  var MV_TF_TIP = "2019~2026년 한·미 956종목에서 이 판정대로 상승 추세일 때만 들고 하락 추세면 현금으로 두었다면(다음 날 종가에 사고팔기·거래 비용·배당 포함) — " +
+    "종목마다 같은 금액으로 나눠 적용한 경우: 최대 낙폭 한국 −40%→−15%·미국 −38%→−16%, 연수익 29%→19%·22%→13%, 위험 대비 수익(샤프) 1.12→1.39·1.06→1.14. " +
+    "큰 하락은 크게 줄었지만 강세장에서는 늦게 타고 일찍 내려 수익이 줄었고, 샤프가 나아진 것은 통계적으로 확정되지 않았습니다(최근 3년 반은 거의 같음). " +
+    "종목 하나만 놓고 보면 낙폭이 준 경우가 74%였지만 수익이 높아진 경우는 27% — 거래의 56%가 작게 지고(평균 −12%) 소수의 긴 추세가 크게 벌었습니다(평균 +50%, 평균 보유 약 5개월). " +
+    "과거에 이 방식이 잘 맞던 종목이 앞으로도 잘 맞는다는 근거는 없었습니다. 지금 살아남은 대형주 표본이라 그냥 보유에 유리한 쪽으로 기울어 있습니다.";
   // 추세 방향으로 60거래일 넘게 새 극점이 없으면 'N개월째 새 고점(저점) 없음' — 사실 표시, 판정은 그대로(2026-10-25 사용자 '보합 대신')
   function mvQuiet(m) { return m.quiet && (m.cls === "상승" || m.cls === "하락") ? mvDur(m.quiet.d, m.to) + "째 새 " + (m.cls === "상승" ? "고점" : "저점") + " 없음" : ""; }
   // 분석 요약 — 숫자·공시·수급·기사로 본 것을 한 줄씩(2026-10-25 사용자 '분석된 내용 자체를 간단하게 정리해서'):
@@ -2749,6 +2772,8 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     if (hl) rows.push(["원인", esc(hl) + " " + MV_AI_TAG, "mv-why1"]);
     rows.push(["시장 대비", mvVsText(m)]);
     var now = mvNowText(m); if (now) rows.push(["지금", now]);
+    var cf = mvConfText(m); if (cf) rows.push(["확인", cf]);
+    var fx = mvFlipText(m); if (fx) rows.push(["전환 기준", fx]);
     if (pts.length) rows.push(["주요 날짜", pts.map(function (p) {
       return '<div class="mv-pl"><span class="mv-n">' + p.n + '</span><span><b class="mv-pd">' + esc(mvDayLabel(p.k, to)) + "</b> " +
         '<b class="' + (p.k.ret >= 0 ? "up" : "down") + '">' + esc(mvPct(p.k.ret)) + "</b> " + mvPointText(m, p) + "</span></div>";
@@ -2764,6 +2789,8 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     var src = [];
     if (ai) (ai.legs || []).forEach(function (x) { if (mvOk(x)) x.src.forEach(function (u) { if (src.indexOf(u) < 0) src.push(u); }); });
     return head + kv + chart + '<p class="mv-foot">이미 일어난 움직임의 정리이며 앞으로의 방향을 예측하지 않습니다. ' +
+      '이 판정대로 상승 추세일 때만 들고 여러 종목에 나눠 적용했다면 지난 7년 큰 하락은 크게 줄었지만 수익도 줄었습니다' +
+      '<i class="kv-i mv-i" data-basis="' + esc(MV_TF_TIP) + '" role="button" tabindex="0" aria-label="추세추종 검증">' + ICON.info + "</i>. " +
       (ai ? "원인은 " + esc(mdOf(String(ai.at || "").slice(0, 10))) + " 루틴이 기사로 확인한 것만 적었습니다." + (src.length ? " 근거:" + mvSrc(src) : "")
         : "기사로 확인한 원인은 매일 루틴이 차례로 채웁니다.") + "</p>";
   }
@@ -3246,12 +3273,15 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     renderReco();
   }
   // 목록 위 '단·중·장' 안내 — 칸의 뜻과 색을 한 번에(누르면 설명)
-  var SIG_HELP = "목록의 세 칸은 단기(일봉)·중기(주봉)·장기(월봉) 추세 상태입니다. 빨강 계열은 상승세, 파랑 계열은 하락세, 회색은 횡보이고 바탕이 진하면 '강한'입니다.\n\n" +
-    "지금 차트의 모양(이동평균선·일목균형표·매물대)을 요약한 것이지 매수·매도 시점이 아닙니다 — 2019~2026년 한·미 995종목(30만 건)에서 강한 하락세부터 강한 상승세까지 다섯 상태의 이후 1개월 시장 대비 수익 차이가 0.3%p 안, 3개월 안에 −10% 이상 빠진 비율이 42~44%로 같았습니다. " +
-    "52주 고점 근처의 강한 상승세도 이후 수익·낙폭이 다른 때와 같았습니다(고점이라서 더 위험하지도, 더 좋지도 않았다).";
+  var SIG_HELP = "목록의 앞 세 칸은 단기(일봉)·중기(주봉)·장기(월봉) 추세 상태입니다. 빨강 계열은 상승세, 파랑 계열은 하락세, 회색은 횡보이고 바탕이 진하면 '강한'입니다.\n\n" +
+    "앞 세 칸은 지금 차트의 모양(이동평균선·일목균형표·매물대)을 요약한 것이지 매수·매도 시점이 아닙니다 — 2019~2026년 한·미 995종목(30만 건)에서 강한 하락세부터 강한 상승세까지 다섯 상태의 이후 1개월 시장 대비 수익 차이가 0.3%p 안, 3개월 안에 −10% 이상 빠진 비율이 42~44%로 같았습니다. " +
+    "52주 고점 근처의 강한 상승세도 이후 수익·낙폭이 다른 때와 같았습니다(고점이라서 더 위험하지도, 더 좋지도 않았다).\n\n" +
+    "네 번째 칸 '추'는 종목 상세 '현재 추세'의 판정입니다(빨강 상승 추세·파랑 하락 추세) — 그 종목 변동성 기준으로 의미 있게 되돌릴 때만 바뀌어 단·중·장보다 느리고 덜 뒤집힙니다. " +
+    "2019~2026년 한·미 956종목에서 이 판정대로 상승일 때만 들고 여러 종목에 나눠 적용했다면 최대 낙폭이 한국 −40%→−15%·미국 −38%→−16% 로 줄었고, 연수익도 29%→19%·22%→13% 로 줄었습니다. " +
+    "전환 기준가와 확인일은 종목 상세 '추세'에 있습니다.";
   (function () {
     var b = document.getElementById("sigHelp");
-    b.innerHTML = sigStrip({ sigShort: "적극매수", sigMid: "중립", sigLong: "매도" }).replace(/ title="[^"]*"/g, "").replace(/ aria-label="[^"]*"/, ' aria-hidden="true"') +
+    b.innerHTML = sigStrip({ sigShort: "적극매수", sigMid: "중립", sigLong: "매도" }).replace(/<\/span>$/, '<i class="g-b g-tr">추</i></span>').replace(/ title="[^"]*"/g, "").replace(/ aria-label="[^"]*"/, ' aria-hidden="true"') +
       ' 신호 보는 법 <i class="kv-i">' + ICON.info + "</i>";
     b.setAttribute("data-basis", SIG_HELP);
   })();
@@ -3381,12 +3411,28 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
 
   // ── 목록 행 ──
   // 단·중·장 신호 3칸(글자 + 색) — 좁은 화면에서도 세 기간이 한 번에 들어간다
-  function sigStrip(n) {
-    var parts = [["단", n.sigShort], ["중", n.sigMid], ["장", n.sigLong]];
-    if (!parts.some(function (p) { return p[1]; })) return '<span class="sg sg-na" title="기술 신호 없음">–</span>';
-    return '<span class="sg" aria-label="' + esc(parts.map(function (p) { return p[0] + "기 " + (p[1] ? sigWord(p[1]) : "없음"); }).join(", ")) + '">' + parts.map(function (p) {
+  // t(티커)를 주면 네 번째 칸 '추' — 현재 추세(data/trend-summary.js, 추세추종 판정: 빨강 상승·파랑 하락)
+  function sigStrip(n, t) {
+    var parts = [["단", n.sigShort], ["중", n.sigMid], ["장", n.sigLong]], tc = t ? trendCell(t) : null;
+    if (!parts.some(function (p) { return p[1]; }) && !tc) return '<span class="sg sg-na" title="기술 신호 없음">–</span>';
+    return '<span class="sg" aria-label="' + esc(parts.map(function (p) { return p[0] + "기 " + (p[1] ? sigWord(p[1]) : "없음"); }).join(", ") + (tc ? ", " + tc.label : "")) + '">' + parts.map(function (p) {
       return '<i class="g-' + (SIG_CLS[p[1]] || "x") + '" title="' + esc(p[0] + "기 " + (p[1] ? sigWord(p[1]) : "없음")) + '">' + p[0] + "</i>";
-    }).join("") + "</span>";
+    }).join("") + (tc ? tc.html : "") + "</span>";
+  }
+  function trendOf(t) { var T = window.TREND_SUMMARY; return T && T.items ? T.items[t] || null : null; }
+  // AI 질문 맥락용 한 줄
+  function trendLine(t, c) {
+    var m = trendOf(t); if (!m) return "";
+    var q = m.quiet && (m.cls === "상승" || m.cls === "하락") ? ", " + mvDur(m.quiet.d, m.asOf) + "째 새 " + (m.cls === "상승" ? "고점" : "저점") + " 없음(" + m.quiet.d + " 이후)" : "";
+    return "현재 추세(되돌림 기준 판정 — 이미 일어난 움직임, 예측 아님): " + m.cls + " 추세 — " + m.from + (m.kind === "low" ? " 저점" : m.kind === "high" ? " 고점" : "") + "부터 " + pctTxt(m.ret * 100) +
+      (m.conf ? ", " + m.conf.d + " 확인 뒤 " + pctTxt(m.conf.ret * 100) : "") +
+      (m.flip ? ", 전환 기준가 " + fmtPrice(m.flip.px, c) + "(지금보다 " + pctTxt(m.flip.pct * 100) + " — 종가가 그 " + (m.cls === "상승" ? "아래로 마감하면 하락" : "위로 마감하면 상승") + " 추세로 바뀜)" : "") + q;
+  }
+  function trendCell(t) {
+    var m = trendOf(t);
+    if (!m || (m.cls !== "상승" && m.cls !== "하락")) return { label: "현재 추세 없음", html: '<i class="g-x g-tr" title="현재 추세 없음">추</i>' };
+    var lb = "현재 추세 " + m.cls + (m.conf ? " · " + m.conf.d + " 확인" : "") + (m.flip ? " · 전환 기준까지 " + fmtPct(m.flip.pct * 100) : "");
+    return { label: lb, html: '<i class="' + (m.cls === "상승" ? "g-b" : "g-s") + ' g-tr" title="' + esc(lb) + '">추</i>' };
   }
   // 추천·편성 종목 한 줄 — o = {c, k(개인 목록 키), pkey(순서 저장 키), edit(편집 모드), noTag(티어 소제목 아래라 티어 표시 생략)}
   // ── 결격 점검·후보 종목(data/candidates.js — scripts/check-defects.js 가 매일 생성, 세션 판정은 candidate-notes.json) ──
@@ -3448,7 +3494,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       (o.edit ? '<span class="r-grip" title="끌어서 순서 바꾸기">' + ICON.grip + "</span>" : "") +
       '<div class="r-l"><div class="r-nm"><span class="r-name">' + esc(s.name) + "</span>" + flags + "</div>" +
         '<div class="r-sub">' + tag + "<span>" + sub.join(" · ") + "</span></div></div>" +
-      sigStrip(s.techNote || {}) +
+      sigStrip(s.techNote || {}, s.ticker) +
       '<div class="r-r"><div class="r-px">' + pxText(e.price, c) + (e.live ? '<i class="live-dot" title="장중 시세(지연 가능)"></i>' : "") + "</div>" + chgHtml(e.chg, "r-ch") + "</div>" +
       (o.edit && o.k ? '<button class="r-del" type="button" data-wl="' + esc(o.k + "|" + c + "|" + s.ticker) + '" aria-label="' + esc(plist(o.k).label + " 목록에서 빼기") + '">' + ICON.x + "</button>" : "") +
     "</div>";
@@ -5084,6 +5130,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       line("투자 포인트", s.thesis), line("밸류 해석", s.valueNote), (s.risks || []).length ? "리스크: " + s.risks.join(" / ") : "", line("실적 메모", s.earnings),
       (n.sigShort || n.short) ? "기술(엔진 등급, 예측 아님): 단기 " + (n.sigShort || "–") + " — " + (n.short || "") + " | 중기 " + (n.sigMid || "–") + " — " + (n.mid || "") + " | 장기 " + (n.sigLong || "–") + " — " + (n.long || "") : "",
       ta.risk ? "60일 변동성 " + ta.risk.vol + "% · 1년 최대낙폭 " + ta.risk.mdd + "%" : "",
+      trendLine(t, c),
       ta.outlook && ta.outlook.m1 ? "다음 1개월 범위(방향 중립 통계): 80% " + fmtPrice(ta.outlook.m1[0], c) + "~" + fmtPrice(ta.outlook.m1[1], c) + (ta.outlook.c1 ? " · 50% " + fmtPrice(ta.outlook.c1[0], c) + "~" + fmtPrice(ta.outlook.c1[1], c) : "") : "",
       ev.next && ev.next.date ? "다음 실적 발표: " + ev.next.date + (ev.next.title ? " (" + ev.next.title + ")" : "") : "",
       ev.flow ? "20일 수급(거래량 대비): 외국인 " + pctTxt(ev.flow.f20 * 100) + " · 기관 " + pctTxt(ev.flow.o20 * 100) + (ev.flow.hot ? " · 수급 과열(이후 지수 대비 약세가 검증된 경고)" : "") : "",
