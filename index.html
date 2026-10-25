@@ -1044,6 +1044,10 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       <div class="list" id="picksList" data-ctx="picks"></div>
       <button class="pk-rec" type="button" id="picksRec" hidden></button>
     </section>
+    <section class="blk blk-list" id="quadBox" style="display:none">
+      <div class="blk-h"><h2>쿼드 크라운</h2><button class="ic-tip" type="button" id="quadTip" aria-label="쿼드 크라운 기준 보기"></button><span class="blk-sub" id="quadSub"></span></div>
+      <div class="list" id="quadList" data-ctx="quad"></div>
+    </section>
     <section class="blk blk-list" id="trendBox" style="display:none">
       <div class="blk-h"><h2>최근 추세 전환</h2><button class="ic-tip" type="button" id="trendTip" aria-label="추세 전환 기준 보기"></button><span class="blk-sub" id="trendSub"></span></div>
       <div class="list" id="trendList" data-ctx="trend"></div>
@@ -3618,6 +3622,61 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     e.stopPropagation();
     tcAll = !tcAll; renderTrendChanges();
   });
+  // ── 홈: 쿼드 크라운 ──
+  //   기술 신호 단기·중기·장기가 모두 상승세(강한 상승세 포함 — 엔진 '매수'·'적극매수')이고 현재 추세(data/trend-summary.js)도 상승인 종목 —
+  //   목록 행의 네 칸(단·중·장·추)이 모두 빨강인 종목이다. 2026-10-25 사용자 '홈에 기술 단기·중기·장기 전부 상승에 추세까지 상승인 종목을 모아서, 제목은 쿼드 크라운'.
+  //   편성·관심·보유 중 종목당 한 줄(편성은 중복 자리를 뺀 대표), 순서는 순위가 아니라 편성(주제 순서·티어) → 관심 → 보유. 처음엔 5개(더 보기로 전부)
+  var QC_SHOW = 5, qcAll = false;
+  var QC_UP = { "적극매수": 1, "매수": 1 };
+  var QC_TIP = "기술 신호 단기(일봉)·중기(주봉)·장기(월봉)가 모두 상승세(강한 상승세 포함)이고 '현재 추세'도 상승인 종목입니다(추천 편성·관심·보유). 목록의 네 칸이 모두 빨강인 종목을 모은 것이고, 순서는 순위가 아니라 편성 → 관심 → 보유입니다.\n\n" +
+    "네 가지 모두 지금까지의 움직임을 요약한 것이라 앞으로 오른다는 뜻은 아닙니다. 2019~2026년 한·미 995종목 검증에서 기술 등급(강한 상승세~강한 하락세)은 이후 1·3개월 수익과 낙폭을 가르지 못했습니다. " +
+    TS_NOTE + " 매매 권유가 아닙니다.";
+  function quadRows(cc) {
+    var best = bestByTicker(cc), seen = {}, out = [];
+    var take = function (s) {
+      if (!s || seen[s.ticker]) return;
+      var n = s.techNote || {}, m = trendOf(s.ticker);
+      if (!QC_UP[n.sigShort] || !QC_UP[n.sigMid] || !QC_UP[n.sigLong] || !m || m.c !== cc || m.cls !== "상승") return;
+      seen[s.ticker] = 1; out.push({ s: s, m: m });
+    };
+    Object.keys(best).map(function (t) { return best[t]; })
+      .sort(function (a, b) { return (THEME_ORDER.indexOf(a.theme) - THEME_ORDER.indexOf(b.theme)) || ((a.tier || 9) - (b.tier || 9)) || byName(a, b); })
+      .forEach(take);
+    ["watch", "hold"].forEach(function (k) { (D[cc] || []).filter(function (s) { return s.theme === k; }).sort(byName).forEach(take); });
+    return out;
+  }
+  function quadRow(r, cc) {
+    var s = r.s, m = r.m, e = effective(s);
+    var th = isPersonal(s.theme) ? plist(s.theme).label : themeMeta(s.theme).label + " · T" + s.tier;
+    return '<div class="row qc"' + openAttrs(cc, s.ticker, s.theme) + ">" +
+      '<div class="r-l"><div class="r-nm"><span class="r-name">' + esc(s.name) + '</span><span class="pk-th">' + esc(th) + "</span></div>" +
+        '<div class="r-sub"><span>' + esc(s.ticker) + " · 추세 " + esc(mdOf(m.from)) + "부터 " + signedSpan(m.ret, fmtPct(m.ret * 100)) + "</span></div></div>" +
+      sigStrip(s.techNote || {}, s.ticker) +
+      '<div class="r-r"><div class="r-px">' + pxText(e.price, cc) + (e.live ? '<i class="live-dot" title="장중 시세(지연 가능)"></i>' : "") + "</div>" + chgHtml(e.chg, "r-ch") + "</div>" +
+    "</div>";
+  }
+  function renderQuad() {
+    var box = document.getElementById("quadBox");
+    if (!box || window.__pastActive) return;
+    if (!window.TREND_SUMMARY) { box.style.display = "none"; return; }
+    var cc = state.country, rows = quadRows(cc), asOf = window.STOCK_TA && window.STOCK_TA.asOf;
+    box.style.display = "";
+    var tip = document.getElementById("quadTip");
+    tip.innerHTML = ICON.info; tip.setAttribute("data-basis", QC_TIP);
+    document.getElementById("quadSub").textContent = rows.length + "종목" + (asOf ? " · " + mdOf(asOf) + " 종가 기준" : "");
+    var list = document.getElementById("quadList");
+    if (!rows.length) { list.innerHTML = '<div class="empty">지금 네 칸이 모두 상승인 종목이 없습니다.</div>'; return; }
+    var shown = qcAll ? rows : rows.slice(0, QC_SHOW);
+    list.innerHTML = shown.map(function (r) { return quadRow(r, cc); }).join("") +
+      (rows.length > QC_SHOW ? '<button class="cand-more tc-more" type="button" id="qcMore">' + (qcAll ? "접기" : (rows.length - QC_SHOW) + "개 더 보기") + "</button>" : "");
+    ensureLive(shown.map(function (r) { return r.s; }), refreshLive);
+    markActiveRow();
+  }
+  document.getElementById("quadList").addEventListener("click", function (e) {
+    if (!e.target.closest("#qcMore")) return;
+    e.stopPropagation();
+    qcAll = !qcAll; renderQuad();
+  });
   // 국가별 상위 3 폴백(큐레이션 데이터 없을 때) — 그 국가 정식 추천 중 종합점수 상위 3
   // 같은 티커가 두 주제에 있으면(예: 하나금융 — 저평가 T1·우량 T3) 가장 높은 티어의 편성을 대표로 쓴다(관심·보유 제외)
   // 같은 종목이 여러 주제에 있으면 대표 하나 — check-defects 의 중복 판정이 '남길 곳'으로 정한 주제를 따른다
@@ -4132,6 +4191,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       if (state.tab === "reco") renderReco();
       else if (state.tab === "mine") renderMine();
       renderTopPicks();   // 성과 탭은 매일 계산값(perf.json)이라 실시간 시세로 다시 그리지 않는다
+      renderQuad();
     }
     if (SH.open) renderSheet(true);
   }
@@ -4490,7 +4550,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   // ── 탭·국가 전환 ──
   var tabScroll = {};
   function renderTab() {
-    if (state.tab === "home") { renderTopPicks(); renderTrendChanges(); }
+    if (state.tab === "home") { renderTopPicks(); renderQuad(); renderTrendChanges(); }
     else if (state.tab === "reco") renderReco();
     else if (state.tab === "mine") renderMine();
     else if (state.tab === "perf") renderPerf();
@@ -4519,6 +4579,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     renderLiquidity();
     renderIndexTA();
     renderTopPicks();
+    renderQuad();
     renderTrendChanges();
     updateMineCounts();
     if (state.tab !== "home") renderTab();
@@ -5646,6 +5707,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   renderIndexTA();
   renderRoster();
   renderTopPicks();
+  renderQuad();
   renderTrendChanges();
   updateMineCounts();
   setTab(state.tab, true);
