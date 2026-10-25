@@ -36,6 +36,14 @@ jobs:
       - name: Validate data (guardrail)
         run: node scripts/validate-reco.js
 
+      # 연기 시험 — 앱을 헤드리스 크롬으로 열어 홈·추천 종목(상세)·미국·내 종목·성과·과거 보기를 돌고, 앱 오류(예외·데이터 파일
+      # 문법 오류·우리 파일 404)가 나면 배포하지 않는다(지난 정상 버전이 남는다). playwright-core 는 사이트 묶음에 섞이지 않게
+      # 임시 폴더에 받고 러너에 설치된 Chrome 을 쓴다. 설치·실행 환경 문제는 경고만 하고 넘어간다(데이터 배포가 멈추지 않게).
+      - name: Smoke test (headless page load)
+        run: |
+          npm install --prefix "$RUNNER_TEMP/pw" --no-audit --no-fund --silent playwright-core@1.56.1 || echo "::warning::playwright-core 설치 실패 — 연기 시험을 건너뜁니다"
+          NODE_PATH="$RUNNER_TEMP/pw/node_modules" node scripts/smoke-app.js
+
       - name: Setup Pages
         uses: actions/configure-pages@v5
 

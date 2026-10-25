@@ -124,7 +124,9 @@ async function main() {
       const o = r.data, line = String(o.line || "").trim();
       if (!o.relevant || !line || L.DIRECTIVE.test(line)) { items[x.t] = { none: 1, h }; return; }
       const used = (o.use || []).map((i) => top[i - 1]).filter(Boolean).slice(0, 3);
-      const links = (used.length ? used : top.slice(0, 1)).map((y) => ({ t: y.t.slice(0, 90), u: y.u, s: y.s, d: y.d }));
+      // 링크는 http(s) 만 남긴다 — 앱도 safeUrl 로 거르지만 데이터 파일에 javascript: 같은 주소가 들어가지 않게 한 번 더
+      const links = (used.length ? used : top.slice(0, 1)).filter((y) => /^https?:\/\//i.test(String(y.u || "")))
+        .map((y) => ({ t: y.t.slice(0, 90), u: y.u, s: y.s, d: y.d }));
       items[x.t] = { line: line.slice(0, 120), date: links[0].d, links, h };
       kept++;
     } catch (e) {

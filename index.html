@@ -424,6 +424,16 @@ svg { display: block; }
 .ic-tip svg { width: 17px; height: 17px; }
 @media (hover: hover) { .ic-tip:hover { background: var(--sf3); } }
 .pk-stale { margin-left: 6px; font-size: 11px; font-weight: 700; color: var(--warn); }
+/* Top Pick 지난 성적 한 줄 — 누르면 성과 탭의 Top Pick 곡선(perf.json picks) */
+.pk-rec { display: flex; align-items: center; gap: 8px; width: calc(100% - 32px); margin: 6px 16px 2px; padding: 9px 12px; border-radius: 8px; background: var(--sf3); color: var(--ink2); font-size: 12.5px; line-height: 1.45; text-align: left; }
+.pk-rec[hidden] { display: none; }
+.pk-rec-k { flex: none; font-weight: 700; color: var(--ink); }
+.pk-rec-v { flex: 1; min-width: 0; word-break: keep-all; }
+.pk-rec-v > span { display: block; }
+.pk-rec-s { color: var(--mut); font-size: 12px; }
+.pk-rec-v b { font-weight: 700; } .pk-rec-v b.up { color: var(--up); } .pk-rec-v b.down { color: var(--down); }
+.pk-rec-c { flex: none; display: inline-flex; width: 14px; height: 14px; color: var(--mut); }
+.pk-rec-c svg { width: 14px; height: 14px; }
 .row.pk { align-items: flex-start; }
 .pk-n { flex: none; width: 20px; font-size: 17px; font-weight: 800; line-height: 1.45; text-align: center; color: var(--ink); }
 .pk-th { flex: none; margin-left: 2px; font-size: 11.5px; font-weight: 600; color: var(--mut); }
@@ -478,6 +488,7 @@ svg { display: block; }
 .pf-verdict { margin: -2px 0 12px; font-size: 14.5px; line-height: 1.7; color: var(--ink2); }
 .pf-verdict b { color: var(--ink); font-weight: 700; }
 .pf-tags { display: flex; flex-wrap: wrap; gap: 6px; margin: -4px 0 14px; }
+.pf-tags.pf-cap-tags { margin: 12px 0 -2px; }
 .pf-chip { display: inline-flex; align-items: center; height: 24px; padding: 0 9px; border-radius: 12px; background: var(--sf3); color: var(--ink2); font-size: 12px; font-weight: 600; cursor: help; }
 .pf-chip.on { background: var(--ink); color: var(--sf); }
 .pf-kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 8px; }
@@ -1029,6 +1040,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     <section class="blk blk-list" id="picksBox" style="display:none">
       <div class="blk-h"><h2>오늘의 Top Pick</h2><button class="ic-tip" type="button" id="picksTip" aria-label="선정 기준 보기"></button><span class="blk-sub" id="picksSub"></span></div>
       <div class="list" id="picksList" data-ctx="picks"></div>
+      <button class="pk-rec" type="button" id="picksRec" hidden></button>
     </section>
     <section class="blk blk-list" id="trendBox" style="display:none">
       <div class="blk-h"><h2>최근 추세 전환</h2><button class="ic-tip" type="button" id="trendTip" aria-label="추세 전환 기준 보기"></button><span class="blk-sub" id="trendSub"></span></div>
@@ -1151,28 +1163,54 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
 <script src="data/news.js"></script>
 <script src="data/ai-status.js"></script>
 <script src="data/quotes.js"></script>
-<script src="data/history.js"></script>
+<!-- 스냅샷은 작은 색인(기록일·편입·제외)만 처음에 받는다 — 전체 기록(history.js)은 '과거 보기'를 열 때,
+     검색 사전(tickers.js)은 '내 종목' 검색창을 쓸 때 받는다(2026-10-25 — 휴대폰 첫 화면 3.8초 → 2.4초) -->
+<script src="data/history-index.js"></script>
 <script src="data/trend-summary.js"></script>
-<!-- 티커 사전(~360KB)은 관심종목 '검색' 입력 때만 쓰이므로 defer 로 빼 초기 렌더를 막지 않는다
-     (아래 메인 스크립트는 인라인이라 defer 보다 먼저 실행되지만, TICKER_DICT 는 입력 이벤트에서만 참조) -->
-<script src="data/tickers.js" defer></script>
 <script src="scripts/lib-ta.js"></script>
 <script>
 (function () {
   var D = window.STOCK_DATA;
   var L = window.LIQUIDITY_DATA;
   // 히스토리는 매일 스크립트가 새로 쓰므로, 한 번의 불완전 기록이 페이지 전체를 막지 않도록
-  // 유효한 스냅샷(date 문자열 + stocks 배열)만 사용한다.
-  var H = (window.STOCK_HISTORY || [])
-    .filter(function (s) { return s && typeof s.date === "string" && Array.isArray(s.stocks); })
-    .sort(function (a, b) { return a.date.localeCompare(b.date); });
+  // 유효한 스냅샷(date 문자열 + stocks 배열)만 사용한다. 전체 기록은 '과거 보기'를 열 때 받는다(loadHistory) — 처음엔 비어 있다.
+  function validSnaps(arr) {
+    return (arr || []).filter(function (s) { return s && typeof s.date === "string" && Array.isArray(s.stocks); })
+      .sort(function (a, b) { return a.date.localeCompare(b.date); });
+  }
+  var H = validSnaps(window.STOCK_HISTORY);
+  var HIDX = window.HISTORY_INDEX || null;   // {asOf, dates[], roster[{d, p, a, r, m}]} — snapshot.js 가 history.js 와 함께 쓴다
 
-  // ── 종목 업데이트(편입·제외) 계산 — 인접 스냅샷쌍마다 diff 축적(history.js) ──
-  // 날짜별로 편입/제외를 조회할 수 있도록, 각 스냅샷을 직전 스냅샷과 비교해 기록한다.
+  // 처음 화면에 필요 없는 큰 자료(과거 보기용 history.js·검색 사전 tickers.js)는 쓸 때 한 번만 받는다
+  var scriptLoads = {};
+  function loadScriptOnce(src) {
+    if (!scriptLoads[src]) scriptLoads[src] = new Promise(function (ok, no) {
+      var el = document.createElement("script");
+      el.src = src;
+      el.async = true;
+      el.onload = function () { ok(); };
+      el.onerror = function () { delete scriptLoads[src]; el.remove(); no(new Error("load " + src)); };
+      document.head.appendChild(el);
+    });
+    return scriptLoads[src];
+  }
+  function loadHistory() {
+    if (H.length) return Promise.resolve();
+    return loadScriptOnce("data/history.js" + (HIDX && HIDX.asOf ? "?v=" + encodeURIComponent(HIDX.asOf) : "")).then(function () {
+      H = validSnaps(window.STOCK_HISTORY);
+      if (!H.length) throw new Error("history empty");
+    });
+  }
+
+  // ── 종목 업데이트(편입·제외) — 색인(history-index.js)의 날짜별 편입·제외·주제 이동. 색인이 없으면 전체 기록으로 계산 ──
   var NEW_TICKERS = {};    // 가장 최근 갱신에 새로 편입된 티커 → true (NEW 표시용)
   var ROSTER_HIST = [];    // [{date, prevDate, added:[snapStock], removed:[snapStock], moved:[…]}], 과거→최신
   (function computeRoster() {
-    for (var i = 1; i < H.length; i++) {
+    if (HIDX && Array.isArray(HIDX.roster)) {
+      HIDX.roster.forEach(function (e) {
+        if (e && typeof e.d === "string") ROSTER_HIST.push({ date: e.d, prevDate: e.p, added: e.a || [], removed: e.r || [], moved: e.m || [] });
+      });
+    } else for (var i = 1; i < H.length; i++) {
       var prev = H[i - 1], cur = H[i];
       var prevSet = {}, curSet = {};
       prev.stocks.forEach(function (s) { prevSet[s.t] = s; });
@@ -1272,7 +1310,9 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     var sel = document.getElementById("asofSel");
     var btn = document.getElementById("asofBtn");
     var panel = document.getElementById("pastView");
-    if (!sel || !panel || !H.length) return;
+    // 날짜 목록은 색인으로 — 그날의 편성(history.js)은 날짜를 처음 고를 때 받는다
+    var pastDates = (HIDX && Array.isArray(HIDX.dates) ? HIDX.dates.slice() : H.map(function (h) { return h.date; })).sort();
+    if (!sel || !panel || !pastDates.length) return;
 
     var wrap = panel.parentNode;
     var pastCountry = null;   // 과거 패널 전용 국가 선택(메인 state 와 분리)
@@ -1351,10 +1391,10 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
 
     // 최신 → 과거. 오늘(generatedAt) 스냅샷은 첫 항목 '(오늘)' 화면과 같은 날이라 목록에서 뺀다
     // (같은 날짜가 두 번 보이고, 고르면 '그날 가격 = 오늘 가격' 인 빈 비교가 나오던 문제).
-    var opts = H.slice().reverse().filter(function (h) { return h.date !== D.generatedAt; });
+    var opts = pastDates.slice().reverse().filter(function (d) { return d !== D.generatedAt; });
     if (!opts.length) return;          // 오늘 기록뿐이면 고를 과거가 없다 — 달력 버튼을 숨긴 채 둔다
     sel.innerHTML = '<option value="">' + esc(D.generatedAt) + " (오늘)</option>" +
-      opts.map(function (h) { return '<option value="' + esc(h.date) + '">' + esc(h.date) + "</option>"; }).join("");
+      opts.map(function (d) { return '<option value="' + esc(d) + '">' + esc(d) + "</option>"; }).join("");
     btn.hidden = false;
 
     function show(date) {
@@ -1487,7 +1527,13 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     }
 
     pastApi.exit = function () { if (window.__pastActive) { sel.value = ""; show(""); } };
-    sel.addEventListener("change", function () { show(sel.value); });
+    sel.addEventListener("change", function () {
+      var v = sel.value;
+      if (!v || H.length) { show(v); return; }
+      sel.disabled = true;               // 처음 고를 때만 전체 기록을 받는다(그동안 다른 날짜를 못 고르게)
+      loadHistory().then(function () { sel.disabled = false; if (sel.value === v) show(v); })
+        .catch(function () { sel.disabled = false; sel.value = ""; toast("과거 기록을 불러오지 못했습니다. 잠시 뒤 다시 골라 주세요."); });
+    });
   })();
 
   // 기준일은 UTC 달력일 — 한국(KST) 달력일이 다르면 병기한다(예: 21:00 UTC 갱신이면 한국은 다음날).
@@ -1529,11 +1575,11 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       .then(function (list) {
         if (!Array.isArray(list)) return;
         var reqs = list.filter(function (it) {
-          return !it.pull_request && it.title && it.title.indexOf("업데이트 요청") >= 0;
+          return !it.pull_request && ownIssue(it) && it.title && it.title.indexOf("업데이트 요청") >= 0;
         });
         if (!reqs.length) return;
         var it = reqs[0];
-        var link = ' · <a href="' + esc(it.html_url) + '" target="_blank" rel="noopener">#' + it.number + "</a>";
+        var link = ' · <a href="' + esc(safeUrl(it.html_url)) + '" target="_blank" rel="noopener">#' + esc(it.number) + "</a>";
         if (it.state === "open" && it.comments > 0) show("us-amber", "업데이트 처리 중", link);
         else if (it.state === "open") show("us-yellow", "업데이트 요청 접수 — 처리 대기", link);
         else {
@@ -1702,6 +1748,8 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   function safeUrl(u) {
     return /^https?:\/\//i.test(String(u || "")) ? u : "#";
   }
+  // 공개 저장소라 누구나 이슈를 열 수 있다 — 상태 칩·정밀분석 요청 표시는 저장소 주인 계정이 연 이슈만 본다
+  function ownIssue(it) { return !!(it && it.user && it.user.login === "csy870617"); }
   // AI적정가 미산출 종목의 보류 사유 문구
   function aiPendingText(s) {
     var why = s.aiPending || s.aiFailReason || "입력값(2026E EPS·배당) 검증이 아직 완료되지 않았습니다";
@@ -2026,41 +2074,6 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       .catch(function () { clearTimeout(to); delete indexInflight[sym]; });
   }
 
-  // ── 종가 시계열 — 실측 2년(있으면 우선) > 누적 스냅샷(폴백) ──
-  // 누적 시계열은 거래일(priceDate) 기준으로 중복(주말·미갱신)을 제거해 실제 흐름만 남긴다.
-  var CLOSES = (function () {
-    var byDate = {}, order = {};
-    H.forEach(function (snap) {
-      (snap.stocks || []).forEach(function (x) {
-        if (!x || typeof x.p !== "number" || !isFinite(x.p)) return;
-        var key = x.pd || snap.date;
-        if (!byDate[x.t]) { byDate[x.t] = {}; order[x.t] = []; }
-        if (!(key in byDate[x.t])) order[x.t].push(key);
-        byDate[x.t][key] = x.p;   // 같은 거래일은 마지막 값으로
-      });
-    });
-    var m = {};
-    Object.keys(byDate).forEach(function (t) {
-      order[t].sort();
-      m[t] = order[t].map(function (k) { return byDate[t][k]; });
-    });
-    return m;
-  })();
-  // 반환 {cl(오래된→최신), source:'live'|'accum', n}
-  function closeSeries(s) {
-    var accum = CLOSES[s.ticker] || [];
-    var hist = histCache[s.ticker];
-    var cl, source;
-    if (Array.isArray(hist) && hist.length >= 2 && hist.length >= accum.length) { cl = hist.slice(); source = "live"; }
-    else { cl = accum.slice(); source = "accum"; }
-    // 누적 스냅샷은 최신 표시가(실시간/quotes)가 마지막 기록보다 새로우면 반영(실측 시계열은 이미 일봉으로 최신)
-    if (source === "accum") {
-      var e = effective(s);
-      if (e.price != null && isFinite(e.price) && (cl.length === 0 || cl[cl.length - 1] !== e.price)) cl.push(e.price);
-    }
-    return { cl: cl, source: source, n: cl.length };
-  }
-
   // 개별 종목 기술적 분석 — data/stock-ta.js(자동 계산, 단기=일봉·중기=주봉·장기=월봉 분리)를 읽는다.
   function stTa(ticker) { var T = window.STOCK_TA; return (T && T.ta && T.ta[ticker]) || null; }
 
@@ -2071,7 +2084,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   var NAVER_US_MAP = (function () {
     var m = {};
     ((D && D.us) || []).forEach(function (s) {
-      if (s.ticker && s.chartUrl && /m\.stock\.naver\.com\/(fchart\/foreign|worldstock)\//.test(s.chartUrl)) m[s.ticker] = s.chartUrl;
+      if (s.ticker && s.chartUrl && /^https:\/\/m\.stock\.naver\.com\/(fchart\/foreign|worldstock)\//.test(s.chartUrl)) m[s.ticker] = s.chartUrl;
     });
     return m;
   })();
@@ -2346,7 +2359,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     return Number(v).toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d });
   }
   function chVol(v, c) {
-    if (!v) return "–";
+    if (!v || typeof v !== "number" || !isFinite(v)) return "–";   // 숫자가 아니면 그대로 화면에 넣지 않는다
     if (c === "korea") return v >= 1e8 ? (v / 1e8).toFixed(v >= 1e9 ? 0 : 1) + "억주" : v >= 1e4 ? Math.round(v / 1e4).toLocaleString("ko-KR") + "만주" : v + "주";
     return v >= 1e9 ? (v / 1e9).toFixed(2) + "B" : v >= 1e6 ? (v / 1e6).toFixed(1) + "M" : v >= 1e3 ? Math.round(v / 1e3) + "K" : String(v);
   }
@@ -3475,7 +3488,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
         var subl = '<span class="wtag ' + (CAND_CLS[x.status] || "cs-wait") + '">' + esc(x.status) + "</span><span>" + esc(x.ticker) +
           (x.alsoIn ? " · " + esc(themeMeta(x.alsoIn).label) + " 편성" : "") + (x.cap ? " · " + esc(x.cap) : "") + (x.why ? ' · <span class="c-why">' + esc(x.why) + "</span>" : "") + "</span>";
         var note = x.note || (x.near ? "근접 후보 — " + x.near : "");
-        return '<a class="row crow" href="' + esc(x.url) + '" target="_blank" rel="noopener">' +
+        return '<a class="row crow" href="' + esc(safeUrl(x.url)) + '" target="_blank" rel="noopener">' +
           '<div class="r-l"><div class="r-nm"><span class="r-name">' + esc(x.name) + "</span></div>" +
           '<div class="r-sub">' + subl + "</div>" + (note ? '<div class="c-note">' + esc(note) + "</div>" : "") + "</div>" +
           '<span class="c-go" aria-hidden="true">›</span></a>';
@@ -3658,9 +3671,25 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
         (partial ? "\n\n오늘 큐레이션 일부가 편성에서 빠져 같은 기준의 상위 종목으로 채웠습니다." : "\n\n오늘 큐레이션이 없어 같은 기준으로 자동 선정했습니다."));
       sub.textContent = "자동 선정";
     }
+    renderPicksRec();
     ensureLive(rows.map(function (r) { return r.s; }), refreshLive);
     markActiveRow();
   }
+  // Top Pick 지난 성적 한 줄 — 정식 편성과 같은 보유 기준(perf.json 의 picks 묶음: 그날 고른 3종목을 다음 기록일까지 같은 비중, 2026-07-31~).
+  //   가장 눈에 띄는 추천이라 성적을 함께 보인다(2026-10-25 약점 점검). perf.json(압축 14KB)은 첫 화면이 뜬 뒤 받는다.
+  function renderPicksRec() {
+    var btn = document.getElementById("picksRec");
+    if (!btn) return;
+    if (!PERF) { btn.hidden = true; if (!perfFail) setTimeout(loadPerf, 800); return; }
+    var g = PERF[state.country] && PERF[state.country].groups && PERF[state.country].groups.picks, s = g && g.w && g.w.all;
+    if (!s || s.days < 5) { btn.hidden = true; return; }
+    var sig = s.days < 20 || s.tEx == null ? "기록 짧음" : Math.abs(s.tEx) < 2 && (s.tAlpha == null || Math.abs(s.tAlpha) < 2) ? "우연 범위" : "의미 있는 차이";
+    btn.innerHTML = '<span class="pk-rec-k">지난 성적</span><span class="pk-rec-v"><span>' + esc(mdOf(s.from)) + "~ " + fmtPct(s.ret) + " · " + esc(benchName(state.country)) + " " + fmtPct(s.bench) + "</span>" +
+      '<span class="pk-rec-s">차이 <b class="' + sgnCls(s.excess).trim() + '">' + fmtPp(s.excess) + "</b> · " + esc(sig) + '</span></span><span class="pk-rec-c" aria-hidden="true">' + ICON.chev + "</span>";
+    btn.setAttribute("aria-label", "Top Pick 지난 성적 — 성과 탭에서 보기");
+    btn.hidden = false;
+  }
+  document.getElementById("picksRec").addEventListener("click", function () { pfSel[state.country] = "picks"; setTab("perf"); });
 
   // ── 추천 종목 탭 ──
   function renderReco() {
@@ -3707,7 +3736,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     if (PERF || perfReq || typeof fetch !== "function") return;
     perfReq = true;
     fetch("data/perf.json", { cache: "no-cache" }).then(function (r) { return r.ok ? r.json() : null; })
-      .then(function (j) { perfReq = false; if (j) PERF = j; else perfFail = true; if (state.tab === "perf") renderPerf(); })
+      .then(function (j) { perfReq = false; if (j) PERF = j; else perfFail = true; if (state.tab === "perf") renderPerf(); renderPicksRec(); })
       .catch(function (e) { perfReq = false; perfFail = true; if (window.console) console.warn("perf.json", e); if (state.tab === "perf") renderPerf(); });
   }
   function fmtPp(v) { return v == null ? "–" : Math.abs(v) < 0.05 ? "0.0%p" : (v > 0 ? "+" : "") + Number(v).toFixed(1) + "%p"; }
@@ -3773,17 +3802,24 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     // 곡선 고르기 — 정식 전체·주제별·티어별(그 묶음을 처음 담은 날부터, 같은 기간 지수와 함께)
     var opts = [["all", "전체"], ["cmp-theme", "주제 비교"], ["cmp-tier", "티어 비교"]].concat(recoThemes().filter(function (t) { return C.groups[t.key]; }).map(function (t) { return [t.key, t.label]; }),
       TIER_KEYS.filter(function (k) { return C.groups[k]; }).map(function (k) { return [k, "T" + tierOfKey(k)]; }),
+      C.groups.picks ? [["picks", "Top Pick"]] : [],
       orderedThemes().filter(function (t) { return isPersonal(t.key) && C.groups[t.key]; }).map(function (t) { return [t.key, t.label]; }));
+    // 칩 묶음 사이 구분선 — 티어 · Top Pick · 내 종목
+    var chipGrp = function (k) { return isTierKey(k) ? "t" : k === "picks" ? "p" : isPersonal(k) ? "m" : ""; };
     var cmp = pfSel[c] === "cmp-theme" || pfSel[c] === "cmp-tier";
     var sel = cmp ? pfSel[c] : (C.groups[pfSel[c]] ? pfSel[c] : "all"), gs = C.groups[cmp ? "all" : sel], ws = gs.w.all;
     var lbl = sel === "all" ? "추천 편성" : (opts.filter(function (o) { return o[0] === sel; })[0] || [0, sel])[1];
     var i0 = 0; while (!cmp && i0 < gs.nav.length && gs.nav[i0] == null) i0++;
     var chips = '<div class="chip-g chips-x pf-sel" role="tablist" aria-label="곡선 고르기">' + opts.map(function (o, i) {
-      var sep = i > 0 && ((isTierKey(o[0]) && !isTierKey(opts[i - 1][0])) || (isPersonal(o[0]) && !isPersonal(opts[i - 1][0]))) ? '<span class="ct-sep" aria-hidden="true"></span>' : "";
+      var sep = i > 0 && chipGrp(o[0]) && chipGrp(o[0]) !== chipGrp(opts[i - 1][0]) ? '<span class="ct-sep" aria-hidden="true"></span>' : "";
       return sep + '<button class="chip chip-s' + (o[0] === sel ? " on" : "") + '" type="button" role="tab" aria-selected="' + (o[0] === sel) + '" data-pfsel="' + esc(o[0]) + '">' + esc(o[1]) + "</button>";
     }).join("") + "</div>";
     var cap = sel === "all" || cmp ? "" : '<p class="pf-cap"><b>' + esc(lbl) + "</b> " + fmtPct(ws.ret) + " · " + esc(bn) + " " + fmtPct(ws.bench) +
-      ' · 차이 <b class="' + sgnCls(ws.excess).trim() + '">' + fmtPp(ws.excess) + "</b>" + (ws.from && ws.from !== PERF.base ? " · " + esc(mdOf(ws.from)) + "부터" : "") + "</p>";
+      ' · 차이 <b class="' + sgnCls(ws.excess).trim() + '">' + fmtPp(ws.excess) + "</b>" + (ws.from && ws.from !== PERF.base ? " · " + esc(mdOf(ws.from)) + "부터" : "") + "</p>" +
+      // 고른 묶음도 우연 범위·시장 민감도를 함께 — 수익 차이만 보고 '잘 고른다'고 읽지 않게
+      '<div class="pf-tags pf-cap-tags">' + pfSig(ws.tEx, ws.days) +
+        (ws.beta != null ? '<span class="pf-chip" data-basis="' + esc(PF_BETA_TIP) + '">β ' + ws.beta.toFixed(2) +
+          (ws.betaAlpha != null && Math.abs(ws.beta - 1) >= 0.25 ? " · 감안하면 " + fmtPp(ws.betaAlpha) : "") + "</span>" : "") + "</div>";
     if (cmp) {   // 겹쳐 보기 — 묶음마다 처음 담은 날부터의 누적(늦게 시작한 묶음은 그날 0%), 지수는 회색
       var ks = sel === "cmp-theme" ? recoThemes().filter(function (t) { return C.groups[t.key]; }).slice(0, 5).map(function (t, i) { return [t.key, t.label, "c" + i]; })
         : TIER_KEYS.filter(function (k) { return C.groups[k]; }).map(function (k) { return [k, "T" + tierOfKey(k), "t" + tierOfKey(k)]; });
@@ -4217,6 +4253,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
         var map = {};
         list.forEach(function (it) {
           var ti = (it && it.title) || "";
+          if (!ownIssue(it)) return;   // 공개 저장소라 누구나 이슈를 열 수 있다 — 주인 계정의 요청만 본다
           if (ti.indexOf("관심종목 정밀분석 요청") !== 0 && ti.indexOf("보유종목 정밀분석 요청") !== 0) return;
           var m = ti.match(/(\d{6}|[A-Z][A-Z0-9.\-]{0,6})\s+(?:한국|미국)\s*$/);
           if (!m) return;
@@ -4882,15 +4919,28 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     e.preventDefault();
     openFromEl(el);
   });
+  // 검색 사전(tickers.js, 압축 90KB)은 검색창을 처음 쓸 때 받는다 — 받는 동안 친 글자는 도착하면 다시 찾고,
+  //   받지 못해도 코드 직접 추가(6자리·영문 티커)는 된다
+  function withDict(fn) {
+    if (window.TICKER_DICT) { fn(); return; }
+    loadScriptOnce("data/tickers.js").then(fn, function () { fn(); });
+  }
+  document.getElementById("mineAdd").addEventListener("focusin", function (e) {
+    if (e.target && e.target.id === "wlQ") withDict(function () {});
+  });
   // 검색 입력 → 자동완성 후보 갱신 · Enter → 첫 후보 추가
   document.getElementById("mineAdd").addEventListener("input", function (e) {
-    if (e.target && e.target.id === "wlQ") renderWlSug(wlSuggest(e.target.value));
+    if (!(e.target && e.target.id === "wlQ")) return;
+    renderWlSug(wlSuggest(e.target.value));
+    if (!window.TICKER_DICT) withDict(function () { var q = document.getElementById("wlQ"); if (q) renderWlSug(wlSuggest(q.value)); });
   });
   document.getElementById("mineAdd").addEventListener("submit", function (e) {
     var f = e.target.closest("#wlAdd"); if (!f) return;
     e.preventDefault();
-    var sug = wlSuggest((document.getElementById("wlQ") || {}).value || "");
-    if (sug.length) wlAddItem(sug[0].t, sug[0].raw ? "" : sug[0].n, sug[0].c, state.mine);
+    withDict(function () {
+      var sug = wlSuggest((document.getElementById("wlQ") || {}).value || "");
+      if (sug.length) wlAddItem(sug[0].t, sug[0].raw ? "" : sug[0].n, sug[0].c, state.mine);
+    });
   });
 
   // 연준 금리 경로 — 연방기금금리 선물이 반영한 FOMC 회의별 확률(liquidity-auto.js fed, scripts/lib-fedpath.js)
@@ -5087,11 +5137,12 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   }
 
   // ══ AI(Claude API) — 이 기기 키로 묻기 · 서버 자동 분석 상태 · 뉴스 한 줄 · AI 작성 표시 ══
-  // 키는 이 브라우저(localStorage 또는 탭을 닫으면 지워지는 sessionStorage)에만 두고 api.anthropic.com 으로만 보낸다.
-  // 공식 SDK(@anthropic-ai/sdk)를 처음 질문할 때만 jsDelivr 에서 불러온다(앱 첫 화면 무게를 늘리지 않게).
+  // 키는 이 브라우저(탭을 닫으면 지워지는 sessionStorage — 기본, 또는 '이 기기에 기억'을 켜면 localStorage)에만 두고 api.anthropic.com 으로만 보낸다.
+  // 공식 SDK(@anthropic-ai/sdk)는 처음 질문할 때만 같은 주소의 고정 파일(vendor/ — 한 파일 묶음)에서 불러온다(앱 첫 화면 무게를 늘리지 않게).
+  //   예전엔 jsDelivr 에서 받았지만 그 묶음은 요청 때 만들어지고 다른 파일을 다시 불러와 무결성을 고정할 수 없었다(2026-10-25 보안 점검).
   var AI = {
     KEY: "mystock.ai.key", MODEL: "mystock.ai.model", WEB: "mystock.ai.web", USE: "mystock.ai.usage",
-    SDK_URL: "https://cdn.jsdelivr.net/npm/@anthropic-ai/sdk@0.131.0/+esm",
+    SDK_URL: "./vendor/anthropic-sdk-0.131.0.min.js",
     MODELS: [
       { id: "claude-opus-5-5", label: "Opus 5.5", note: "가장 정확 — 질문당 대략 3~10센트" },
       { id: "claude-sonnet-5-5", label: "Sonnet 5.5", note: "빠르고 저렴 — 대략 2~5센트" },
@@ -5459,10 +5510,11 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       h += '<div class="ai-key"><code>' + esc(key.slice(0, 10) + "…" + key.slice(-4)) + '</code><button class="lnk" type="button" id="aiRetest">다시 확인</button><button class="lnk" type="button" id="aiForget">연결 해제</button></div>' + msg;
     } else {
       h += '<input class="ai-in" id="aiKeyIn" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="sk-ant-api03-…" aria-label="Anthropic API 키">' +
-        '<label class="ai-chk"><input type="checkbox" id="aiRemember" checked> 이 기기에 기억(끄면 이 탭을 닫을 때 지웁니다)</label>' +
+        // 기본은 '이 탭에만' — 같은 주소(csy870617.github.io)의 다른 페이지도 읽을 수 있는 저장소에 키가 오래 남지 않게(2026-10-25 보안 점검)
+        '<label class="ai-chk"><input type="checkbox" id="aiRemember"> 이 기기에 기억(끄면 이 탭을 닫을 때 지웁니다 — 내 기기에서만 켜세요)</label>' +
         '<div class="ai-row"><button class="btn pri" type="button" id="aiSave"' + (t && t.state === "busy" ? " disabled" : "") + ">" + (t && t.state === "busy" ? "확인 중…" : "연결 확인 후 저장") + "</button></div>" + msg +
         '<p class="ai-help">키 발급: <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com → API Keys</a> → Create Key (결제 수단 등록 필요 — Claude 구독과 별도로 사용량만큼 청구). ' +
-        "Console 의 Limits 에서 월 지출 한도를 낮게 걸어 두길 권합니다. 같은 기기를 쓰는 사람은 이 키로 질문할 수 있으니 공용 기기에서는 '기억'을 끄세요.</p>";
+        "Console 의 Limits 에서 월 지출 한도를 낮게 걸어 두길 권합니다. '기억'을 켜면 같은 기기를 쓰는 사람과 같은 주소(csy870617.github.io)의 다른 페이지도 이 키를 쓸 수 있으니 공용 기기에서는 켜지 마세요.</p>";
     }
     var cur = aiModel();
     h += '<div class="ai-models" role="radiogroup" aria-label="질문에 쓸 모델">' + AI.MODELS.map(function (m) {

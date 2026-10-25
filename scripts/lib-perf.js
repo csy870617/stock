@@ -11,7 +11,8 @@
 const PERSONAL = { watch: 1, hold: 1 };
 const MIN_DAYS = 20;   // β·t 를 계산하는 최소 거래일
 
-// 선택자: null = 정식 전체(관심·보유 제외), "core" 등 = 그 주제, "tier:1" = 정식 중 그 티어, "watch"/"hold" = 개인 목록
+// 선택자: null = 정식 전체(관심·보유 제외), "core" 등 = 그 주제, "tier:1" = 정식 중 그 티어, "watch"/"hold" = 개인 목록,
+//   "picks" = 그 기록일의 그 나라 Top Pick(스냅샷 picks — chain 이 기록일마다 고른다, inGroup 으로는 가릴 수 없다)
 function inGroup(sel, th, tier) {
   if (!sel) return !PERSONAL[th];
   if (sel.indexOf("tier:") === 0) return !PERSONAL[th] && tier === +sel.slice(5);
@@ -45,8 +46,10 @@ function chain(H, country, sel, exitPx) {
     (b.stocks || []).forEach((e) => { if (e.c === country && e.p) pb[e.t] = e.p; });
     const seen = {};
     let sum = 0, n = 0;
+    // Top Pick 묶음 — 그 기록일에 고른 3종목을 다음 기록일까지 같은 비중으로(고른 날 종가부터 — 정식 편성과 같은 기준)
+    const pk = sel === "picks" ? (a.picks && a.picks[country]) || [] : null;
     (a.stocks || []).forEach((e) => {
-      if (e.c !== country || seen[e.t] || !e.p || !inGroup(sel, e.th, e.tier)) return;
+      if (e.c !== country || seen[e.t] || !e.p || (pk ? pk.indexOf(e.t) < 0 : !inGroup(sel, e.th, e.tier))) return;
       let p1 = pb[e.t];
       if (!p1 && exitPx) p1 = exitPx(country, e.t, i);
       if (!p1) return;

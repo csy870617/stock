@@ -179,9 +179,18 @@ Object.keys(byTheme).sort().forEach((gk) => {
 const LP = require("./lib-perf");
 const PERF = (() => { try { return JSON.parse(fs.readFileSync(path.join(ROOT, "data", "perf.json"), "utf8")); } catch (_e) { return null; } })();
 const EXIT = (PERF && PERF.cache) || {};
-const exitPx = (c, t, i) => { const v = EXIT[c + ":" + t + "@" + H[i].date]; return v ? v.p : null; };
+// 보유 기준 성적·β 는 최근 90일로 잰다 — 결격 점검(check-defects.js)의 β 밴드가 '지금 편성'의 시장 민감도를 보게.
+// 2026-10-25 전에는 history.js 자체가 90일 상한이라 같은 창이었다(이제 기록은 지우지 않고, 앱 성과 탭은 기록 전체를 쓴다).
+const HELD_DAYS = 90;
+const HB = (() => {
+  const d = new Date(H[H.length - 1].date);
+  d.setUTCDate(d.getUTCDate() - HELD_DAYS);
+  const cut = d.toISOString().slice(0, 10);
+  return H.filter((h) => h.date >= cut);
+})();
+const exitPx = (c, t, i) => { const v = EXIT[c + ":" + t + "@" + HB[i].date]; return v ? v.p : null; };
 function held(country, themeKey) {
-  const s = LP.stats(LP.chain(H, country, themeKey || null, exitPx), 0, H[0].date);
+  const s = LP.stats(LP.chain(HB, country, themeKey || null, exitPx), 0, HB[0].date);
   if (!s) return null;
   return { ret: s.ret, bench: s.bench, excess: s.excess, beta: s.beta, betaAlpha: s.betaAlpha, tExcess: s.tEx,
     vsEqualWeight: s.vsEq != null ? s.vsEq : null };
@@ -218,7 +227,7 @@ const report = {
   },
   perfNote: "avgReturn 은 종목별 편입시점~현재 원수익률(편입 구간이 종목마다 달라 전체구간 벤치마크와 직접 비교는 왜곡). avgExcess/byTierExcess 는 각 종목 편입일에 맞춘 지수 대비 초과수익으로 like-for-like.",
   held: heldReport,
-  heldNote: "held = 실제 보유 기준(편출 종목 포함, 동일비중 일별 연결 — lib-perf.js, 앱 성과 탭과 같은 값). betaAlpha = 수익률 − β×지수(시장 민감도 몫을 뺀 선별 효과, β 는 거래일 일간 회귀). tExcess = 일간 초과수익의 t(|t|<2 면 우연과 구별 안 됨). vsEqualWeight = 동일비중 S&P500(RSP) 대비(미국).",
+  heldNote: "held = 최근 " + HELD_DAYS + "일 실제 보유 기준(편출 종목 포함, 동일비중 일별 연결 — lib-perf.js; 앱 성과 탭은 같은 계산으로 기록 전체). betaAlpha = 수익률 − β×지수(시장 민감도 몫을 뺀 선별 효과, β 는 거래일 일간 회귀). tExcess = 일간 초과수익의 t(|t|<2 면 우연과 구별 안 됨). vsEqualWeight = 동일비중 S&P500(RSP) 대비(미국).",
   betaWarn,
   byTier: Object.fromEntries(Object.keys(byTier).sort().map((k) => [k, +avg(byTier[k]).toFixed(2)])),
   byTierExcess: Object.fromEntries(Object.keys(byTier).sort().map((k) => [k, avgEx(byTier[k]) == null ? null : +avgEx(byTier[k]).toFixed(2)])),

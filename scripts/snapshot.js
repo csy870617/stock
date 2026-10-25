@@ -2,7 +2,9 @@
 // 일별 스냅샷 축적 스크립트
 // 사용법: node scripts/snapshot.js            # 지수는 quotes.js 의 지수 종가(update-quotes 가 함께 받음)
 //         node scripts/snapshot.js --kospi 8088.34 --sp500 7483.24 --rsp 210.5   # 지수 직접 지정
-// data/recommendations.js 의 현재 데이터를 data/history.js 에 스냅샷으로 추가한다.
+//         node scripts/snapshot.js --rewrite   # 스냅샷을 더하지 않고 history.js·history-index.js 를 지금 기록으로 다시 쓴다
+// data/recommendations.js 의 현재 데이터를 data/history.js 에 스냅샷으로 추가하고, 앱이 시작할 때 받는 작은 색인
+// data/history-index.js(기록일 목록 + 날짜별 편입·제외·주제 이동)를 함께 쓴다 — 앱은 history.js 를 '과거 보기'를 열 때만 받는다.
 // 가격·지수는 모두 '마지막으로 끝난 정규장 종가'다(quotes.js close) — 장중에 돌아도 장중가가 섞이지 않는다.
 // 같은 날짜(generatedAt)의 스냅샷이 이미 있으면 교체한다(멱등).
 // 스냅샷은 (국가,티커) 기준으로 중복 제거하며, 여러 주제에 등장하면 가장 높은 확신(tier 최소값) 항목을 기록한다.
@@ -31,6 +33,13 @@ let history = [];
 if (fs.existsSync(HIST)) {
   require(HIST);
   history = global.window.STOCK_HISTORY || [];
+}
+if (process.argv.includes("--rewrite")) {
+  history = history.filter((h) => h && typeof h.date === "string" && Array.isArray(h.stocks)).sort((a, b) => a.date.localeCompare(b.date));
+  writeHistory(history);
+  writeIndex(history);
+  console.log("다시 씀: history.js·history-index.js — " + history.length + "일치");
+  process.exit(0);
 }
 
 // 시세는 data/quotes.js(매일 갱신되는 실제 시세)를 우선 사용한다.
@@ -75,7 +84,9 @@ const seen = {};
                     // 문구(techNote.short/mid/long)는 용량이 커 저장하지 않고 등급만 남긴다.
                     ss: (s.techNote && s.techNote.sigShort) || null,
                     sm: (s.techNote && s.techNote.sigMid) || null,
-                    sl: (s.techNote && s.techNote.sigLong) || null };
+                    sl: (s.techNote && s.techNote.sigLong) || null,
+                    // AI 적정가 — 나중에 맞았는지 잴 수 있게 그날 값을 남긴다(값이 없으면 키를 쓰지 않는다)
+                    ai: typeof s.aiTarget === "number" && isFinite(s.aiTarget) ? s.aiTarget : undefined };
     }
   });
 });
@@ -129,26 +140,14 @@ if (idx >= 0) {
 }
 history.sort((a, b) => a.date.localeCompare(b.date));
 
-// 히스토리 상한 — 최근 90일치만 보존한다(2026-07-31 개정: 365 → 90).
-//
-// 왜 줄였나: history.js 는 앱이 매 로드마다 통째로 받는 파일이다. 한 스냅샷이 약 18KB
-// (110종목 편성 + 요약 분석)라 365일이면 6.5MB 까지 커져 로딩이 눈에 띄게 느려진다.
-// 90일이면 약 1.6MB 로 억제된다.
-//
-// ★ 대가: 성과(perf)의 '추천시점 대비'는 보존된 스냅샷 중 그 종목이 **처음 등장한 날**을
-// 기준선으로 쓴다(computePerf). 따라서 90일보다 오래 보유한 종목도 수익률이 최대 90일
-// 구간으로만 측정된다 — 장기 보유 종목의 실제 누적 성과보다 짧게 보인다는 뜻이다.
-// 더 긴 성과 구간이 필요해지면 이 값을 늘리되 파일 크기를 함께 고려할 것.
-const RETAIN_DAYS = 90;
-if (history.length) {
-  const latest = new Date(history[history.length - 1].date);
-  latest.setUTCDate(latest.getUTCDate() - RETAIN_DAYS);
-  const cutoff = latest.toISOString().slice(0, 10);
-  history = history.filter((h) => h.date >= cutoff);
-}
+// 기록은 지우지 않는다(2026-10-25 — 그 전엔 최근 90일만 남겼다).
+// 90일 상한은 앱이 history.js 를 매번 통째로 받던 때 로딩을 줄이려던 것인데, 성과 탭(perf-track.js)·교체 성과·
+// 결격 점검이 모두 이 파일로 계산해서 '전체' 성적이 늘 최근 90일로 잘리고 6·12개월 창이 영영 채워지지 않았다.
+// 이제 앱은 시작할 때 작은 색인(history-index.js)만 받고 이 파일은 '과거 보기'를 열 때만 받는다.
+// 결격 점검의 β 는 performance-report.js 가 최근 90일로 따로 잰다(지금 편성의 시장 민감도).
 
 // ── 목표가 장기 원장(data/tp-history.json) ──────────────────────────────────
-// history.js 는 90일 상한이 있어 upside(목표가 대비 상승여력)의 장기 예측력 백테스트가
+// history.js 는 2026-10-25 전까지 90일 상한이 있어 upside(목표가 대비 상승여력)의 장기 예측력 백테스트가
 // 불가능하다(2026-08-11 backtest-upside 실행에서 확인 — 표본 1~10일 지평뿐). 그래서
 // 목표가만 따로, 변경된 날에 변경분만 기록해 무기한 보존한다(하루 수백 바이트).
 // 스키마: { start, lastRun, days: { "YYYY-MM-DD": { "<국가>:<티커>": 목표가|null } } }
@@ -182,11 +181,45 @@ const TPH = path.join(ROOT, "data", "tp-history.json");
     Object.keys(tph.days).length + "일치");
 })();
 
-const out = "// 일별 추천 스냅샷 히스토리 — scripts/snapshot.js 가 자동 생성/추가\n" +
-  "// 각 항목: {date, kospi, sp500, rsp(동일비중 S&P500 ETF), note·noteUS·noteKR 시황, liq 유동성{us,korea,headline}, picks Top Pick{korea[],us[]},\n" +
-  "//           stocks:[{t 티커, n 이름, c 국가, th 주제, tier, p 종가(마지막으로 끝난 정규장), pd 그 거래일, tp 목표가, ss 단기신호, sl 장기신호}]}\n" +
-  "// kospi·sp500·rsp 도 같은 조회 시점의 끝난 장 종가다(장중 실행이어도 장중가를 기록하지 않음).\n" +
-  "window.STOCK_HISTORY = " + JSON.stringify(history, null, 1) + ";\n";
-fs.writeFileSync(HIST, out);
+writeHistory(history);
+writeIndex(history);
 console.log("스냅샷 저장: " + snap.date + " (" + snap.stocks.length + "종목, KOSPI " +
   (snap.kospi ?? "–") + ", S&P500 " + (snap.sp500 ?? "–") + ") / 총 " + history.length + "일치 기록");
+
+// 한 기록일을 한 줄로 — 파일이 작아지고(들여쓰기 없음) 하루 기록이 git 에서 한 줄 변경으로 보인다
+function writeHistory(list) {
+  const out = "// 일별 추천 스냅샷 히스토리 — scripts/snapshot.js 가 자동 생성/추가(지우지 않는다, 한 줄 = 한 기록일)\n" +
+    "// 각 항목: {date, kospi, sp500, rsp(동일비중 S&P500 ETF), note·noteUS·noteKR 시황, liq 유동성{us,korea,headline}, picks Top Pick{korea[],us[]},\n" +
+    "//           stocks:[{t 티커, n 이름, c 국가, th 주제, tier, p 종가(마지막으로 끝난 정규장), pd 그 거래일, tp 목표가, ss·sm·sl 단·중·장기 신호, ai AI 적정가}]}\n" +
+    "// kospi·sp500·rsp 도 같은 조회 시점의 끝난 장 종가다(장중 실행이어도 장중가를 기록하지 않음).\n" +
+    "// 앱은 이 파일을 '과거 보기'를 열 때만 받는다 — 시작할 때는 history-index.js 만 받는다.\n" +
+    "window.STOCK_HISTORY = [\n" + list.map((h) => JSON.stringify(h)).join(",\n") + "\n];\n";
+  fs.writeFileSync(HIST, out);
+}
+
+// 앱 시작용 색인 — 기록일 목록(과거 보기 날짜 고르기)과 인접 기록일 사이의 편입(a)·제외(r)·주제 이동(m, from = 이전 주제).
+// 앱 '종목 업데이트'와 목록의 NEW 표시가 쓴다. 편입·제외는 티어와 무관하게 티커 기준(앱이 예전에 history.js 로 하던 계산과 같다).
+function writeIndex(list) {
+  const H = list.filter((h) => h && typeof h.date === "string" && Array.isArray(h.stocks));
+  const pick = (s) => ({ t: s.t, n: s.n, c: s.c, th: s.th });
+  const roster = [];
+  for (let i = 1; i < H.length; i++) {
+    const prev = H[i - 1], cur = H[i], ps = {}, cs = {};
+    prev.stocks.forEach((s) => { ps[s.t] = s; });
+    cur.stocks.forEach((s) => { cs[s.t] = s; });
+    const e = { d: cur.date, p: prev.date };
+    const a = cur.stocks.filter((s) => !ps[s.t]).map(pick);
+    const r = prev.stocks.filter((s) => !cs[s.t]).map(pick);
+    const m = cur.stocks.filter((s) => { const p = ps[s.t]; return p && p.th && s.th && p.th !== s.th; })
+      .map((s) => Object.assign(pick(s), { from: ps[s.t].th }));
+    if (a.length) e.a = a;
+    if (r.length) e.r = r;
+    if (m.length) e.m = m;
+    roster.push(e);
+  }
+  const idx = { asOf: H.length ? H[H.length - 1].date : null, dates: H.map((h) => h.date), roster };
+  fs.writeFileSync(path.join(ROOT, "data", "history-index.js"),
+    "// 스냅샷 색인 — scripts/snapshot.js 가 history.js 와 함께 쓴다(손으로 고치지 않는다). 앱이 시작할 때 받는다.\n" +
+    "// {asOf 마지막 기록일, dates 기록일 전부, roster:[{d 기록일, p 직전 기록일, a 편입·r 제외·m 주제 이동(from) — [{t, n, c, th}]}]}\n" +
+    "window.HISTORY_INDEX = " + JSON.stringify(idx) + ";\n");
+}

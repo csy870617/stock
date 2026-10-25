@@ -19,7 +19,8 @@ const DATA = path.join(ROOT, "data");
 const OUT = path.join(DATA, "perf.json");
 const OFFLINE = process.argv.includes("--offline");
 const FORMAL = ["core", "growth", "value", "dividend", "rising"];
-const GROUPS = ["all"].concat(FORMAL, ["tier:1", "tier:2", "tier:3", "watch", "hold"]);
+// picks = 홈 'Top Pick'(그날 고른 나라별 3종목 — 스냅샷 picks, 2026-07-31~): 가장 눈에 띄는 추천이라 같은 방식으로 성적을 잰다
+const GROUPS = ["all"].concat(FORMAL, ["tier:1", "tier:2", "tier:3", "picks", "watch", "hold"]);
 const REMOVED_DAYS = 90;   // 편출 종목 목록에 남기는 기간(일)
 const SWAP_DAYS = 365;     // 교체 성과를 재는 기간(일)
 const AFTER = 20;          // 교체 뒤 비교 시점(거래일)
@@ -158,7 +159,8 @@ async function main() {
       nav[f] = 1;
       let v = 1;
       for (let k = f; k < days.length; k++) { v *= 1 + days[k].r; nav[k + 1] = r4(v); }
-      groups[g] = { w: LP.windows(days, base), nav, n: lastC.filter((e) => LP.inGroup(sel, e.th, e.tier)).length };
+      groups[g] = { w: LP.windows(days, base), nav,
+        n: g === "picks" ? ((last.picks && last.picks[c]) || []).length : lastC.filter((e) => LP.inGroup(sel, e.th, e.tier)).length };
     });
 
     // ── 4. 종목별 — 지금 편성(이번 주제 연속 보유 시작일부터)과 최근 90일 편출 ──

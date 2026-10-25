@@ -1,9 +1,11 @@
 // 서비스워커 — 앱 설치(PWA) 및 오프라인 대비 캐시
 // 전략: 네트워크 우선(항상 최신 데이터를 먼저 시도), 실패 시에만 캐시 사용.
 // 데이터 정확성이 최우선이므로 캐시가 최신 데이터를 가리는 일이 없도록 한다.
-var CACHE = "mystock-v71";
+var CACHE = "mystock-v72";
 // index.html 이 로드하는 스크립트 전부를 프리캐시해야 오프라인에서 앱이 온전히 뜬다
 // (하나라도 빠지면 오프라인 첫 로드에서 그 데이터 레이어가 통째로 비어 보인다).
+// 검색 사전(tickers.js)은 쓸 때 받지만 오프라인 검색을 위해 설치 때 미리 받아 둔다(첫 화면을 막지 않는다).
+// 전체 스냅샷(history.js)은 계속 커지므로 프리캐시하지 않는다 — '과거 보기'를 열 때 받으면 그때 캐시된다.
 var SHELL = [
   "./",
   "./index.html",
@@ -22,7 +24,7 @@ var SHELL = [
   "./data/stock-ta.js",
   "./data/events.js",
   "./data/fundamentals.js",
-  "./data/history.js",
+  "./data/history-index.js",
   "./data/trend-summary.js",
   "./data/tickers.js",
   "./scripts/lib-ta.js",
