@@ -11,7 +11,8 @@
 //      되돌림이 h 안이면 추세는 이어진 것으로 본다(상승 추세 속 조정·하락 추세 속 반등). 지금 추세 = 마지막 전환점 이후의 다리.
 //      2026-10-25 까지는 '60거래일 새 고점(저점)이 없으면 멈춤 → 보합 또는 반대 추세'와 박스권 이후 재시작 규칙이 더 있었다.
 //      한·미 955종목 7년 비교(scripts/research/trend-method, 사전 등록)에서 그 규칙을 뺀 쪽이 판정이 덜 뒤집혔고(헛신호 23→15%)
-//      이후 움직임과도 조금 더 맞아(멈춘 듯한 다리도 이후엔 원래 방향으로 움직인 경우가 많았다) 뺐다.
+//      이후 움직임과도 조금 더 맞아(멈춘 듯한 다리도 이후엔 원래 방향으로 움직인 경우가 조금 더 많았다 — 약 53~54%) 뺐다.
+//      대신 추세 방향으로 60거래일 넘게 새 고점(저점)이 없으면 그 사실만 quiet 로 남긴다 — 앱 'N개월째 새 고점 없음'(판정은 그대로).
 //   2) 추세 구간 분해 — 시장 몫(1년 일간 β × 지수) vs 종목 고유(로그로 정확히 더해짐), 핵심 날짜(초과수익이 큰 날),
 //      구간 안의 단계(로그 가격 꺾은선 1~4개 — 상승·하락·보합), 직전 추세(그 앞 다리).
 // 예측이 아니다 — 지금까지 일어난 움직임의 정리다(어느 판정 방식도 이후 방향을 믿을 만하게 맞히지 못했다).
@@ -23,6 +24,7 @@ const KEY_MAX = 5;          // 핵심 날짜 최대 개수
 const MKT_DAY_MAX = 2;      // 시장 급변일 최대 개수
 const LEG_MAX = 4, LEG_MIN = 10, LEG_GAIN = 0.6;   // 단계: 최대 4개, 최소 10거래일, 오차가 60% 이하로 줄어야 하나 더
 const REL_BAND = 0.05;      // 시장 대비 강함·약함 — 지수와의 비율 차 5%
+const QUIET = 60;           // 추세 방향으로 새 고점(저점) 없이 60거래일(약 3개월) → 'N개월째 새 고점 없음' 표시(사실 — 판정은 바꾸지 않는다)
 
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const r4 = (v) => (v == null || !isFinite(v) ? null : Math.round(v * 1e4) / 1e4);
@@ -223,6 +225,9 @@ function analyze(bars, bench, opts) {
     const dd = bars[i].c / bars[peak].c - 1;
     if (dd < mdd) { mdd = dd; mddFrom = bars[peak].t; mddTo = bars[i].t; }
   }
+  // 추세 방향으로 새 극점이 없는 기간(2026-10-25 사용자 요청 '보합 대신 N개월째 새 고점 없음 표시') — 마지막 극점 날짜와 그 뒤 거래일 수
+  const ext = rg.cls === "상승" ? hi : rg.cls === "하락" ? lo : -1;
+  const quiet = ext >= 0 && last - ext >= QUIET ? { n: last - ext, d: ymd(bars[ext].t) } : null;
 
   // 핵심 날짜(종목 고유) — 초과수익이 큰 날, 같은 방향으로 이어진 날은 최대 3일로 묶는다
   const volMed = median(days.map((d) => d.v));
@@ -296,7 +301,7 @@ function analyze(bars, bench, opts) {
     rel, relRaw: r4(relRaw), relBand: REL_BAND,
     hi: { d: ymd(bars[hi].t), c: bars[hi].c }, lo: { d: ymd(bars[lo].t), c: bars[lo].c },
     fromHi: r4(now.c / bars[hi].c - 1), fromLo: r4(now.c / bars[lo].c - 1),
-    mdd: mddFrom ? { v: r4(mdd), from: ymd(mddFrom), to: ymd(mddTo) } : null,
+    mdd: mddFrom ? { v: r4(mdd), from: ymd(mddFrom), to: ymd(mddTo) } : null, quiet,
     box, prev: pv,
     att: { mkt: r4(att.mkt), up: r4(att.up), upN: att.upN, down: r4(att.down), downN: att.downN, rest: r4(att.rest), spec: r4(logSpec), tot: r4(logTot) },
     keyShare: r4(keyShare), character, upVol: r4(upVol), volTrend: r2(volTrend),
@@ -316,4 +321,4 @@ function fingerprint(a) {
   return [a.cls, a.from].concat((a.keys || []).slice(0, 3).map((k) => k.s).sort()).join("|");
 }
 
-module.exports = { LOOKBACK, H_K, H_MIN, H_MAX, analyze, regime, zigzag, breakpoints, phases, fingerprint, ymd, bandOf, clsOf };
+module.exports = { LOOKBACK, H_K, H_MIN, H_MAX, QUIET, analyze, regime, zigzag, breakpoints, phases, fingerprint, ymd, bandOf, clsOf };

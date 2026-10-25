@@ -68,6 +68,7 @@ function packet(m) {
   L.push("- 참고(자세히 화면): 시장 민감도 β " + m.beta + " → 시장만 따랐다면 " + pct(m.mkt) + ", 종목 고유 " + pct(m.spec));
   if (m.cls === "상승" && m.fromHi <= -0.05) L.push("- 추세 중 고점 " + m.hi.d + " 대비 " + pct(m.fromHi) + " (상승 추세 속 조정)");
   if (m.cls === "하락" && m.fromLo >= 0.05) L.push("- 추세 중 저점 " + m.lo.d + " 대비 " + pct(m.fromLo) + " (하락 추세 속 반등)");
+  if (m.quiet) L.push("- " + (m.cls === "상승" ? "고점" : "저점") + " " + m.quiet.d + " 이후 " + m.quiet.n + "거래일 새 " + (m.cls === "상승" ? "고점" : "저점") + " 없음(앱 표시: N개월째 새 " + (m.cls === "상승" ? "고점" : "저점") + " 없음 — 사실 표시, 추세 판정은 그대로)");
   if (m.box) L.push("- 박스권(약 3년 내내 전환 기준 안): 고점 " + m.hi.d + " · 저점 " + m.lo.d + " · 폭 " + pct(m.box.width));
   if (m.prev) L.push("- 직전 추세: " + m.prev.cls + " " + m.prev.from + " ~ " + m.prev.to + " " + pct(m.prev.ret));
   L.push("");

@@ -377,6 +377,7 @@ function build(stock, a, extra) {
     if (pull != null && Math.abs(pull) >= 0.05 && (up ? a.hi.d : a.lo.d) !== a.to)
       sum.push(up ? "추세 중 고점(" + mdy(a.hi.d, y0) + ")보다 " + abs(pull) + " 낮다 — 상승 추세 속 조정이다(이 종목의 추세 전환 기준인 고점 대비 -" + abs(a.h) + "에는 못 미침)."
         : "추세 중 저점(" + mdy(a.lo.d, y0) + ")보다 " + abs(pull) + " 높다 — 하락 추세 속 반등이다(이 종목의 추세 전환 기준인 저점 대비 +" + abs(a.h) + "에는 못 미침).");
+    if (a.quiet) sum.push("추세 중 " + (up ? "고점" : "저점") + "(" + mdy(a.quiet.d, y0) + ") 이후 " + durTxt(a.quiet.d, a.to) + "째 새 " + (up ? "고점" : "저점") + "이 없다(" + a.quiet.n + "거래일).");
   }
   sum.push("같은 기간 " + bn + " " + pct(a.mret) + " · 시장 민감도 β " + a.beta.toFixed(2) + " → 시장만 따랐다면 " + pct(a.mkt) + ". 실제 " + pct(a.ret) +
     "로, 그 차이 " + pct(a.spec) + "가 종목 고유 요인이다.");
