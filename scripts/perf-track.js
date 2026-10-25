@@ -2,7 +2,7 @@
 // 추천 성과 사전 계산 → data/perf.json (앱 '성과' 탭이 그대로 그린다, LLM 토큰 0)
 //
 // 무엇을: data/history.js 스냅샷으로 보유 기준 성적(편출 종목 포함 — lib-perf.js)을 묶음마다(정식 전체·5주제·티어·관심·보유)
-//   전체·최근 1/3/6/12개월 창으로 계산하고, 차트용 누적 곡선, 종목별(지금 편성·최근 90일 편출) 성적, 교체 성과(같은 날·같은 주제의
+//   전체·최근 1/3/6/12개월 창으로 계산하고(한국 정식 전체는 2026-10-26 구간부터 대표 2종목 비중 — weights), 차트용 누적 곡선, 종목별(지금 편성·최근 90일 편출) 성적, 교체 성과(같은 날·같은 주제의
 //   편입 ⇄ 편출 묶음을 교체일 종가부터 지수 대비로 비교 — swap-outcome.js 와 같은 기준), 3개월 검증(data/shadow.json 의 추천 vs 그림자)을 쓴다.
 // 왜 미리 계산하나: 편출 종목의 마지막 하루·편출 후 시세는 스냅샷에 없어 야후 종가가 필요하고, 앱이 매번 2년 시세를 받아
 //   계산하던 기간별 화면(지금 종목의 과거 주가 — 추천 성적이 아님)을 없애 성과 탭을 가볍게 한다(2026-10-23 사용자 요청 '성과 화면 개선').
@@ -163,6 +163,24 @@ async function main() {
         n: g === "picks" ? ((last.picks && last.picks[c]) || []).length : lastC.filter((e) => LP.inGroup(sel, e.th, e.tier)).length };
     });
 
+    // ── 3-1. 정식 전체 비중(lib-perf ANCHORS — 한국 대표 2종목 각 15%, 2026-10-25 사용자 결정) — 앱이 비중과
+    //   '지금 비중 기준 β'(최근 90일 편성 전체에 지금 비중을 적용 — 결격 점검의 β 밴드와 같은 계산)를 동일비중 β 와 함께 보인다 ──
+    let weights = null;
+    const AN = LP.ANCHORS[c];
+    if (AN) {
+      const HB = LP.recentSnaps(H, LP.HELD_DAYS), off = H.length - HB.length;
+      const px = (cc, t, i) => exitPx(cc, t, i + off);
+      const now = LP.stats(LP.chain(HB, c, null, px, "always"), 0, HB[0].date);
+      const ew = LP.stats(LP.chain(HB, c, null, px, "never"), 0, HB[0].date);
+      const formal = lastC.filter((e) => LP.inGroup(null, e.th, e.tier));
+      const anchors = Object.keys(AN.w).map((t) => {
+        const e = formal.find((x) => x.t === t);
+        return e ? { t, n: e.n, w: r2(AN.w[t] * 100) } : null;
+      }).filter(Boolean);
+      weights = { from: AN.from, anchors, rest: r2(100 - anchors.reduce((s, x) => s + x.w, 0)), nRest: formal.length - anchors.length,
+        beta: now && ew ? { now: now.beta, ew: ew.beta, from: now.from, days: now.days } : null };
+    }
+
     // ── 4. 종목별 — 지금 편성(이번 주제 연속 보유 시작일부터)과 최근 90일 편출 ──
     const ix = (i) => { for (let j = i; j >= 0; j--) if (H[j][LP.idxKey(c)]) return H[j][LP.idxKey(c)]; return null; };
     // 기록일 i 부터 거꾸로 같은 갈래(정식 편성·관심·보유)로 이어진 첫 기록일 — 정식 안에서 주제만 옮긴 종목은 처음 추천한 날부터 센다
@@ -249,9 +267,10 @@ async function main() {
       (P0.removed || []).forEach((r) => { old[r.t + "@" + r.d1] = r; });
       removed.forEach((r) => { const o = old[r.t + "@" + r.d1]; if (o && r.post == null && o.post != null) { r.post = o.post; r.postEx = o.postEx; } });
     }
-    out[c] = { pd: maxD[c], dates, idx: idxNav, eq: eqNav, groups, stocks, removed, swaps: swapsOut, shadow };
+    out[c] = { pd: maxD[c], dates, idx: idxNav, eq: eqNav, groups, stocks, removed, swaps: swapsOut, shadow, weights };
     const a = groups.all && groups.all.w.all;
     console.log("perf-track " + c + ": " + daysAll.length + "거래일 · 정식 " + (a ? a.ret + "% vs 지수 " + a.bench + "% (β " + a.beta + ", β 반영 " + a.betaAlpha + "%p, t " + a.tEx + ")" : "–") +
+      (weights && weights.beta ? " · 지금 비중 β " + weights.beta.now + "(동일비중 " + weights.beta.ew + ")" : "") +
       " · 편출 " + removed.length + " · 교체 " + swapsOut.list.length + "회(20거래일 지난 " + swapsOut.summary.done + "회 중 편입이 나은 " + swapsOut.summary.wins20 + ")" + (swapsOut === P0?.swaps ? " — 지난 계산 유지" : ""));
   }
   // 편출일 종가 캐시 — 지난 사실이라 한 번 받으면 다시 받지 않는다(스냅샷 보존 기간 밖은 정리)

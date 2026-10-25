@@ -1,7 +1,8 @@
 // 추천 성과 계산(보유 기준) — perf-track.js(앱 성과 탭의 data/perf.json)와 performance-report.js(루틴·결격 점검의 β)가 함께 쓴다.
 //
 // 보유 기준: 매 기록일(history.js 스냅샷)의 편성을 다음 기록일까지 동일비중으로 보유했다고 보고 수익률을 이어 붙인다(편출 종목 포함 —
-//   생존 편향 없음). 기록일 사이에 빠진 종목은 다음 기록일 스냅샷에 가격이 없으므로, 그날 종가(exitPx — 야후, perf.json cache)로
+//   생존 편향 없음). 예외: 한국 정식 전체는 2026-10-26 구간부터 지수 대표 2종목 비중(ANCHORS)을 쓴다.
+//   기록일 사이에 빠진 종목은 다음 기록일 스냅샷에 가격이 없으므로, 그날 종가(exitPx — 야후, perf.json cache)로
 //   마지막 하루를 잰다(2026-10-23 전에는 이 하루가 빠져 주제별로 최대 2%p 어긋났다).
 // 거래일: 지수 종가가 바뀐 기록일만 거래일로 센다 — 주말·휴장일 기록(수익 0)은 다음 거래일에 합친다.
 // β: 거래일 일간 수익률을 지수에 회귀(20거래일 이상) — 주간 7기록 묶음(12점)은 오차가 커서(미국 주제별 ±0.4~0.9) 바꿨다.
@@ -10,6 +11,20 @@
 
 const PERSONAL = { watch: 1, hold: 1 };
 const MIN_DAYS = 20;   // β·t 를 계산하는 최소 거래일
+const HELD_DAYS = 90;  // '지금 편성'의 시장 민감도를 재는 최근 기록 창(달력일) — 결격 점검의 β 밴드·앱 '지금 비중 기준 β'
+
+// 정식 전체 비중(2026-10-25 사용자 결정 — CLAUDE.md §6): 코스피 시총의 절반이 삼성전자·SK하이닉스라 동일비중 편성은
+//   시장 민감도(β)가 0.45 안팎에 머문다(코스피 상위 200종목 동일비중도 0.43). 지수 대표 2종목에 각 15%, 나머지 고유 종목이
+//   70% 를 똑같이 나눈다. 정식 전체(sel=null)에만 쓰고 주제·티어·Top Pick·관심·보유와 그림자 비교는 동일비중 그대로다(종목 선택만 비교).
+//   from = 이 비중으로 재는 첫 구간의 끝 기록일 — 그 전 구간은 동일비중으로 잰 성적 그대로 남긴다.
+//   지수 대표 2종목(§6 '시총 상위 2종목')이 바뀌면 여기 티커를 함께 바꾼다.
+const ANCHORS = { korea: { from: "2026-10-26", w: { "005930": 0.15, "000660": 0.15 } } };
+// mode: "always" = 기록 전체에 지금 비중(β 밴드용), "never" = 동일비중, 그 밖 = from 부터
+function anchorsFor(country, sel, date, mode) {
+  const A = ANCHORS[country];
+  if (sel || !A || mode === "never" || (mode !== "always" && date < A.from)) return null;
+  return A.w;
+}
 
 // 선택자: null = 정식 전체(관심·보유 제외), "core" 등 = 그 주제, "tier:1" = 정식 중 그 티어, "watch"/"hold" = 개인 목록,
 //   "picks" = 그 기록일의 그 나라 Top Pick(스냅샷 picks — chain 이 기록일마다 고른다, inGroup 으로는 가릴 수 없다)
@@ -30,7 +45,8 @@ const idxKey = (country) => (country === "korea" ? "kospi" : "sp500");
 
 // 보유 기준 일별 수익 — [{d, r, rb, re, eq, n}] (거래일만, 앞쪽 n=0 은 그 묶음이 아직 비어 있던 날)
 //   exitPx(country, ticker, i) → 기록일 i-1 에 있다가 i 에 없는 종목의 기록일 i 종가(없으면 null — 그 종목은 그날 빠진다)
-function chain(H, country, sel, exitPx) {
+//   anchorMode → anchorsFor 의 mode(정식 전체 비중을 언제부터 쓰나)
+function chain(H, country, sel, exitPx, anchorMode) {
   const bk = idxKey(country), prev = {};
   const lv = (snap, k) => { if (snap[k]) prev[k] = snap[k]; return prev[k] || null; };
   if (!H.length) return [];
@@ -45,19 +61,24 @@ function chain(H, country, sel, exitPx) {
     const pb = {};
     (b.stocks || []).forEach((e) => { if (e.c === country && e.p) pb[e.t] = e.p; });
     const seen = {};
-    let sum = 0, n = 0;
+    let sum = 0, n = 0, aSum = 0, aW = 0, nA = 0;
     // Top Pick 묶음 — 그 기록일에 고른 3종목을 다음 기록일까지 같은 비중으로(고른 날 종가부터 — 정식 편성과 같은 기준)
     const pk = sel === "picks" ? (a.picks && a.picks[country]) || [] : null;
+    const wA = anchorsFor(country, sel, b.date, anchorMode);
     (a.stocks || []).forEach((e) => {
       if (e.c !== country || seen[e.t] || !e.p || (pk ? pk.indexOf(e.t) < 0 : !inGroup(sel, e.th, e.tier))) return;
       let p1 = pb[e.t];
       if (!p1 && exitPx) p1 = exitPx(country, e.t, i);
       if (!p1) return;
-      seen[e.t] = 1; sum += p1 / e.p - 1; n++;
+      seen[e.t] = 1; n++;
+      if (wA && wA[e.t] != null) { aSum += wA[e.t] * (p1 / e.p - 1); aW += wA[e.t]; nA++; } else sum += p1 / e.p - 1;
     });
+    // 비중을 쓰는 구간: 대표 종목은 정한 비중, 나머지는 남은 비중을 똑같이(대표 종목이 빠졌으면 그만큼 나머지가 나눈다)
+    const nr = n - nA;
+    const r = !n ? 0 : !aW ? sum / n : nr ? aSum + (1 - aW) * (sum / nr) : aSum / aW;
     // RSP(동일비중 S&P500)는 미국 편성의 비교 기준 — 한국 쪽은 쓰지 않는다
     const eq = country === "us" && !!(e0 && e1);
-    const r = n ? sum / n : 0, rb = b0 && b1 ? b1 / b0 - 1 : 0, re = eq ? e1 / e0 - 1 : 0;
+    const rb = b0 && b1 ? b1 / b0 - 1 : 0, re = eq ? e1 / e0 - 1 : 0;
     if (!acc) acc = { r: 0, rb: 0, re: 0, eq: true, n: 0 };
     acc.r = (1 + acc.r) * (1 + r) - 1; acc.rb = (1 + acc.rb) * (1 + rb) - 1; acc.re = (1 + acc.re) * (1 + re) - 1;
     acc.eq = acc.eq && eq; acc.n = Math.max(acc.n, n);
@@ -129,4 +150,13 @@ function windows(days, base) {
   return out;
 }
 
-module.exports = { PERSONAL, MIN_DAYS, inGroup, pdOf, idxKey, chain, stats, windows, reg, tMean, r2 };
+// 최근 days 달력일의 기록 — 보유 기준 β 를 '지금 편성'에 가깝게 잰다(HELD_DAYS)
+function recentSnaps(H, days) {
+  if (!H.length) return [];
+  const d = new Date(H[H.length - 1].date);
+  d.setUTCDate(d.getUTCDate() - days);
+  const cut = d.toISOString().slice(0, 10);
+  return H.filter((h) => h.date >= cut);
+}
+
+module.exports = { PERSONAL, MIN_DAYS, HELD_DAYS, ANCHORS, anchorsFor, inGroup, pdOf, idxKey, chain, stats, windows, recentSnaps, reg, tMean, r2 };

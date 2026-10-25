@@ -7,7 +7,7 @@ window.CANDIDATES = {
  "screenAsOf": "2026-10-24",
  "screenFresh": true,
  "beta": {
-  "korea": 0.45,
+  "korea": 0.72,
   "us": 1.01
  },
  "groups": {
@@ -99,7 +99,7 @@ window.CANDIDATES = {
      "ticker": "003230",
      "name": "삼양식품",
      "status": "검증 통과",
-     "note": "3년 매출 연평균 37%·3년 평균 ROIC 19.5% — 한국 β 를 낮추는 점(β 0.15)이 블로커, β 가 밴드 안으로 복귀하면 1순위 대체",
+     "note": "3년 매출 연평균 37%·3년 평균 ROIC 19.5% — 성장 주제에 결격이 생기면 1순위 대체",
      "asOf": "2026-10-23",
      "why": "3년 매출 연평균 37.3% · FCF 마진 -5.9% · 3년 평균 ROIC 19.5%",
      "url": "https://m.stock.naver.com/domestic/stock/003230/total"
@@ -261,7 +261,7 @@ window.CANDIDATES = {
      "ticker": "271560",
      "name": "오리온",
      "status": "검증 통과",
-     "note": "저평가 정체성·이익 안정성·컨센 2출처 통과 — β 가 매우 낮아 β 를 올리는 교체와 짝일 때 편입",
+     "note": "저평가 정체성·이익 안정성·컨센 2출처 통과 — 저평가 주제에 결격이 생기면 대체 후보",
      "asOf": "2026-10-18",
      "why": "EBIT/EV 12.6% · FCF/시총 9.5% · 매출 성장 7.3%",
      "url": "https://m.stock.naver.com/domestic/stock/271560/total"
@@ -270,7 +270,7 @@ window.CANDIDATES = {
      "ticker": "282330",
      "name": "BGF리테일",
      "status": "검증 통과",
-     "note": "검증 통과 — β 가 매우 낮아 β 를 올리는 교체와 짝일 때 편입",
+     "note": "검증 통과 — 저평가 주제에 결격이 생기면 대체 후보",
      "asOf": "2026-10-18",
      "why": "EBIT/EV 8.2% · FCF/시총 23.3% · 매출 성장 4.2%",
      "url": "https://m.stock.naver.com/domestic/stock/282330/total"
@@ -279,7 +279,7 @@ window.CANDIDATES = {
      "ticker": "004370",
      "name": "농심",
      "status": "검증 통과",
-     "note": "검증 통과(관심 편성 중) — β 가 매우 낮아 β 를 올리는 교체와 짝일 때 편입",
+     "note": "검증 통과(관심 편성 중) — 저평가 주제에 결격이 생기면 대체 후보",
      "asOf": "2026-10-18",
      "why": "EBIT/EV 7% · FCF/시총 8.2% · 매출 성장 2.2%",
      "url": "https://m.stock.naver.com/domestic/stock/004370/total"
