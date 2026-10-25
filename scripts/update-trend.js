@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 "use strict";
 //
-// 현재 추세 — 지금 상승·하락·보합 중 어느 추세인지, 언제 시작됐는지, 그 추세를 무엇이 만들었는지 숫자로 정리한다
+// 현재 추세 — 지금 상승·하락 중 어느 추세인지, 언제 시작됐는지, 그 추세를 무엇이 만들었는지 숫자로 정리한다
 // (LLM 토큰 0, refresh-quotes Action·세션 backbone)
 //
 //   node scripts/update-trend.js            → data/trend/<ticker>.json (편성·관심·보유 전 종목)
 //   node scripts/update-trend.js 005930 NVDA  → 그 종목만
 //
-// 계산(scripts/lib-trend.js): 추세 판정·시작점(되돌림 기준 지그재그 + 60거래일 정체) → 그 추세 구간의 시장 몫 vs 종목 고유(β)·
+// 계산(scripts/lib-trend.js): 추세 판정·시작점(되돌림 기준 지그재그의 마지막 다리) → 그 추세 구간의 시장 몫 vs 종목 고유(β)·
 //   핵심 날짜(초과수익이 큰 날)·단계(꺾은선 1~4개)·직전 추세.
 // 여기서 덧붙이는 사실:
 //   - 한국: 네이버 증권 투자자별 매매동향(추세 구간의 외국인·기관·개인 순매수 — 수량 × 그날 종가, 단계별 합·보유율)과
@@ -267,8 +267,7 @@ function durTxt(from, to) {
   return Math.floor(m / 12) + "년" + (m % 12 ? " " + (m % 12) + "개월" : "");
 }
 // 추세 시작점의 말
-const START_WORD = { low: "저점부터", high: "고점부터", boxLow: "저점부터(박스권 이후)", boxHigh: "고점부터(박스권 이후)",
-  afterHigh: "고점 이후", afterLow: "저점 이후", window: "이전부터" };
+const START_WORD = { low: "저점부터", high: "고점부터", window: "이전부터" };
 
 // 날짜 문자열 → 시리즈 인덱스(그 날짜 이상인 첫 거래일)
 function idxOnOrAfter(T, dstrv) {
@@ -368,7 +367,7 @@ function build(stock, a, extra) {
   const sum = [];
   const bn = extra.benchName, ex = (x) => Math.exp(x) - 1, dur = durTxt(a.from, a.to), y0 = a.to;
   const startTxt = mdy(a.from, y0) + " " + START_WORD[a.kind];
-  if (a.cls === "보합") {
+  if (a.cls === "보합") {   // 약 3년 창 전체가 전환 기준(h) 안에서만 움직였다
     const where = a.box && a.box.pos != null ? (a.box.pos >= 0.75 ? "상단 근처" : a.box.pos <= 0.25 ? "하단 근처" : "중간") : "";
     sum.push(startTxt + " " + dur + "째 박스권이다 — 이 기간 고점 " + mdy(a.hi.d, y0) + "·저점 " + mdy(a.lo.d, y0) + " 사이(폭 " + abs(a.box ? a.box.width : 0) + ")에서 움직였고 지금은 " + where + "다.");
   } else {
@@ -396,7 +395,7 @@ function build(stock, a, extra) {
   else sum.push("종목 고유 몫이 작아(" + pct(a.spec) + ") 주가는 대체로 시장 몫(β)대로 움직였다.");
   if (a.legs.length > 1) sum.push("추세 안의 단계: " + a.legs.map((L) => mdy(L.e, y0) + "까지 " + pct(L.ret) + " " + L.cls).join(" → ") + ".");
   if (a.prev) sum.push("직전에는 " + mdy(a.prev.from, y0) + (a.prev.cut ? " 이전" : "") + "부터 " + mdy(a.prev.to, y0) + "까지 " + durTxt(a.prev.from, a.prev.to) + " " +
-    (a.prev.cls === "보합" ? "박스권(" + pct(a.prev.ret) + ")" : a.prev.cls + "(" + pct(a.prev.ret) + ")") + "이었다.");
+    a.prev.cls + "(" + pct(a.prev.ret) + ")이었다.");
   if (flow) sum.push((flow.part ? "추세 구간 중 최근 " + flow.days + "거래일" : "같은 기간") + " " + [flowWord("외국인", flow.f), flowWord("기관", flow.o), flowWord("개인", flow.p)].join(" · ") +
     (flow.hold && flow.hold[0] != null && Math.abs(flow.hold[1] - flow.hold[0]) >= 0.3 ? " — 외국인 보유율 " + flow.hold[0].toFixed(1) + "% → " + flow.hold[1].toFixed(1) + "%" : "") + ".");
   if (earn.length) sum.push("실적 발표 반응: " + earn.slice(-6).map((e) => mdy(e.rd, y0) + " " + pct(e.ret) + "(시장 대비 " + pct(e.ar) + ")").join(", ") + ".");

@@ -1,4 +1,4 @@
-// 현재 추세 분석 — 지금 이 종목이 상승·하락·보합 중 어느 추세에 있는지, 그 추세가 언제 시작됐는지를 정하고
+// 현재 추세 분석 — 지금 이 종목이 상승·하락 중 어느 추세에 있는지, 그 추세가 언제 시작됐는지를 정하고
 // 그 추세 구간을 숫자로 쪼갠다(토큰 0). update-trend.js 가 종목마다 일봉(최근 약 3년)과 지수 일봉으로 계산해
 // data/trend/<ticker>.json 에 쓰고, 앱 종목 상세 '현재 추세'가 그린다.
 //
@@ -8,17 +8,17 @@
 //
 //   1) 전환 — 지그재그: 마지막 고점(저점)에서 h 넘게 되돌리면 그 고점(저점)을 전환점으로 확정한다.
 //      h = 그 종목 일간 변동성 × 10(약 100거래일 무작위 움직임의 1표준편차 — 몇 달짜리 추세를 가르는 크기), 10~35% 로 묶는다.
-//      되돌림이 h 안이면 추세는 이어진 것으로 본다(상승 추세 속 조정·하락 추세 속 반등).
-//   2) 보합 — 추세 방향으로 60거래일(약 3개월) 넘게 새 고점(하락이면 새 저점)을 못 내면 그 고점(저점) 이후를 보합(박스권)으로 본다.
-//      박스권을 지나 다시 새 고점을 내면, 돌파 직전 60거래일 안의 가장 낮은 점(하락이면 가장 높은 점)부터를 새 추세로 본다.
-//   3) 추세 구간 분해 — 시장 몫(1년 일간 β × 지수) vs 종목 고유(로그로 정확히 더해짐), 핵심 날짜(초과수익이 큰 날),
-//      구간 안의 단계(로그 가격 꺾은선 1~4개), 직전 추세.
-// 예측이 아니다 — 지금까지 일어난 움직임의 정리다.
+//      되돌림이 h 안이면 추세는 이어진 것으로 본다(상승 추세 속 조정·하락 추세 속 반등). 지금 추세 = 마지막 전환점 이후의 다리.
+//      2026-10-25 까지는 '60거래일 새 고점(저점)이 없으면 멈춤 → 보합 또는 반대 추세'와 박스권 이후 재시작 규칙이 더 있었다.
+//      한·미 955종목 7년 비교(scripts/research/trend-method, 사전 등록)에서 그 규칙을 뺀 쪽이 판정이 덜 뒤집혔고(헛신호 23→15%)
+//      이후 움직임과도 조금 더 맞아(멈춘 듯한 다리도 이후엔 원래 방향으로 움직인 경우가 많았다) 뺐다.
+//   2) 추세 구간 분해 — 시장 몫(1년 일간 β × 지수) vs 종목 고유(로그로 정확히 더해짐), 핵심 날짜(초과수익이 큰 날),
+//      구간 안의 단계(로그 가격 꺾은선 1~4개 — 상승·하락·보합), 직전 추세(그 앞 다리).
+// 예측이 아니다 — 지금까지 일어난 움직임의 정리다(어느 판정 방식도 이후 방향을 믿을 만하게 맞히지 못했다).
 "use strict";
 
 const LOOKBACK = 750;       // 약 3년 일봉
 const H_K = 10, H_MIN = 0.10, H_MAX = 0.35;   // 전환 되돌림 = 일간 σ × 10, 10~35%
-const STALL = 60;           // 새 고점(저점) 없이 60거래일 → 보합
 const KEY_MAX = 5;          // 핵심 날짜 최대 개수
 const MKT_DAY_MAX = 2;      // 시장 급변일 최대 개수
 const LEG_MAX = 4, LEG_MIN = 10, LEG_GAIN = 0.6;   // 단계: 최대 4개, 최소 10거래일, 오차가 60% 이하로 줄어야 하나 더
@@ -81,50 +81,16 @@ function zigzag(y, H) {
   return { piv, dir, ext };
 }
 
-// ── 2) 지금 추세 — 지그재그의 마지막 다리를 시간 기준(새 극점 없이 STALL 일)으로 다시 가른다 ──
-//   다리가 최근 STALL 일 안에 새 극점을 냈으면 그 방향 추세가 이어지는 중이다(시작 = 전환점).
-//     다리 안에 2×STALL 일(약 6개월) 넘는 정체가 있었다가 다시 새 극점을 냈으면, 정체 = 박스권, 돌파 직전 STALL 일 안의 반대 극점부터 새 추세.
-//     그보다 짧은 정체는 추세 속 조정·반등으로 보고 가르지 않는다(단계로 보인다).
-//   STALL 일 넘게 새 극점이 없으면 멈춘 것이다. 그 뒤 움직임이 한쪽으로 꾸준했으면(되돌아온 단계 없이 띠 이상) 그 반대 방향 추세가
-//     극점에서 시작된 것으로 보고 같은 규칙을 다시 적용하고(천천히 흘러내린 하락 등), 오르내렸으면 극점 이후 보합(박스권)이다.
-//   → { cls, s(시작 인덱스), kind(시작점 종류), prev:{cls,s,e,kind}|null }
+// ── 2) 지금 추세 — 지그재그의 마지막 다리. 시작 = 마지막 전환점, 직전 추세 = 그 앞 다리 ──
+//   → { cls, s(시작 인덱스), kind(시작점 종류: low 저점부터 · high 고점부터 · window 창 시작부터), prev:{cls,s,e,kind}|null }
 const WORD = (d) => (d > 0 ? "상승" : "하락");
-function regime(y, H, stall, sigD) {
-  const n = y.length, z = zigzag(y, H), last = n - 1;
-  if (!z.dir) return { cls: "보합", s: 0, kind: "window", prev: null };   // 창 전체가 H 안 — 기간 내내 박스권
+function regime(y, H) {
+  const z = zigzag(y, H);
+  if (!z.dir) return { cls: "보합", s: 0, kind: "window", prev: null };   // 창 전체(약 3년)가 H 안 — 기간 내내 박스권
   const P = z.piv[z.piv.length - 1];
-  const prev0 = z.piv.length >= 2 ? { cls: WORD(-z.dir), s: z.piv[z.piv.length - 2].i, e: P.i, kind: z.dir > 0 ? "high" : "low" }
+  const prev = z.piv.length >= 2 ? { cls: WORD(-z.dir), s: z.piv[z.piv.length - 2].i, e: P.i, kind: z.dir > 0 ? "high" : "low" }
     : { cls: WORD(-z.dir), s: 0, e: P.i, kind: "window" };
-  return tail(P.i, z.dir, prev0, z.dir > 0 ? "low" : "high");
-
-  function tail(start, d, prevCtx, kind0) {
-    const better = (a, b) => (d > 0 ? y[a] > y[b] : y[a] < y[b]);
-    const prog = [start];   // 이 다리에서 새 극점을 낸 날들
-    for (let t = start + 1; t < n; t++) if (better(t, prog[prog.length - 1])) prog.push(t);
-    const ie = prog[prog.length - 1];
-    let s = start, kind = kind0, prev = prevCtx;
-    for (let j = prog.length - 2; j >= 0; j--) {
-      if (prog[j + 1] - prog[j] >= 2 * stall) {
-        const lo = Math.max(prog[j], prog[j + 1] - stall);
-        let m = lo;
-        for (let t = lo; t < prog[j + 1]; t++) if (d > 0 ? y[t] < y[m] : y[t] > y[m]) m = t;
-        const bs = prog[j] - start <= 10 ? start : prog[j];
-        // 정체 구간이 한쪽으로 꾸준히 밀린 것이었으면(되돌아온 단계 없이 띠 이상) 박스권이 아니라 그 방향의 약한 추세(조정·반등)다
-        const r = y[m] - y[bs];
-        const one = !phases(y.slice(bs, m + 1), sigD).some((g) => g.cls === WORD(d)) && Math.abs(r) >= Math.log(1 + bandOf(sigD, m - bs, 0.05, 0.10));
-        prev = { cls: one ? WORD(-d) : "보합", s: bs, e: m, kind: one ? (d > 0 ? "high" : "low") : "box" };
-        s = m; kind = one ? (d > 0 ? "low" : "high") : d > 0 ? "boxLow" : "boxHigh";
-        break;
-      }
-    }
-    if (last - ie < stall) return { cls: WORD(d), s, kind, prev };
-    // 멈춤 — 극점 이후의 움직임이 한쪽으로 꾸준했나
-    const mine = { cls: WORD(d), s, e: ie, kind };
-    const L = last - ie, r = y[last] - y[ie];
-    const orderly = !phases(y.slice(ie), sigD).some((g) => g.cls === WORD(d));
-    if (orderly && Math.abs(r) >= Math.log(1 + bandOf(sigD, L, 0.05, 0.10))) return tail(ie, -d, mine, d > 0 ? "high" : "low");
-    return { cls: "보합", s: ie, kind: d > 0 ? "afterHigh" : "afterLow", prev: mine };
-  }
+  return { cls: WORD(z.dir), s: P.i, kind: z.dir > 0 ? "low" : "high", prev };
 }
 
 // ── 3) 로그 가격 꺾은선 근사 — 구간 끝점은 실제 종가, 오차 제곱합 최소. → 끝점 인덱스 배열 ──
@@ -213,7 +179,7 @@ function analyze(bars, bench, opts) {
   for (let i = 1; i < n; i++) lrAll.push(y[i] - y[i - 1]);
   const sigD = sd(lrAll.slice(-500));
   const h = clamp(H_K * sigD, H_MIN, H_MAX), H = Math.log(1 + h);
-  const rg = regime(y, H, STALL, sigD);
+  const rg = regime(y, H);
   const s = rg.s, len = last - s;
   if (len < 1) return null;
 
@@ -319,13 +285,13 @@ function analyze(bars, bench, opts) {
   // 앱 차트 — 추세 시작 앞에 맥락 구간(추세 길이의 절반, 10~250거래일)을 붙인다. lead = 추세 시작의 배열 위치
   const lead = Math.min(s, Math.max(10, Math.min(250, Math.round(len * 0.5))));
   const c0 = s - lead;
-  // 보합이면 박스 범위(고·저)와 지금 위치
+  // 보합(창 전체가 h 안)이면 박스 범위(고·저)와 지금 위치
   const box = rg.cls === "보합" ? { hi: { d: ymd(bars[hi].t), c: bars[hi].c }, lo: { d: ymd(bars[lo].t), c: bars[lo].c },
     width: r4(bars[hi].c / bars[lo].c - 1), pos: r2(bars[hi].c > bars[lo].c ? (now.c - bars[lo].c) / (bars[hi].c - bars[lo].c) : 0.5) } : null;
   const toKey = (e) => ({ s: ymd(e.s), e: ymd(e.eT), si: lead + e.a + 1, ei: lead + e.e + 1, n: e.n, ar: r4(e.ar), ret: r4(e.ret), mret: r4(e.mret), vr: r2(e.vr), gap: r4(e.gap) });
   return {
     cls: rg.cls, kind: rg.kind, from: ymd(base.t), to: ymd(now.t), n: len, cut: s === 0, benchLag,
-    h: r4(h), stall: STALL, sigD: r4(sigD),
+    h: r4(h), sigD: r4(sigD),
     ret: r4(ret), mret: r4(mret), beta: r2(beta), betaN: est.length, mkt: r4(Math.exp(logMkt) - 1), spec: r4(Math.exp(logSpec) - 1),
     rel, relRaw: r4(relRaw), relBand: REL_BAND,
     hi: { d: ymd(bars[hi].t), c: bars[hi].c }, lo: { d: ymd(bars[lo].t), c: bars[lo].c },
@@ -350,4 +316,4 @@ function fingerprint(a) {
   return [a.cls, a.from].concat((a.keys || []).slice(0, 3).map((k) => k.s).sort()).join("|");
 }
 
-module.exports = { LOOKBACK, STALL, H_K, H_MIN, H_MAX, analyze, regime, zigzag, breakpoints, phases, fingerprint, ymd, bandOf, clsOf };
+module.exports = { LOOKBACK, H_K, H_MIN, H_MAX, analyze, regime, zigzag, breakpoints, phases, fingerprint, ymd, bandOf, clsOf };

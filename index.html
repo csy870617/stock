@@ -2589,8 +2589,8 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   function redrawChart() { var st = CH.cur; if (st && st.src && st.el.isConnected) drawChart(st); }
   if (window.matchMedia) { try { window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", redrawChart); } catch (_e) {} }
 
-  // ── 현재 추세 — 상승·하락·보합과 그 이유 ──
-  //   data/trend/<ticker>.json(update-trend.js 가 매일 계산: 추세 판정·시작점(되돌림 기준 전환점 + 3개월 정체)·시장 몫 vs 종목 고유(β)·
+  // ── 현재 추세 — 상승·하락과 그 이유 ──
+  //   data/trend/<ticker>.json(update-trend.js 가 매일 계산: 추세 판정·시작점(되돌림 기준 마지막 전환점)·시장 몫 vs 종목 고유(β)·
   //   단계·핵심 날짜·수급·공시·실적 반응, 루틴 세션이 trend-notes.js 로 쓴 '기사로 확인한 이유')을 종목을 열 때만 받아 상세 '현재 추세'를 채운다.
   //   고정 기간이 아니라 그 종목의 마지막 전환점부터가 추세다. 이미 일어난 움직임의 정리이지 예측이 아니다.
   //   분석 전체를 한 줄씩 요약해 보인다 — 원인·시장 대비·지금·주요 날짜·수급·실적·직전(2026-10-25 '분석된 내용 자체를 간단하게 정리해서').
@@ -2598,7 +2598,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   //   주요 날짜는 요약과 같은 번호 점(누르면 그날 값). 색 규칙은 성과 탭 곡선과 같다(dataviz 검증 팔레트).
   var MV = { data: {}, inflight: {}, cur: null };
   var MV_CLS = { "상승": "up", "하락": "down", "보합": "flat" };
-  var MV_KIND = { low: "저점부터", high: "고점부터", boxLow: "저점부터", boxHigh: "고점부터", afterHigh: "고점 이후", afterLow: "저점 이후", window: "이전부터" };
+  var MV_KIND = { low: "저점부터", high: "고점부터", window: "이전부터" };
   var MV_AI_TAG = '<span class="ai-tag" data-basis="매일 루틴(Claude 세션)이 추세 구간·크게 움직인 날을 기사로 검색해 쓴 설명입니다(scripts/trend-notes.js). 날짜별 이유도 같은 루틴이 쓰고, 기사로 확인한 것만 적습니다 — 출처 링크를 확인하세요.">AI</span>';
   function moveFileOf(t) { return "data/trend/" + encodeURIComponent(String(t).replace(/[^A-Za-z0-9.\-]/g, "_")) + ".json"; }
   // 받은 파일은 기억한다(없으면 null — 막 편입된 종목, 네트워크 오류는 다음에 다시)
@@ -2684,8 +2684,8 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   }
   function mvTip(m) {
     return "추세는 되돌림으로 나눕니다 — 마지막 고점(하락 추세면 저점)에서 이 종목 기준 " + Math.round((m.h || 0) * 100) + "% 넘게 되돌리면 추세가 바뀐 것으로 봅니다" +
-      "(일간 변동성 × 10 = 약 100거래일 움직임의 1표준편차, 10~35%로 묶음). 60거래일(약 3개월) 넘게 새 고점(하락 추세면 새 저점)을 못 내면 보합(박스권)이고, " +
-      "그사이 한쪽으로 꾸준히 밀렸다면 그 방향 추세로 봅니다. 추세 시작 = 그 전환점이라 기간은 종목마다 다릅니다. '시장보다'는 같은 기간 지수와의 차이가 ±5%를 넘었는지로 봅니다. " +
+      "(일간 변동성 × 10 = 약 100거래일 움직임의 1표준편차, 10~35%로 묶음). 그보다 작은 되돌림은 추세 속 조정·반등이라, 몇 달째 새 고점이 없어도 그만큼 밀리지 않았다면 상승 추세입니다" +
+      "(2019~2026 한·미 955종목 비교에서 '3개월 정체 = 보합' 규칙을 둔 방식보다 판정이 덜 뒤집혔습니다). 추세 시작 = 그 전환점이라 기간은 종목마다 다릅니다. '시장보다'는 같은 기간 지수와의 차이가 ±5%를 넘었는지로 봅니다. " +
       "이미 일어난 움직임의 정리이며 앞으로의 방향을 예측하지 않습니다.";
   }
   function mvChip(m) { return m.cls === "보합" ? "보합(박스권)" : m.cls + " 추세"; }
@@ -2727,9 +2727,8 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   }
   function mvPrevText(m) {
     var p = m.prev; if (!p) return "";
-    var where = /^(low|boxLow|afterLow)$/.test(m.kind) ? "저점" : /^(high|boxHigh|afterHigh)$/.test(m.kind) ? "고점" : "";
-    return esc(mvDur(p.from, p.to) + (p.cut ? " 이상" : "") + " " + (p.cls === "보합" ? "박스권" : p.cls)) + "(" + mvSg(p.ret) + ") 뒤 " +
-      (where ? where + "에서 " : "") + (m.cls === "보합" ? "멈춰 박스권이 됐다" : "이번 추세가 시작됐다");
+    var where = m.kind === "low" ? "저점" : m.kind === "high" ? "고점" : "";
+    return esc(mvDur(p.from, p.to) + (p.cut ? " 이상" : "") + " " + p.cls) + "(" + mvSg(p.ret) + ") 뒤 " + (where ? where + "에서 " : "") + "이번 추세가 시작됐다";
   }
   function mvHtml(m) {
     var cls = MV_CLS[m.cls] || "flat", ai = mvAiOk(m) ? m.ai : null, to = m.to, pts = mvPoints(m);

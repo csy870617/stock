@@ -40,7 +40,7 @@ const won = (v) => {
   return Math.round(a / 1e4).toLocaleString("ko-KR") + "만원";
 };
 const flowTxt = (who, v) => who + " " + won(v) + " " + (v >= 0 ? "순매수" : "순매도");
-const KIND = { low: "저점부터", high: "고점부터", boxLow: "저점부터(박스권 이후)", boxHigh: "고점부터(박스권 이후)", afterHigh: "고점 이후", afterLow: "저점 이후", window: "이전부터" };
+const KIND = { low: "저점부터", high: "고점부터", window: "이전부터" };
 const readJson = (f) => { try { return JSON.parse(fs.readFileSync(f, "utf8")); } catch (_e) { return null; } };
 const files = () => (fs.existsSync(DIR) ? fs.readdirSync(DIR).filter((f) => /\.json$/.test(f)) : []);
 function formalSet() {
@@ -68,8 +68,8 @@ function packet(m) {
   L.push("- 참고(자세히 화면): 시장 민감도 β " + m.beta + " → 시장만 따랐다면 " + pct(m.mkt) + ", 종목 고유 " + pct(m.spec));
   if (m.cls === "상승" && m.fromHi <= -0.05) L.push("- 추세 중 고점 " + m.hi.d + " 대비 " + pct(m.fromHi) + " (상승 추세 속 조정)");
   if (m.cls === "하락" && m.fromLo >= 0.05) L.push("- 추세 중 저점 " + m.lo.d + " 대비 " + pct(m.fromLo) + " (하락 추세 속 반등)");
-  if (m.box) L.push("- 박스권: 고점 " + m.hi.d + " · 저점 " + m.lo.d + " · 폭 " + pct(m.box.width));
-  if (m.prev) L.push("- 직전 추세: " + (m.prev.cls === "보합" ? "박스권" : m.prev.cls) + " " + m.prev.from + " ~ " + m.prev.to + " " + pct(m.prev.ret));
+  if (m.box) L.push("- 박스권(약 3년 내내 전환 기준 안): 고점 " + m.hi.d + " · 저점 " + m.lo.d + " · 폭 " + pct(m.box.width));
+  if (m.prev) L.push("- 직전 추세: " + m.prev.cls + " " + m.prev.from + " ~ " + m.prev.to + " " + pct(m.prev.ret));
   L.push("");
   L.push("## 추세 안의 단계(legs)");
   m.legs.forEach((g, i) => {
