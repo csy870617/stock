@@ -7,7 +7,7 @@ window.CANDIDATES = {
  "screenAsOf": "2026-10-26",
  "screenFresh": true,
  "beta": {
-  "korea": 0.72,
+  "korea": 0.71,
   "us": 1.01
  },
  "groups": {
@@ -28,7 +28,7 @@ window.CANDIDATES = {
      "note": "ROE 6%·3년 평균 ROIC 5.7%(우량 정체성 미달) — 검증 통과 대체 없음",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-23",
+     "triedAt": "2026-10-26",
      "since": "2026-10-18",
      "age": 8
     },
@@ -46,7 +46,7 @@ window.CANDIDATES = {
      ],
      "note": "중복 편성 — 저평가 주제에 남기고 이 주제는 다른 종목으로 교체",
      "dup": "value",
-     "triedAt": "2026-10-23",
+     "triedAt": "2026-10-26",
      "since": "2026-10-21",
      "age": 5
     },
@@ -64,12 +64,21 @@ window.CANDIDATES = {
      "note": "단·중·장기 신호 모두 매도 이하(추세 붕괴) — 3분기 영업이익 추정 하향(원화 강세·유럽 물류비)으로 증권사 목표가 하향, 매출 성장은 유지돼 기초 체력 훼손은 아님 · 검증 통과 대체 후보 없어 감시",
      "judged": "2026-10-21",
      "verdict": "실질",
-     "triedAt": "2026-10-23",
+     "triedAt": "2026-10-26",
      "since": "2026-10-21",
      "age": 5
     }
    ],
    "list": [
+    {
+     "ticker": "042700",
+     "name": "한미반도체",
+     "status": "보류",
+     "note": "3년 평균 ROIC 23%로 우량 정체성은 충족하나 컨센서스 목표가를 신뢰 출처 2곳으로 확인하지 못했고 매출 변동·고객 집중이 커 3분기 실적(11월) 뒤 재검토.",
+     "asOf": "2026-10-26",
+     "why": "3년 평균 ROIC 23.2% · 매출 성장 3.2% · 주식 수 연 -1.3%",
+     "url": "https://m.stock.naver.com/domestic/stock/042700/total"
+    },
     {
      "ticker": "323410",
      "name": "카카오뱅크",
@@ -86,14 +95,17 @@ window.CANDIDATES = {
     {
      "ticker": "329180",
      "name": "HD현대중공업",
-     "state": "점검 필요",
+     "state": "감시",
      "flags": [
       {
        "k": "trend",
        "msg": "추세 붕괴(단·중·장기 모두 매도 이하)",
-       "fresh": true
+       "fresh": false
       }
-     ]
+     ],
+     "note": "추세 붕괴 신호만 성립했고 논거 훼손은 없다. 올해 1분기 연결 영업이익이 전년보다 크게 늘었고 수주 목표도 높게 유지되며, 3분기 실적은 11월 중순 발표 예정이라 그때까지 감시.",
+     "judged": "2026-10-26",
+     "verdict": "형식"
     },
     {
      "ticker": "298040",
@@ -117,25 +129,6 @@ window.CANDIDATES = {
      "url": "https://m.stock.naver.com/domestic/stock/443060/total"
     },
     {
-     "ticker": "003230",
-     "name": "삼양식품",
-     "status": "검증 통과",
-     "note": "3년 매출 연평균 37%·3년 평균 ROIC 19.5% — 성장 주제에 결격이 생기면 1순위 대체",
-     "asOf": "2026-10-23",
-     "why": "3년 매출 연평균 37.3% · FCF 마진 -5.9% · 3년 평균 ROIC 19.5%",
-     "url": "https://m.stock.naver.com/domestic/stock/003230/total"
-    },
-    {
-     "ticker": "010140",
-     "name": "삼성중공업",
-     "status": "검증 통과",
-     "note": "3년 매출 연평균 21.5%·FCF 마진 12.6% — 삼성그룹 상한으로 불가(삼성바이오가 우량에 남아 그룹 수가 줄지 않음)",
-     "asOf": "2026-10-23",
-     "why": "3년 매출 연평균 21.5% · FCF 마진 12.6% · 3년 평균 ROIC 6.1%",
-     "cap": "삼성그룹 상한",
-     "url": "https://m.stock.naver.com/domestic/stock/010140/total"
-    },
-    {
      "ticker": "161890",
      "name": "한국콜마",
      "status": "보류",
@@ -145,11 +138,30 @@ window.CANDIDATES = {
      "url": "https://m.stock.naver.com/domestic/stock/161890/total"
     },
     {
+     "ticker": "003230",
+     "name": "삼양식품",
+     "status": "보류",
+     "note": "성장 지속성은 최상위지만 증설로 FCF 적자·자산 증가율이 필터 경계, 변동성 낮아 한국 β 를 더 낮춤.",
+     "asOf": "2026-10-26",
+     "why": "3년 매출 연평균 37.3% · FCF 마진 -5.9% · 3년 평균 ROIC 19.5%",
+     "url": "https://m.stock.naver.com/domestic/stock/003230/total"
+    },
+    {
+     "ticker": "010140",
+     "name": "삼성중공업",
+     "status": "보류",
+     "note": "성장 정체성·현금흐름은 충족하나 삼성그룹 상한(5) 초과로 편입 불가 — 삼성 계열 편성이 줄면 첫 후보. 편입 전 엔진 신호 3종 확인 필요. (HD현대중공업 추세 붕괴 대체 1순위)",
+     "asOf": "2026-10-26",
+     "why": "3년 매출 연평균 21.5% · FCF 마진 12.6% · 3년 평균 ROIC 6.1%",
+     "cap": "삼성그룹 상한",
+     "url": "https://m.stock.naver.com/domestic/stock/010140/total"
+    },
+    {
      "ticker": "079550",
      "name": "LIG디펜스앤에어로스페이스",
      "status": "보류",
-     "note": "한화에어로스페이스 결격 시 대체",
-     "asOf": "2026-10-18",
+     "note": "FCF 적자·자산 증가율 30%대, 3분기 실적 하회 전망과 제재 심의·증자 일정이 변수.",
+     "asOf": "2026-10-26",
      "why": "3년 매출 연평균 24.7% · FCF 마진 -17.5% · 3년 평균 ROIC 10.7%",
      "url": "https://m.stock.naver.com/domestic/stock/079550/total"
     },
@@ -162,6 +174,15 @@ window.CANDIDATES = {
      "why": "3년 매출 연평균 6.3% · FCF 마진 2.6% · 3년 평균 ROIC 5.7%",
      "cap": "삼성그룹 상한",
      "url": "https://m.stock.naver.com/domestic/stock/009150/total"
+    },
+    {
+     "ticker": "039030",
+     "name": "이오테크닉스",
+     "status": "보류",
+     "note": "3년 매출 연평균이 음수라 성장 지속성 미달, 장기 결격 규칙(14일 이후) 때 재검토.",
+     "asOf": "2026-10-26",
+     "why": "3년 매출 연평균 -5.2% · FCF 마진 25.3% · 3년 평균 ROIC 5.8%",
+     "url": "https://m.stock.naver.com/domestic/stock/039030/total"
     },
     {
      "ticker": "006260",
@@ -198,39 +219,12 @@ window.CANDIDATES = {
      "why": "3년 매출 연평균 -3.5% · FCF 마진 2.2% · 3년 평균 ROIC 17.3%",
      "cap": "삼성그룹 상한",
      "url": "https://m.stock.naver.com/domestic/stock/028050/total"
-    },
-    {
-     "ticker": "111770",
-     "name": "영원무역",
-     "status": "검증 대기",
-     "why": "3년 매출 연평균 1.3% · FCF 마진 3.7% · 3년 평균 ROIC 9.1%",
-     "url": "https://m.stock.naver.com/domestic/stock/111770/total"
     }
    ]
   },
   "korea|value": {
    "eligible": 58,
    "defects": [
-    {
-     "ticker": "267270",
-     "name": "HD건설기계",
-     "state": "점검 필요",
-     "flags": [
-      {
-       "k": "theme",
-       "msg": "주제 기준 미달 — 정체성 조건 미달(EBIT/EV·FCF 수익률 상위 30%)",
-       "fresh": false
-      },
-      {
-       "k": "earn",
-       "msg": "실적 발표(10/26) — 가이던스·논거 확인",
-       "fresh": true
-      }
-     ],
-     "note": "합병 전 재무 왜곡 — 합병 후 재무로 재판정",
-     "judged": "2026-10-18",
-     "verdict": "형식"
-    },
     {
      "ticker": "000270",
      "name": "기아",
@@ -253,6 +247,26 @@ window.CANDIDATES = {
      ],
      "note": "시총 순위 경계",
      "judged": "2026-10-18",
+     "verdict": "형식"
+    },
+    {
+     "ticker": "267270",
+     "name": "HD건설기계",
+     "state": "감시",
+     "flags": [
+      {
+       "k": "theme",
+       "msg": "주제 기준 미달 — 정체성 조건 미달(EBIT/EV·FCF 수익률 상위 30%)",
+       "fresh": false
+      },
+      {
+       "k": "earn",
+       "msg": "실적 발표(10/26) — 가이던스·논거 확인",
+       "fresh": false
+      }
+     ],
+     "note": "합병 전 재무가 반영된 정체성 지표 미달(합병 후 영업이익률은 개선) — 10/26 3분기 실적 발표 결과는 아직 확인되지 않아 확인 뒤 재판정.",
+     "judged": "2026-10-26",
      "verdict": "형식"
     },
     {
@@ -401,7 +415,7 @@ window.CANDIDATES = {
      ],
      "note": "중복 편성 — 우량 주제에 남기고 이 주제는 다른 종목으로 교체",
      "dup": "core",
-     "triedAt": "2026-10-23",
+     "triedAt": "2026-10-26",
      "since": "2026-10-21",
      "age": 5
     }
@@ -446,18 +460,40 @@ window.CANDIDATES = {
      "url": "https://m.stock.naver.com/domestic/stock/030000/total"
     },
     {
-     "ticker": "047050",
-     "name": "포스코인터내셔널",
-     "status": "검증 대기",
-     "why": "배당 비감소 4년 · 배당성향 51.4% · 배당 3.8%",
-     "url": "https://m.stock.naver.com/domestic/stock/047050/total"
+     "ticker": "009970",
+     "name": "영원무역홀딩스",
+     "status": "보류",
+     "note": "8월 밸류업(배당성향 30%·자사주 매입) 확인, 지주사 연결 왜곡과 컨센서스 부재가 블로커.",
+     "asOf": "2026-10-26",
+     "why": "배당 비감소 4년 · 배당성향 20.8% · 배당 3.8%",
+     "url": "https://m.stock.naver.com/domestic/stock/009970/total"
+    },
+    {
+     "ticker": "000240",
+     "name": "한국앤컴퍼니",
+     "status": "보류",
+     "note": "배당 지속성은 양호하나 경영권 분쟁 소송과 실적·컨센서스 미확인.",
+     "asOf": "2026-10-26",
+     "why": "배당 비감소 4년 · 배당성향 30% · 배당 4.8%",
+     "url": "https://m.stock.naver.com/domestic/stock/000240/total"
     },
     {
      "ticker": "018670",
      "name": "SK가스",
-     "status": "검증 대기",
+     "status": "보류",
+     "note": "배당 비감소 4년·성향 35%로 배당 조건은 충족하는 비금융 후보. 3분기 실적(10월 말~11월 초)과 컨센서스 목표가 2출처 확인 뒤 재검토, 분기 영업이익 급감의 원인 확인 필요.",
+     "asOf": "2026-10-26",
      "why": "배당 비감소 4년 · 배당성향 34.5% · 배당 3.6%",
      "url": "https://m.stock.naver.com/domestic/stock/018670/total"
+    },
+    {
+     "ticker": "047050",
+     "name": "포스코인터내셔널",
+     "status": "보류",
+     "note": "배당 조건은 통과하나 3년 매출 역성장과 모기업 지분 매각 오버행, 컨센서스 미확인.",
+     "asOf": "2026-10-26",
+     "why": "배당 비감소 4년 · 배당성향 51.4% · 배당 3.8%",
+     "url": "https://m.stock.naver.com/domestic/stock/047050/total"
     },
     {
      "ticker": "024110",
@@ -486,7 +522,7 @@ window.CANDIDATES = {
      "note": "성장 숫자·PEG 미달 — 품질 최상위라 대체 확보 시 교체",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-23",
+     "triedAt": "2026-10-26",
      "since": "2026-10-18",
      "age": 8
     },
@@ -504,7 +540,7 @@ window.CANDIDATES = {
      "note": "3년 매출 연평균 -1.9% — 근접 완화선 미달, 대체 후보 소진",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-23",
+     "triedAt": "2026-10-26",
      "since": "2026-10-18",
      "age": 8
     },
@@ -522,24 +558,9 @@ window.CANDIDATES = {
      "note": "3년 성장 2.8%·1·2분기 매출·영업이익 감소",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-23",
+     "triedAt": "2026-10-26",
      "since": "2026-10-18",
      "age": 8
-    },
-    {
-     "ticker": "062040",
-     "name": "산일전기",
-     "state": "점검 필요",
-     "flags": [
-      {
-       "k": "trend",
-       "msg": "추세 붕괴(단·중·장기 모두 매도 이하)",
-       "fresh": true
-      }
-     ],
-     "note": "전력기기 업종 전반 급락, 2분기 매출 +28%·영업이익 +34% — 회사 고유 악재 없음",
-     "judged": "2026-10-18",
-     "verdict": "없음"
     },
     {
      "ticker": "082920",
@@ -548,6 +569,21 @@ window.CANDIDATES = {
      "flags": [],
      "note": "상반기 매출 +30.7%·영업이익 +25.1%로 성장 유지, 최근 목표가 하향 원인 미확인 — 감시",
      "judged": "2026-10-18",
+     "verdict": "형식"
+    },
+    {
+     "ticker": "062040",
+     "name": "산일전기",
+     "state": "감시",
+     "flags": [
+      {
+       "k": "trend",
+       "msg": "추세 붕괴(단·중·장기 모두 매도 이하)",
+       "fresh": false
+      }
+     ],
+     "note": "추세 붕괴 신호는 있으나 논거 훼손 근거는 찾지 못했다. 2분기 수주가 분기 기준 처음 2천억 원을 넘었고 데이터센터용 변압기 수주와 초고압 3공장 증설이 진행 중이라 히든 기준 위반 징후가 없다.",
+     "judged": "2026-10-26",
      "verdict": "형식"
     },
     {
@@ -572,8 +608,8 @@ window.CANDIDATES = {
      "ticker": "092730",
      "name": "네오팜",
      "status": "보류",
-     "note": "2분기 매출 +36% — 목표가 내는 증권사 1곳",
-     "asOf": "2026-10-18",
+     "note": "2분기 매출 +36%·영업이익 +40%, 월봉 추세 정상. 컨센서스 목표가를 신뢰 출처 2곳으로 확인하지 못해 대기 — 3분기 실적(11월) 뒤 리포트 확인.",
+     "asOf": "2026-10-26",
      "why": "3년 매출 연평균 15.9% · 3년 평균 ROIC 38.9% · PEG 0.5",
      "url": "https://m.stock.naver.com/domestic/stock/092730/total"
     },
@@ -581,8 +617,8 @@ window.CANDIDATES = {
      "ticker": "003350",
      "name": "한국화장품제조",
      "status": "보류",
-     "note": "증권사 커버리지 없음 — 11-16까지 진전 없으면 기각",
-     "asOf": "2026-10-17",
+     "note": "2분기 매출 +32%·영업이익 +29%, 월봉 추세 정상. 증권사 커버리지가 없어 목표가·해자 근거 미확인 — 11-16 기한 안에 커버리지가 없으면 기각.",
+     "asOf": "2026-10-26",
      "why": "3년 매출 연평균 21.1% · 3년 평균 ROIC 40.7% · PEG 0.4",
      "url": "https://m.stock.naver.com/domestic/stock/003350/total"
     },
@@ -1123,7 +1159,7 @@ window.CANDIDATES = {
      "note": "⑨ 세액공제(45X) 의존 · 최근 낙폭은 회사 고유 악재 미확인(10/28 실적 발표 예정) · 새 신호: 2026.07 분기 매출 +8.2%, EBIT +6.2%, 순이익 +5.2%로 흑자 성장을 유지했고 FY2027 가이던스도 상향됐다. 다만 재무 데이터 공백으로 기준 충족 여부는 확인 전이라 10-28 실적 발표까지 감시한다.",
      "judged": "2026-10-24",
      "verdict": "실질",
-     "triedAt": "2026-10-25",
+     "triedAt": "2026-10-26",
      "since": "2026-10-21",
      "age": 5
     },
@@ -1141,7 +1177,7 @@ window.CANDIDATES = {
      "note": "⑤ 재무 안전 조건 미달 — 남은 대체 후보는 모두 집중 리스크(⑨)·추세 붕괴로 막힘",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-25",
+     "triedAt": "2026-10-26",
      "since": "2026-10-18",
      "age": 8
     },
@@ -1159,7 +1195,7 @@ window.CANDIDATES = {
      "note": "⑤ 재무 안전 조건 미달 — 남은 대체 후보는 모두 집중 리스크(⑨)·추세 붕괴로 막힘",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-25",
+     "triedAt": "2026-10-26",
      "since": "2026-10-18",
      "age": 8
     },
@@ -1177,41 +1213,9 @@ window.CANDIDATES = {
      "note": "⑤ 재무 안전 조건 미달 — 남은 대체 후보는 모두 집중 리스크(⑨)·추세 붕괴로 막힘",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-25",
+     "triedAt": "2026-10-26",
      "since": "2026-10-18",
      "age": 8
-    },
-    {
-     "ticker": "FIVE",
-     "name": "Five Below",
-     "state": "점검 필요",
-     "flags": [
-      {
-       "k": "theme",
-       "msg": "주제 기준 미달 — PEG 1.98",
-       "fresh": true
-      }
-     ]
-    },
-    {
-     "ticker": "STRL",
-     "name": "Sterling Infrastructure",
-     "state": "점검 필요",
-     "flags": [
-      {
-       "k": "theme",
-       "msg": "주제 기준 미달 — 매출 성장 미달(3년 12.1%·최근 17.7%)",
-       "fresh": true
-      },
-      {
-       "k": "drop",
-       "msg": "5거래일 -16.3%(시장 중앙값 -0.1%) 급락 — 원인 확인",
-       "fresh": false
-      }
-     ],
-     "note": "같은 5거래일 데이터센터 시공·전력 인프라 업종이 함께 10~19% 하락(FIX -19.3%·IESC -15.2%·PWR -13.5%, S&P 500 -0.5%) — 업종 전체 하락이고 회사 고유 악재·소송·회계 문제는 확인되지 않았다. 10/28 3분기 실적(수주잔고 일시 감소 가능성)을 확인한다.",
-     "judged": "2026-10-25",
-     "verdict": "없음"
     },
     {
      "ticker": "NVMI",
@@ -1258,6 +1262,41 @@ window.CANDIDATES = {
      "judged": "2026-10-24",
      "verdict": "형식",
      "by": "ai"
+    },
+    {
+     "ticker": "FIVE",
+     "name": "Five Below",
+     "state": "감시",
+     "flags": [
+      {
+       "k": "theme",
+       "msg": "주제 기준 미달 — PEG 1.98",
+       "fresh": false
+      }
+     ],
+     "note": "PEG 가 상한을 넘어 근접 후보 범위(완화선 안) — 재무·ROIC 는 충족, 해자 약세는 기존 위험으로 감시.",
+     "judged": "2026-10-26",
+     "verdict": "형식"
+    },
+    {
+     "ticker": "STRL",
+     "name": "Sterling Infrastructure",
+     "state": "감시",
+     "flags": [
+      {
+       "k": "theme",
+       "msg": "주제 기준 미달 — 매출 성장 미달(3년 12.1%·최근 17.7%)",
+       "fresh": false
+      },
+      {
+       "k": "drop",
+       "msg": "5거래일 -16.3%(시장 중앙값 -0.1%) 급락 — 원인 확인",
+       "fresh": false
+      }
+     ],
+     "note": "3년 매출 성장이 문턱 아래지만 수주잔고·최근 분기 성장은 훨씬 높은 근접 후보. 최근 급락은 회사 고유 악재(공시·실적·애널리스트 조치)를 찾지 못했고 11/9 실적 발표에서 확인한다.",
+     "judged": "2026-10-26",
+     "verdict": "형식"
     }
    ],
    "list": [
@@ -1265,8 +1304,8 @@ window.CANDIDATES = {
      "ticker": "CORT",
      "name": "Corcept Therapeutics Incorporated",
      "status": "보류",
-     "note": "⑨ 단일 제품 의존 — 12-17 신약 승인 결정 뒤",
-     "asOf": "2026-10-18",
+     "note": "⑨ 주력 제품 매출 비중 약 80% — 12-17 신약 승인 결정과 희석 연 3% 이하 복귀 뒤 재검토.",
+     "asOf": "2026-10-26",
      "why": "3년 매출 연평균 23.7% · 3년 평균 ROIC 36.4% · PEG 0.8",
      "near": "희석 주식 수 연 3.6% 증가",
      "url": "https://finance.yahoo.com/quote/CORT"
@@ -1275,8 +1314,8 @@ window.CANDIDATES = {
      "ticker": "CAMT",
      "name": "Camtek",
      "status": "보류",
-     "note": "⑨ 2025년 매출의 약 49%가 중국이고 미국 수출 규제 영향권 — 중국 비중이 1/3 안팎으로 내려가고 GAAP 이익이 다시 늘면 재검토",
-     "asOf": "2026-10-25",
+     "note": "반등 중이나 매출의 약 절반이 중국(⑨)이고 성장 문턱 미달 — 중국 비중 감소 시 재검토.",
+     "asOf": "2026-10-26",
      "why": "3년 매출 연평균 15.6% · 3년 평균 ROIC 21.5% · PEG 1.5",
      "near": "매출 성장 미달(3년 15.6%·최근 15.6%)",
      "url": "https://finance.yahoo.com/quote/CAMT"
@@ -1285,10 +1324,10 @@ window.CANDIDATES = {
   }
  },
  "summary": {
-  "review": 5,
+  "review": 0,
   "defect": 11,
-  "watch": 17,
-  "untried": 11,
+  "watch": 22,
+  "untried": 0,
   "dup": 2,
   "long": 0
  }

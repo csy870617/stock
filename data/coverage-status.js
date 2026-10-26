@@ -23,30 +23,30 @@ window.COVERAGE_STATUS = {
   {
    "key": "indexNotes",
    "label": "지수 대응",
-   "done": 0,
+   "done": 8,
    "total": 8,
-   "ok": false
+   "ok": true
   },
   {
    "key": "topPicks",
    "label": "Top Pick",
-   "done": 0,
+   "done": 6,
    "total": 6,
-   "ok": false
+   "ok": true
   },
   {
    "key": "liquidity",
    "label": "유동성 판단",
-   "done": 0,
+   "done": 1,
    "total": 1,
-   "ok": false
+   "ok": true
   },
   {
    "key": "market",
    "label": "시황",
-   "done": 0,
+   "done": 1,
    "total": 1,
-   "ok": false
+   "ok": true
   },
   {
    "key": "backbone",
@@ -58,37 +58,37 @@ window.COVERAGE_STATUS = {
   {
    "key": "defects",
    "label": "결격 점검",
-   "done": 0,
+   "done": 1,
    "total": 1,
-   "ok": false
+   "ok": true
   }
  ],
  "rotation": [
   {
    "key": "verified",
    "label": "목표가 재검증",
-   "fresh": 111,
+   "fresh": 119,
    "total": 119,
-   "oldestDays": 8,
-   "ok": false
+   "oldestDays": 7,
+   "ok": true
   },
   {
    "key": "discovery",
    "label": "신규 후보 탐색",
-   "fresh": 1,
+   "fresh": 10,
    "total": 10,
    "unit": "그룹",
-   "oldestDays": 8,
-   "ok": false
+   "oldestDays": 0,
+   "ok": true
   },
   {
    "key": "deepDiscovery",
    "label": "주간 심층 발굴",
-   "fresh": 0,
+   "fresh": 1,
    "total": 1,
    "unit": "회",
-   "oldestDays": 8,
-   "ok": false
+   "oldestDays": 0,
+   "ok": true
   },
   {
    "key": "aiTarget",
@@ -108,5 +108,5 @@ window.COVERAGE_STATUS = {
    "ok": true
   }
  ],
- "ok": false
+ "ok": true
 };

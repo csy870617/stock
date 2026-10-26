@@ -962,7 +962,17 @@
    "us:PG": null,
    "korea:047050": null,
    "us:TXN": null
+  },
+  "2026-10-26": {
+   "korea:068270": 279444,
+   "korea:062040": 292000,
+   "korea:241560": 81800,
+   "korea:010120": 275105,
+   "us:FIVE": 302.74,
+   "us:STRL": 819.25,
+   "us:MKSI": null,
+   "us:RBC": null
   }
  },
- "lastRun": "2026-10-24"
+ "lastRun": "2026-10-26"
 }
