@@ -1,8 +1,8 @@
 // 자동 생성 — scripts/coverage.js --emit (refresh-quotes Action, 토큰 0)
 // 앱 상단 '데이터 신선도' 패널이 읽는다. 직접 수정하지 말 것.
 window.COVERAGE_STATUS = {
- "asOf": "2026-10-25",
- "T": "2026-10-23",
+ "asOf": "2026-10-26",
+ "T": "2026-10-26",
  "total": 119,
  "cycleDays": 7,
  "daily": [
@@ -23,30 +23,30 @@ window.COVERAGE_STATUS = {
   {
    "key": "indexNotes",
    "label": "지수 대응",
-   "done": 8,
+   "done": 0,
    "total": 8,
-   "ok": true
+   "ok": false
   },
   {
    "key": "topPicks",
    "label": "Top Pick",
-   "done": 6,
+   "done": 0,
    "total": 6,
-   "ok": true
+   "ok": false
   },
   {
    "key": "liquidity",
    "label": "유동성 판단",
-   "done": 1,
+   "done": 0,
    "total": 1,
-   "ok": true
+   "ok": false
   },
   {
    "key": "market",
    "label": "시황",
-   "done": 1,
+   "done": 0,
    "total": 1,
-   "ok": true
+   "ok": false
   },
   {
    "key": "backbone",
@@ -58,44 +58,44 @@ window.COVERAGE_STATUS = {
   {
    "key": "defects",
    "label": "결격 점검",
-   "done": 1,
+   "done": 0,
    "total": 1,
-   "ok": true
+   "ok": false
   }
  ],
  "rotation": [
   {
    "key": "verified",
    "label": "목표가 재검증",
-   "fresh": 119,
+   "fresh": 111,
    "total": 119,
-   "oldestDays": 7,
-   "ok": true
+   "oldestDays": 8,
+   "ok": false
   },
   {
    "key": "discovery",
    "label": "신규 후보 탐색",
-   "fresh": 10,
+   "fresh": 1,
    "total": 10,
    "unit": "그룹",
-   "oldestDays": 7,
-   "ok": true
+   "oldestDays": 8,
+   "ok": false
   },
   {
    "key": "deepDiscovery",
    "label": "주간 심층 발굴",
-   "fresh": 1,
+   "fresh": 0,
    "total": 1,
    "unit": "회",
-   "oldestDays": 7,
-   "ok": true
+   "oldestDays": 8,
+   "ok": false
   },
   {
    "key": "aiTarget",
    "label": "AI 적정가 재시도",
    "fresh": 119,
    "total": 119,
-   "oldestDays": 13,
+   "oldestDays": 14,
    "ok": true
   },
   {
@@ -104,9 +104,9 @@ window.COVERAGE_STATUS = {
    "fresh": 10,
    "total": 10,
    "unit": "그룹",
-   "oldestDays": 3,
+   "oldestDays": 4,
    "ok": true
   }
  ],
- "ok": true
+ "ok": false
 };
