@@ -93,6 +93,15 @@ const planLine = (P) => "ai-daily: T " + P.T + " · 종가 한국 " + P.basis.kr
 // ── 프롬프트 재료 ──
 const n2 = (v) => (v == null || !isFinite(v) ? "–" : (Math.round(v * 100) / 100).toString());
 const sgn = (v) => (v == null || !isFinite(v) ? "–" : (v > 0 ? "+" : "") + n2(v));
+// 코스피·코스닥 수급 줄 — indices.js flows(한국거래소 집계 확정치, 억원 — lib-flows.js)
+const flowSgn = (v) => (v > 0 ? "+" : "") + Math.round(v || 0).toLocaleString("en-US");
+const flowPart = (o) => "외국인 " + flowSgn(o && o.f) + "·기관 " + flowSgn(o && o.o) + "·개인 " + flowSgn(o && o.p);
+function flowLine(F) {
+  if (!F || !F.last) return null;
+  const sk = F.streak || {}, st = (v) => (v > 0 ? "순매수 " : "순매도 ") + Math.abs(v || 0) + "일";
+  return "  수급(투자자별 순매수, 억원, " + F.asOf + "까지): 최근일 " + flowPart(F.last) + " | 5일 " + flowPart(F.s5) + " | 20일 " + flowPart(F.s20) +
+    " | 60일 " + flowPart(F.s60) + " | 연속 외국인 " + st(sk.f) + "·기관 " + st(sk.o) + "·개인 " + st(sk.p);
+}
 function indexBlock(IX) {
   const per = { short: "단기(일봉)", mid: "중기(주봉)", long: "장기(월봉)" };
   return (IX.indices || []).map((i) => {
@@ -100,6 +109,8 @@ function indexBlock(IX) {
       const x = i[k] || {};
       return "  " + per[k] + ": 등급 " + (x.signal || "–") + " · 추세 " + (x.trend || "–") + " · " + (x.metrics || []).map((m) => m[0] + " " + m[1]).join(" | ");
     });
+    const fl = flowLine(i.flows);
+    if (fl) lines.push(fl);
     return "- " + i.key + " (" + i.name + "): " + i.level + " " + i.change + " (" + (i.period || "") + ")\n" + lines.join("\n");
   }).join("\n") + macroBlock(IX);
 }
@@ -253,6 +264,7 @@ const COMPOSE_SYSTEM = [
   "- policyNews: 연준·한국은행 각각 stance(매파·중립·비둘기파)와 note(누가·무엇을 말하거나 결정했는지 사실 1~2문장). 조사 메모에 근거가 없으면 note 에 직전 판단을 유지한다고 쓰지 말고 sources 를 빈 배열로 둔다.",
   "- indexNotes: 나스닥·다우·코스피·코스닥(+ 아래 환율·원자재) 각각",
   "  value = 지수 밸류(멀티플은 메모에 수치가 있을 때만 — 없으면 멀티플을 언급하지 않는다)와 그 지역 유동성 국면 1~2문장(미국=나스닥·다우, 한국=코스피·코스닥),",
+  "  코스피·코스닥의 외국인·기관·개인 순매수 금액은 [데이터]의 수급 줄(한국거래소 집계 확정치)을 쓴다 — 기사의 장중·잠정 숫자와 다르면 데이터를 따른다.",
   "  short/mid/long = 일봉·주봉·월봉 등급과 그 근거(이평·구름·지지/저항·RSI 등 [데이터]의 사실) 1~2문장. 등급은 앱과 같은 추세 상태 이름으로 쓴다",
   "  (적극매수=강한 상승세, 매수=상승세, 중립=횡보, 매도=하락세, 적극매도=강한 하락세 — 2019~2026 995종목에서 다섯 상태의 이후 수익·낙폭이 같아 매수·매도로 부르지 않는다).",
   "  usdkrw(원/달러 환율)·dxy(달러인덱스)·wti(국제 유가)·gold(국제 금)도 같은 형식으로 쓴다 — value 는 '영향': 최근 움직임의 원인(조사 메모)과 그것이 한국·미국 주식에 주는 영향",

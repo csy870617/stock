@@ -722,6 +722,19 @@ svg { display: block; }
 .ch-tip div { display: flex; justify-content: space-between; gap: 10px; }
 .ch-tip span:last-child { color: var(--ink); font-weight: 600; }
 .ch-tip span.up { color: var(--up); } .ch-tip span.down { color: var(--down); }
+/* 지수 차트 아래 수급 막대(코스피·코스닥 투자자별 순매수) — 막대 칸만큼 차트를 키우고, 아래에 투자자 고르기 */
+.dt-chart.has-fl .ch-box { height: 300px; }
+.ch-fl { display: flex; align-items: center; gap: 8px; margin-top: 8px; font-size: 11.5px; color: var(--mut); }
+.ch-fl[hidden] { display: none; }
+.ch-fl .seg button { height: 24px; padding: 0 9px; font-size: 12px; }
+.ch-fl-k { white-space: nowrap; }
+/* 지수 상세 '수급' 표 — 행 = 외국인·기관·개인, 열 = 최근일·5·20·60거래일 합 */
+.fl-tbl { display: grid; grid-template-columns: auto repeat(4, minmax(0, 1fr)); gap: 8px 6px; align-items: baseline; font-variant-numeric: tabular-nums; }
+.fl-tbl .fl-h { font-size: 11.5px; color: var(--mut); text-align: right; white-space: nowrap; }
+.fl-tbl .fl-k { padding-right: 4px; font-size: 13px; font-weight: 600; color: var(--ink2); white-space: nowrap; }
+.fl-tbl .fl-v { font-size: 13px; font-weight: 600; text-align: right; white-space: nowrap; }
+.fl-sub { margin-top: 10px; font-size: 12.5px; color: var(--ink2); }
+.fl-note { font-size: 13px; line-height: 1.6; color: var(--mut); }
 
 /* 요약 카드 — 단·중·장 신호(칸 셋)와 다음 1개월 범위를 한 카드에 */
 .dt-sum { margin: 0 20px 16px; border-radius: 14px; background: var(--sf2); }
@@ -2301,6 +2314,15 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   if (["d", "w", "m"].indexOf(CH.period) < 0) CH.period = "d";
   var CH_P = { d: { label: "일봉", n: 120, unit: "일" }, w: { label: "주봉", n: 104, unit: "주" }, m: { label: "월봉", n: 120, unit: "개월" } };
   var CH_MA = [[5, "#f59f00"], [20, "#12b886"], [60, "#7950f2"], [120, "#adb5bd"]];
+  // 코스피·코스닥 차트 아래 수급 막대 — 차트 행 끝의 [개인, 외국인, 기관](억원, update-indices.js·lib-flows.js) 중 무엇을 그릴지
+  var CH_FL = [["외국인", 1], ["기관", 2], ["개인", 0]];
+  CH.flow = +(lsGet("ui.chartFlow") || 1);
+  if ([0, 1, 2].indexOf(CH.flow) < 0) CH.flow = 1;
+  function flAmt(v) {   // 억원 → '+6,507억' · '-1.46조' · '-27.8조'
+    if (v == null || !isFinite(v)) return "–";
+    var a = Math.abs(v), s = v > 0 ? "+" : v < 0 ? "-" : "";
+    return s + (a >= 10000 ? (a / 10000).toFixed(a >= 100000 ? 1 : 2).replace(/\.?0+$/, "") + "조" : Math.round(a).toLocaleString("ko-KR") + "억");
+  }
   var WD_K = ["일", "월", "화", "수", "목", "금", "토"];
   function chartFileOf(t) { return "data/chart/" + encodeURIComponent(String(t).replace(/[^A-Za-z0-9.\-]/g, "_")) + ".json"; }
   // 받은 파일은 기억한다. 파일이 없으면(404 — 막 편입된 종목) null 로 기억하고, 네트워크 오류는 다음에 다시 시도한다.
@@ -2316,7 +2338,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       .catch(function () {})
       .then(function () { var q = CH.inflight[t] || []; delete CH.inflight[t]; q.forEach(function (f) { f(got === undefined ? null : got); }); });
   }
-  function toBars(a) { return (a || []).map(function (r) { return { t: r[0], o: r[1], h: r[2], l: r[3], c: r[4], v: r[5] || 0 }; }); }
+  function toBars(a) { return (a || []).map(function (r) { return { t: r[0], o: r[1], h: r[2], l: r[3], c: r[4], v: r[5] || 0, fl: r.length >= 9 ? [r[6], r[7], r[8]] : null }; }); }
   // 종가만 있는 시계열(시세 서버 2년) → 일·주·월 '선' 봉(시=고=저=종)
   function barsFromCloses(closes, dates) {
     var d = [], i;
@@ -2375,7 +2397,10 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
         return '<button type="button" data-chp="' + p + '"' + (p === CH.period ? ' class="on"' : "") + ">" + CH_P[p].label + "</button>";
       }).join("") + '</div><span class="ch-asof"></span></div>' +
       '<div class="ch-leg" title="이동평균선(값은 마지막 봉, 누르면 그 봉 기준)"></div>' +
-      '<div class="ch-box"><canvas aria-hidden="true"></canvas><div class="ch-msg">차트 불러오는 중…</div></div></section>';
+      '<div class="ch-box"><canvas aria-hidden="true"></canvas><div class="ch-msg">차트 불러오는 중…</div></div>' +
+      '<div class="ch-fl" hidden><span class="ch-fl-k">수급 막대</span><div class="seg ch-fseg" role="tablist" aria-label="수급 막대 투자자">' + CH_FL.map(function (w) {
+        return '<button type="button" data-chf="' + w[1] + '"' + (w[1] === CH.flow ? ' class="on"' : "") + ">" + w[0] + "</button>";
+      }).join("") + "</div></div></section>";
   }
   function chartMsg(st, msg) {
     var m = st.el.querySelector(".ch-msg");
@@ -2407,6 +2432,11 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   }
   function setChartSrc(st, src, line, asOf) {
     st.src = src; st.line = line;
+    // 수급 막대 — 차트 행에 투자자별 순매수가 있으면(코스피·코스닥) 차트를 키우고 투자자 고르기를 보인다
+    var hasFl = !line && ["d", "w", "m"].some(function (p) { return (src[p] || []).some(function (b) { return b.fl; }); });
+    st.el.classList.toggle("has-fl", hasFl);
+    var flRow = st.el.querySelector(".ch-fl");
+    if (flRow) flRow.hidden = !hasFl;
     var a = st.el.querySelector(".ch-asof");
     if (a && asOf) a.textContent = String(asOf).slice(5).replace("-", "/").replace(/^0/, "") + (line ? " 종가까지 · 종가 선" : " 종가까지");
     // 기간 버튼 — 자료가 없는 기간(시세만 종목의 월봉 등)은 끈다
@@ -2421,6 +2451,13 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       var b = e.target.closest("[data-chp]"); if (!b || b.disabled || b.dataset.chp === CH.period) return;
       CH.period = b.dataset.chp; lsSet("ui.chartP", CH.period); st.cross = null;
       st.el.querySelectorAll("[data-chp]").forEach(function (x) { x.classList.toggle("on", x === b); });
+      if (st.src) drawChart(st);
+    });
+    var fseg = st.el.querySelector(".ch-fseg");
+    if (fseg) fseg.addEventListener("click", function (e) {
+      var b = e.target.closest("[data-chf]"); if (!b || +b.dataset.chf === CH.flow) return;
+      CH.flow = +b.dataset.chf; lsSet("ui.chartFlow", String(CH.flow));
+      fseg.querySelectorAll("[data-chf]").forEach(function (x) { x.classList.toggle("on", x === b); });
       if (st.src) drawChart(st);
     });
     var touchDown = false;
@@ -2477,10 +2514,14 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       if (b.v > vmax) vmax = b.v;
     });
     var pad = (hi - lo) * 0.08 || hi * 0.01 || 1;
+    // 수급 막대(코스피·코스닥) — 고른 투자자의 순매수, 높이 기준은 보이는 구간의 최대 절댓값
+    var hasFlow = !st.line && vis.some(function (b) { return b.fl; }), fmax = 0;
+    if (hasFlow) vis.forEach(function (b) { if (b.fl) fmax = Math.max(fmax, Math.abs(b.fl[CH.flow] || 0)); });
     var top = 8, xAxisH = 18, hasVol = !st.line && vmax > 0;
     var inner = H - top - xAxisH;
-    var volH = hasVol ? Math.round(inner * 0.2) : 0, gap = hasVol ? 8 : 0;
-    var priceH = inner - volH - gap;
+    var volH = hasVol ? Math.round(inner * (hasFlow ? 0.14 : 0.2)) : 0, gap = hasVol ? 8 : 0;
+    var flowH = hasFlow ? Math.round(inner * 0.24) : 0, fgap = hasFlow ? 10 : 0;
+    var priceH = inner - volH - gap - flowH - fgap;
     var yMax = hi + pad, yMin = Math.max(0, lo - pad);
     g.font = "10.5px -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif";
     var step0 = niceStep(yMax - yMin, 4), ticks = [];
@@ -2489,7 +2530,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       .concat([g.measureText(chNum(vis[vis.length - 1].c, dp)).width + 8]))) + 12;
     var plotL = 0, plotR = W - axisW, plotW = plotR - plotL, step = plotW / n;
     var y = function (v) { return top + (yMax - v) / (yMax - yMin) * priceH; };
-    var volTop = top + priceH + gap;
+    var volTop = top + priceH + gap, flowTop = volTop + volH + fgap, paneBot = hasFlow ? flowTop + flowH : volTop + volH;
     st.layout = { plotL: plotL, plotR: plotR, step: step, from: from, n: n, top: top, priceH: priceH };
     // 가로 눈금·가격 축
     g.textBaseline = "middle"; g.textAlign = "left"; g.lineWidth = 1;
@@ -2514,7 +2555,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       var xx = plotL + (k + 0.5) * step, hw = g.measureText(lab).width / 2;
       if (xx - lastX < hw * 2 + 10 || xx - hw < plotL || xx + hw > plotR - 2) return;   // 겹치거나 가장자리에서 잘리면 건너뛴다
       lastX = xx;
-      g.strokeStyle = C.grid; g.beginPath(); g.moveTo(Math.round(xx) + 0.5, top); g.lineTo(Math.round(xx) + 0.5, volTop + volH); g.stroke();
+      g.strokeStyle = C.grid; g.beginPath(); g.moveTo(Math.round(xx) + 0.5, top); g.lineTo(Math.round(xx) + 0.5, paneBot); g.stroke();
       g.fillStyle = C.axis; g.fillText(lab, xx, H - 4);
     });
     // 거래량
@@ -2529,6 +2570,23 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
         g.fillRect(xx - bw / 2, volTop + volH - hh, bw, hh);
       });
       g.globalAlpha = 1;
+    }
+    // 수급 막대 — 0 선 위는 순매수(빨강), 아래는 순매도(파랑)
+    var fy0 = flowTop + flowH / 2;
+    if (hasFlow) {
+      g.strokeStyle = C.line; g.lineWidth = 1;
+      g.beginPath(); g.moveTo(plotL, Math.round(fy0) + 0.5); g.lineTo(plotR, Math.round(fy0) + 0.5); g.stroke();
+      if (fmax > 0) {
+        g.globalAlpha = 0.8;
+        vis.forEach(function (b, k) {
+          var v = b.fl && b.fl[CH.flow];
+          if (!v) return;
+          var hh = Math.max(1, Math.abs(v) / fmax * (flowH / 2 - 2)), xx = plotL + (k + 0.5) * step;
+          g.fillStyle = v > 0 ? C.up : C.down;
+          g.fillRect(xx - bw / 2, v > 0 ? fy0 - hh : fy0, bw, hh);
+        });
+        g.globalAlpha = 1;
+      }
     }
     // 가격 영역 밖으로 나가는 선은 자른다
     g.save(); g.beginPath(); g.rect(plotL, top, plotW, priceH); g.clip();
@@ -2581,7 +2639,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     if (ci != null) {
       var cx = Math.round(plotL + (ci + 0.5) * step) + 0.5;
       g.strokeStyle = C.axis; g.lineWidth = 1; g.setLineDash([2, 3]);
-      g.beginPath(); g.moveTo(cx, top); g.lineTo(cx, volTop + volH); g.stroke();
+      g.beginPath(); g.moveTo(cx, top); g.lineTo(cx, paneBot); g.stroke();
       if (st.crossY != null && st.crossY >= top && st.crossY <= top + priceH) {
         var cy = Math.round(st.crossY) + 0.5;
         g.beginPath(); g.moveTo(plotL, cy); g.lineTo(plotR, cy); g.stroke();
@@ -2602,11 +2660,24 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
         : [["시가", chNum(b.o, dp)], ["고가", chNum(b.h, dp)], ["저가", chNum(b.l, dp)], ["종가", chNum(b.c, dp)]];
       if (chg != null) rows.push(["등락", '<span class="' + (chg > 0 ? "up" : chg < 0 ? "down" : "") + '">' + (chg > 0 ? "+" : "") + chg.toFixed(2) + "%</span>"]);
       if (!st.line && b.v) rows.push(["거래량", chVol(b.v, st.c)]);
+      if (b.fl) CH_FL.forEach(function (w) {
+        var fv = b.fl[w[1]];
+        rows.push([w[0], '<span class="' + (fv > 0 ? "up" : fv < 0 ? "down" : "") + '">' + flAmt(fv) + "</span>"]);
+      });
       tip.innerHTML = "<b>" + esc(chDate(b.t, CH.period, true)) + "</b>" + rows.map(function (r) { return "<div><span>" + r[0] + "</span><span>" + r[1] + "</span></div>"; }).join("");
       tip.style.left = cx < plotW / 2 ? "" : "6px";
       tip.style.right = cx < plotW / 2 ? (axisW + 6) + "px" : "";
       tip.hidden = false;
     } else if (tip) tip.hidden = true;
+    // 수급 막대 이름과 값 — 십자선 위치, 없으면 마지막 봉(그 봉에 수급이 아직 없으면 '–')
+    if (hasFlow) {
+      var fb = vis[ci != null ? ci : n - 1], fv = fb && fb.fl ? fb.fl[CH.flow] : null;
+      var fname = CH_FL.filter(function (w) { return w[1] === CH.flow; })[0][0] + " 순매수 ";
+      g.textAlign = "left"; g.textBaseline = "top"; g.fillStyle = C.axis;
+      g.fillText(fname, plotL + 2, flowTop + 1);
+      g.fillStyle = fv > 0 ? C.up : fv < 0 ? C.down : C.axis;
+      g.fillText(flAmt(fv), plotL + 2 + g.measureText(fname).width, flowTop + 1);
+    }
     // 범례 — 이동평균 값(십자선 위치, 없으면 마지막 봉)
     var li = ci != null ? from + ci : bars.length - 1;
     st.el.querySelector(".ch-leg").innerHTML = CH_MA.map(function (m, mi) {
@@ -3105,6 +3176,36 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     var gi = LQ_RANKS.indexOf(g);
     return '<span class="it-liq" style="color:' + (gi >= 0 ? "var(--lq" + gi + ")" : "var(--mut)") + '">유동성 ' + esc(g) + "</span>";
   }
+  // 지수 수급 — 코스피·코스닥 투자자별 순매수(indices.js flows: 최근일·5·20·60거래일 합·연속 일수, 억원 — lib-flows.js, 다음 금융·한국거래소 집계).
+  //   차트 아래 수급 막대와 같은 값이다. 미국은 투자자별 매매가 매일 공개되지 않아 그 사실만 한 줄로 적는다.
+  var FL_WHO = [["f", "외국인"], ["o", "기관"], ["p", "개인"]];
+  function flowTipIdx(x) {
+    return "한국거래소가 집계한 " + (x.key === "kosdaq" ? "코스닥" : "코스피") + " 시장 전체의 투자자별 순매수 금액입니다(다음 금융에서 매일 받음 — 장 마감 직후 잠정치가 나중에 확정치로 바뀌기도 해 최근 60거래일을 매일 다시 받습니다). " +
+      "차트 아래 수급 막대도 같은 값이고, 주봉·월봉 막대는 그 기간의 합입니다. 이미 일어난 매매의 집계이며 앞으로의 방향을 예측하지 않습니다 — " +
+      "종목 단위 검증(2016~2026 한국 종목)에서는 외국인·기관이 사면 오른다는 가설이 기각됐고, 20일 순매수가 아주 큰 '수급 과열' 종목은 오히려 이후 1·3개월 지수보다 약했습니다. 지수 단위 수급은 따로 검증하지 않았습니다.";
+  }
+  function idxFlowHtml(x) {
+    if (IDX_REGION[x.key] !== "korea") return '<section class="dt-sec"><h3>수급</h3><p class="fl-note">미국은 투자자별(외국인·기관·개인) 매매를 매일 공개하지 않아 표시하지 않습니다.</p></section>';
+    var F = x.flows;
+    if (!F || !F.last) return "";
+    var cols = [["last", mdOf(F.asOf)], ["s5", "5일"], ["s20", "20일"], ["s60", "60일"]];
+    var cell = function (v) { return '<span class="fl-v ' + (v > 0 ? "up" : v < 0 ? "down" : "flat") + '">' + esc(flAmt(v)) + "</span>"; };
+    var rows = "<span></span>" + cols.map(function (c) { return '<span class="fl-h">' + esc(c[1]) + "</span>"; }).join("") +
+      FL_WHO.map(function (w) { return '<span class="fl-k">' + w[1] + "</span>" + cols.map(function (c) { return cell((F[c[0]] || {})[w[0]]); }).join(""); }).join("");
+    var sk = F.streak || {}, sub = FL_WHO.filter(function (w) { return Math.abs(sk[w[0]] || 0) >= 3; })
+      .map(function (w) { return w[1] + " " + Math.abs(sk[w[0]]) + "일 연속 순" + (sk[w[0]] > 0 ? "매수" : "매도"); });
+    return '<section class="dt-sec" id="dt-flow"><h3>수급 <span class="md-as">투자자별 순매수</span>' +
+      '<button class="ic-tip" type="button" data-basis="' + esc(flowTipIdx(x)) + '" aria-label="수급 보는 법">' + ICON.info + "</button></h3>" +
+      '<div class="fl-tbl">' + rows + "</div>" + (sub.length ? '<p class="fl-sub">' + esc(sub.join(" · ")) + "</p>" : "") + "</section>";
+  }
+  function idxFlowCtx(x) {   // AI 질문 맥락 한 줄
+    var F = x && x.flows;
+    if (!F || !F.last) return "";
+    var part = function (lab, o) { return lab + " " + FL_WHO.map(function (w) { return w[1] + " " + flAmt(o && o[w[0]]); }).join("·"); };
+    var sk = F.streak || {};
+    return "수급(투자자별 순매수, 한국거래소 집계 — " + F.asOf + "까지): " + [part("최근일", F.last), part("5일", F.s5), part("20일", F.s20), part("60일", F.s60)].join(" | ") +
+      " | 연속: " + FL_WHO.map(function (w) { return w[1] + " " + (sk[w[0]] > 0 ? "순매수 " : "순매도 ") + Math.abs(sk[w[0]] || 0) + "일"; }).join("·");
+  }
   function indexDetailHtml(x) {
     var chNA = !x.change || x.change === "–", dir = chNA ? "flat" : (x.changeDir === "up" ? "up" : "down");
     var asOf = window.INDEX_TA && window.INDEX_TA.asOf;
@@ -3121,7 +3222,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
         (nAs && asOf && nAs < asOf ? ' <span class="tn-stale" title="오늘 데이터(' + esc(asOf) + ')로 아직 갱신되지 않았습니다.">미갱신</span>' : "") + "</h3>" +
         line("밸류", n.value, null, idxLiqChip(x.key)) + line("단기", n.short, n.sigShort) + line("중기", n.mid, n.sigMid) + line("장기", n.long, n.sigLong) + "</section>" : "";
     var acts = x.chartUrl ? '<div class="dt-act"><a class="btn" href="' + esc(safeUrl(x.chartUrl)) + '" target="_blank" rel="noopener" title="네이버 증권에서 보기">' + ICON.ext + " 네이버</a></div>" : "";
-    return top + chartHtml("idx-" + x.key) + sig + notes +
+    return top + chartHtml("idx-" + x.key) + sig + idxFlowHtml(x) + notes +
       '<section class="dt-sec"><h3>AI에게 묻기</h3>' + aiSectionHtml("i:" + x.key, { kind: "index", key: x.key }) + "</section>" + acts;
   }
   // ── 환율·원자재(원/달러·달러인덱스·WTI·금) 상세 — 캔들 차트 + 단·중·장 신호 + 관련 정보(매일 자동 계산한 사실 숫자) + 분석(세션·AI) + AI 질문 ──
@@ -5386,6 +5487,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   function ctxIndex(key) {
     var x = indexOf(key), n = ((window.INDEX_NOTES || {}).items || {})[key], reg = IDX_REGION[key] || "us";
     return [x ? "지수: " + idxLine(x) + " (" + ((window.INDEX_TA || {}).asOf || "") + " 종가 기준)" : "",
+      idxFlowCtx(x),
       n ? "앱의 지수 대응(" + (window.INDEX_NOTES.asOf || "") + "): 밸류 — " + n.value + " | 단기 — " + n.short + " | 중기 — " + n.mid + " | 장기 — " + n.long : "",
       liqTxt(reg)].filter(Boolean).join("\n");
   }
