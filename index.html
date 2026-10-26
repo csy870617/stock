@@ -1697,7 +1697,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     document.getElementById("mktPrev").textContent = parts[0] || "";
     document.getElementById("marketNote").innerHTML = mn
       ? '<div class="mn-body">' + parts.map(function (p, i) {
-          return '<p class="mn-p">' + (i === 0 ? '<span class="mn-tag">시황</span>' + (aiWrote("market", D.marketNote) ? AI_TAG + " " : "") : "") + esc(p) + "</p>";
+          return '<p class="mn-p">' + (i === 0 ? '<span class="mn-tag">시황</span>' + (aiWrote("market") ? AI_TAG + " " : "") : "") + esc(p) + "</p>";
         }).join("") + "</div>"
       : "";
     syncMktBox();
@@ -3117,7 +3117,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     var n = ((window.INDEX_NOTES && window.INDEX_NOTES.items) || {})[x.key], nAs = window.INDEX_NOTES && window.INDEX_NOTES.asOf;
     var line = function (k, v, g, lead) { return v ? '<div class="tn-line"><span class="tn-k">' + k + '</span><span class="tn-v">' + (lead || "") + (g ? sigBadge(g) : "") + esc(v) + "</span></div>" : ""; };
     var notes = n && (n.value || n.short || n.mid || n.long)
-      ? '<section class="dt-sec"><h3>지수 대응' + (aiWrote("indexNotes", (((window.INDEX_NOTES || {}).items || {}).kospi || {}).short) ? " " + AI_TAG : "") + (nAs ? ' <span class="md-as">작성 ' + esc(mdOf(nAs)) + "</span>" : "") +
+      ? '<section class="dt-sec"><h3>지수 대응' + (aiWrote("indexNotes") ? " " + AI_TAG : "") + (nAs ? ' <span class="md-as">작성 ' + esc(mdOf(nAs)) + "</span>" : "") +
         (nAs && asOf && nAs < asOf ? ' <span class="tn-stale" title="오늘 데이터(' + esc(asOf) + ')로 아직 갱신되지 않았습니다.">미갱신</span>' : "") + "</h3>" +
         line("밸류", n.value, null, idxLiqChip(x.key)) + line("단기", n.short, n.sigShort) + line("중기", n.mid, n.sigMid) + line("장기", n.long, n.sigLong) + "</section>" : "";
     var acts = x.chartUrl ? '<div class="dt-act"><a class="btn" href="' + esc(safeUrl(x.chartUrl)) + '" target="_blank" rel="noopener" title="네이버 증권에서 보기">' + ICON.ext + " 네이버</a></div>" : "";
@@ -3212,7 +3212,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     var n = ((window.INDEX_NOTES && window.INDEX_NOTES.items) || {})[m.key], nAs = window.INDEX_NOTES && window.INDEX_NOTES.asOf, asOf = window.INDEX_TA && window.INDEX_TA.asOf;
     var line = function (k, v, g) { return v ? '<div class="tn-line"><span class="tn-k">' + k + '</span><span class="tn-v">' + (g ? sigBadge(g) : "") + esc(v) + "</span></div>" : ""; };
     var notes = n && (n.value || n.short || n.mid || n.long)
-      ? '<section class="dt-sec"><h3>분석' + (aiWrote("indexNotes", (((window.INDEX_NOTES || {}).items || {}).kospi || {}).short) ? " " + AI_TAG : "") + (nAs ? ' <span class="md-as">작성 ' + esc(mdOf(nAs)) + "</span>" : "") +
+      ? '<section class="dt-sec"><h3>분석' + (aiWrote("indexNotes") ? " " + AI_TAG : "") + (nAs ? ' <span class="md-as">작성 ' + esc(mdOf(nAs)) + "</span>" : "") +
         (nAs && asOf && nAs < asOf ? ' <span class="tn-stale" title="오늘 데이터(' + esc(asOf) + ')로 아직 갱신되지 않았습니다.">미갱신</span>' : "") + "</h3>" +
         line("영향", n.value) + line("단기", n.short, n.sigShort) + line("중기", n.mid, n.sigMid) + line("장기", n.long, n.sigLong) + "</section>" : "";
     var acts = m.chartUrl ? '<div class="dt-act"><a class="btn" href="' + esc(safeUrl(m.chartUrl)) + '" target="_blank" rel="noopener" title="네이버 증권에서 보기">' + ICON.ext + " 네이버</a></div>" : "";
@@ -3735,7 +3735,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     if (curatedFull) {
       var stale = TP.asOf && taAsOf && TP.asOf < taAsOf;
       tipBtn.setAttribute("data-basis", "선정 기준 — " + (TP.note || DEFAULT_CRIT));
-      sub.innerHTML = (aiWrote("topPicks", TP.korea && TP.korea[0] && TP.korea[0].reason) ? AI_TAG + " " : "") + (TP.asOf ? esc(mdOf(TP.asOf)) + " 기준" : "") +
+      sub.innerHTML = (aiWrote("topPicks") ? AI_TAG + " " : "") + (TP.asOf ? esc(mdOf(TP.asOf)) + " 기준" : "") +
         (stale ? '<span class="pk-stale" title="오늘 데이터(' + esc(taAsOf) + ')로 아직 갱신되지 않았습니다. 표시는 ' + esc(TP.asOf) + ' 기준입니다.">미갱신</span>' : "");
     } else {
       var partial = hadCurated || (Array.isArray(TP[cc]) && TP[cc].length);
@@ -5146,7 +5146,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       return '<a href="' + esc(safeUrl(u)) + '" target="_blank" rel="noopener">출처' + (i + 1) + "</a>";
     }).join("") : "";
     if (srcs) bits.push(srcs);
-    det.innerHTML = '<div class="md-sec"><div class="md-t">거시 유동성' + (hasL && aiWrote("liquidity", L.headline) ? AI_TAG : "") + '<span class="md-as">기준일 ' + esc(src.asOf) +
+    det.innerHTML = '<div class="md-sec"><div class="md-t">거시 유동성' + (hasL && aiWrote("liquidity") ? AI_TAG : "") + '<span class="md-as">기준일 ' + esc(src.asOf) +
       (hasL && A && A.asOf && A.asOf !== L.asOf ? " · 자동 " + esc(A.asOf) : "") + "</span></div>" +
       (head ? '<div class="md-head">' + esc(head) + "</div>" : "") +
       (drivers ? '<ul class="liq-drivers">' + drivers + "</ul>" : "") +
@@ -5680,11 +5680,41 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   });
   syncAiDot();
 
-  // ── AI 가 쓴 문장 표시 — ai-status.js 의 지문(앞 40자)과 지금 문장이 같을 때만 ──
-  function aiSig(s) { return String(s || "").replace(/\s+/g, " ").trim().slice(0, 40); }
-  function aiWrote(item, text) {
-    var d = (window.AI_STATUS || {}).daily, sg = d && d.sig && d.sig[item];
-    return !!(sg && text && sg === aiSig(text));
+  // ── AI 가 쓴 문장 표시 — ai-status.js 의 지문과 지금 문장이 같을 때만 ──
+  //   지문 = 대표 문장 앞 40자 + '#' + 항목 화면 문장 전체의 FNV-1a — scripts/lib-claude.js aiParts·aiSig 와 같은 계산이어야 한다.
+  //   (앞 40자만 보던 때는 틀이 같은 지수 대응 단기 문장이 늘 같아 보여 세션이 쓴 문장에도 'AI' 가 붙었다 — 2026-10-26)
+  function aiNorm(s) { return String(s || "").replace(/\s+/g, " ").trim(); }
+  function aiFp(s) {
+    var h = 0x811c9dc5;
+    for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+    return h.toString(36);
+  }
+  function aiParts(item) {
+    var Ld = L || {}, items = (window.INDEX_NOTES && window.INDEX_NOTES.items) || {}, tp = D.topPicks || {};
+    if (item === "market") return [D.marketNote, [D.marketNote, D.marketNoteUS, D.marketNoteKR].map(aiNorm).join("\n")];
+    if (item === "liquidity") {
+      var us = Ld.us || {}, kr = Ld.korea || {};
+      return [Ld.headline, [Ld.headline, Ld.headlineUS, Ld.headlineKR, Ld.nextCheck, us.shortTerm, us.midTerm, kr.shortTerm, kr.midTerm]
+        .concat(us.drivers || [], kr.drivers || []).map(aiNorm).join("\n")];
+    }
+    if (item === "indexNotes") {
+      return [(items.kospi || {}).short, Object.keys(items).sort().map(function (k) {
+        var n = items[k] || {};
+        return k + ":" + [n.value, n.short, n.mid, n.long].map(aiNorm).join("|");
+      }).join("\n")];
+    }
+    if (item === "topPicks") {
+      return [((tp.korea && tp.korea[0]) || {}).reason, ["korea", "us"].map(function (c) {
+        return (tp[c] || []).map(function (x) { return x.ticker + ":" + aiNorm(x.reason); }).join("|");
+      }).join("\n")];
+    }
+    return ["", ""];
+  }
+  function aiWrote(item) {
+    var d = (window.AI_STATUS || {}).daily, sg = d && d.sig && d.sig[item], p = aiParts(item);
+    if (!sg || !p[0]) return false;
+    var pre = aiNorm(p[0]).slice(0, 40);
+    return sg.indexOf("#") < 0 ? sg === pre : sg === pre + "#" + aiFp(p[1]);   // '#' 없는 지문은 2026-10-26 전 형식(앞 40자만)
   }
   var AI_TAG = '<span class="ai-tag" data-basis="Claude API 가 매일 시세 갱신 직후 같은 날 데이터로 자동 작성했습니다(scripts/ai-daily.js).">AI</span>';
   // 종목 뉴스 한 줄(ai-news.js) — 최근 4일 안의 것만

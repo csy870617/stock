@@ -179,6 +179,39 @@ function writeStatus(part, obj) {
 }
 // 화면 문장의 '지문'(앱이 지금 보이는 문장이 AI 가 쓴 것인지 판별) — 앞 40자
 const sigOf = (s) => String(s || "").replace(/\s+/g, " ").trim().slice(0, 40);
+// 항목 지문 = 대표 문장 앞 40자 + '#' + 항목 화면 문장 전체의 FNV-1a(앱 index.html aiWrote 와 같은 계산).
+//   왜(2026-10-26): 앞 40자만 보면 틀이 같은 지수 대응 단기 문장('매도 — 하락 추세에 일목 구름 아래, …')이 누가 썼든
+//   같아 보여, ai-daily 가 A 세션이 같은 T 로 다시 쓴 지수 대응을 자기 것으로 알고 덮었다.
+const norm1 = (s) => String(s || "").replace(/\s+/g, " ").trim();
+const fpOf = (s) => {
+  let h = 0x811c9dc5;
+  const t = String(s || "");
+  for (let i = 0; i < t.length; i++) { h ^= t.charCodeAt(i); h = Math.imul(h, 0x01000193) >>> 0; }
+  return h.toString(36);
+};
+// X = { D: STOCK_DATA, LQ: LIQUIDITY_DATA, IN: INDEX_NOTES } — 항목별 [대표 문장, 화면 문장 전체]
+function aiParts(item, X) {
+  const D = X.D || {}, LQ = X.LQ || {}, items = (X.IN && X.IN.items) || {}, tp = D.topPicks || {};
+  if (item === "market") return [D.marketNote, [D.marketNote, D.marketNoteUS, D.marketNoteKR].map(norm1).join("\n")];
+  if (item === "liquidity") {
+    const us = LQ.us || {}, kr = LQ.korea || {};
+    return [LQ.headline, [LQ.headline, LQ.headlineUS, LQ.headlineKR, LQ.nextCheck, us.shortTerm, us.midTerm, kr.shortTerm, kr.midTerm]
+      .concat(us.drivers || [], kr.drivers || []).map(norm1).join("\n")];
+  }
+  if (item === "indexNotes") {
+    return [(items.kospi || {}).short, Object.keys(items).sort().map((k) => {
+      const n = items[k] || {};
+      return k + ":" + [n.value, n.short, n.mid, n.long].map(norm1).join("|");
+    }).join("\n")];
+  }
+  if (item === "topPicks") {
+    return [(tp.korea && tp.korea[0] || {}).reason, ["korea", "us"].map((c) => (tp[c] || []).map((x) => x.ticker + ":" + norm1(x.reason)).join("|")).join("\n")];
+  }
+  return ["", ""];
+}
+const aiSig = (item, X) => { const p = aiParts(item, X); return sigOf(p[0]) + "#" + fpOf(p[1]); };
+// 지문 비교 — 예전 형식(앞 40자만, 2026-10-26 전 기록)은 앞부분만 견준다(그 항목을 다음에 쓰거나 볼 때 새 형식으로 바뀐다)
+const sameSig = (a, b) => !!a && !!b && (a === b || (String(a).indexOf("#") < 0 && a === String(b).split("#")[0]));
 
 // 매매 지시 문구 — 화면 문장에 쓰지 않는다(CLAUDE.md §4-2). '개인의 추격 매수가 몰렸다'·'손절 매물' 같은 시장 묘사는
 // 사실이라 허용하고, 독자에게 행동을 권하는 꼴(…하라·…을 권한다·…가 유효하다·…할 기회다)만 막는다.
@@ -186,5 +219,5 @@ const DIRECTIVE = /(?:매수|매도|추격\s*매수|분할\s*매수|저가\s*매
 
 module.exports = {
   ROOT, DATA, CACHE_DIR, MODELS, PRICE, client, research, compose, newUsage, addUsage, mergeUsage, roundUsage,
-  AiError, describeError, loadWin, readCache, writeCache, readStatus, writeStatus, sigOf, DIRECTIVE, collectUrls,
+  AiError, describeError, loadWin, readCache, writeCache, readStatus, writeStatus, sigOf, fpOf, aiParts, aiSig, sameSig, DIRECTIVE, collectUrls,
 };

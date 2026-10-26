@@ -18,7 +18,9 @@
 //   --reapply — API 를 부르지 않고 이번 실행의 결과(.ai-cache/daily.json)를 다시 얹는다(Action rebase 충돌 복구용).
 //     이번 실행이 계획할 때 본 문장이 원격에서 바뀌었으면(그 사이 세션이 씀) 원격을 남긴다.
 //
-// 사용법: ANTHROPIC_API_KEY=… node scripts/ai-daily.js [--if-stale] [--reapply] [--dry]
+//   --who — API 를 부르지 않고 지금 화면 문장을 누가 썼는지(AI 작성분·세션 작성분·미작성)만 보인다(세션 점검용, 키 불필요).
+//
+// 사용법: ANTHROPIC_API_KEY=… node scripts/ai-daily.js [--if-stale] [--reapply] [--dry] | node scripts/ai-daily.js --who
 const fs = require("fs");
 const path = require("path");
 const { spawnSync } = require("child_process");
@@ -26,7 +28,7 @@ const L = require("./lib-claude");
 const { isPersonalTheme, isBlockedSource, priceNumberIn } = require("./validate-reco");
 
 const args = process.argv.slice(2);
-const IF_STALE = args.includes("--if-stale"), REAPPLY = args.includes("--reapply"), DRY = args.includes("--dry");
+const IF_STALE = args.includes("--if-stale"), REAPPLY = args.includes("--reapply"), DRY = args.includes("--dry"), WHO = args.includes("--who");
 const today = new Date().toISOString().slice(0, 10);
 const THEME_KO = { core: "우량", growth: "성장", value: "저평가", dividend: "배당", rising: "히든" };
 const IDX_KEYS = ["nasdaq", "dow", "kospi", "kosdaq"];
@@ -48,15 +50,11 @@ function basisOf(Q) {
   const ix = Q.indices || {};
   return { kr: (ix.kospi && ix.kospi.closeDate) || null, us: (ix.sp500 && ix.sp500.closeDate) || null };
 }
-// 지금 보이는 문장이 AI 가 쓴 것인지 — 지난 실행이 남긴 지문과 비교
+// 지금 보이는 문장이 AI 가 쓴 것인지 — 지난 실행이 남긴 지문과 비교(항목 화면 문장 전체 지문 — lib-claude aiSig)
 function sigs(S) {
-  const tp = S.D.topPicks || {};
-  return {
-    market: L.sigOf(S.D.marketNote),
-    liquidity: L.sigOf(S.LQ && S.LQ.headline),
-    indexNotes: L.sigOf(S.IN && S.IN.items && S.IN.items.kospi && S.IN.items.kospi.short),
-    topPicks: L.sigOf(tp.korea && tp.korea[0] && tp.korea[0].reason),
-  };
+  const X = { D: S.D, LQ: S.LQ, IN: S.IN }, o = {};
+  ITEMS.forEach((k) => { o[k] = L.aiSig(k, X); });
+  return o;
 }
 // 세션이 쓴 문장도 '새 종가가 나온 뒤 아무도 고치지 않았으면' 저녁에 새 종가로 다시 쓰는 항목(Top Pick 은 세션 판단이라 제외).
 // 왜: A 루틴(09:07 UTC)은 미국 장 시작 전에 쓰고, 예약 Action 은 몇 시간씩 늦게 돌아(아침 ~12:30·저녁 ~00:00 UTC)
@@ -67,7 +65,7 @@ const newer = (a, b) => !!(a && b && ((a.kr || "") > (b.kr || "") || (a.us || ""
 //   처음 보는 지문은 지금 기준으로 적는다(세션이 언제 썼는지 모르면 최신으로 본다 — 세션 작업을 덮지 않는 쪽).
 function nextSeen(prevSeen, cur, basis) {
   const items = {}, p = (prevSeen && prevSeen.items) || {};
-  ITEMS.forEach((k) => { items[k] = p[k] && p[k].sig === cur[k] ? p[k] : { sig: cur[k], basis }; });
+  ITEMS.forEach((k) => { items[k] = p[k] && L.sameSig(p[k].sig, cur[k]) ? { sig: cur[k], basis: p[k].basis } : { sig: cur[k], basis }; });
   return { at: new Date().toISOString(), items };
 }
 function plan(S, st) {
@@ -82,13 +80,15 @@ function plan(S, st) {
   const seenItems = (prev.seen && prev.seen.items) || {};
   const out = {};
   ITEMS.forEach((k) => {
-    const mine = !!(prev.sig && prev.sig[k] && prev.sig[k] === cur[k]);
+    const mine = L.sameSig(prev.sig && prev.sig[k], cur[k]);
     const sn = seenItems[k];
-    const outdated = !stale[k] && !mine && REFRESH_SESSION.includes(k) && !!(sn && sn.sig && sn.sig === cur[k] && newer(basis, sn.basis));
+    const outdated = !stale[k] && !mine && REFRESH_SESSION.includes(k) && !!(sn && L.sameSig(sn.sig, cur[k]) && newer(basis, sn.basis));
     out[k] = { stale: stale[k], mine, outdated, need: stale[k] || (mine && newClose) || outdated, write: !IF_STALE || stale[k] || mine || outdated };
   });
   return { T, basis, items: out, cur, run: !IF_STALE || ITEMS.some((k) => out[k].need) };
 }
+const planLine = (P) => "ai-daily: T " + P.T + " · 종가 한국 " + P.basis.kr + " 미국 " + P.basis.us + " · " +
+  ITEMS.map((k) => k + (P.items[k].stale ? "(미작성)" : P.items[k].mine ? "(AI 작성분)" : P.items[k].outdated ? "(세션 작성분 — 새 종가로 갱신)" : "(세션 작성분)")).join(" ");
 
 // ── 프롬프트 재료 ──
 const n2 = (v) => (v == null || !isFinite(v) ? "–" : (Math.round(v * 100) / 100).toString());
@@ -237,7 +237,7 @@ const COMPOSE_SYSTEM = [
   "너는 한국 개인 투자자용 주식 대시보드의 매일 시황·거시 판단을 쓰는 애널리스트다. 출력은 지정된 JSON 하나다.",
   "",
   "공통 규칙",
-  "- 한국어. 첫 문장에 핵심을 둔다. 앱이 그대로 보여 주므로 처리 메모·작업 경위를 쓰지 않는다.",
+  "- 한국어. 첫 문장에 핵심을 둔다. 앱이 그대로 보여 주므로 처리 메모·작업 경위를 쓰지 않는다 — 확인하지 못한 수치·자료는 '확인되지 않았다'고 쓰지 말고 아예 언급하지 않는다.",
   "- 숫자는 [데이터]나 [조사 메모]에 있는 것만 쓴다. 없는 수치를 만들지 않는다.",
   "- 매매 지시를 쓰지 않는다('매수하라·비중 확대·추격 매수·손절' 금지). 무엇이 일어났고 어떻게 읽히는지만 쓴다.",
   "- 기술 신호 등급은 이미 일어난 움직임의 요약이지 예측이 아니다. 하락 추세면 반등은 '반등 시도'로만 쓴다.",
@@ -252,7 +252,7 @@ const COMPOSE_SYSTEM = [
   "  headline(통합 1문장)·headlineUS·headlineKR(각 1~2문장). nextCheck: 다음에 확인할 가격·지표·일정 1문장.",
   "- policyNews: 연준·한국은행 각각 stance(매파·중립·비둘기파)와 note(누가·무엇을 말하거나 결정했는지 사실 1~2문장). 조사 메모에 근거가 없으면 note 에 직전 판단을 유지한다고 쓰지 말고 sources 를 빈 배열로 둔다.",
   "- indexNotes: 나스닥·다우·코스피·코스닥(+ 아래 환율·원자재) 각각",
-  "  value = 지수 밸류(멀티플은 메모에 수치가 있을 때만)와 그 지역 유동성 국면 1~2문장(미국=나스닥·다우, 한국=코스피·코스닥),",
+  "  value = 지수 밸류(멀티플은 메모에 수치가 있을 때만 — 없으면 멀티플을 언급하지 않는다)와 그 지역 유동성 국면 1~2문장(미국=나스닥·다우, 한국=코스피·코스닥),",
   "  short/mid/long = 일봉·주봉·월봉 등급과 그 근거(이평·구름·지지/저항·RSI 등 [데이터]의 사실) 1~2문장. 등급은 앱과 같은 추세 상태 이름으로 쓴다",
   "  (적극매수=강한 상승세, 매수=상승세, 중립=횡보, 매도=하락세, 적극매도=강한 하락세 — 2019~2026 995종목에서 다섯 상태의 이후 수익·낙폭이 같아 매수·매도로 부르지 않는다).",
   "  usdkrw(원/달러 환율)·dxy(달러인덱스)·wti(국제 유가)·gold(국제 금)도 같은 형식으로 쓴다 — value 는 '영향': 최근 움직임의 원인(조사 메모)과 그것이 한국·미국 주식에 주는 영향",
@@ -293,11 +293,15 @@ function composePrompt(S, ctx, memo, urls, picks) {
 }
 
 // ── 결과 검사 — 항목별 오류(있으면 그 항목은 반영하지 않는다) ──
+// 조사 경위 문구 — 못 찾은 자료를 화면 문장에 적은 것(2026-10-26 지수 대응 4개가 '멀티플 수치는 확인되지 않았고,'로 시작했다).
+//   '원인 보도는 확인되지 않았고'처럼 보도가 없었다는 사실은 읽는 사람에게 정보라 막지 않는다.
+const PROCESS = /(?:수치|자료|데이터|멀티플|밸류에이션|PER|PBR|지표)\S{0,2}\s*(?:확인되지\s*않|확인하지\s*못|확인\s*못|찾지\s*못|파악되지\s*않|파악하지\s*못)|조사\s*메모|검색\s*결과|출처\s*목록/;
 function check(out, picks) {
   const err = { market: [], liquidity: [], policy: [], indexNotes: [], topPicks: [] };
   const txt = (k, label, s) => {
     if (!s || !String(s).trim()) err[k].push(label + " 비어 있음");
     else if (L.DIRECTIVE.test(s)) err[k].push(label + " 매매 지시 문구('" + String(s).match(L.DIRECTIVE)[0] + "') — 사실과 해석만 쓸 것");
+    else if (PROCESS.test(s)) err[k].push(label + " 조사 경위 문구('" + String(s).match(PROCESS)[0] + "') — 확인 못 한 자료는 언급하지 말 것");
   };
   txt("market", "marketNote", out.marketNote); txt("market", "marketNoteUS", out.marketNoteUS); txt("market", "marketNoteKR", out.marketNoteKR);
   const lq = out.liquidity || {};
@@ -325,6 +329,7 @@ function check(out, picks) {
       const hit = priceNumberIn(it.reason);
       if (hit) err.topPicks.push(tag + " reason 에 가격 의존 수치('" + hit + "') 금지");
       if (L.DIRECTIVE.test(it.reason || "")) err.topPicks.push(tag + " reason 매매 지시 문구");
+      if (PROCESS.test(it.reason || "")) err.topPicks.push(tag + " reason 조사 경위 문구");
     });
   });
   return err;
@@ -441,7 +446,7 @@ function reapply() {
   const S = loadAll(), res = {};
   // 이번 실행이 계획할 때 본 문장(seenSig)이 원격에 그대로일 때만 다시 얹는다 — 그 사이 세션이 고쳤으면 원격을 남긴다.
   //   (예전 캐시엔 seenSig 가 없어 날짜로 판단)
-  const now = sigs(S), untouched = (k, byDate) => (c.seenSig ? now[k] === c.seenSig[k] : byDate);
+  const now = sigs(S), untouched = (k, byDate) => (c.seenSig ? L.sameSig(c.seenSig[k], now[k]) : byDate);
   if (c.res.patch) {
     const p = {};
     if (c.res.patch.marketNote && untouched("market", !(S.D.marketNoteAsOf >= c.today))) Object.assign(p, { marketNote: c.res.patch.marketNote, marketNoteUS: c.res.patch.marketNoteUS, marketNoteKR: c.res.patch.marketNoteKR, marketNoteAsOf: c.res.patch.marketNoteAsOf });
@@ -457,14 +462,14 @@ function reapply() {
 
 async function main() {
   if (REAPPLY) return reapply();
+  if (WHO) { const S = loadAll(); if (S.D && S.IX && S.TA) console.log(planLine(plan(S, L.readStatus()))); return; }
   const cl = L.client();
   if (!cl) { console.log("ai-daily: ANTHROPIC_API_KEY 없음 — 건너뜀(그날 몫은 A 루틴 세션이 쓴다)"); return; }
   const S = loadAll();
   if (!S.D || !S.IX || !S.TA) { console.log("ai-daily: 데이터 파일 부족 — 건너뜀"); return; }
   const st = L.readStatus(), P = plan(S, st);
   const todo = ITEMS.filter((k) => P.items[k].write);
-  console.log("ai-daily: T " + P.T + " · 종가 한국 " + P.basis.kr + " 미국 " + P.basis.us + " · " +
-    ITEMS.map((k) => k + (P.items[k].stale ? "(미작성)" : P.items[k].mine ? "(AI 작성분)" : P.items[k].outdated ? "(세션 작성분 — 새 종가로 갱신)" : "(세션 작성분)")).join(" "));
+  console.log(planLine(P));
   const prevSeen = (st.daily || {}).seen;
   if (!P.run || !todo.length) {
     console.log("ai-daily: 쓸 항목 없음 — 오늘 몫이 이미 최신이거나 세션이 썼다");
