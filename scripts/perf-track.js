@@ -21,6 +21,9 @@ const OFFLINE = process.argv.includes("--offline");
 const FORMAL = ["core", "growth", "value", "dividend", "rising"];
 // picks = 홈 'Top Pick'(그날 고른 나라별 3종목 — 스냅샷 picks, 2026-07-31~): 가장 눈에 띄는 추천이라 같은 방식으로 성적을 잰다
 const GROUPS = ["all"].concat(FORMAL, ["tier:1", "tier:2", "tier:3", "picks", "watch", "hold"]);
+// Top Pick 선정 규칙이 바뀐 날 — 2026-10-27 '균형' 큐레이션 → '건강 + 상승 가능성' 순위(lib-picks.js). 그날 기록의 Top Pick 부터
+//   새 규칙이라 picks 묶음에 그 뒤 구간만 잰 창(w.rule)을 더한다 — 앱 '지난 성적'은 새 규칙이 5거래일 쌓이면 그 성적을 보인다.
+const PICKS_RULE = { from: "2026-10-27", label: "건강 + 상승 가능성" };
 const REMOVED_DAYS = 90;   // 편출 종목 목록에 남기는 기간(일)
 const SWAP_DAYS = 365;     // 교체 성과를 재는 기간(일)
 const AFTER = 20;          // 교체 뒤 비교 시점(거래일)
@@ -139,7 +142,7 @@ async function main() {
   const exitPx = (c, t, i) => { const v = cache[c + ":" + t + "@" + H[i].date]; return v ? v.p : null; };
   const unfilled = exits.filter((x) => !cache[x.c + ":" + x.t + "@" + x.d]).length;
 
-  const out = { builtAt: new Date().toISOString(), asOf: last.date, base, freeze: FR ? { from: FR.from, until: FR.until } : null };
+  const out = { builtAt: new Date().toISOString(), asOf: last.date, base, freeze: FR ? { from: FR.from, until: FR.until } : null, picksRule: PICKS_RULE };
   for (const c of COUNTRIES) {
     // ── 3. 묶음별 성적·누적 곡선(정식 전체의 거래일에 맞춘다) ──
     const daysAll = LP.chain(H, c, null, exitPx);
@@ -159,7 +162,13 @@ async function main() {
       nav[f] = 1;
       let v = 1;
       for (let k = f; k < days.length; k++) { v *= 1 + days[k].r; nav[k + 1] = r4(v); }
-      groups[g] = { w: LP.windows(days, base), nav,
+      const w = LP.windows(days, base);
+      if (g === "picks") {   // 새 규칙 구간 — 그 규칙으로 고른 기록일에서 시작한 구간부터
+        const k0 = days.findIndex((x, k) => k > 0 && days[k - 1].d >= PICKS_RULE.from);
+        const st = k0 > 0 ? LP.stats(days, k0, base) : null;
+        if (st) w.rule = st;
+      }
+      groups[g] = { w, nav,
         n: g === "picks" ? ((last.picks && last.picks[c]) || []).length : lastC.filter((e) => LP.inGroup(sel, e.th, e.tier)).length };
     });
 

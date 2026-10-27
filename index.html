@@ -1200,6 +1200,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
 <script src="data/recommendations.js"></script>
 <script src="data/coverage-status.js"></script>
 <script src="data/candidates.js"></script>
+<script src="data/pick-scores.js"></script>
 <script src="data/news.js"></script>
 <script src="data/ai-status.js"></script>
 <script src="data/quotes.js"></script>
@@ -3583,55 +3584,16 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   // '많이 오를 종목' 순위처럼 읽혔다(2026-10-16 — 증권사 목표가 낙관 편향, TP_REALITY 참조).
   function byName(a, b) { return String(a.name || "").localeCompare(String(b.name || ""), "ko"); }
 
-  // 거시 국면 신호 — Top Picks 폴백 선정에 시장 국면을 반영한다(유동성·지수 분석 연동).
-  //  · gaugeTilt: 유동성 게이지 단기등급(온디맨드 우선, 없으면 자동 baseline) → -1(매우우호)..+1(매우부정)
-  //  · rotationTilt: 성장지수가 가치지수보다 약한 정도(미: 나스닥−다우, 한: 코스닥−코스피) 0..1
-  var GAUGE_RANK = { "매우 우호": -1, "우호": -0.5, "신중": 0, "부정": 0.5, "매우 부정": 1 };
-  var IDX_SIG = { "적극매수": -1, "매수": -0.5, "중립": 0, "매도": 0.5, "적극매도": 1 };
-  // 테마 선호 — '안전 + 수익성' 관점: 우량(핵심)·저평가(가치, 안전마진) 우대, 고베타(성장·라이징) 회피.
-  var THEME_QUALITY = { core: 1, value: 0.6, dividend: 0.1, growth: -0.6, rising: -0.9 };
-  function idxSignal(key) {
-    var T = window.INDEX_TA, x = T && (T.indices || []).filter(function (i) { return i.key === key; })[0];
-    var sig = x && x.short && x.short.signal;
-    return sig ? (IDX_SIG[sig] || 0) : 0;
+  // Top Pick 순위 — data/pick-scores.js(scripts/pick-score.js 가 매일 생성: 건강 관문 + 상승 가능성 점수, scripts/lib-picks.js — 2026-10-27~).
+  //   큐레이션(topPicks — 이 순위 1~3위에 이유를 붙인 것)이 없거나 일부가 편성에서 빠졌을 때 같은 순위로 채운다. 순위 파일이 없으면 채우지 않는다.
+  var PICK_CRIT = "건강 조건(흑자·희석·자산 급증·이익 변동·추세·수급·결격)을 통과한 정식 추천 중 상승 가능성 점수(주식 수 감소·주주환원·ROIC) 1~3위 — 확실한 예측이 아니라 확률을 조금 기울이는 기준";
+  function rankedPicks(cc) {
+    var P = window.PICK_SCORES, r = P && P[cc] && P[cc].ranked;
+    return Array.isArray(r) ? r : [];
   }
-  function gaugeTilt(country) {
-    var A = window.LIQUIDITY_AUTO;
-    var c = (L && L[country]) || (A && A[country]);
-    var rk = c && c.shortTerm;
-    return (rk in GAUGE_RANK) ? GAUGE_RANK[rk] : 0;
-  }
-  function rotationTilt(country) {
-    var grw = country === "us" ? "nasdaq" : "kosdaq", val = country === "us" ? "dow" : "kospi";
-    return Math.max(0, Math.min(idxSignal(grw) - idxSignal(val), 1));
-  }
-  // 폴백 선정 점수 — 큐레이션(topPicks)이 없거나 일부가 빠졌을 때만 쓴다. CLAUDE.md §4-6 과 같은 잣대:
-  //   품질(tier) + 실측 변동성·낙폭(risk) + 최근 분기 영업이익 모멘텀(fundamentals.js). 상승여력 크기는 쓰지 않는다.
-  function pickScore(s) {
-    var g = gaugeTilt(state.country), rot = rotationTilt(state.country);
-    var tierScore = s.tier === 1 ? 1 : s.tier === 2 ? 0.5 : 0;
-    var riskScore = 0.5;
-    var taR = stTa(s.ticker); taR = taR && taR.risk;
-    if (taR && typeof taR.vol === "number" && typeof taR.mdd === "number") {
-      var volN = Math.max(0, Math.min((taR.vol - 20) / 50, 1));
-      var mddN = Math.max(0, Math.min((taR.mdd - 10) / 40, 1));
-      riskScore = 1 - Math.max(0, Math.min(0.6 * volN + 0.4 * mddN, 1));
-    }
-    var f = fundOf(s.ticker), op = f && f.q && f.q.op, growth = 0.5;
-    if (op) growth = op.turn === "흑자전환" ? 1 : op.turn ? 0 : op.yoy == null ? 0.5 : Math.max(0, Math.min(1, 0.5 + op.yoy / 100));
-    var base = 0.45 * tierScore + 0.30 * riskScore + 0.25 * growth;
-    var defense = Math.max(Math.max(0, g), rot);
-    var tilt = 0.08 + 0.12 * defense;   // 상시 품질 선호 + 국면 증폭
-    return base + tilt * (THEME_QUALITY[s.theme] || 0);
-  }
-  // 폴백 후보에서 빼는 종목 — 단기·중기 적극매도(falling knife), 한국 수급 과열(검증된 약세 경고), 목표가 소진
-  function pickExcluded(s, cc) {
-    var n = s.techNote || {};
-    if (n.sigShort === "적극매도" || n.sigMid === "적극매도") return true;
-    var E = window.STOCK_EVENTS, ev = E && E.items && E.items[s.ticker];
-    if (cc === "korea" && ev && ev.flow && ev.flow.hot) return true;
-    var up = effective(s).upside;
-    return up == null || up <= 0;
+  function pickBasis() {
+    var P = window.PICK_SCORES || {};
+    return "선정 기준 — " + (P.note || PICK_CRIT) + (P.evidence ? "\n\n" + P.evidence : "");
   }
 
   // 종목 찾기 — 같은 티커가 두 주제에 있을 수 있어 주제까지 맞춰 찾고, 없으면 티커만으로
@@ -3970,19 +3932,14 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     return m;
   }
   function fallbackPicks(cc, n) {
-    var best = bestByTicker(cc), picks = [];
-    Object.keys(best).forEach(function (t) {
-      var s = best[t];
-      if (!pickExcluded(s, cc)) picks.push(s);   // 관심·보유는 추천이 아니므로 bestByTicker 에서 이미 빠졌다
-    });
-    picks.sort(function (a, b) { return (pickScore(b) - pickScore(a)) || byName(a, b); });
-    return picks.slice(0, n || 3);
+    var best = bestByTicker(cc), picks = [];   // 관심·보유·중복 자리는 bestByTicker 에서 이미 빠졌다
+    rankedPicks(cc).forEach(function (x) { var s = best[x.ticker]; if (s && picks.length < (n || 3)) picks.push(s); });
+    return picks;
   }
   function renderTopPicks() {
     var box = document.getElementById("picksBox");
     if (window.__pastActive) return;   // 과거 보기 중엔 오늘 목록을 그리지 않는다(시세 도착 콜백 경합)
     var tipBtn = document.getElementById("picksTip"), sub = document.getElementById("picksSub");
-    var DEFAULT_CRIT = "정식 추천 중 품질(tier)·최근 실적·변동성을 종합한 국가별 3종목(예측 아님 — 상승여력 크기로 고르지 않음)";
     var TP = D.topPicks || {};
     var cc = state.country;
     var byT = bestByTicker(cc);
@@ -4009,13 +3966,13 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     tipBtn.innerHTML = ICON.info;
     if (curatedFull) {
       var stale = TP.asOf && taAsOf && TP.asOf < taAsOf;
-      tipBtn.setAttribute("data-basis", "선정 기준 — " + (TP.note || DEFAULT_CRIT));
+      tipBtn.setAttribute("data-basis", pickBasis());
       sub.innerHTML = (aiWrote("topPicks") ? AI_TAG + " " : "") + (TP.asOf ? esc(mdOf(TP.asOf)) + " 기준" : "") +
         (stale ? '<span class="pk-stale" title="오늘 데이터(' + esc(taAsOf) + ')로 아직 갱신되지 않았습니다. 표시는 ' + esc(TP.asOf) + ' 기준입니다.">미갱신</span>' : "");
     } else {
       var partial = hadCurated || (Array.isArray(TP[cc]) && TP[cc].length);
-      tipBtn.setAttribute("data-basis", "선정 기준 — " + DEFAULT_CRIT +
-        (partial ? "\n\n오늘 큐레이션 일부가 편성에서 빠져 같은 기준의 상위 종목으로 채웠습니다." : "\n\n오늘 큐레이션이 없어 같은 기준으로 자동 선정했습니다."));
+      tipBtn.setAttribute("data-basis", pickBasis() +
+        (partial ? "\n\n오늘 고른 종목 일부가 편성에서 빠져 같은 순위의 다음 종목으로 채웠습니다." : "\n\n오늘 선정 이유가 아직 없어 같은 순위로 자동 표시했습니다."));
       sub.textContent = "자동 선정";
     }
     renderPicksRec();
@@ -4028,12 +3985,16 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     var btn = document.getElementById("picksRec");
     if (!btn) return;
     if (!PERF) { btn.hidden = true; if (!perfFail) setTimeout(loadPerf, 800); return; }
-    var g = PERF[state.country] && PERF[state.country].groups && PERF[state.country].groups.picks, s = g && g.w && g.w.all;
+    // 선정 규칙이 바뀐 뒤(perf.json picksRule — 2026-10-27 '건강 + 상승 가능성')는 새 규칙 구간(w.rule)이 5거래일 쌓이면 그 성적을,
+    //   그 전에는 이전 기준(균형 큐레이션)의 기록임을 밝혀 전체 기록을 보인다
+    var g = PERF[state.country] && PERF[state.country].groups && PERF[state.country].groups.picks, rule = g && g.w && g.w.rule;
+    var useRule = !!(rule && rule.days >= 5), s = useRule ? rule : g && g.w && g.w.all;
     if (!s || s.days < 5) { btn.hidden = true; return; }
+    var key = useRule ? "새 기준 성적" : PERF.picksRule ? "이전 기준 성적" : "지난 성적";
     var sig = s.days < 20 || s.tEx == null ? "기록 짧음" : Math.abs(s.tEx) < 2 && (s.tAlpha == null || Math.abs(s.tAlpha) < 2) ? "우연 범위" : "의미 있는 차이";
-    btn.innerHTML = '<span class="pk-rec-k">지난 성적</span><span class="pk-rec-v"><span>' + esc(mdOf(s.from)) + "~ " + fmtPct(s.ret) + " · " + esc(benchName(state.country)) + " " + fmtPct(s.bench) + "</span>" +
+    btn.innerHTML = '<span class="pk-rec-k">' + key + '</span><span class="pk-rec-v"><span>' + esc(mdOf(s.from)) + "~ " + fmtPct(s.ret) + " · " + esc(benchName(state.country)) + " " + fmtPct(s.bench) + "</span>" +
       '<span class="pk-rec-s">차이 <b class="' + sgnCls(s.excess).trim() + '">' + fmtPp(s.excess) + "</b> · " + esc(sig) + '</span></span><span class="pk-rec-c" aria-hidden="true">' + ICON.chev + "</span>";
-    btn.setAttribute("aria-label", "Top Pick 지난 성적 — 성과 탭에서 보기");
+    btn.setAttribute("aria-label", "Top Pick " + key + " — 성과 탭에서 보기");
     btn.hidden = false;
   }
   document.getElementById("picksRec").addEventListener("click", function () { pfSel[state.country] = "picks"; setTab("perf"); });
@@ -4170,7 +4131,11 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       // 고른 묶음도 우연 범위·시장 민감도를 함께 — 수익 차이만 보고 '잘 고른다'고 읽지 않게
       '<div class="pf-tags pf-cap-tags">' + pfSig(ws.tEx, ws.days) +
         (ws.beta != null ? '<span class="pf-chip" data-basis="' + esc(PF_BETA_TIP) + '">β ' + ws.beta.toFixed(2) +
-          (ws.betaAlpha != null && Math.abs(ws.beta - 1) >= 0.25 ? " · 감안하면 " + fmtPp(ws.betaAlpha) : "") + "</span>" : "") + "</div>";
+          (ws.betaAlpha != null && Math.abs(ws.beta - 1) >= 0.25 ? " · 감안하면 " + fmtPp(ws.betaAlpha) : "") + "</span>" : "") + "</div>" +
+      // Top Pick 선정 규칙이 바뀐 날(perf.json picksRule) — 곡선은 이어 그리고, 새 규칙 구간 성적을 따로 적는다
+      (sel === "picks" && PERF.picksRule ? '<p class="pf-note">' + esc(mdOf(PERF.picksRule.from)) + "부터 '" + esc(PERF.picksRule.label) +
+        "' 순위로 고릅니다(그 전은 품질·실적·변동성 균형 큐레이션)." + (gs.w.rule ? " 새 기준 " + esc(mdOf(gs.w.rule.from)) + "~ " + fmtPct(gs.w.rule.ret) + " · " + esc(bn) + " " +
+        fmtPct(gs.w.rule.bench) + " (" + gs.w.rule.days + "거래일)" : "") + "</p>" : "");
     if (cmp) {   // 겹쳐 보기 — 묶음마다 처음 담은 날부터의 누적(늦게 시작한 묶음은 그날 0%), 지수는 회색
       var ks = sel === "cmp-theme" ? recoThemes().filter(function (t) { return C.groups[t.key]; }).slice(0, 5).map(function (t, i) { return [t.key, t.label, "c" + i]; })
         : TIER_KEYS.filter(function (k) { return C.groups[k]; }).map(function (k) { return [k, "T" + tierOfKey(k), "t" + tierOfKey(k)]; });

@@ -515,6 +515,20 @@ if (require.main === module) {
     if (fz.active && fz.changed.length) warnings.push("선정 규칙 동결 중(" + fz.from + " ~ " + fz.until + "): " + fz.changed.join(", ") +
       " 이(가) 기준선과 다르다 — 버그 수정·승인된 변경이면 node scripts/rules-freeze.js --accept \"사유\", 아니면 되돌린다");
   } catch (e) { warnings.push("선정 규칙 동결 확인 실패: " + e.message); }
+  // Top Pick 선정 규칙(2026-10-27~, CLAUDE.md §4-6): 지금 데이터로 다시 매긴 lib-picks 순위 1~3위와 같아야 한다 — 최신 거래일 몫으로 쓴 것만 본다
+  try {
+    const tp = D.topPicks, T = (loadTa() || {}).asOf;
+    if (tp && T && tp.asOf >= T) {
+      const win = (f, k) => { const p = path.join(ROOT, "data", f); return fs.existsSync(p) ? loadGlobalScript(p, k) : null; };
+      const R = require("./lib-picks").rankPicks({ D, TA: loadTa(), EV: (win("events.js", "STOCK_EVENTS") || {}).items || {},
+        CA: win("candidates.js", "CANDIDATES") || { groups: {} }, DC: win("discovery-candidates.js", "DISCOVERY_CANDIDATES") });
+      ["korea", "us"].forEach((c) => {
+        const want = R[c].ranked.slice(0, 3).map((x) => x.ticker), got = (tp[c] || []).map((x) => x.ticker);
+        if (want.length === 3 && want.join() !== got.join()) warnings.push("topPicks." + c + " 가 지금 순위 1~3위(" + want.join(", ") + ")와 다르다(" + got.join(", ") +
+          ") — node scripts/pick-score.js 로 확인하고 그 순서로 다시 쓴다(§4-6)");
+      });
+    }
+  } catch (e) { warnings.push("Top Pick 순위 확인 실패: " + e.message); }
   if (warnings.length) {
     console.log("⚠ 경고 " + warnings.length + "건:");
     warnings.forEach((w) => console.log("  - " + w));

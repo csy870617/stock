@@ -7,7 +7,7 @@
 //
 // 흐름: ①research — 웹 검색(Opus 5.5, 최대 6회)으로 최근 미·한 증시 원인·연준/한은 발언·이번 주 일정을 메모로
 //       ②compose — 검색 없이 데이터(지수·유동성 baseline·금리 경로·편성 표) + 메모 → 정해진 JSON
-//       ③검사 — 매매 지시 문구·Top Pick 규칙(정식 추천·적극매도/추세 붕괴/수급 과열/결격 제외·가격 의존 수치 금지)·출처 번호
+//       ③검사 — 매매 지시 문구·Top Pick 규칙(lib-picks 순위 1~3위 그대로 — 건강 관문·상승 가능성 점수, 2026-10-27~ · 가격 의존 수치 금지)·출처 번호
 //       ④반영 — recommendations.js(시황·Top Pick, update-reco.js 가드레일 통과) · liquidity.js · index-notes.js · ai-status.js
 //
 // 덮어쓰기 규칙(세션 작업을 지우지 않는다):
@@ -25,6 +25,7 @@ const fs = require("fs");
 const path = require("path");
 const { spawnSync } = require("child_process");
 const L = require("./lib-claude");
+const LP = require("./lib-picks");
 const { isPersonalTheme, isBlockedSource, priceNumberIn } = require("./validate-reco");
 
 const args = process.argv.slice(2);
@@ -43,6 +44,7 @@ function loadAll() {
     LQ: L.loadWin("liquidity.js", "LIQUIDITY_DATA"), A: L.loadWin("liquidity-auto.js", "LIQUIDITY_AUTO"), TA: L.loadWin("stock-ta.js", "STOCK_TA"),
     EV: (L.loadWin("events.js", "STOCK_EVENTS") || {}).items || {}, FU: (L.loadWin("fundamentals.js", "STOCK_FUND") || {}).items || {},
     Q: L.loadWin("quotes.js", "STOCK_QUOTES") || {}, CA: L.loadWin("candidates.js", "CANDIDATES") || { groups: {} },
+    DC: L.loadWin("discovery-candidates.js", "DISCOVERY_CANDIDATES"),
   };
 }
 // 마지막으로 끝난 정규장 날짜(한국·미국) — 저녁 실행이 '새 종가가 생겼나'를 본다
@@ -156,41 +158,33 @@ function liquidityBlock(A, LQ) {
   }
   return out.join("\n");
 }
-// Top Pick 후보 — §4-6 제외 조건(단기·중기 적극매도·추세 붕괴·한국 수급 과열)과 실질 결격을 미리 거른다
+// Top Pick — lib-picks 순위(건강 관문 + 상승 가능성 점수, 2026-10-27 사용자 요청 '건강하면서 상승 가능성이 가장 높은 종목')의 나라별 1~3위.
+//   종목은 규칙이 고르고 AI 는 그 세 종목의 이유 문장만 쓴다 — 검사가 순서까지 강제한다.
 function pickTable(S) {
-  // 결격 상태는 (국가|주제|티커)로 본다 — '중복' 자리는 회사 결격이 아니라 편성 구성 문제라 그 자리만 건너뛰고
-  // 남길 주제의 행으로 후보에 올린다(check-defects 의 dup 판정을 따름)
-  const ta = (S.TA && S.TA.ta) || {}, defState = {}, dupSlot = new Set();
-  Object.keys(S.CA.groups || {}).forEach((g) => (S.CA.groups[g].defects || []).forEach((d) => {
-    if (d.dup) dupSlot.add(g + "|" + d.ticker);
-    else defState[g + "|" + d.ticker] = d.state;
-  }));
-  const rows = { korea: [], us: [] }, eligible = { korea: new Set(), us: new Set() }, excluded = [];
-  ["korea", "us"].forEach((c) => (S.D[c] || []).forEach((s) => {
-    if (isPersonalTheme(s.theme) || eligible[c].has(s.ticker) || dupSlot.has(c + "|" + s.theme + "|" + s.ticker)) return;
-    const x = ta[s.ticker] || {}, sg = ["short", "mid", "long"].map((k) => (x[k] && x[k].signal) || "–");
-    const ev = S.EV[s.ticker] || {}, fu = S.FU[s.ticker] || {}, q = fu.q || {};
-    let why = null;
-    if (sg[0] === "적극매도" || sg[1] === "적극매도") why = "단기·중기 적극매도";
-    else if (sg.every((v) => /매도/.test(v))) why = "추세 붕괴";
-    else if (c === "korea" && ev.flow && ev.flow.hot) why = "수급 과열";
-    else if (defState[c + "|" + s.theme + "|" + s.ticker] === "결격") why = "실질 결격(교체 대기)";
-    if (why) { excluded.push(c + ":" + s.ticker + " " + s.name + "(" + why + ")"); return; }
-    eligible[c].add(s.ticker);
-    const parts = [s.ticker + " " + s.name, THEME_KO[s.theme] + " T" + s.tier, "신호 " + sg.join("/")];
-    if (x.risk) parts.push("60일 변동성 " + x.risk.vol + "% · 1년 최대낙폭 " + x.risk.mdd + "%");
-    const yo = (k, lab) => (q[k] && q[k].yoy != null ? lab + " " + sgn(q[k].yoy) + "%" : null);
-    const qq = [yo("rev", "매출"), yo("op", q.opLabel === "EBIT" ? "EBIT" : "영업이익"), yo("np", "순이익")].filter(Boolean);
-    if (qq.length) parts.push((q.period || "") + " 분기 전년 대비 " + qq.join(" "));
-    if (q.next && q.next.op != null) parts.push("다음 분기(" + q.next.period + ") 영업이익 컨센서스 " + q.next.op);
-    if (fu.rev4w) parts.push("최근 4주 EPS 추정 상향 " + fu.rev4w.up + "·하향 " + fu.rev4w.down);
-    const nx = ev.next && ev.next.date;
-    if (nx && nx >= today) parts.push("실적 발표 " + nx);
-    const st = defState[c + "|" + s.theme + "|" + s.ticker];
-    if (st) parts.push("점검 상태 " + st);
-    rows[c].push("- " + parts.join(" | "));
-  }));
-  return { rows, eligible, excluded };
+  const R = LP.rankPicks({ D: S.D, TA: S.TA, EV: S.EV, CA: S.CA, DC: S.DC });
+  const ta = (S.TA && S.TA.ta) || {}, rows = { korea: [], us: [] }, top = { korea: [], us: [] }, excluded = [];
+  ["korea", "us"].forEach((c) => {
+    const r = R[c];
+    r.excluded.forEach((x) => excluded.push(c + ":" + x.ticker + " " + x.name + "(" + x.why + ")"));
+    top[c] = r.ranked.slice(0, 3).map((x) => x.ticker);
+    r.ranked.slice(0, 3).forEach((x) => {
+      const s = ((S.D[c] || []).find((y) => y.ticker === x.ticker && y.theme === x.theme)) || {};
+      const t = ta[x.ticker] || {}, sg = ["short", "mid", "long"].map((k) => (t[k] && t[k].signal) || "–");
+      const ev = S.EV[x.ticker] || {}, fu = S.FU[x.ticker] || {}, q = fu.q || {};
+      const parts = [x.rank + "위 " + x.ticker + " " + x.name, THEME_KO[x.theme] + " T" + x.tier, "점수 " + x.score + "(" + LP.partsLine(x) + ")", "신호 " + sg.join("/")];
+      if (t.risk) parts.push("60일 변동성 " + t.risk.vol + "% · 1년 최대낙폭 " + t.risk.mdd + "%");
+      const yo = (k, lab) => (q[k] && q[k].yoy != null ? lab + " " + sgn(q[k].yoy) + "%" : null);
+      const qq = [yo("rev", "매출"), yo("op", q.opLabel === "EBIT" ? "EBIT" : "영업이익"), yo("np", "순이익")].filter(Boolean);
+      if (qq.length) parts.push((q.period || "") + " 분기 전년 대비 " + qq.join(" "));
+      if (q.next && q.next.op != null) parts.push("다음 분기(" + q.next.period + ") 영업이익 컨센서스 " + q.next.op);
+      if (fu.rev4w) parts.push("최근 4주 EPS 추정 상향 " + fu.rev4w.up + "·하향 " + fu.rev4w.down);
+      const nx = ev.next && ev.next.date;
+      if (nx && nx >= today) parts.push("실적 발표 " + nx);
+      if (s.thesis) parts.push("논거: " + String(s.thesis).slice(0, 160));
+      rows[c].push("- " + parts.join(" | "));
+    });
+  });
+  return { rows, top, excluded, counts: { korea: R.korea.ranked.length, us: R.us.ranked.length } };
 }
 
 // ── 출력 스키마(structured outputs — 모든 필드 필수, 추가 필드 없음) ──
@@ -271,12 +265,12 @@ const COMPOSE_SYSTEM = [
   "  (환율: 수출주·외국인 수급·미국 주식의 원화 환산 수익 / 유가: 물가·금리·에너지·운송) 1~2문장, [데이터]의 관련 정보(상관·같이 움직인 종목)를 근거로.",
   "  (달러인덱스: 원화·신흥국 자금·원자재 / 금: 실질금리·안전자산 수요)",
   "  usdkrw 상태는 달러 기준이다(상승세 = 원/달러 상승·원화 약세). 환율·원자재의 방향을 예측하지 않는다.",
-  "- topPicks: 한국·미국 각 정확히 3종목, [Top Pick 후보]에 있는 티커만. 예측이 아니라 '지금 편성에서 균형이 좋은 종목' 큐레이션이다.",
-  "  품질(tier)·최근 분기 실적·이익 전망(한국 다음 분기 컨센서스, 미국 최근 4주 EPS 추정 상향/하향)·변동성·밸류를 함께 본다.",
-  "  상승여력 크기로 순위를 매기지 않고, 장기(월봉) 신호를 주 근거로 쓰지 않는다.",
-  "  reason 은 한국어 1문장. 앞에 주제·tier 를 붙이지 않는다('가치 주제 Tier1 —' 금지).",
-  "  reason 에 상승여력 %, 목표가·적정가 금액, PER·PBR 배수, 배당수익률 %, 'N만원' 같은 가격 의존 수치를 쓰지 않는다. 매출·이익 증가율 같은 회사 수치는 된다.",
-  "  note: 선정 기준 1문장(예측이 아니라는 점 포함).",
+  "- topPicks: 한국·미국 각 [Top Pick 순위]의 1·2·3위를 그 순서 그대로 쓴다 — 종목은 규칙(건강 관문 + 상승 가능성 점수)이 이미 골랐다. 고르지도 바꾸지도 않는다.",
+  "  reason 은 한국어 1문장 — 그 종목이 건강 조건(흑자·희석 없음·자산 급증·이익 변동 없음)을 통과하고 점수가 높은 이유를",
+  "  [Top Pick 순위]의 사실(주식 수 감소·자사주 소각·주주환원·ROIC·최근 분기 실적·논거)로 쓴다. 앞에 주제·tier 를 붙이지 않는다('가치 주제 Tier1 —' 금지).",
+  "  reason 에 상승여력 %, 목표가·적정가 금액, PER·PBR 배수, 배당수익률·주주환원 수익률 %, 'N만원' 같은 가격 의존 수치를 쓰지 않는다.",
+  "  매출·이익 증가율·ROIC·주식 수 감소율 같은 회사 수치는 된다. '오른다·유망하다' 같은 예측 표현을 쓰지 않는다.",
+  "  note: 선정 기준 1문장(앱은 정해진 기준 문구를 쓴다).",
 ].join("\n");
 
 function composePrompt(S, ctx, memo, urls, picks) {
@@ -297,9 +291,9 @@ function composePrompt(S, ctx, memo, urls, picks) {
     "[출처 목록]",
     urls.length ? urls.map((u, i) => (i + 1) + ". " + u.url + (u.title ? " — " + u.title : "")).join("\n") : "(없음)",
     "",
-    "[Top Pick 후보 — 제외 조건(단기·중기 적극매도·추세 붕괴·한국 수급 과열·실질 결격)을 이미 거른 정식 추천 종목]",
-    "한국:", picks.rows.korea.join("\n"),
-    "미국:", picks.rows.us.join("\n"),
+    "[Top Pick 순위 — 건강 관문(강한 하락세·추세 붕괴·수급 과열·실질 결격·적자·희석·자산 급증·이익 변동 제외)을 통과한 정식 추천의 상승 가능성 점수 1~3위]",
+    "한국(통과 " + picks.counts.korea + "종목):", picks.rows.korea.join("\n") || "(없음)",
+    "미국(통과 " + picks.counts.us + "종목):", picks.rows.us.join("\n") || "(없음)",
     "직전 Top Pick: " + prevPicks + (tp.asOf ? " (" + tp.asOf + ")" : ""),
   ].join("\n");
 }
@@ -327,14 +321,14 @@ function check(out, picks) {
   ["us", "korea"].forEach((r) => txt("policy", "policyNews." + r + ".note", (pn[r] || {}).note));
   IDX_KEYS.concat(MACRO_KEYS.filter((k) => macroOf(k))).forEach((k) => ["value", "short", "mid", "long"].forEach((f) => txt("indexNotes", "indexNotes." + k + "." + f, ((out.indexNotes || {})[k] || {})[f])));
   const tp = out.topPicks || {};
-  txt("topPicks", "topPicks.note", tp.note);
   ["korea", "us"].forEach((c) => {
     const arr = tp[c];
+    if (picks.top[c].length < 3) { err.topPicks.push("topPicks." + c + " — 순위 종목이 3개 미만(" + picks.top[c].length + ") — 이번엔 쓰지 않는다"); return; }
     if (!Array.isArray(arr) || arr.length !== 3) { err.topPicks.push("topPicks." + c + " 는 정확히 3종목(현재 " + (Array.isArray(arr) ? arr.length : 0) + ")"); return; }
     const seen = new Set();
     arr.forEach((it, i) => {
       const tag = "topPicks." + c + "[" + i + "]";
-      if (!picks.eligible[c].has(it.ticker)) err.topPicks.push(tag + " '" + it.ticker + "' 는 후보 목록에 없음(타국·관심·보유·제외 종목 불가)");
+      if (it.ticker !== picks.top[c][i]) err.topPicks.push(tag + " '" + it.ticker + "' — " + (i + 1) + "위는 '" + picks.top[c][i] + "'(순위 1~3위를 그 순서 그대로)");
       if (seen.has(it.ticker)) err.topPicks.push(tag + " '" + it.ticker + "' 중복");
       seen.add(it.ticker);
       if (!/[가-힣]/.test(it.reason || "")) err.topPicks.push(tag + " reason 한국어 아님");
@@ -383,7 +377,7 @@ function buildOutputs(S, out, urls, ctx, ok) {
     if (ok.topPicks) {
       const by = {};
       ["korea", "us"].forEach((c) => (S.D[c] || []).forEach((s) => { if (!isPersonalTheme(s.theme) && !by[c + ":" + s.ticker]) by[c + ":" + s.ticker] = s; }));
-      const tp = { asOf: today, note: out.topPicks.note.trim() };
+      const tp = { asOf: today, note: LP.NOTE };
       ["korea", "us"].forEach((c) => {
         tp[c] = out.topPicks[c].map((it, i) => { const s = by[c + ":" + it.ticker]; return { rank: i + 1, ticker: it.ticker, market: s.market, name: s.name, reason: cleanReason(it.reason) }; });
       });
