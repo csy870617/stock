@@ -2,15 +2,15 @@
 // Yahoo 시장지표(금리·일드커브·VIX·HY신용·달러·원달러·코스피)의 가중 합성 → 5단계.
 // 온디맨드 유동성(data/liquidity.js)이 있으면 그것을 우선 표시하고, 이 baseline 을 함께 보여준다.
 window.LIQUIDITY_AUTO = {
- "asOf": "2026-10-26",
+ "asOf": "2026-10-27",
  "note": "Yahoo 시장지표 기반 자동 baseline(금리·일드커브·VIX·HY신용·달러·원달러·코스피). 거시 이벤트·내러티브는 미반영 — 온디맨드 유동성이 보정.",
  "inputs": {
   "us10y": "4.99",
   "curve": "0.96",
   "vix": "18.4",
   "hyg20": "0.0",
-  "dxy": "101.8",
-  "usdkrw": "1326"
+  "dxy": "102.0",
+  "usdkrw": "1322"
  },
  "us": {
   "shortTerm": "우호",
@@ -27,18 +27,18 @@ window.LIQUIDITY_AUTO = {
  "korea": {
   "shortTerm": "매우 부정",
   "midTerm": "부정",
-  "shortScore": 0,
+  "shortScore": -0.24,
   "midScore": -0.39,
   "drivers": [
-   "⚠ 코스피 급락 floor 발동 (20일 -22%)",
-   "원/달러 추세 (+2)",
+   "⚠ 코스피 급락 floor 발동 (20일 -20%)",
    "코스피 모멘텀(20d) (−2)",
+   "원/달러 추세 (+1)",
    "글로벌 변동성 VIX (·0)",
    "글로벌 신용(20d) (·0)"
   ]
  },
  "fed": {
-  "asOf": "2026-10-26",
+  "asOf": "2026-10-27",
   "current": 3.88,
   "meetings": [
    {
@@ -91,65 +91,65 @@ window.LIQUIDITY_AUTO = {
    },
    {
     "date": "2027-03-17",
-    "rate": 4.361,
-    "stepBp": 16.6,
-    "cumBp": 48.1,
+    "rate": 4.35,
+    "stepBp": 15.5,
+    "cumBp": 47,
     "outcomes": [
      {
       "n": 2,
-      "p": 92
+      "p": 88
      },
      {
       "n": 1,
-      "p": 8
+      "p": 12
      }
     ]
    },
    {
     "date": "2027-04-28",
-    "rate": 4.45,
-    "stepBp": 8.9,
-    "cumBp": 57,
+    "rate": 4.44,
+    "stepBp": 9,
+    "cumBp": 56,
     "outcomes": [
      {
       "n": 2,
-      "p": 72
+      "p": 76
      },
      {
       "n": 3,
-      "p": 28
+      "p": 24
      }
     ]
    },
    {
     "date": "2027-06-09",
-    "rate": 4.543,
-    "stepBp": 9.3,
-    "cumBp": 66.3,
+    "rate": 4.54,
+    "stepBp": 10,
+    "cumBp": 66,
     "outcomes": [
      {
       "n": 3,
-      "p": 65
+      "p": 64
      },
      {
       "n": 2,
-      "p": 35
+      "p": 36
      }
     ]
    },
    {
     "date": "2027-07-28",
-    "rate": 4.57,
-    "stepBp": 2.7,
-    "cumBp": 69,
+    "rate": 4.565,
+    "stepBp": 2.5,
+    "cumBp": 68.5,
     "outcomes": [
      {
       "n": 3,
-      "p": 76
+      "p": 74
      },
      {
       "n": 2,
-      "p": 24
+      "p": 26
      }
     ]
    }
@@ -157,13 +157,13 @@ window.LIQUIDITY_AUTO = {
   "source": "CBOT 연방기금금리 선물(ZQ, 야후) — 월물 가격으로 회의별 기대 금리를 푼 값(CME FedWatch 방식)"
  },
  "bok": {
-  "asOf": "2026-10-26",
+  "asOf": "2026-10-27",
   "base": 3,
-  "call": 3.048,
+  "call": 3.055,
   "cd91": 3.26,
-  "y1": 3.567,
-  "y2": 3.741,
-  "y3": 3.788,
+  "y1": 3.57,
+  "y2": 3.727,
+  "y3": 3.798,
   "exp3m": {
    "rate": 3.08,
    "chg": 0.08,
@@ -171,8 +171,8 @@ window.LIQUIDITY_AUTO = {
    "label": "3개월 동결 우세 — 인상 쪽으로 기움"
   },
   "exp12m": {
-   "rate": 3.517,
-   "chg": 0.517,
+   "rate": 3.52,
+   "chg": 0.52,
    "sd": 0.17,
    "label": "1년 인상 기대 — 기간 평균 금리가 지금보다 인상 약 2.1회분 높다"
   },

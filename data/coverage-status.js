@@ -2,7 +2,7 @@
 // 앱 상단 '데이터 신선도' 패널이 읽는다. 직접 수정하지 말 것.
 window.COVERAGE_STATUS = {
  "asOf": "2026-10-27",
- "T": "2026-10-26",
+ "T": "2026-10-27",
  "total": 119,
  "cycleDays": 7,
  "daily": [
@@ -100,10 +100,10 @@ window.COVERAGE_STATUS = {
   {
    "key": "aiTarget",
    "label": "AI 적정가 재시도",
-   "fresh": 118,
+   "fresh": 119,
    "total": 119,
-   "oldestDays": 15,
-   "ok": false
+   "oldestDays": 5,
+   "ok": true
   },
   {
    "key": "tier",
@@ -115,5 +115,5 @@ window.COVERAGE_STATUS = {
    "ok": true
   }
  ],
- "ok": false
+ "ok": true
 };
