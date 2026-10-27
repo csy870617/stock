@@ -7,11 +7,13 @@
 //        '상위 10%'는 시장 전체를 매일 다시 잴 수 없어 검증 표본의 월별 90백분위 중앙값을 고정 문턱으로 쓴다(CUTS).
 //   ② 상승 가능성 점수 — 관문을 통과한 같은 나라 종목 안의 백분위(0~1, 높을수록 좋게) 평균, 값이 있는 것만(SCORE):
 //      미국 = 주식 수 감소(−희석) · 주주환원 수익률(배당+자사주−증자 ÷ 시총) · ROIC — 2011~2026 시총 상위 500 에서 6개월 IC +0.043
-//        (t 2.66, 전·후반 양), 점수 1~3위가 6개월 뒤 시장보다 오른 경우 55%(건강 통과 전체 49%).
-//      한국 = 주식 수 감소만 — 세 재료 평균은 한국에서 효과가 없었고(IC +0.01) 주식 수 감소 단독이 뚜렷했다(6개월 IC +0.09, t 3.65).
-//        처음엔 사용자 선택이었고, 같은 날 2차 검증(PREREG-2 — 22개 지표를 과거 자료만으로 데이터가 고르는 방식)에서도
-//        두 나라 모두 가장 꾸준히 뽑힌 지표가 주식 수 감소였다. 데이터가 고르는 방식은 미국 표본 밖에서 실패해 채택하지 않았다(README 2차).
-//        1~3위만 보면 성적이 들쭉날쭉하다 — 앞으로의 성적(perf.json picks w.rule)으로 다시 확인한다.
+//        (t 2.66, 전·후반 양). 3차 연구(PREREG-3 — 우량·저평가·배당 기둥 묶음 6개, 중소형 501~1,000위 확인)에서도 이 규칙이 가장 나았다.
+//      한국 = 주식 수 감소 · 배당수익률(2026-10-27 3차 연구) — 미국 주주환원 수익률(배당+자사주)을 한국 자료로 옮긴 것과 같은 뜻이다
+//        (한국 패널엔 자사주 매입액이 없어 자사주 소각은 주식 수 감소로, 배당은 배당수익률로 본다). 주식 수 감소만 본 순위보다 3개월 IC 가
+//        개발(1~300위) +0.049(t 2.38, 전·후반 양)·확인용(301~600위) +0.057(t 2.2) 높았고 해마다(2023~2026)·비금융에서도 같은 방향,
+//        후보 40종목 중 1~3위 흉내에서 3개월 뒤 시장보다 오른 비율 54%(주식 수만 49%, 무작위 43%)·12개월 −30% 폭락 2%(8%, 12%).
+//        사전 기준(t ≥ 2.5)엔 조금 못 미쳤다 — 그 전 한국 규칙(주식 수만)도 사전 등록으로 고른 게 아니어서 같은 저울에서 앞선 쪽을 골랐다
+//        (README 3차). 대신 평균 초과수익은 주식 수만 본 쪽이 컸다(소수의 큰 상승 — 그만큼 폭락도 많았다).
 //   나라별 점수 1~3위 = 오늘의 Top Pick. ai-daily·세션은 이 순서 그대로 쓰고 이유 문장만 쓴다(pick-score.js 로 확인).
 //
 // 재무 값은 발굴 스크린(discovery-candidates.js)이 편성 종목마다 남기는 fx(연간 재무 — lib-factors, 연구와 같은 정의, % 단위).
@@ -20,6 +22,7 @@
 // 주식 수가 한 해 20% 넘게 준 값은 자사주 소각이 아니라 인적분할·주식 병합 같은 자본 거래로 보고 0(순발행·소각 없음)으로 둔다
 //   (2026-10-27 삼성바이오로직스 인적분할 −35% 가 1위로 올라왔다 — 연구 패널에서도 이런 값은 0.6%뿐이고 대부분 분할·분사였다.
 //   0 으로 두고 다시 잰 검증도 결론이 같았다 — research/top-pick/README.md '자료 정리').
+// 배당수익률은 fundamentals.js dy(최근 결산 DPS ÷ 현재가 — 연구 패널과 같은 정의), 출처 값이 의심스러우면(dyFlag) 쓰지 않는다.
 // 결산 뒤 자본 거래 점검(한국 — fundamentals.js sh.chg: 결산 연도 주식 수 → 지금): 결산 재무는 그 뒤의 합병·증자·분할을 못 본다
 //   (2026-10-27 HD건설기계 — 2025년 −5.2%로 '주식 수 감소' 1위였지만 2026-01 합병으로 지금 주식 수가 결산 때의 2.7배).
 //   지금이 20% 넘게 많으면 희석과 같게 관문에서 빼고, 20% 넘게 적으면(분할 등) 주식 수 변화를 0 으로 본다. 근사치라 ±20% 안은 보지 않는다.
@@ -32,16 +35,16 @@ const CUTS = {
   korea: { iss: 5, ag: 36.7, sroa: 9.8, sroaFin: null },
 };
 // 점수 재료(나라별) — 위 ②
-const SCORE = { us: ["iss", "shy", "roic"], korea: ["iss"] };
-const NOTE = "건강 조건(흑자·희석·자산 급증·이익 변동·추세·수급·결격)을 통과한 정식 추천 중 상승 가능성 점수(미국: 주식 수 감소·주주환원·ROIC, 한국: 주식 수 감소) 1~3위 — 확실한 예측이 아니라 확률을 조금 기울이는 기준";
+const SCORE = { us: ["iss", "shy", "roic"], korea: ["iss", "dy"] };
+const NOTE = "건강 조건(흑자·희석·자산 급증·이익 변동·추세·수급·결격)을 통과한 정식 추천 중 상승 가능성 점수(미국: 주식 수 감소·주주환원·ROIC, 한국: 주식 수 감소·배당) 1~3위 — 확실한 예측이 아니라 확률을 조금 기울이는 기준";
 // 앱 ⓘ·문서용 검증 요약(research/top-pick/README.md — 자본 거래 정리 뒤 값, 앱과 같은 처리)
 const EVIDENCE = {
-  us: "과거 검증(미국 2011~2026 시총 상위 500, 매월 고른 점수 1~3위): 1개월 뒤 시장보다 오른 경우 55%(건강 조건 통과 전체 50%), " +
-    "6개월 뒤 53%(49%)·평균 +2.8%p. 22개 재무 지표를 데이터가 과거 자료만으로 고르게 한 방식은 표본 밖에서 이 기준보다 못했다. 열에 넷 이상은 시장보다 못했다 — 확실히 오르는 종목은 없다.",
-  korea: "과거 검증(한국 2022~2026 시총 상위 300, 매월): 22개 재무 지표를 데이터가 과거 자료만으로 고르게 해도 주식 수 감소가 두 나라 모두에서 가장 꾸준히 뽑혔다. " +
-    "주식 수가 많이 준 상위 10%는 6개월 뒤 시장보다 오른 경우 49%(건강 조건 통과 전체 42%)·평균 +6.7%p였지만, 1~3위만 보면 1개월 45%(45%)로 차이가 없었다 — 확실히 오르는 종목은 없다.",
+  us: "과거 검증(미국 2011~2026 시총 상위 500, 매월 후보 40종목 중 1~3위를 고르는 상황을 흉내): 3개월 뒤 시장보다 오른 경우 52.5%(무작위 49.8%), " +
+    "12개월 안 −30% 폭락 4.2%(4.6%). 우량·저평가·배당 지표를 더한 묶음 6가지와 데이터가 고르는 방식은 이보다 못했다. 차이는 작다 — 확실히 오르는 종목은 없다.",
+  korea: "과거 검증(한국 2022~2026 시총 상위 300, 매월 후보 40종목 중 1~3위를 고르는 상황을 흉내): 3개월 뒤 시장보다 오른 경우 54%(무작위 43%), " +
+    "12개월 안 −30% 폭락 2%(12%). 주식 수 감소만 볼 때(49%·8%)보다 나았고 확인용 중소형주(301~600위)에서도 같은 방향이었다. 평균 상승 폭은 주식 수만 볼 때가 컸다 — 확실히 오르는 종목은 없다.",
 };
-const SCORE_KO = { iss: "주식 수", shy: "주주환원", roic: "ROIC" };
+const SCORE_KO = { iss: "주식 수", shy: "주주환원", roic: "ROIC", dy: "배당" };
 
 const ok = (v) => v != null && isFinite(v);
 const mean = (a) => { const x = a.filter(ok); return x.length ? x.reduce((s, v) => s + v, 0) / x.length : null; };
@@ -58,22 +61,23 @@ function pctRank(vals) {
   };
 }
 
-// 편성 종목의 재무 값 — {niPos, iss, shy, roic, ag, sroa, fin, post}(%), 없으면 null. sh = fundamentals.js 의 결산 뒤 주식 수 변화
-function finOf(DC, country, theme, ticker, sh) {
+// 편성 종목의 재무 값 — {niPos, iss, shy, roic, ag, sroa, dy, fin, post}(%), 없으면 null. fu = fundamentals.js 항목(배당수익률·결산 뒤 주식 수 변화)
+function finOf(DC, country, theme, ticker, fu) {
   const g = DC && DC.groups && DC.groups[country + "|" + theme];
   const inc = g && (g.incumbents || []).find((x) => x.ticker === ticker);
   if (!inc) return null;
+  const sh = fu && fu.sh, dy = fu && !fu.dyFlag && ok(fu.dy) ? fu.dy : null;
   const post = sh && ok(sh.chg) && Math.abs(sh.chg) > POST_CA ? sh : null;
   const iss = (v) => (!ok(v) ? null : v < ISS_CA || (post && post.chg < 0) ? 0 : v);
   const ca = (v) => (ok(v) && v < ISS_CA) || !!(post && post.chg < 0);
   if (theme === "rising") {
     const fails = (inc.fails || []).join(" ");
-    return { niPos: /순이익 적자/.test(fails) ? 0 : null, iss: iss(inc.dilution), issCa: ca(inc.dilution), shy: null, roic: null, ag: null, sroa: null, fin: false, post, src: "hidden" };
+    return { niPos: /순이익 적자/.test(fails) ? 0 : null, iss: iss(inc.dilution), issCa: ca(inc.dilution), shy: null, roic: null, ag: null, sroa: null, dy, fin: false, post, src: "hidden" };
   }
   const fx = inc.fx;
   if (!fx) return null;
   return { niPos: fx.niPos == null ? null : fx.niPos, iss: iss(fx.iss), issCa: ca(fx.iss), shy: ok(fx.shy) ? fx.shy : null, roic: ok(fx.roic) ? fx.roic : null,
-    ag: ok(fx.ag) ? fx.ag : null, sroa: ok(fx.sroa) ? fx.sroa : null, fin: !!inc.fin, post, src: "fx" };
+    ag: ok(fx.ag) ? fx.ag : null, sroa: ok(fx.sroa) ? fx.sroa : null, dy, fin: !!inc.fin, post, src: "fx" };
 }
 
 // 건강 관문 — 걸린 사유(첫 번째 하나) 또는 null
@@ -114,7 +118,7 @@ function rankPicks(S) {
     const healthy = [], excluded = [], unscored = [];
     rep.forEach((s) => {
       const x = ta[s.ticker] || {}, sig = ["short", "mid", "long"].map((k) => (x[k] && x[k].signal) || "–");
-      const f = finOf(S.DC, c, s.theme, s.ticker, ((S.FU || {})[s.ticker] || {}).sh);
+      const f = finOf(S.DC, c, s.theme, s.ticker, (S.FU || {})[s.ticker]);
       const why = unhealthy(c, s, sig, EV[s.ticker], defState[c + "|" + s.theme + "|" + s.ticker], f);
       const base = { ticker: s.ticker, name: s.name, theme: s.theme, tier: s.tier };
       if (why) excluded.push(Object.assign(base, { why }));
@@ -127,7 +131,7 @@ function rankPicks(S) {
     const ranked = healthy.map((h) => {
       const p = {};
       SCORE[c].forEach((k) => { const v = pr[k](h.f[k]); p[k] = v == null ? null : r3(k === "iss" ? 1 - v : v); });
-      return Object.assign(h.base, { score: r3(mean(SCORE[c].map((k) => p[k]))), iss: r1(h.f.iss), shy: r1(h.f.shy), roic: r1(h.f.roic),
+      return Object.assign(h.base, { score: r3(mean(SCORE[c].map((k) => p[k]))), iss: r1(h.f.iss), shy: r1(h.f.shy), roic: r1(h.f.roic), dy: r1(h.f.dy),
         pct: p, src: h.f.src, issCa: h.f.issCa || undefined });
     });
     ranked.sort((p, q) => (q.score - p.score) || ((p.tier || 9) - (q.tier || 9)) || (THEMES.indexOf(p.theme) - THEMES.indexOf(q.theme)) || String(p.name).localeCompare(String(q.name), "ko"));
@@ -146,6 +150,7 @@ function partsLine(x, country) {
   }
   if (use.includes("shy") && ok(x.shy)) a.push("주주환원 수익률 " + x.shy + "%");
   if (use.includes("roic") && ok(x.roic)) a.push("ROIC " + x.roic + "%");
+  if (use.includes("dy") && ok(x.dy)) a.push("배당수익률 " + x.dy + "%");
   return a.join(" · ");
 }
 
