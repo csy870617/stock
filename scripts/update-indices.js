@@ -21,7 +21,7 @@ const fs = require("fs");
 const path = require("path");
 
 const TA = require("./lib-ta.js");   // 공유 기술적 분석 라이브러리(단기/중기/장기)
-const { settleDailyBars } = require("./lib-quote");
+const { settleDailyBars, fillPrevSessionClose } = require("./lib-quote");
 const { writeChart } = require("./lib-chart");
 const LF = require("./lib-flows");   // 코스피·코스닥 투자자별 순매수(지수 상세 '수급' — 차트 아래 막대·수급 표, data/market-flows.json)
 const KR_VOL_THOUSANDS = { kospi: 1, kosdaq: 1 };   // 지수 상세 캔들 차트 data/chart/idx-<key>.json(앱 '오늘의 시장' 지수 칸을 누르면 연다)   // 일봉을 끝난 장 기준으로 정리(장중 미완성 봉 제외·빈 종가 채움)
@@ -109,8 +109,10 @@ async function fetchSeriesOnce(symbol, bustCache) {
   finally { clearTimeout(to); }
   const res = j && j.chart && j.chart.result && j.chart.result[0];
   if (!res || !res.indicators || !res.indicators.quote || !res.indicators.quote[0]) return null;
-  // 장중 실행이면 진행 중인 장의 미완성 봉은 버린다 — 지수 카드·신호는 끝난 장 종가 기준(lib-quote 참고)
+  // 장중 실행이면 진행 중인 장의 미완성 봉은 버린다 — 지수 카드·신호는 끝난 장 종가 기준(lib-quote 참고).
+  // 한국 지수의 직전 장 일봉 종가가 비어 있으면 채운다(장중 실행이 코스피·코스닥을 하루 전으로 되돌리지 않게)
   settleDailyBars(res);
+  await fillPrevSessionClose(res, symbol);
   const q = res.indicators.quote[0];
   const ts = res.timestamp || [];
   const rows = [];
@@ -297,12 +299,19 @@ function loadPrevAsOf() {
   }
 
   // 투자자별 순매수 — 끝난 장(야후가 끝난 장으로 본 코스피 마지막 봉)까지만. 받기에 실패하면 쌓아 둔 기록을 쓴다.
-  let flows = null;
+  // 실패는 Action 실행 요약에 경고(::warning::)로도 남긴다 — 매일 자동 갱신이 조용히 멈추지 않게(2026-10-27).
+  const flowWarn = (m) => console.warn((process.env.GITHUB_ACTIONS ? "::warning::" : "  ⚠ ") + "수급: " + m);
+  let flows = null, flowState = "";
   try {
     const fr = await LF.updateFlows({ maxDate: fetched.kospi && fetched.kospi.lastDate });
     flows = fr.data;
-    fr.notes.forEach((x) => console.warn("  ⚠ 수급: " + x));
-  } catch (e) { console.warn("  ⚠ 수급 갱신 실패(이전 기록 유지): " + e.message); flows = (() => { try { return JSON.parse(fs.readFileSync(LF.FILE, "utf8")); } catch (_e) { return null; } })(); }
+    fr.notes.forEach(flowWarn);
+    flowState = fr.notes.length ? "일부 받기 실패" : fr.changed ? "새로 받음" : "변화 없음";
+  } catch (e) {
+    flowWarn("갱신 실패(이전 기록 유지) — " + e.message);
+    flowState = "받기 실패";
+    flows = (() => { try { return JSON.parse(fs.readFileSync(LF.FILE, "utf8")); } catch (_e) { return null; } })();
+  }
   const flowRows = (key) => (flows && LF.MARKETS[key] && Array.isArray(flows[key]) && flows[key].length ? flows[key] : null);
 
   const indices = [];
@@ -376,5 +385,5 @@ function loadPrevAsOf() {
 
   const fl = indices.filter((x) => x.flows).map((x) => x.key + " " + x.flows.asOf + " 외국인 " + x.flows.last.f + "억");
   console.log("indices.js 갱신: " + indices.length + "개 지수 + 환율·원자재 " + macro.length + " (" + asOf + ") — 실시간 " +
-    live + " · 폴백 " + fellBack + " · 차트 " + charts + (fl.length ? " · 수급 " + fl.join(", ") : " · 수급 없음"));
+    live + " · 폴백 " + fellBack + " · 차트 " + charts + (fl.length ? " · 수급(" + flowState + ") " + fl.join(", ") : " · 수급 없음"));
 })();

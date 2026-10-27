@@ -3216,7 +3216,11 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       FL_WHO.map(function (w) { return '<span class="fl-k">' + w[1] + "</span>" + cols.map(function (c) { return cell((F[c[0]] || {})[w[0]]); }).join(""); }).join("");
     var sk = F.streak || {}, sub = FL_WHO.filter(function (w) { return Math.abs(sk[w[0]] || 0) >= 3; })
       .map(function (w) { return w[1] + " " + Math.abs(sk[w[0]]) + "일 연속 순" + (sk[w[0]] > 0 ? "매수" : "매도"); });
+    // 마지막으로 끝난 한국 장(quotes.js 코스피 종가일)보다 수급이 밀렸으면 표시 — 매일 자동 갱신이 그날을 아직 못 받은 것
+    var kq = window.STOCK_QUOTES && window.STOCK_QUOTES.indices && window.STOCK_QUOTES.indices.kospi, krLast = kq && kq.closeDate;
+    var stale = krLast && F.asOf < krLast;
     return '<section class="dt-sec" id="dt-flow"><h3>수급 <span class="md-as">투자자별 순매수</span>' +
+      (stale ? ' <span class="tn-stale" title="' + esc(mdOf(krLast) + " 장의 수급이 아직 들어오지 않았습니다 — 다음 자동 갱신 때 채워집니다.") + '">미갱신</span>' : "") +
       '<button class="ic-tip" type="button" data-basis="' + esc(flowTipIdx(x)) + '" aria-label="수급 보는 법">' + ICON.info + "</button></h3>" +
       '<div class="fl-hd"><span class="fl-hd-k">누적 순매수</span><div class="seg fl-seg" role="tablist" aria-label="누적 기간">' + FLG_P.map(function (q) {
         return '<button type="button" data-flp="' + q[0] + '"' + (q[0] === FLG.p ? ' class="on"' : "") + ">" + q[1] + "</button>";

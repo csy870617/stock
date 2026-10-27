@@ -27,6 +27,8 @@
 //   liquidity  : liquidity.js asOf == 오늘 + 통합·미국·한국 headline
 //   backbone   : stock-ta.js·indices.js 의 builtAt(재생성 시각)이 오늘 — 이 단계를 건너뛰면
 //                어제자 T 로 techNote 를 써 놓고 100% 로 오판하게 된다(2026-08-05 실측).
+//   flows      : indices.js 코스피·코스닥 flows.asOf(투자자별 순매수 마지막 날)가 지수 차트
+//                (data/chart/idx-<key>.json) asOf 와 같음 — 수급 받기 실패를 잡는다(2026-10-27).
 //
 // 매일 전량인 항목(techNote·valueNote·tier·indexNotes·topPicks·liquidity·시황)과
 // 7일 회전 항목(verified·discovery·aiTarget)이 합쳐져, 앱 데이터 전체가 최소 주 1회 갱신된다.
@@ -268,6 +270,21 @@ const builtDay = (v) => (v && typeof v === "string" ? v.slice(0, 10) : null);
   }
 });
 
+// ── 수급(코스피·코스닥 투자자별 순매수 — 2026-10-27 사용자 '수급도 매일 자동으로 업데이트 되어야해') ──
+// update-indices.js 가 매 실행 다음 금융에서 받아 쌓는데, 받기에 실패하면 이전 기록을 그대로 쓴다. 그래서 지수 차트
+// (data/chart/idx-<key>.json — 같은 실행이 쓰는 마지막 끝난 장)보다 수급 마지막 날이 밀렸는지를 따로 본다.
+// 밀렸으면 update-indices.js 를 다시 돌린다(backbone). builtAt 만 보는 backbone 게이트로는 이 실패가 안 보인다.
+const FLOW_KEYS = ["kospi", "kosdaq"];
+const missFlows = [];
+FLOW_KEYS.forEach((k) => {
+  const x = IX && (IX.indices || []).find((i) => i.key === k);
+  let last = null;
+  try { last = JSON.parse(fs.readFileSync(path.join(ROOT, "data/chart/idx-" + k + ".json"), "utf8")).asOf || null; } catch (_e) { /* 차트 없음 — 수급만 본다 */ }
+  const f = x && x.flows && x.flows.asOf;
+  if (!f) missFlows.push(k + " 수급 없음(update-indices.js 재실행)");
+  else if (last && f < last) missFlows.push(k + " 수급 " + f + " — 지수 마지막 거래일 " + last + "보다 늦음(update-indices.js 재실행)");
+});
+
 // ── 매일 결격 점검(2026-10-18 사용자 지시 — '매일 결격 검사, 발생 시 바로 교체', CLAUDE.md §3-7) ──
 // check-defects.js 를 다시 돌려 candidate-notes.json 의 최신 판정을 반영한 뒤 판정한다:
 // 자동 신호가 뜬 편성 종목을 모두 판정했는가 + 실질 결격마다 최신 거래일(T) 이후 교체를 시도했는가.
@@ -344,6 +361,7 @@ if (process.argv.includes("--emit")) {
       { key: "market",    label: "시황",        done: missMarket.length ? 0 : 1, total: 1 },
       // backbone(오늘 재실행)이 빠지면 CLI 게이트는 빨강인데 패널만 초록인 불일치가 났다(감사).
       { key: "backbone",  label: "지표 재생성",  done: missBackbone.length ? 0 : 2, total: 2 },
+      { key: "flows",     label: "수급(코스피·코스닥)", done: FLOW_KEYS.length - missFlows.length, total: FLOW_KEYS.length },
       { key: "defects",   label: "결격 점검",   done: missDefect.length ? 0 : 1, total: 1 },
     ],
     rotation: [
@@ -391,6 +409,7 @@ rows.forEach(([name, done, total, miss]) => {
 
 [["index-notes", missIdx], ["topPicks", missTop], ["liquidity", missLiq],
  ["backbone 최신화 (오늘 재실행)", missBackbone],
+ ["수급 (코스피·코스닥 — 지수 마지막 거래일까지)", missFlows],
  ["결격 점검 (자동 신호 판정 + 결격 교체 시도)", missDefect],
  ["신규 후보 탐색 (전 " + DISC_GROUPS.length + "그룹 " + VERIF_CYCLE_DAYS + "일 이내)", missDisc],
  ["주간 심층 발굴 (C 모드 " + VERIF_CYCLE_DAYS + "일 이내)", missDeep],
@@ -425,7 +444,7 @@ console.log("  ℹ️  tier 회전(참고): " + Object.keys(tierGroups).length +
 
 const blockers = missTech.length + missValue.length + missVerif.length + missTier.length +
   missIdx.length + missTop.length + missLiq.length + missDisc.length + missDeep.length + staleAi.length +
-  missBackbone.length + missMarket.length + missDefect.length;
+  missBackbone.length + missFlows.length + missMarket.length + missDefect.length;
 
 console.log("");
 if (blockers === 0) {

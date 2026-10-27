@@ -69,6 +69,7 @@ async function yahooQuote(symbol, opts) {
   const date = localDate(m.regularMarketTime, off);
   const ageDays = (nowSec - m.regularMarketTime) / 86400;
   if (isFinite(ageDays) && ageDays > STALE_QUOTE_DAYS) throw new Error("stale quote (" + date + ", " + Math.round(ageDays) + "일 경과)");
+  await fillPrevSessionClose(res, symbol, nowSec * 1000);   // 직전 장 일봉 종가가 비었으면 채운다(아래 함수 주석)
 
   // 일봉(거래소 현지 날짜, 종가 있는 것만)
   const ts = res.timestamp || [];
@@ -91,6 +92,9 @@ async function yahooQuote(symbol, opts) {
     // 진행 중인 장의 날짜보다 앞선 마지막 일봉 = 마지막으로 끝난 장
     close = null; closeDate = null;
     for (let i = bars.length - 1; i >= 0; i--) { if (bars[i].d < sessionDate) { close = bars[i].c; closeDate = bars[i].d; break; } }
+    // meta 시각이 진행 중인 장보다 앞선 날이면 그 시세가 끝난 장의 확정 종가다 — 그 날 일봉 종가가 비어 있어도(야후 한국 지수,
+    // fillLastClose 주석) 한 장 더 전의 종가로 밀리지 않게
+    if (date < sessionDate && (!closeDate || date > closeDate)) { close = m.regularMarketPrice; closeDate = date; }
   }
   return { price: m.regularMarketPrice, date: date, prevClose: prevClose, changePct: changePct,
     close: close, closeDate: closeDate, inSession: inSession };
@@ -99,23 +103,69 @@ async function yahooQuote(symbol, opts) {
 // 끝난 장의 마지막 일봉 종가가 비어 있으면(null) meta 의 확정 시세로 채운다(제자리 수정, 채웠으면 true).
 // 야후 장기(1y·10y) 일봉은 한국 종목의 당일 종가를 몇 시간씩 null 로 두곤 한다(2026-10-08 15시 UTC
 // 005930·^KS11 등 — 5d 범위엔 값이 있음). 그대로 두면 그 봉이 건너뛰어져 기준일(asOf)이 하루 뒤로 밀리거나,
-// 다른 시장 봉이 asOf 를 끌어올려 '날짜는 오늘·한국 신호는 어제'가 된다. 장이 끝났고(장중 아님) 그 봉의
-// 날짜가 regularMarketTime 날짜와 같을 때만 채운다(장중 값으로 채우지 않는다).
+// 다른 시장 봉이 asOf 를 끌어올려 '날짜는 오늘·한국 신호는 어제'가 된다. 그 봉의 장이 끝났고(그 날짜의 장이
+// 진행 중이 아님) 날짜가 regularMarketTime 날짜와 같을 때만 채운다(장중 값으로 채우지 않는다). 그 뒤 날짜의 빈 봉
+// (다음 장 자리)은 건너뛴다 — 비어 있어 어차피 지표 계산에서 빠진다.
 function fillLastClose(res, nowMs) {
   if (!res || !Array.isArray(res.timestamp) || !res.timestamp.length) return false;
   const m = res.meta || {};
-  if (openSessionDate(m, nowMs)) return false;
+  // 장중이면 meta 시세가 진행 중인 장의 값이라 채우지 않는다 — 단 meta 시각이 진행 중인 장보다 앞선 날이면 그 시세는
+  // 끝난 장의 확정 시세다. 야후 한국 지수는 다음 장이 열린 뒤에도 전날 확정 시세에 머물고 전날 일봉 종가는 비워 둔다
+  // (2026-10-27 09:2x KST ^KS11·^KQ11 — 그대로 두면 장중 실행이 코스피·코스닥을 하루 전으로 되돌렸다).
+  const sd = openSessionDate(m, nowMs);
+  if (sd && !(m.regularMarketTime && localDate(m.regularMarketTime, m.gmtoffset || 0) < sd)) return false;
   if (typeof m.regularMarketPrice !== "number" || !isFinite(m.regularMarketPrice) || !m.regularMarketTime) return false;
   const q = res.indicators && res.indicators.quote && res.indicators.quote[0];
   if (!q || !Array.isArray(q.close)) return false;
-  const i = res.timestamp.length - 1, off = m.gmtoffset || 0;
-  if (q.close[i] != null || localDate(res.timestamp[i], off) !== localDate(m.regularMarketTime, off)) return false;
+  const off = m.gmtoffset || 0, rd = localDate(m.regularMarketTime, off);
+  let i = res.timestamp.length - 1;
+  // meta 날짜 뒤의 빈 봉(다음 장 자리 — 장 시작 무렵 생긴다)은 건너뛰고 meta 날짜의 봉을 찾는다
+  while (i > 0 && q.close[i] == null && localDate(res.timestamp[i], off) > rd) i--;
+  if (q.close[i] != null || localDate(res.timestamp[i], off) !== rd) return false;
   const px = m.regularMarketPrice;
   q.close[i] = px;
   if (Array.isArray(q.high)) q.high[i] = typeof m.regularMarketDayHigh === "number" ? m.regularMarketDayHigh : px;
   if (Array.isArray(q.low)) q.low[i] = typeof m.regularMarketDayLow === "number" ? m.regularMarketDayLow : px;
   if (Array.isArray(q.open) && q.open[i] == null) q.open[i] = px;
   if (Array.isArray(q.volume) && q.volume[i] == null && typeof m.regularMarketVolume === "number") q.volume[i] = m.regularMarketVolume;
+  const adj = res.indicators.adjclose && res.indicators.adjclose[0];
+  if (adj && Array.isArray(adj.adjclose) && adj.adjclose[i] == null) adj.adjclose[i] = px;
+  return true;
+}
+
+// 기준 장(장중이면 진행 중인 장, 아니면 meta 의 장) 바로 앞 일봉의 종가가 비어 있으면 range=1d 응답의 chartPreviousClose
+// (= 그 앞 장의 확정 종가)로 채운다(제자리 수정, 채웠으면 true). 야후 한국 지수는 장이 끝난 뒤에도 그날 일봉 종가를 비워 두고,
+// 다음 장이 열려 meta 가 새 장의 실시간 값으로 넘어가면 fillLastClose 로도 못 채운다 — 그대로 두면 장중 실행이 코스피·코스닥을
+// 하루 전으로 되돌리고 quotes.js 종가일도 밀렸다(2026-10-27 09:02 KST ^KS11: 일봉 10/26 비어 있음, range=1d chartPreviousClose 5469.47).
+// 비어 있을 때만 한 번 더 받는다.
+async function prevCloseOf(symbol, timeoutMs) {
+  if (typeof fetch !== "function") return null;
+  const ctrl = new AbortController(), to = setTimeout(function () { ctrl.abort(); }, timeoutMs || 8000);
+  try {
+    const r = await fetch("https://query1.finance.yahoo.com/v8/finance/chart/" + encodeURIComponent(symbol) + "?interval=1d&range=1d",
+      { signal: ctrl.signal, headers: { "User-Agent": "Mozilla/5.0", "Accept": "application/json" } });
+    if (!r.ok) return null;
+    const j = await r.json(), m = j && j.chart && j.chart.result && j.chart.result[0] && j.chart.result[0].meta;
+    return m && typeof m.chartPreviousClose === "number" && isFinite(m.chartPreviousClose) && m.chartPreviousClose > 0 ? m.chartPreviousClose : null;
+  } catch (_e) { return null; } finally { clearTimeout(to); }
+}
+async function fillPrevSessionClose(res, symbol, nowMs) {
+  if (!res || !Array.isArray(res.timestamp) || !res.timestamp.length) return false;
+  const m = res.meta || {}, off = m.gmtoffset || 0;
+  // 한국 거래소만 — 관찰된 빈 종가가 한국 것이고, 선물·외환은 일요일 저녁 장 같은 빈 봉이 있어 '앞 장'으로 볼 수 없다
+  if (!(m.exchangeTimezoneName ? m.exchangeTimezoneName === "Asia/Seoul" : off === 32400)) return false;
+  const q = res.indicators && res.indicators.quote && res.indicators.quote[0];
+  if (!q || !Array.isArray(q.close) || !m.regularMarketTime) return false;
+  const ref = openSessionDate(m, nowMs) || localDate(m.regularMarketTime, off);
+  // range=1d 의 '전 장'은 meta 의 장 기준이다 — meta 가 아직 앞 장에 머물러 있으면(그 값은 fillLastClose 가 채운다) 하루 더 앞 종가가 온다
+  if (localDate(m.regularMarketTime, off) !== ref) return false;
+  let i = res.timestamp.length - 1;
+  while (i >= 0 && localDate(res.timestamp[i], off) >= ref) i--;
+  if (i < 0 || q.close[i] != null) return false;
+  const px = await prevCloseOf(symbol);
+  if (px == null) return false;
+  q.close[i] = px;
+  ["open", "high", "low"].forEach(function (k) { if (Array.isArray(q[k]) && q[k][i] == null) q[k][i] = px; });
   const adj = res.indicators.adjclose && res.indicators.adjclose[0];
   if (adj && Array.isArray(adj.adjclose) && adj.adjclose[i] == null) adj.adjclose[i] = px;
   return true;
@@ -128,4 +178,4 @@ function settleDailyBars(res, nowMs) {
   return { cut: cut, filled: filled };
 }
 
-module.exports = { yahooQuote, trimOpenBar, fillLastClose, settleDailyBars, openSessionDate, STALE_QUOTE_DAYS };
+module.exports = { yahooQuote, trimOpenBar, fillLastClose, fillPrevSessionClose, settleDailyBars, openSessionDate, STALE_QUOTE_DAYS };

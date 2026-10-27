@@ -56,6 +56,13 @@ window.COVERAGE_STATUS = {
    "ok": true
   },
   {
+   "key": "flows",
+   "label": "수급(코스피·코스닥)",
+   "done": 2,
+   "total": 2,
+   "ok": true
+  },
+  {
    "key": "defects",
    "label": "결격 점검",
    "done": 1,
