@@ -3586,14 +3586,14 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
 
   // Top Pick 순위 — data/pick-scores.js(scripts/pick-score.js 가 매일 생성: 건강 관문 + 상승 가능성 점수, scripts/lib-picks.js — 2026-10-27~).
   //   큐레이션(topPicks — 이 순위 1~3위에 이유를 붙인 것)이 없거나 일부가 편성에서 빠졌을 때 같은 순위로 채운다. 순위 파일이 없으면 채우지 않는다.
-  var PICK_CRIT = "건강 조건(흑자·희석·자산 급증·이익 변동·추세·수급·결격)을 통과한 정식 추천 중 상승 가능성 점수(주식 수 감소·주주환원·ROIC) 1~3위 — 확실한 예측이 아니라 확률을 조금 기울이는 기준";
+  var PICK_CRIT = "건강 조건(흑자·희석·자산 급증·이익 변동·추세·수급·결격)을 통과한 정식 추천 중 상승 가능성 점수(미국: 주식 수 감소·주주환원·ROIC, 한국: 주식 수 감소) 1~3위 — 확실한 예측이 아니라 확률을 조금 기울이는 기준";
   function rankedPicks(cc) {
     var P = window.PICK_SCORES, r = P && P[cc] && P[cc].ranked;
     return Array.isArray(r) ? r : [];
   }
-  function pickBasis() {
-    var P = window.PICK_SCORES || {};
-    return "선정 기준 — " + (P.note || PICK_CRIT) + (P.evidence ? "\n\n" + P.evidence : "");
+  function pickBasis() {   // 검증 요약은 나라별(한국은 주식 수 감소만 — 10/27 사용자 결정)
+    var P = window.PICK_SCORES || {}, ev = P.evidence && typeof P.evidence === "object" ? P.evidence[state.country] : P.evidence;
+    return "선정 기준 — " + (P.note || PICK_CRIT) + (ev ? "\n\n" + ev : "");
   }
 
   // 종목 찾기 — 같은 티커가 두 주제에 있을 수 있어 주제까지 맞춰 찾고, 없으면 티커만으로

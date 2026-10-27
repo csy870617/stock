@@ -102,10 +102,25 @@ function quarter(t, opTitle) {
 }
 // PER·PBR — 음수(적자)·비정상(1,000배 초과)은 숫자 대신 null
 const ratioOk = (v) => (v != null && v > 0 && v < 1000 ? r2(v) : null);
+// '3조 8,235억' → 원
+const wonOf = (s) => { const a = /([\d,.]+)\s*조/.exec(s || ""), b = /([\d,.]+)\s*억/.exec(s || ""); const v = (a ? num(a[1]) * 1e12 : 0) + (b ? num(b[1]) * 1e8 : 0); return v > 0 ? v : null; };
+// 결산 뒤 주식 수 변화(%, 한국) — 최근 결산 연도의 주식 수(지배주주순이익 ÷ EPS — 가중평균이라 근사)와 지금(시총 ÷ 종가)을 견준다.
+//   Top Pick 의 '주식 수 감소' 점수(lib-picks.js)는 결산 재무라 결산 뒤 합병·증자·분할로 크게 바뀐 주식 수를 못 본다
+//   (2026-10-27 HD건설기계: 2025년엔 −5.2% 였지만 2026-01 합병으로 지금 주식 수가 결산 때의 2.7배). 근사라 ±20% 넘는 차이만 쓴다.
+function shareChange(t, ti) {
+  if (!t) return null;
+  const act = t.periods.filter((p) => !p.est), last = act[act.length - 1];
+  if (!last) return null;
+  const row = (title) => (t.rows[title] ? t.rows[title][last.key] : null);
+  const ni = row("지배주주순이익") != null ? row("지배주주순이익") : row("당기순이익"), eps = row("EPS");
+  const mv = wonOf(ti.marketValue), px = num(ti.lastClosePrice);
+  if (!(ni > 0 && eps > 0 && mv > 0 && px > 0)) return null;
+  return { fy: last.title.slice(0, 7), chg: r1((mv / px) / (ni * 1e8 / eps) * 100 - 100) };
+}
 
 async function korea(code) {
   const base = "https://m.stock.naver.com/api/stock/" + code;
-  const [it, q] = await Promise.all([getJson(base + "/integration"), getJson(base + "/finance/quarter")]);
+  const [it, q, an] = await Promise.all([getJson(base + "/integration"), getJson(base + "/finance/quarter"), getJson(base + "/finance/annual")]);
   if (!it && !q) return undefined;
   const ti = {}; ((it && it.totalInfos) || []).forEach((x) => { ti[x.code] = x.value; });
   const o = {
@@ -116,6 +131,8 @@ async function korea(code) {
   };
   const Q = quarter(finTable(q), "영업이익");
   if (Q) o.q = Q;
+  const sh = shareChange(finTable(an), ti);
+  if (sh) o.sh = sh;
   return o;
 }
 
@@ -190,6 +207,7 @@ function dyCheck(o, card) {
   fs.writeFileSync(OUT, "// 밸류에이션·최근 분기 실적 — scripts/update-fundamentals.js 가 자동 생성 (LLM 토큰 0)\n" +
     "// ticker → { per, eps, fper(선행 PER), feps(선행 EPS: 한국 FnGuide 올해 추정·미국 다음 4분기 합), pbr, dy(배당수익률 %), dps, dyFlag(출처 값 의심 사유),\n" +
     "//            mcap(시총 문자열), foreignRate(한국 외국인 소진율 %), hi52, lo52, rev4w:{up,down}(미국 최근 4주 EPS 추정 상향·하향),\n" +
+    "//            sh:{fy(최근 결산), chg(결산 연도 주식 수 → 지금, % — 한국, Top Pick 자본 거래 점검)},\n" +
     "//            q:{period, base(비교 분기), opLabel(영업이익|EBIT), rev/op/np:{v, yoy(%), turn(흑자전환 등)}, next:{period, rev, op}(다음 분기 컨센서스)} }\n" +
     "//   단위: 한국 재무 = 억원, 미국 재무 = 백만 달러(네이버 표기 그대로).\n" +
     "window.STOCK_FUND = " + JSON.stringify(F) + ";\n");

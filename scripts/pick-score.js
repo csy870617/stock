@@ -21,7 +21,8 @@ const D = load("recommendations.js", "STOCK_DATA");
 if (!D) { console.error("pick-score: recommendations.js 를 읽지 못함"); process.exit(1); }
 const TA = load("stock-ta.js", "STOCK_TA") || {};
 const DC = load("discovery-candidates.js", "DISCOVERY_CANDIDATES");
-const R = LP.rankPicks({ D, TA, EV: (load("events.js", "STOCK_EVENTS") || {}).items || {}, CA: load("candidates.js", "CANDIDATES") || { groups: {} }, DC });
+const R = LP.rankPicks({ D, TA, EV: (load("events.js", "STOCK_EVENTS") || {}).items || {}, CA: load("candidates.js", "CANDIDATES") || { groups: {} }, DC,
+  FU: (load("fundamentals.js", "STOCK_FUND") || {}).items || {} });
 
 if (process.argv.includes("--json")) { console.log(JSON.stringify(R, null, 1)); process.exit(0); }
 
@@ -30,10 +31,10 @@ console.log("Top Pick 순위 — 건강 관문 + 상승 가능성 점수 · T " 
 const tp = D.topPicks || {};
 ["korea", "us"].forEach((c) => {
   const r = R[c], cur = (tp[c] || []).map((x) => x.ticker);
-  console.log("\n■ " + (c === "korea" ? "한국" : "미국") + " — 건강 통과 " + r.ranked.length + " · 제외 " + r.excluded.length + " · 재무 자료 없음 " + r.unscored.length +
-    " · 지금 Top Pick(" + (tp.asOf || "–") + "): " + (cur.join(", ") || "–"));
+  console.log("\n■ " + (c === "korea" ? "한국" : "미국") + " — 건강 통과 " + r.ranked.length + " · 제외 " + r.excluded.length + " · 점수 자료 없음 " + r.unscored.length +
+    " · 지금 Top Pick(" + (tp.asOf || "–") + "): " + (cur.join(", ") || "–") + "\n  점수 = " + LP.SCORE[c].map((k) => ({ iss: "주식 수 감소", shy: "주주환원 수익률", roic: "ROIC" })[k]).join("·") + " 백분위" + (LP.SCORE[c].length > 1 ? " 평균" : ""));
   r.ranked.slice(0, 10).forEach((x) => console.log("  " + String(x.rank).padStart(2) + ". " + x.ticker + " " + x.name + " (" + THEME_KO[x.theme] + " T" + x.tier + ") 점수 " +
-    x.score.toFixed(3) + " — " + LP.partsLine(x) + (x.src === "hidden" ? " (히든: 희석만)" : "") + (cur.includes(x.ticker) ? "  ← 지금" : "")));
+    x.score.toFixed(3) + " — " + LP.partsLine(x, c) + (x.src === "hidden" ? " (히든: 희석만)" : "") + (cur.includes(x.ticker) ? "  ← 지금" : "")));
   if (r.ranked.length > 10) console.log("  … " + (r.ranked.length - 10) + "종목 더");
   if (r.excluded.length) console.log("  건강 조건 제외: " + r.excluded.map((x) => x.name + "(" + x.why + ")").join(", "));
   if (r.unscored.length) console.log("  순위 없음: " + r.unscored.map((x) => x.name + "(" + x.why + ")").join(", "));
