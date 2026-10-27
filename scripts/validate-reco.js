@@ -524,7 +524,7 @@ if (require.main === module) {
         CA: win("candidates.js", "CANDIDATES") || { groups: {} }, DC: win("discovery-candidates.js", "DISCOVERY_CANDIDATES"),
         FU: (win("fundamentals.js", "STOCK_FUND") || {}).items || {} });
       ["korea", "us"].forEach((c) => {
-        const want = R[c].ranked.slice(0, 3).map((x) => x.ticker), got = (tp[c] || []).map((x) => x.ticker);
+        const want = R[c].top, got = (tp[c] || []).map((x) => x.ticker);
         if (want.length === 3 && want.join() !== got.join()) warnings.push("topPicks." + c + " 가 지금 순위 1~3위(" + want.join(", ") + ")와 다르다(" + got.join(", ") +
           ") — node scripts/pick-score.js 로 확인하고 그 순서로 다시 쓴다(§4-6)");
       });

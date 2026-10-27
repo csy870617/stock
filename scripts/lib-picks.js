@@ -14,7 +14,11 @@
 //        후보 40종목 중 1~3위 흉내에서 3개월 뒤 시장보다 오른 비율 54%(주식 수만 49%, 무작위 43%)·12개월 −30% 폭락 2%(8%, 12%).
 //        사전 기준(t ≥ 2.5)엔 조금 못 미쳤다 — 그 전 한국 규칙(주식 수만)도 사전 등록으로 고른 게 아니어서 같은 저울에서 앞선 쪽을 골랐다
 //        (README 3차). 대신 평균 초과수익은 주식 수만 본 쪽이 컸다(소수의 큰 상승 — 그만큼 폭락도 많았다).
-//   나라별 점수 1~3위 = 오늘의 Top Pick. ai-daily·세션은 이 순서 그대로 쓰고 이유 문장만 쓴다(pick-score.js 로 확인).
+//   ③ 업종 분산(미국만 — 2026-10-27 4차 연구, 사용자 '금융주에 너무 유리하게 되어 있다'): 점수 순으로 고르되 같은 업종(나스닥 섹터)은 하나만.
+//      미국 2011~2026 후보 40종목 중 1~3위 흉내에서 금융 비중이 29%→24%로 줄고 6개월 평균 초과는 같았다(개발 −0.09%p t −0.6, 확인용 +0.10%p).
+//      한국은 적용하지 않는다 — 같은 방식으로 대형주(1~300위) 6개월 평균 초과가 1.3%p 낮았다(t −3.8, 2023~2025 해마다 — 밸류업 국면에서
+//      금융주가 실제로 가장 많이 올랐다; 확인용 301~600위는 +0.2%p). 사전 등록 기준(뚜렷한 비용이 없을 때만 분산)에 걸렸다(PREREG-4·README 4차).
+//   나라별 1~3위(③ 적용) = 오늘의 Top Pick(rankPicks 의 top). ai-daily·세션은 이 순서 그대로 쓰고 이유 문장만 쓴다(pick-score.js 로 확인).
 //
 // 재무 값은 발굴 스크린(discovery-candidates.js)이 편성 종목마다 남기는 fx(연간 재무 — lib-factors, 연구와 같은 정의, % 단위).
 // 히든 주제 종목은 fx 가 없어 히든 스크린의 희석(주식 수 연 증가율)만 쓴다 — 히든 스크린의 ROIC 는 현금을 뺀 투하자본이라
@@ -26,7 +30,10 @@
 // 결산 뒤 자본 거래 점검(한국 — fundamentals.js sh.chg: 결산 연도 주식 수 → 지금): 결산 재무는 그 뒤의 합병·증자·분할을 못 본다
 //   (2026-10-27 HD건설기계 — 2025년 −5.2%로 '주식 수 감소' 1위였지만 2026-01 합병으로 지금 주식 수가 결산 때의 2.7배).
 //   지금이 20% 넘게 많으면 희석과 같게 관문에서 빼고, 20% 넘게 적으면(분할 등) 주식 수 변화를 0 으로 본다. 근사치라 ±20% 안은 보지 않는다.
+// 업종은 fundamentals.js 의 ind(한국 WICS 산업)·sec(미국 나스닥 섹터) → lib-sectors.js 의 같은 분류표(연구와 공유). 업종을 모르면 제한하지 않는다.
+const SEC = require("./lib-sectors");
 const ISS_CA = -20, POST_CA = 20;
+const DIVERSIFY = { us: true, korea: false };   // 위 ③
 const PERSONAL = new Set(["watch", "hold"]);
 const THEMES = ["core", "growth", "value", "dividend", "rising"];
 // 고정 문턱(%) — research/top-pick/README.md '라이브 문턱'. 한국 금융은 검증 때도 값이 30개 미만이라 이익 변동 문턱이 없었다.
@@ -36,13 +43,15 @@ const CUTS = {
 };
 // 점수 재료(나라별) — 위 ②
 const SCORE = { us: ["iss", "shy", "roic"], korea: ["iss", "dy"] };
-const NOTE = "건강 조건(흑자·희석·자산 급증·이익 변동·추세·수급·결격)을 통과한 정식 추천 중 상승 가능성 점수(미국: 주식 수 감소·주주환원·ROIC, 한국: 주식 수 감소·배당) 1~3위 — 확실한 예측이 아니라 확률을 조금 기울이는 기준";
+const NOTE = "건강 조건(흑자·희석·자산 급증·이익 변동·추세·수급·결격)을 통과한 정식 추천 중 상승 가능성 점수(미국: 주식 수 감소·주주환원·ROIC, 한국: 주식 수 감소·배당) 1~3위(미국은 업종마다 한 종목) — 확실한 예측이 아니라 확률을 조금 기울이는 기준";
 // 앱 ⓘ·문서용 검증 요약(research/top-pick/README.md — 자본 거래 정리 뒤 값, 앱과 같은 처리)
 const EVIDENCE = {
   us: "과거 검증(미국 2011~2026 시총 상위 500, 매월 후보 40종목 중 1~3위를 고르는 상황을 흉내): 3개월 뒤 시장보다 오른 경우 52.5%(무작위 49.8%), " +
-    "12개월 안 −30% 폭락 4.2%(4.6%). 우량·저평가·배당 지표를 더한 묶음 6가지와 데이터가 고르는 방식은 이보다 못했다. 차이는 작다 — 확실히 오르는 종목은 없다.",
+    "12개월 안 −30% 폭락 4.2%(4.6%). 우량·저평가·배당 지표를 더한 묶음 6가지와 데이터가 고르는 방식은 이보다 못했다. " +
+    "1~3위를 업종마다 한 종목으로 고르면 금융 비중이 29%에서 24%로 줄고 성적은 같았다. 차이는 작다 — 확실히 오르는 종목은 없다.",
   korea: "과거 검증(한국 2022~2026 시총 상위 300, 매월 후보 40종목 중 1~3위를 고르는 상황을 흉내): 3개월 뒤 시장보다 오른 경우 54%(무작위 43%), " +
-    "12개월 안 −30% 폭락 2%(12%). 주식 수 감소만 볼 때(49%·8%)보다 나았고 확인용 중소형주(301~600위)에서도 같은 방향이었다. 평균 상승 폭은 주식 수만 볼 때가 컸다 — 확실히 오르는 종목은 없다.",
+    "12개월 안 −30% 폭락 2%(12%). 주식 수 감소만 볼 때(49%·8%)보다 나았고 확인용 중소형주(301~600위)에서도 같은 방향이었다. 평균 상승 폭은 주식 수만 볼 때가 컸다. " +
+    "업종마다 한 종목으로 고르는 방식은 2023~2025년 금융주 강세 탓에 대형주에서 성적이 낮아 쓰지 않는다 — 확실히 오르는 종목은 없다.",
 };
 const SCORE_KO = { iss: "주식 수", shy: "주주환원", roic: "ROIC", dy: "배당" };
 
@@ -97,8 +106,26 @@ function unhealthy(country, s, sig, ev, defState, f) {
   return null;
 }
 
+// 업종(분류표의 키 — 한국 WICS 섹터·미국 나스닥 섹터) — fundamentals.js 항목에서, 모르면 null
+function sectorOf(country, fu) {
+  if (!fu) return null;
+  return country === "korea" ? SEC.krSector(fu.ind) || (SEC.KR_SECTORS[fu.sec] ? fu.sec : null) : SEC.usSector(fu.sec);
+}
+// 1~3위 — 점수 순, diversify 면 같은 업종은 하나만(업종 모름은 제한 없음). 뽑힌 종목에 pick(1~3), 업종이 겹쳐 건너뛴 종목에 skip(앞선 Top Pick 티커)
+function pickTop(ranked, diversify, n) {
+  const out = [], used = new Map();
+  for (const x of ranked) {
+    if (out.length >= (n || 3)) break;
+    if (diversify && x.sec && used.has(x.sec)) { x.skip = used.get(x.sec); continue; }
+    if (x.sec) used.set(x.sec, x.ticker);
+    out.push(x);
+  }
+  out.forEach((x, i) => { x.pick = i + 1; });
+  return out.map((x) => x.ticker);
+}
+
 // S = { D: STOCK_DATA, TA: STOCK_TA, EV: events items(티커별), CA: CANDIDATES, DC: DISCOVERY_CANDIDATES, FU: fundamentals items(티커별, 선택) }
-// → { korea: {ranked, excluded, unscored}, us: {…} } — ranked 는 점수 내림차순(1위가 첫째)
+// → { korea: {ranked, excluded, unscored, top, diversify}, us: {…} } — ranked 는 점수 내림차순(1위가 첫째), top = 오늘의 Top Pick 티커 3개(③ 적용)
 function rankPicks(S) {
   const ta = (S.TA && S.TA.ta) || {}, EV = S.EV || {}, defState = {}, dupSlot = new Set();
   // 결격 상태는 (국가|주제|티커)로 본다 — '중복' 자리는 회사 결격이 아니라 편성 구성 문제라 그 자리만 건너뛴다(check-defects 의 dup 판정)
@@ -123,7 +150,7 @@ function rankPicks(S) {
       const base = { ticker: s.ticker, name: s.name, theme: s.theme, tier: s.tier };
       if (why) excluded.push(Object.assign(base, { why }));
       else if (!f || !SCORE[c].some((k) => ok(f[k]))) unscored.push(Object.assign(base, { why: "점수 자료 없음(" + SCORE[c].map((k) => SCORE_KO[k]).join("·") + ")" }));
-      else healthy.push({ s, f, base });
+      else healthy.push({ s, f, base, sec: sectorOf(c, (S.FU || {})[s.ticker]) });
     });
     // 재료마다 같은 나라 관문 통과 종목 안의 백분위 — 주식 수는 줄수록 좋다(1 − 백분위)
     const pr = {};
@@ -132,11 +159,12 @@ function rankPicks(S) {
       const p = {};
       SCORE[c].forEach((k) => { const v = pr[k](h.f[k]); p[k] = v == null ? null : r3(k === "iss" ? 1 - v : v); });
       return Object.assign(h.base, { score: r3(mean(SCORE[c].map((k) => p[k]))), iss: r1(h.f.iss), shy: r1(h.f.shy), roic: r1(h.f.roic), dy: r1(h.f.dy),
-        pct: p, src: h.f.src, issCa: h.f.issCa || undefined });
+        pct: p, src: h.f.src, issCa: h.f.issCa || undefined, sec: h.sec || undefined, secKo: SEC.sectorKo(c, h.sec) || undefined });
     });
     ranked.sort((p, q) => (q.score - p.score) || ((p.tier || 9) - (q.tier || 9)) || (THEMES.indexOf(p.theme) - THEMES.indexOf(q.theme)) || String(p.name).localeCompare(String(q.name), "ko"));
     ranked.forEach((x, i) => { x.rank = i + 1; });
-    out[c] = { ranked, excluded, unscored };
+    const top = pickTop(ranked, DIVERSIFY[c]);
+    out[c] = { ranked, excluded, unscored, top, diversify: !!DIVERSIFY[c] };
   });
   return out;
 }
@@ -154,4 +182,4 @@ function partsLine(x, country) {
   return a.join(" · ");
 }
 
-module.exports = { CUTS, SCORE, NOTE, EVIDENCE, rankPicks, finOf, partsLine };
+module.exports = { CUTS, SCORE, NOTE, EVIDENCE, DIVERSIFY, rankPicks, finOf, partsLine, pickTop };

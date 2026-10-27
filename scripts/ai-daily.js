@@ -166,12 +166,13 @@ function pickTable(S) {
   ["korea", "us"].forEach((c) => {
     const r = R[c];
     r.excluded.forEach((x) => excluded.push(c + ":" + x.ticker + " " + x.name + "(" + x.why + ")"));
-    top[c] = r.ranked.slice(0, 3).map((x) => x.ticker);
-    r.ranked.slice(0, 3).forEach((x) => {
+    top[c] = r.top;
+    r.top.map((t) => r.ranked.find((x) => x.ticker === t)).forEach((x, i) => {
       const s = ((S.D[c] || []).find((y) => y.ticker === x.ticker && y.theme === x.theme)) || {};
       const t = ta[x.ticker] || {}, sg = ["short", "mid", "long"].map((k) => (t[k] && t[k].signal) || "–");
       const ev = S.EV[x.ticker] || {}, fu = S.FU[x.ticker] || {}, q = fu.q || {};
-      const parts = [x.rank + "위 " + x.ticker + " " + x.name, THEME_KO[x.theme] + " T" + x.tier, "점수 " + x.score + "(" + LP.partsLine(x, c) + ")", "신호 " + sg.join("/")];
+      const parts = [(i + 1) + "위 " + x.ticker + " " + x.name + (x.rank !== i + 1 ? "(점수 " + x.rank + "위 — 앞 순위가 같은 업종이라 업종마다 한 종목)" : ""),
+        THEME_KO[x.theme] + " T" + x.tier + (x.secKo ? " · " + x.secKo : ""), "점수 " + x.score + "(" + LP.partsLine(x, c) + ")", "신호 " + sg.join("/")];
       if (t.risk) parts.push("60일 변동성 " + t.risk.vol + "% · 1년 최대낙폭 " + t.risk.mdd + "%");
       const yo = (k, lab) => (q[k] && q[k].yoy != null ? lab + " " + sgn(q[k].yoy) + "%" : null);
       const qq = [yo("rev", "매출"), yo("op", q.opLabel === "EBIT" ? "EBIT" : "영업이익"), yo("np", "순이익")].filter(Boolean);
@@ -265,7 +266,7 @@ const COMPOSE_SYSTEM = [
   "  (환율: 수출주·외국인 수급·미국 주식의 원화 환산 수익 / 유가: 물가·금리·에너지·운송) 1~2문장, [데이터]의 관련 정보(상관·같이 움직인 종목)를 근거로.",
   "  (달러인덱스: 원화·신흥국 자금·원자재 / 금: 실질금리·안전자산 수요)",
   "  usdkrw 상태는 달러 기준이다(상승세 = 원/달러 상승·원화 약세). 환율·원자재의 방향을 예측하지 않는다.",
-  "- topPicks: 한국·미국 각 [Top Pick 순위]의 1·2·3위를 그 순서 그대로 쓴다 — 종목은 규칙(건강 관문 + 상승 가능성 점수)이 이미 골랐다. 고르지도 바꾸지도 않는다.",
+  "- topPicks: 한국·미국 각 [Top Pick 순위]의 1·2·3위를 그 순서 그대로 쓴다 — 종목은 규칙(건강 관문 + 상승 가능성 점수, 미국은 업종마다 한 종목)이 이미 골랐다. 고르지도 바꾸지도 않는다.",
   "  reason 은 한국어 1문장 — 그 종목이 건강 조건(흑자·희석 없음·자산 급증·이익 변동 없음)을 통과하고 점수가 높은 이유를",
   "  [Top Pick 순위]의 사실(주식 수 감소·자사주 소각·배당·주주환원 계획·ROIC·최근 분기 실적·논거)로 쓴다. 점수 재료는 미국 = 주식 수 감소·주주환원·ROIC, 한국 = 주식 수 감소·배당이다",
   "  (한국은 주식 수를 줄인 사실 — 자사주 소각 등 — 과 배당 사실 — 배당 확대·주주환원 계획 — 을 쓰되 배당수익률 숫자는 쓰지 않는다). 앞에 주제·tier 를 붙이지 않는다('가치 주제 Tier1 —' 금지).",
@@ -292,7 +293,7 @@ function composePrompt(S, ctx, memo, urls, picks) {
     "[출처 목록]",
     urls.length ? urls.map((u, i) => (i + 1) + ". " + u.url + (u.title ? " — " + u.title : "")).join("\n") : "(없음)",
     "",
-    "[Top Pick 순위 — 건강 관문(강한 하락세·추세 붕괴·수급 과열·실질 결격·적자·희석·자산 급증·이익 변동 제외)을 통과한 정식 추천의 상승 가능성 점수(미국: 주식 수 감소·주주환원·ROIC, 한국: 주식 수 감소·배당) 1~3위]",
+    "[Top Pick 순위 — 건강 관문(강한 하락세·추세 붕괴·수급 과열·실질 결격·적자·희석·자산 급증·이익 변동 제외)을 통과한 정식 추천의 상승 가능성 점수(미국: 주식 수 감소·주주환원·ROIC, 한국: 주식 수 감소·배당) 1~3위 — 미국은 업종마다 한 종목]",
     "한국(통과 " + picks.counts.korea + "종목):", picks.rows.korea.join("\n") || "(없음)",
     "미국(통과 " + picks.counts.us + "종목):", picks.rows.us.join("\n") || "(없음)",
     "직전 Top Pick: " + prevPicks + (tp.asOf ? " (" + tp.asOf + ")" : ""),

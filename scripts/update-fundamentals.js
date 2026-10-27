@@ -13,10 +13,13 @@
 //       미국 = 네이버 해외주식 기본(stockItemTotalInfos: PER·PBR·배당수익률·시총) + 분기 재무(매출액·EBIT·순이익)
 //              + 나스닥(Zacks) 분기 컨센서스 EPS(다음 4분기 합 = 12개월 선행 EPS → 선행 PER, 최근 4주 추정 상향·하향 건수)
 // 실패한 종목은 이전 값을 유지한다. 비정상 값(음수·과대 PER, 배당 정의 불일치)은 버리거나 표시하지 않게 표시(flag)한다.
+// 업종(ind·sec — Top Pick 업종 분산, lib-picks.js): 한국 = 와이즈리포트 기업현황의 WICS 산업(연구·발굴 스크린과 같은 출처) → lib-sectors 의 WICS 섹터,
+//   미국 = 나스닥 company-profile 의 Sector·Industry. 자주 바뀌지 않아 30일에 한 번만 다시 받는다(secAt).
 
 const fs = require("fs");
 const path = require("path");
 const { execFile } = require("child_process");
+const SEC = require("./lib-sectors");
 
 const ROOT = path.join(__dirname, "..");
 const OUT = path.join(ROOT, "data", "fundamentals.js");
@@ -161,6 +164,26 @@ async function us(ticker, reuters) {
   return o;
 }
 
+// 업종 — 한국 WICS 산업(와이즈리포트 페이지의 'WICS : 은행'), 미국 나스닥 섹터·산업
+const DESKTOP = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36";
+const curlText = (url) => new Promise((resolve) => {
+  execFile("curl", ["-s", "--max-time", "20", "--compressed", "-A", DESKTOP, url], { maxBuffer: 16 << 20 }, (err, out) => resolve(err ? null : out));
+});
+async function krIndustry(code) {
+  for (let i = 0; i < 2; i++) {
+    const page = await curlText("https://navercomp.wisereport.co.kr/v2/company/c1010001.aspx?cmp_cd=" + code);
+    const m = page && page.match(/WICS\s*:\s*([^&<]+)/);
+    if (m) { const ind = m[1].trim(); return ind ? { ind, sec: SEC.krSector(ind) } : null; }
+    await sleepMs(500 * (i + 1));
+  }
+  return null;
+}
+async function usIndustry(ticker) {
+  const j = await getJson("https://api.nasdaq.com/api/company/" + encodeURIComponent(ticker.replace("-", ".")) + "/company-profile");
+  const d = j && j.data, sec = d && d.Sector && d.Sector.value, ind = d && d.Industry && d.Industry.value;
+  return sec ? { ind: ind || null, sec } : null;
+}
+
 // 배당수익률 정의 점검 — 출처 값이 카드(세션이 신뢰 출처 2곳으로 확인한 값)와 3배 넘게·0.3%p 넘게 다르면
 // 출처 쪽 오류 가능성이 커서(예: 네이버 NVDA 주당배당금 1.00달러 — 실제 연 0.04달러) 표시하지 않게 표시한다.
 function dyCheck(o, card) {
@@ -185,12 +208,21 @@ function dyCheck(o, card) {
     list.push({ c, t: s.ticker, reuters: m ? decodeURIComponent(m[1]) : s.ticker, card: typeof s.dividendYield === "number" ? s.dividendYield : null });
   }));
   const items = {};
-  let fresh = 0, kept = 0, none = 0;
+  let fresh = 0, kept = 0, none = 0, secNew = 0;
+  const day = new Date().toISOString().slice(0, 10);
   await mapLimit(list, 5, async (x) => {
     let v = x.c === "korea" ? await korea(x.t) : await us(x.t, x.reuters);
     if (v === undefined) { v = prev[x.t] || null; if (v) kept++; else none++; }
     else fresh++;
     if (!v) return;
+    // 업종 — 30일 안에 받은 값이 있으면 그대로, 아니면 다시 받는다(실패하면 이전 값)
+    const pv = prev[x.t];
+    if (pv && pv.secAt && Date.parse(day) - Date.parse(pv.secAt) < 30 * 864e5) { v.ind = pv.ind; v.sec = pv.sec; v.secAt = pv.secAt; }
+    else {
+      const s = x.c === "korea" ? await krIndustry(x.t) : await usIndustry(x.t);
+      if (s) { v.ind = s.ind; v.sec = s.sec; v.secAt = day; secNew++; }
+      else if (pv && pv.secAt) { v.ind = pv.ind; v.sec = pv.sec; v.secAt = pv.secAt; }
+    }
     dyCheck(v, x.card);
     // 선행 PER(미국) — 현재가 ÷ 12개월 선행 EPS(양수일 때만)
     const q = QT.quotes && QT.quotes[x.t];
@@ -208,9 +240,11 @@ function dyCheck(o, card) {
     "// ticker → { per, eps, fper(선행 PER), feps(선행 EPS: 한국 FnGuide 올해 추정·미국 다음 4분기 합), pbr, dy(배당수익률 %), dps, dyFlag(출처 값 의심 사유),\n" +
     "//            mcap(시총 문자열), foreignRate(한국 외국인 소진율 %), hi52, lo52, rev4w:{up,down}(미국 최근 4주 EPS 추정 상향·하향),\n" +
     "//            sh:{fy(최근 결산), chg(결산 연도 주식 수 → 지금, % — 한국, Top Pick 자본 거래 점검)},\n" +
+    "//            ind(업종 — 한국 WICS 산업·미국 나스닥 산업), sec(한국 WICS 섹터·미국 나스닥 섹터 — Top Pick 업종 분산), secAt(업종 받은 날),\n" +
     "//            q:{period, base(비교 분기), opLabel(영업이익|EBIT), rev/op/np:{v, yoy(%), turn(흑자전환 등)}, next:{period, rev, op}(다음 분기 컨센서스)} }\n" +
     "//   단위: 한국 재무 = 억원, 미국 재무 = 백만 달러(네이버 표기 그대로).\n" +
     "window.STOCK_FUND = " + JSON.stringify(F) + ";\n");
   console.log("fundamentals.js 갱신: " + Object.keys(items).length + "/" + list.length + "종목 (신규 " + fresh + " · 이전 유지 " + kept + " · 실패 " + none + ")" +
-    " · 배당 의심 " + Object.values(items).filter((v) => v.dyFlag).length);
+    " · 배당 의심 " + Object.values(items).filter((v) => v.dyFlag).length +
+    " · 업종 " + Object.values(items).filter((v) => v.sec).length + "종목(새로 받음 " + secNew + ")");
 })();
