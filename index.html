@@ -58,6 +58,7 @@
   --pf-f: #6741d9; --pf-s: #0c8f6a; --pf-i: #8b95a1;   /* 성과 곡선: 추천 · 그림자 · 지수 */
   --pf-c0: #2a78d6; --pf-c1: #eb6834; --pf-c2: #1baf7a; --pf-c3: #eda100; --pf-c4: #e87ba4;   /* 주제 비교(dataviz 기본 1~5번) */
   --pf-t1: #3b2a99; --pf-t2: #6741d9; --pf-t3: #a99bf0;   /* 티어 비교 — 한 색의 진하기(순서) */
+  --fl-f: #6250d6; --fl-o: #1baf7a; --fl-p: #eda100;   /* 수급 누적: 외국인·기관·개인(dataviz 7·3·4번 — 상승·하락의 빨강·파랑을 피함) */
   --t1bg: #191f28; --t1fg: #ffffff;
   --t2bg: #6b7684; --t2fg: #ffffff;
   --t3bg: #eef0f3; --t3fg: #4e5968;
@@ -96,6 +97,7 @@
   --ev:        #9775fa;
   --ev-soft:   rgba(151,117,250,0.16);
   --pf-f: #9775fa; --pf-s: #20a77c; --pf-i: #7e868f; --pf-c0: #3987e5; --pf-c1: #d95926; --pf-c2: #199e70; --pf-c3: #c98500; --pf-c4: #d55181; --pf-t1: #c4b8ff; --pf-t2: #9775fa; --pf-t3: #5f4bc0;
+  --fl-f: #9085e9; --fl-o: #199e70; --fl-p: #c98500;
   --t1bg: #ececef; --t1fg: #111214;
   --t2bg: #8b939c; --t2fg: #111214;
   --t3bg: #2c2f34; --t3fg: #b1b8c0;
@@ -131,6 +133,7 @@
     --ev:        #9775fa;
     --ev-soft:   rgba(151,117,250,0.16);
     --pf-f: #9775fa; --pf-s: #20a77c; --pf-i: #7e868f; --pf-c0: #3987e5; --pf-c1: #d95926; --pf-c2: #199e70; --pf-c3: #c98500; --pf-c4: #d55181; --pf-t1: #c4b8ff; --pf-t2: #9775fa; --pf-t3: #5f4bc0;
+    --fl-f: #9085e9; --fl-o: #199e70; --fl-p: #c98500;
     --t1bg: #ececef; --t1fg: #111214;
     --t2bg: #8b939c; --t2fg: #111214;
     --t3bg: #2c2f34; --t3fg: #b1b8c0;
@@ -728,12 +731,25 @@ svg { display: block; }
 .ch-fl[hidden] { display: none; }
 .ch-fl .seg button { height: 24px; padding: 0 9px; font-size: 12px; }
 .ch-fl-k { white-space: nowrap; }
+/* 지수 상세 '수급' 누적 순매수 꺾은선 — 투자자 셋은 색 + 범례 + 선 끝 이름표로 구분(값 글자는 상승·하락 색) */
+.fl-hd { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.fl-hd-k { font-size: 13px; font-weight: 600; color: var(--ink2); white-space: nowrap; }
+.fl-hd .seg button { height: 26px; padding: 0 9px; font-size: 12.5px; }
+.fl-leg { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 10px; min-height: 42px; font-variant-numeric: tabular-nums; }
+.fl-leg span { display: flex; align-items: center; gap: 6px; font-size: 12.5px; color: var(--ink2); white-space: nowrap; }
+.fl-leg b { display: block; margin-top: 2px; font-size: 15px; font-weight: 700; color: var(--ink); white-space: nowrap; }
+.fl-leg b.up { color: var(--up); } .fl-leg b.down { color: var(--down); }
+.pf-chart.fl-chart { min-height: 180px; margin: 6px 0 14px; }
+.pf-chart .fl-el { fill: var(--ink2); font-size: 11px; font-weight: 600; }
+.pf-chart .ln-fl-f { stroke: var(--fl-f); } .pf-chart circle.ln-fl-f { fill: var(--fl-f); } .lk.lk-fl-f { border-top-color: var(--fl-f); }
+.pf-chart .ln-fl-o { stroke: var(--fl-o); } .pf-chart circle.ln-fl-o { fill: var(--fl-o); } .lk.lk-fl-o { border-top-color: var(--fl-o); }
+.pf-chart .ln-fl-p { stroke: var(--fl-p); } .pf-chart circle.ln-fl-p { fill: var(--fl-p); } .lk.lk-fl-p { border-top-color: var(--fl-p); }
 /* 지수 상세 '수급' 표 — 행 = 외국인·기관·개인, 열 = 최근일·5·20·60거래일 합 */
 .fl-tbl { display: grid; grid-template-columns: auto repeat(4, minmax(0, 1fr)); gap: 8px 6px; align-items: baseline; font-variant-numeric: tabular-nums; }
 .fl-tbl .fl-h { font-size: 11.5px; color: var(--mut); text-align: right; white-space: nowrap; }
 .fl-tbl .fl-k { padding-right: 4px; font-size: 13px; font-weight: 600; color: var(--ink2); white-space: nowrap; }
 .fl-tbl .fl-v { font-size: 13px; font-weight: 600; text-align: right; white-space: nowrap; }
-.fl-sub { margin-top: 10px; font-size: 12.5px; color: var(--ink2); }
+.fl-run { margin-top: 10px; font-size: 12.5px; color: var(--ink2); }
 .fl-note { font-size: 13px; line-height: 1.6; color: var(--mut); }
 
 /* 요약 카드 — 단·중·장 신호(칸 셋)와 다음 1개월 범위를 한 카드에 */
@@ -3179,8 +3195,14 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   // 지수 수급 — 코스피·코스닥 투자자별 순매수(indices.js flows: 최근일·5·20·60거래일 합·연속 일수, 억원 — lib-flows.js, 다음 금융·한국거래소 집계).
   //   차트 아래 수급 막대와 같은 값이다. 미국은 투자자별 매매가 매일 공개되지 않아 그 사실만 한 줄로 적는다.
   var FL_WHO = [["f", "외국인"], ["o", "기관"], ["p", "개인"]];
+  var FL_IX = { p: 0, f: 1, o: 2 };   // 차트 행 끝 [개인, 외국인, 기관] 의 자리
+  // 누적 그래프 기간 — 20·60일은 아래 표의 20·60일 합과 같은 날들, 1년은 일별, 3년은 주별(주봉 행의 그 주 합)
+  var FLG_P = [["20", "20일"], ["60", "60일"], ["1y", "1년"], ["3y", "3년"]];
+  var FLG = { p: lsGet("ui.flowP") || "60", cur: null };
+  if (!FLG_P.some(function (q) { return q[0] === FLG.p; })) FLG.p = "60";
   function flowTipIdx(x) {
     return "한국거래소가 집계한 " + (x.key === "kosdaq" ? "코스닥" : "코스피") + " 시장 전체의 투자자별 순매수 금액입니다(다음 금융에서 매일 받음 — 장 마감 직후 잠정치가 나중에 확정치로 바뀌기도 해 최근 60거래일을 매일 다시 받습니다). " +
+      "누적 그래프는 고른 기간의 첫날부터 날마다(3년은 주마다) 순매수를 더해 간 값이라, 선이 오르는 구간은 순매수·내리는 구간은 순매도입니다. " +
       "차트 아래 수급 막대도 같은 값이고, 주봉·월봉 막대는 그 기간의 합입니다. 이미 일어난 매매의 집계이며 앞으로의 방향을 예측하지 않습니다 — " +
       "종목 단위 검증(2016~2026 한국 종목)에서는 외국인·기관이 사면 오른다는 가설이 기각됐고, 20일 순매수가 아주 큰 '수급 과열' 종목은 오히려 이후 1·3개월 지수보다 약했습니다. 지수 단위 수급은 따로 검증하지 않았습니다.";
   }
@@ -3196,8 +3218,139 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       .map(function (w) { return w[1] + " " + Math.abs(sk[w[0]]) + "일 연속 순" + (sk[w[0]] > 0 ? "매수" : "매도"); });
     return '<section class="dt-sec" id="dt-flow"><h3>수급 <span class="md-as">투자자별 순매수</span>' +
       '<button class="ic-tip" type="button" data-basis="' + esc(flowTipIdx(x)) + '" aria-label="수급 보는 법">' + ICON.info + "</button></h3>" +
-      '<div class="fl-tbl">' + rows + "</div>" + (sub.length ? '<p class="fl-sub">' + esc(sub.join(" · ")) + "</p>" : "") + "</section>";
+      '<div class="fl-hd"><span class="fl-hd-k">누적 순매수</span><div class="seg fl-seg" role="tablist" aria-label="누적 기간">' + FLG_P.map(function (q) {
+        return '<button type="button" data-flp="' + q[0] + '"' + (q[0] === FLG.p ? ' class="on"' : "") + ">" + q[1] + "</button>";
+      }).join("") + "</div></div>" +
+      '<div class="fl-leg"></div><div class="pf-chart fl-chart" tabindex="0" role="group" aria-label="외국인·기관·개인 누적 순매수 꺾은선 (좌우 화살표로 날짜 이동)"></div>' +
+      '<div class="fl-tbl">' + rows + "</div>" + (sub.length ? '<p class="fl-run">' + esc(sub.join(" · ")) + "</p>" : "") + "</section>";
   }
+  // ── 수급 누적 꺾은선 — 고른 기간 첫날부터 투자자별 순매수를 더해 간 선(억원). 누르거나 올리면 그날까지의 누적(십자선) ──
+  function flSeries(j, p) {
+    var wk = p === "3y", rows = ((j && j[wk ? "w" : "d"]) || []).filter(function (r) { return r.length >= 9; });
+    if (p === "20" || p === "60") rows = rows.slice(-(+p));
+    else if (rows.length) {
+      var s = String(rows[rows.length - 1][0]), d = new Date(Date.UTC(+s.slice(0, 4), +s.slice(4, 6) - 1, +s.slice(6, 8)));
+      d.setUTCMonth(d.getUTCMonth() - (wk ? 36 : 12));
+      var cut = +d.toISOString().slice(0, 10).replace(/-/g, "");
+      rows = rows.filter(function (r) { return r[0] > cut; });
+    }
+    if (rows.length < 2) return null;
+    return {
+      dates: rows.map(function (r) { return r[0]; }), wk: wk, long: p === "1y" || wk,
+      series: FL_WHO.map(function (w) {
+        var acc = 0;
+        return { k: "fl-" + w[0], label: w[1], vals: rows.map(function (r) { acc += r[6 + FL_IX[w[0]]] || 0; return acc; }) };
+      })
+    };
+  }
+  function flJo(t) { return t === 0 ? "0" : (t > 0 ? "+" : "-") + Math.abs(t) + "조"; }   // 축 눈금(조원)
+  function flDraw(el, sp) {
+    var W = Math.max(240, Math.round(el.clientWidth || 320)), H = 180, L = 44, R = 50, T = 10, B = 24;
+    var n = sp.dates.length, ser = sp.series, mn = 0, mx = 0;
+    ser.forEach(function (s) { s.vals.forEach(function (v) { v /= 1e4; if (v < mn) mn = v; if (v > mx) mx = v; }); });
+    var ticks = niceTicks(mn, mx, 4, 0.2), y0 = ticks[0], y1 = ticks[ticks.length - 1];
+    var X = function (i) { return L + (W - L - R) * (n <= 1 ? 0 : i / (n - 1)); };
+    var Yj = function (t) { return T + (H - T - B) * (1 - (t - y0) / (y1 - y0)); };   // 조원
+    var Y = function (v) { return Yj(v / 1e4); };   // 억원
+    var svg = "";
+    ticks.forEach(function (t) {
+      var y = Yj(t).toFixed(1);
+      svg += '<line class="' + (t === 0 ? "g0" : "gl") + '" x1="' + L + '" x2="' + (W - R) + '" y1="' + y + '" y2="' + y + '"/>' +
+        '<text class="yl" x="' + (L - 6) + '" y="' + y + '" dy="0.35em" text-anchor="end">' + flJo(t) + "</text>";
+    });
+    [0, Math.floor((n - 1) / 2), n - 1].forEach(function (i, j) {
+      if (j === 1 && n < 5) return;
+      svg += '<text class="xl" x="' + X(i).toFixed(1) + '" y="' + (H - 6) + '" text-anchor="' + (j === 0 ? "start" : j === 2 ? "end" : "middle") + '">' +
+        esc(chDate(sp.dates[i], sp.long ? "m" : "d")) + "</text>";
+    });
+    ser.forEach(function (s) {
+      var d = "";
+      s.vals.forEach(function (v, i) { d += (i ? "L" : "M") + X(i).toFixed(1) + " " + Y(v).toFixed(1); });
+      svg += '<path class="ln ln-' + s.k + '" d="' + d + '"/><circle class="dot ln-' + s.k + '" cx="' + X(n - 1).toFixed(1) + '" cy="' + Y(s.vals[n - 1]).toFixed(1) + '" r="4"/>';
+    });
+    // 선 끝 이름표 — 끝 높이 순으로, 겹치면 위아래로 13px 씩 벌린다(그림 영역 안)
+    var labs = ser.map(function (s) { return { t: s.label, y: Y(s.vals[n - 1]) }; }).sort(function (a, b) { return a.y - b.y; });
+    labs.forEach(function (a, i) { a.y = Math.max(a.y, i ? labs[i - 1].y + 13 : T + 5); });
+    for (var i = labs.length - 1; i >= 0; i--) labs[i].y = Math.min(labs[i].y, i < labs.length - 1 ? labs[i + 1].y - 13 : H - B - 3);
+    labs.forEach(function (a) { svg += '<text class="fl-el" x="' + (X(n - 1) + 8).toFixed(1) + '" y="' + a.y.toFixed(1) + '" dy="0.35em">' + esc(a.t) + "</text>"; });
+    svg += '<g class="xh-g" style="display:none"><line class="xh" y1="' + T + '" y2="' + (H - B) + '"/>' +
+      ser.map(function (s) { return '<circle class="dot ln-' + s.k + '" r="4" data-k="' + s.k + '"/>'; }).join("") + "</g>";
+    el.innerHTML = '<svg viewBox="0 0 ' + W + " " + H + '" height="' + H + '" aria-hidden="true">' + svg + '</svg><div class="pf-tip" hidden></div>';
+    var sv = el.querySelector("svg"), g = sv.querySelector(".xh-g"), tip = el.querySelector(".pf-tip"), cur = -1;
+    function show(i) {
+      if (i < 0 || i >= n) return;
+      cur = i;
+      g.style.display = "";
+      var x = X(i);
+      g.querySelector(".xh").setAttribute("x1", x); g.querySelector(".xh").setAttribute("x2", x);
+      Array.prototype.forEach.call(g.querySelectorAll("circle"), function (cEl) {
+        var s = ser.filter(function (q) { return q.k === cEl.getAttribute("data-k"); })[0];
+        cEl.setAttribute("cx", x); cEl.setAttribute("cy", Y(s.vals[i]));
+      });
+      tip.textContent = "";
+      var dEl = document.createElement("div"); dEl.className = "tp-d"; dEl.textContent = chDate(sp.dates[i], "d", true) + (sp.wk ? " 주까지 누적" : "까지 누적"); tip.appendChild(dEl);
+      ser.forEach(function (s) {
+        var r = document.createElement("div"); r.className = "tp-r";
+        var k = document.createElement("i"); k.className = "lk lk-" + s.k; r.appendChild(k);
+        r.appendChild(document.createTextNode(s.label));
+        var b = document.createElement("b"); b.textContent = flAmt(s.vals[i]); r.appendChild(b);
+        tip.appendChild(r);
+      });
+      tip.hidden = false;
+      var px = x / W * el.clientWidth, tw = tip.offsetWidth;
+      tip.style.left = Math.max(0, Math.min(el.clientWidth - tw, px > el.clientWidth / 2 ? px - tw - 10 : px + 10)) + "px";
+    }
+    function hide() { g.style.display = "none"; tip.hidden = true; cur = -1; }
+    function idxAt(ev) {
+      var rc = sv.getBoundingClientRect(), x = (ev.clientX - rc.left) * (W / rc.width);
+      return Math.max(0, Math.min(n - 1, Math.round((x - L) / (W - L - R) * (n - 1))));
+    }
+    sv.addEventListener("pointermove", function (ev) { show(idxAt(ev)); });
+    sv.addEventListener("pointerdown", function (ev) { show(idxAt(ev)); });
+    sv.addEventListener("pointerleave", hide);
+    el.onblur = hide;
+    el.onkeydown = function (ev) {
+      if (ev.key !== "ArrowLeft" && ev.key !== "ArrowRight") return;
+      ev.preventDefault();
+      show(cur < 0 ? n - 1 : Math.max(0, Math.min(n - 1, cur + (ev.key === "ArrowLeft" ? -1 : 1))));
+    };
+  }
+  function flPaint(st) {
+    var sp = st.j && flSeries(st.j, FLG.p), leg = st.sec.querySelector(".fl-leg");
+    if (!sp) { leg.innerHTML = ""; st.el.innerHTML = '<p class="fl-note">' + (st.j === undefined ? "그래프 불러오는 중…" : "누적 그래프 자료가 아직 없습니다 — 다음 자동 갱신 때 생깁니다.") + "</p>"; return; }
+    var n = sp.dates.length;
+    leg.innerHTML = sp.series.map(function (s) {
+      var v = s.vals[n - 1];
+      return '<div><span><i class="lk lk-' + s.k + '"></i>' + esc(s.label) + '</span><b class="' + (v > 0 ? "up" : v < 0 ? "down" : "") + '">' + esc(flAmt(v)) + "</b></div>";
+    }).join("");
+    flDraw(st.el, sp);
+  }
+  // 지수 상세를 그린 뒤 누적 그래프를 붙인다(캔들 차트와 같은 파일 — 받아 둔 것을 함께 쓴다)
+  function mountFlowGraph(x) {
+    FLG.cur = null;
+    var sec = shBody.querySelector("#dt-flow"), el = sec && sec.querySelector(".fl-chart");
+    if (!el) return;
+    var st = { sec: sec, el: el, j: undefined };
+    FLG.cur = st;
+    var seg = sec.querySelector(".fl-seg");
+    seg.addEventListener("click", function (e) {
+      var b = e.target.closest("[data-flp]"); if (!b || b.dataset.flp === FLG.p) return;
+      FLG.p = b.dataset.flp; lsSet("ui.flowP", FLG.p);
+      seg.querySelectorAll("[data-flp]").forEach(function (q) { q.classList.toggle("on", q === b); });
+      if (st.j !== undefined) flPaint(st);
+    });
+    flPaint(st);
+    loadChartData("idx-" + x.key, function (j) {
+      if (FLG.cur !== st || !el.isConnected) return;
+      st.j = j; flPaint(st);
+    });
+  }
+  var flResizeT = null;
+  window.addEventListener("resize", function () {
+    var st = FLG.cur; if (!st || st.j === undefined) return;
+    clearTimeout(flResizeT);
+    flResizeT = setTimeout(function () { if (FLG.cur === st && st.el.isConnected) flPaint(st); }, 150);
+  });
   function idxFlowCtx(x) {   // AI 질문 맥락 한 줄
     var F = x && x.flows;
     if (!F || !F.last) return "";
@@ -4192,8 +4345,8 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     return '<div class="pf-chart" id="pfc-' + id + '" tabindex="0" role="group" aria-label="' + esc("누적 수익 곡선 — " + aria + " (좌우 화살표로 날짜 이동)") + '"></div>';
   }
   function pfDrawAll() { Object.keys(PFC).forEach(function (id) { var el = document.getElementById(id); if (el) pfDraw(el, PFC[id]); }); }
-  function niceTicks(mn, mx, k) {   // k = 목표 칸 수(기본 3)
-    var span = Math.max(mx - mn, 2), raw = span / (k || 3), steps = [0.5, 1, 2, 2.5, 5, 10, 20, 25, 50, 100], st = steps[steps.length - 1];
+  function niceTicks(mn, mx, k, minSpan) {   // k = 목표 칸 수(기본 3), minSpan = 최소 폭(기본 2 — 수익률 %)
+    var span = Math.max(mx - mn, minSpan || 2), raw = span / (k || 3), steps = [0.1, 0.2, 0.25, 0.5, 1, 2, 2.5, 5, 10, 20, 25, 50, 100, 200, 250, 500], st = steps[steps.length - 1];
     for (var i = 0; i < steps.length; i++) if (steps[i] >= raw) { st = steps[i]; break; }
     var lo = Math.floor(mn / st) * st, hi = Math.ceil(mx / st) * st, out = [];
     for (var v = lo; v <= hi + 1e-9; v += st) out.push(Math.round(v * 100) / 100);
@@ -4757,6 +4910,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       shBody.innerHTML = ix ? (ix.facts ? macroDetailHtml(ix) : indexDetailHtml(ix)) : '<div class="empty">지수 정보를 찾을 수 없습니다.</div>';
       if (ix && ix.facts) ensureMacroLive();
       mountChart(it);
+      if (ix && !ix.facts) mountFlowGraph(ix);
       shBody.scrollTop = top;
       return;
     }
