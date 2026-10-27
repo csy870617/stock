@@ -542,7 +542,12 @@ svg { display: block; }
 .mv-v.mv-up { background: var(--up-soft); color: var(--up); } .mv-v.mv-down { background: var(--down-soft); color: var(--down); }
 .mv-r { font-size: 22px; font-weight: 800; letter-spacing: -0.02em; }
 .mv-v.mv-q { font-weight: 600; }
-.row.tc .tc-v { margin-left: auto; }   /* 홈 '최근 추세 전환' — 오른쪽에 바뀐 판정 */
+/* 홈 '최근 추세 전환' — 상승 전환·하락 전환 묶음 머리(판정 칩 + 종목 수), 두 번째 묶음 위에 구분선 */
+.tc-gh { display: flex; align-items: center; gap: 8px; padding: 10px 16px 2px; }
+.tc-gh:not(:first-child) { margin-top: 10px; padding-top: 16px; border-top: 1px solid var(--line); }
+.tc-gn { font-size: 12.5px; color: var(--mut); }
+.tc-none { padding: 10px 16px 12px; font-size: 13px; color: var(--mut); }
+@media (max-width: 379px) { .row.tc .sg { display: none; } }   /* 좁은 폰은 신호 칸을 접어 '확인일 · 그 뒤 수익'이 잘리지 않게(묶음이 추세 방향을 말해 준다) */
 .tc-more { margin-top: 2px; }   /* 'N개월째 새 고점 없음' — 사실 표시(판정 칩보다 가볍게, 중립색) */
 .mv-r.flat { color: var(--ink); }
 .mv-p { font-size: 13px; color: var(--mut); }
@@ -3832,8 +3837,10 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   }
   // ── 홈: 최근 추세 전환 ──
   //   최근 10거래일(약 2주) 안에 '현재 추세' 판정이 바뀐(규칙상 확인된) 편성·관심·보유 종목 — data/trend-summary.js 의 conf.n(확인 뒤 거래일 수).
-  //   2026-10-25 사용자 '홈에 최근 추세 바뀐 종목 목록'. 최신순, 처음엔 5개(더 보기로 전부). 누르면 종목 상세의 '추세' 섹션으로 연다
-  var TC_DAYS = 10, TC_SHOW = 5, tcAll = false;
+  //   2026-10-25 사용자 '홈에 최근 추세 바뀐 종목 목록'. 누르면 종목 상세의 '추세' 섹션으로 연다.
+  //   2026-10-27 사용자 '상승과 하락으로 분리해서' — 상승 전환·하락 전환 두 묶음, 묶음마다 최신순 5개(더 보기로 전부).
+  //   한쪽이 몰리는 장(10/27 한국 21건 중 하락 20)에서 반대쪽 몇 건이 섞인 목록 아래로 묻히지 않게
+  var TC_DAYS = 10, TC_SHOW = 5, tcAll = { up: false, down: false };
   var TC_TIP = "최근 10거래일(약 2주) 안에 '현재 추세' 판정이 바뀐 종목입니다(추천 편성·관심·보유). '확인'은 추세 고점(하락 추세면 저점)에서 그 종목 기준 전환폭을 넘겨 " +
     "판정이 바뀐 날, '그 뒤'는 그날 종가 대비 지금입니다. 판정을 다시 바꾸는 가격(전환 기준가)은 종목 상세 '추세'에 있습니다.\n\n" +
     "2019~2026년 한·미 956종목에서 이 판정대로 상승 추세일 때만 들고 여러 종목에 나눠 적용했다면 최대 낙폭은 한국 −40%→−15%·미국 −38%→−16% 로 줄었고 연수익도 29%→19%·22%→13% 로 줄었습니다. " +
@@ -3850,35 +3857,45 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     out.sort(function (a, b) { return (a.m.conf.n - b.m.conf.n) || byName(a.s, b.s); });
     return out;
   }
+  // 묶음이 판정(상승·하락)을 말해 주므로 행에는 판정 칩 대신 다른 목록과 같은 신호 칸·현재가를 둔다
   function trendChangeRow(r, cc) {
-    var s = r.s, m = r.m, up = m.cls === "상승";
+    var s = r.s, m = r.m, e = effective(s);
     var th = isPersonal(s.theme) ? plist(s.theme).label : themeMeta(s.theme).label + " · T" + s.tier;
     return '<div class="row tc"' + openAttrs(cc, s.ticker, s.theme, ' data-sec="dt-trend"') + ">" +
       '<div class="r-l"><div class="r-nm"><span class="r-name">' + esc(s.name) + '</span><span class="pk-th">' + esc(th) + "</span></div>" +
         '<div class="r-sub"><span>' + esc(mdOf(m.conf.d)) + " 확인" + (m.conf.n > 0 ? " · 그 뒤 " + signedSpan(m.conf.ret, fmtPct(m.conf.ret * 100)) : " · 마지막 거래일") + "</span></div></div>" +
-      '<span class="mv-v ' + (up ? "mv-up" : "mv-down") + ' tc-v">' + (up ? "상승 추세로" : "하락 추세로") + "</span>" +
+      sigStrip(s.techNote || {}, s.ticker) +
+      '<div class="r-r"><div class="r-px">' + pxText(e.price, cc) + (e.live ? '<i class="live-dot" title="장중 시세(지연 가능)"></i>' : "") + "</div>" + chgHtml(e.chg, "r-ch") + "</div>" +
     "</div>";
   }
+  var TC_GROUPS = [["up", "상승"], ["down", "하락"]];
   function renderTrendChanges() {
     var box = document.getElementById("trendBox");
     if (!box || window.__pastActive) return;
     if (!window.TREND_SUMMARY) { box.style.display = "none"; return; }
     var cc = state.country, rows = trendChangeRows(cc);
-    var nUp = rows.filter(function (r) { return r.m.cls === "상승"; }).length;
     box.style.display = "";
     var tip = document.getElementById("trendTip");
     tip.innerHTML = ICON.info; tip.setAttribute("data-basis", TC_TIP);
-    document.getElementById("trendSub").textContent = "최근 2주 · 상승 " + nUp + " · 하락 " + (rows.length - nUp);
+    document.getElementById("trendSub").textContent = "최근 2주";
     var list = document.getElementById("trendList");
     if (!rows.length) { list.innerHTML = '<div class="empty">최근 2주 동안 추세가 바뀐 종목이 없습니다.</div>'; return; }
-    var shown = tcAll ? rows : rows.slice(0, TC_SHOW);
-    list.innerHTML = shown.map(function (r) { return trendChangeRow(r, cc); }).join("") +
-      (rows.length > TC_SHOW ? '<button class="cand-more tc-more" type="button" id="tcMore">' + (tcAll ? "접기" : (rows.length - TC_SHOW) + "개 더 보기") + "</button>" : "");
+    var live = [];
+    list.innerHTML = TC_GROUPS.map(function (g) {
+      var rs = rows.filter(function (r) { return r.m.cls === g[1]; }), shown = tcAll[g[0]] ? rs : rs.slice(0, TC_SHOW);
+      live = live.concat(shown.map(function (r) { return r.s; }));
+      return '<div class="tc-gh"><span class="mv-v mv-' + g[0] + '">' + g[1] + ' 전환</span><span class="tc-gn">' + rs.length + "종목</span></div>" +
+        (rs.length ? shown.map(function (r) { return trendChangeRow(r, cc); }).join("") : '<div class="tc-none">최근 2주 동안 ' + g[1] + " 추세로 바뀐 종목이 없습니다.</div>") +
+        (rs.length > TC_SHOW ? '<button class="cand-more tc-more" type="button" data-tcg="' + g[0] + '">' + (tcAll[g[0]] ? "접기" : (rs.length - TC_SHOW) + "개 더 보기") + "</button>" : "");
+    }).join("");
+    ensureLive(live, refreshLive);
+    markActiveRow();
   }
   document.getElementById("trendList").addEventListener("click", function (e) {
-    if (!e.target.closest("#tcMore")) return;
+    var b = e.target.closest("[data-tcg]");
+    if (!b) return;
     e.stopPropagation();
-    tcAll = !tcAll; renderTrendChanges();
+    tcAll[b.dataset.tcg] = !tcAll[b.dataset.tcg]; renderTrendChanges();
   });
   // ── 홈: 쿼드 크라운 ──
   //   기술 신호 단기·중기·장기가 모두 상승세(강한 상승세 포함 — 엔진 '매수'·'적극매수')이고 현재 추세(data/trend-summary.js)도 상승인 종목 —
