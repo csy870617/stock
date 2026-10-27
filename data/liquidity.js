@@ -2,44 +2,46 @@
 // 앱은 이 파일이 있으면 우선 표시하고 baseline 을 병기, 없으면 baseline 을 게이지로 쓴다.
 window.LIQUIDITY_DATA = {
  "asOf": "2026-10-26",
- "headline": "유가 100달러대와 연준 12월 인상 기대(89%)로 미국은 단기 신중·중기 부정, 코스피가 약 7개월 만의 최저 종가로 밀리고 외국인 매도가 이어진 한국은 단기 매우 부정·중기 부정입니다.",
- "headlineUS": "자동 지표는 단기 우호를 가리키지만, 유가 급등과 연방기금 선물의 12월 인상 확률 89%·내년 3월 기대금리 4.33%를 반영해 단기 신중, 중기 부정으로 봅니다. 10/28 FOMC는 동결 90%가 우세합니다.",
- "headlineKR": "코스피 20일 -22% 급락 floor가 발동된 가운데 10/26에도 외국인이 6,955억원을 순매도해 단기는 매우 부정입니다. 한국은행 1년 금리 기대가 인상 약 2.1회분을 반영하고 국제 유가가 높아 중기도 부정입니다.",
+ "headline": "미 10년물 5% 부근과 연준 12월 인상 기대가 미국 유동성을 누르고, 한국은 코스피 급락과 외국인 대량 매도로 단기 유동성 여건이 가장 나쁜 구간에 있습니다.",
+ "headlineUS": "미국은 단기 신중·중기 부정입니다. 신용·변동성은 안정적이지만 10년물 4.99%와 12월 인상을 거의 반영한 금리 선물, 100달러대 유가가 여유를 줄이고 있습니다.",
+ "headlineKR": "한국은 단기 매우 부정·중기 부정입니다. 코스피가 20일간 약 22% 밀리고 외국인이 20일간 27조 원 넘게 순매도한 가운데, 시장은 1년 안에 한은 금리 인상을 반영하고 있습니다.",
  "us": {
   "shortTerm": "신중",
   "midTerm": "부정",
   "drivers": [
-   "연방기금 선물은 10/28 동결(90%) 뒤 12/9 인상 확률 89%, 2027년 3월 기대금리 4.33%를 반영해 긴축 경로가 이어지고 있습니다.",
-   "WTI가 하루 3.82% 오른 103.27달러, 브렌트가 116.72달러로 4년여 만의 최고치에 오르면서 10년물이 4.99%로 반등해 baseline 의 10년물 추세 가점을 그대로 읽기 어렵습니다.",
-   "HY 채권이 20일 -0.6%로 신용 여건이 다소 약해졌고 VIX는 19.5로 중립 수준입니다.",
-   "금리 예측 모델의 12개월 전망 4.64%와 테일러 준칙 4.39%가 현재 실효금리 3.88%보다 높아 중기 부담이 큽니다."
+   "미 10년물 금리가 4.99%로 5% 부근에 머물러 자동 baseline(우호)보다 한 단계 낮춰 봅니다.",
+   "연방기금 선물은 10/28 동결(90%) 뒤 12/9 회의 25bp 인상 확률을 92% 반영하고 있습니다.",
+   "WTI가 103.27달러로 올해 79.9% 올라 물가·금리 부담을 키우고 있습니다.",
+   "VIX 18.4, 하이일드 채권 20일 0.0%로 신용·변동성 지표는 아직 안정적입니다."
   ]
  },
  "korea": {
   "shortTerm": "매우 부정",
   "midTerm": "부정",
   "drivers": [
-   "코스피는 20일 -22% 급락 floor가 발동된 상태이고 10/26에도 1.46% 내려 5,469.47로 약 7개월 만의 최저 종가를 기록했습니다.",
-   "외국인은 10/23 9,810억원에 이어 10/26 코스피에서 6,955억원을 순매도했고 기관(6,047억원)이 이를 받아냈습니다.",
-   "한국은행 기준금리 3%에 대해 시장은 1년 평균 기대금리 3.523%로 인상 약 2.1회분을 반영하고 있습니다.",
-   "원/달러가 3개월 -8.8%로 원화 강세가 이어진 점은 우호 요인이지만, WTI 올해 +79.9% 급등이 물가 부담을 키우고 있습니다."
+   "코스피가 20일간 약 22% 하락해 약 7개월 만의 최저로 밀렸습니다.",
+   "외국인은 코스피에서 20일간 27조 8,439억 원, 60일간 47조 9,575억 원을 순매도했습니다.",
+   "한국은행 기준금리 3%에 대해 시장은 1년 평균 3.517%로 약 2.1회 인상분을 반영하고 있습니다.",
+   "원/달러는 1,323.1원으로 연저점을 다시 낮춰 원화 강세가 이어지고 있지만 외국인 매도를 되돌리지는 못하고 있습니다."
   ]
  },
- "nextCheck": "10/28 FOMC 결정과 12월 인상 확률(현재 89%), WTI의 110.48달러 저항 돌파 여부, 코스피가 5,306 지지 위에서 버티는지를 확인합니다.",
+ "nextCheck": "10/28 FOMC 결과와 워시 의장 기자회견, 10/29 미국 3분기 GDP·근원 PCE, 그리고 코스피가 5,568 위로 돌아서는지를 확인합니다.",
  "sources": [
-  "http://www.idahopress.com/ap_news/us/wall-street-loses-ground-under-pressure-from-rising-oil-prices/article_928170fe-05b3-59f5-a8fc-e253aee1bde2.html",
-  "https://finance.yahoo.com/markets/world-indices/articles/major-us-stock-indexes-fared-201458598.html",
-  "https://www.munhwa.com/article/11625899",
-  "https://www.fnnews.com/news/202610231637254942"
+  "https://finance.yahoo.com/markets/stocks/articles/stock-market-today-oct-26-134626728.html",
+  "https://www.thestreet.com/stock-market-today/stock-market-today-dow-jones-sp-500-nasdaq-updates-oct-26-2026",
+  "https://www.fool.com/coverage/stock-market-today/2026/10/26/stock-market-today-oct-26-ai-optimism-lifts-nasdaq-as-tech-stocks-rebound/",
+  "https://www.businesskorea.co.kr/news/articleView.html?idxno=279680"
  ],
  "policyNews": {
-  "asOf": "2026-10-24",
+  "asOf": "2026-10-26",
   "us": {
    "stance": "매파",
-   "note": "연준은 9월 15~16일 회의에서 금리를 0.25%p 올려 3.75~4.00%로 만들었고, 10/27~28 FOMC(결정 10/28)를 앞두고 로이터 설문에서 이코노미스트 100명 중 94명이 동결을 예상했습니다. 연방기금 선물은 10월 동결 90% 뒤 12/9 회의 인상 확률 86%를 반영하고 있습니다.",
+   "note": "연준은 9월 인상으로 기준금리를 3.75~4.00%로 올렸고, 10/27~28 FOMC(결정 10/28)에서는 동결이 널리 예상되지만 CNBC는 연내 추가 인상 가능성을 전했습니다. Kiplinger는 시장의 관심이 워시 의장의 기자회견에 쏠려 있다고 전했고, 연방기금 선물은 12/9 회의 인상 확률을 92% 반영하고 있습니다.",
    "sources": [
+    "https://finance.yahoo.com/markets/stocks/articles/stock-market-today-oct-26-134626728.html",
+    "https://www.cnbc.com/2026/10/26/fed-decision-expectations-october-meeting.html",
     "https://www.raisin.com/en-us/news/pre-fomc-preview-positioning-cash-october-2026/",
-    "https://www.noradarealestate.com/blog/fed-interest-rate-predictions-october-2026/"
+    "https://www.kiplinger.com/investing/live/fed-meeting-updates-and-commentary-october-2026"
    ]
   },
   "korea": {
