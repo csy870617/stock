@@ -1200,6 +1200,20 @@
         "flags": [
           "earn"
         ]
+      },
+      "VZ": {
+        "verdict": "없음",
+        "note": "10/26 3분기 실적에서 EPS가 예상을 3.2% 상회했고 연간 EPS 가이던스를 상향했으며, 후불 폰 순증도 40.6만 건으로 급증했다. 매출 -0.7%는 소폭 부진이나 투자 논거는 유지된다.",
+        "asOf": "2026-10-27",
+        "flags": [
+          "earn"
+        ],
+        "by": "ai",
+        "sources": [
+          "https://finance.yahoo.com/markets/stocks/articles/verizon-beats-third-quarter-profit-134526221.html",
+          "https://finance.biggo.com/news/US_VZ_2026-10-26",
+          "https://news.google.com/read/CBMirAFBVV95cUxPOXhWdzlTb24wTm4tOW9OZEVYYWZ5cENVajFwYkVVdnE2V1FyczdYQXhxdWtscDRqWjA5QXJvZTdEdEIxc096b1FSdll2T1NKS2JGTVZ2UHhGemdweW1xUEhiSE1CczVUaXZoUzN2bVZYOEFxMnZQUXpJNUxjenJINjNLVmwzNmc4TXk5RnNxM1RjVzRlMDNWMXpWTjlVRHh3WkJrQXFxUTFHNlI2?hl=en-US&gl=US&ceid=US%3Aen"
+        ]
       }
     },
     "us|dividend": {
