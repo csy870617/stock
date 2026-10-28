@@ -18,6 +18,10 @@
 //      미국 2011~2026 후보 40종목 중 1~3위 흉내에서 금융 비중이 29%→24%로 줄고 6개월 평균 초과는 같았다(개발 −0.09%p t −0.6, 확인용 +0.10%p).
 //      한국은 적용하지 않는다 — 같은 방식으로 대형주(1~300위) 6개월 평균 초과가 1.3%p 낮았다(t −3.8, 2023~2025 해마다 — 밸류업 국면에서
 //      금융주가 실제로 가장 많이 올랐다; 확인용 301~600위는 +0.2%p). 사전 등록 기준(뚜렷한 비용이 없을 때만 분산)에 걸렸다(PREREG-4·README 4차).
+//   ④ 한국 목표가 급락 관문(2026-10-28 6차 연구, 사용자 '미래적 성장이 종목선정 기준에 포함되면 좋겠다'): 증권사 리포트 목표가 평균
+//      (지난 180일 안 증권사마다 최신, 2곳 이상)이 3개월 새 10% 넘게 내린 종목을 뺀다 — data/revisions.js(update-revisions.js).
+//      한국 2022~2026 후보 40종목 중 1~3위 흉내에서 6개월 평균 초과 +0.86%p(t 3.0, 전·후반·해마다 양), 확인용 301~600위 +0.14%p(t 1.1).
+//      미국은 효과가 없어(−0.08%p) 쓰지 않는다. 앞날 기대를 점수에 더하는 후보(목표가 상향·성장 예측·상승여력)는 두 나라 모두 사전 기준 미달(PREREG-6).
 //   나라별 1~3위(③ 적용) = 오늘의 Top Pick(rankPicks 의 top). ai-daily·세션은 이 순서 그대로 쓰고 이유 문장만 쓴다(pick-score.js 로 확인).
 //
 // 재무 값은 발굴 스크린(discovery-candidates.js)이 편성 종목마다 남기는 fx(연간 재무 — lib-factors, 연구와 같은 정의, % 단위).
@@ -34,6 +38,7 @@
 const SEC = require("./lib-sectors");
 const ISS_CA = -20, POST_CA = 20;
 const DIVERSIFY = { us: true, korea: false };   // 위 ③
+const REV = { korea: { months: 3, cutPct: -10 } };   // 위 ④ — 나라에 없으면 보지 않는다
 const PERSONAL = new Set(["watch", "hold"]);
 const THEMES = ["core", "growth", "value", "dividend", "rising"];
 // 고정 문턱(%) — research/top-pick/README.md '라이브 문턱'. 한국 금융은 검증 때도 값이 30개 미만이라 이익 변동 문턱이 없었다.
@@ -43,7 +48,7 @@ const CUTS = {
 };
 // 점수 재료(나라별) — 위 ②
 const SCORE = { us: ["iss", "shy", "roic"], korea: ["iss", "dy"] };
-const NOTE = "건강 조건(흑자·희석·자산 급증·이익 변동·추세·수급·결격)을 통과한 정식 추천 중 상승 가능성 점수(미국: 주식 수 감소·주주환원·ROIC, 한국: 주식 수 감소·배당) 1~3위(미국은 업종마다 한 종목) — 확실한 예측이 아니라 확률을 조금 기울이는 기준";
+const NOTE = "건강 조건(흑자·희석·자산 급증·이익 변동·추세·수급·결격, 한국은 목표가 급락도)을 통과한 정식 추천 중 상승 가능성 점수(미국: 주식 수 감소·주주환원·ROIC, 한국: 주식 수 감소·배당) 1~3위(미국은 업종마다 한 종목) — 확실한 예측이 아니라 확률을 조금 기울이는 기준";
 // 앱 ⓘ·문서용 검증 요약(research/top-pick/README.md — 자본 거래 정리 뒤 값, 앱과 같은 처리)
 const EVIDENCE = {
   us: "과거 검증(미국 2011~2026 시총 상위 500, 매월 후보 40종목 중 1~3위를 고르는 상황을 흉내): 3개월 뒤 시장보다 오른 경우 52.5%(무작위 49.8%), " +
@@ -51,7 +56,8 @@ const EVIDENCE = {
     "1~3위를 업종마다 한 종목으로 고르면 금융 비중이 29%에서 24%로 줄고 성적은 같았다. 차이는 작다 — 확실히 오르는 종목은 없다.",
   korea: "과거 검증(한국 2022~2026 시총 상위 300, 매월 후보 40종목 중 1~3위를 고르는 상황을 흉내): 3개월 뒤 시장보다 오른 경우 54%(무작위 43%), " +
     "12개월 안 −30% 폭락 2%(12%). 주식 수 감소만 볼 때(49%·8%)보다 나았고 확인용 중소형주(301~600위)에서도 같은 방향이었다. 평균 상승 폭은 주식 수만 볼 때가 컸다. " +
-    "업종마다 한 종목으로 고르는 방식은 2023~2025년 금융주 강세 탓에 대형주에서 성적이 낮아 쓰지 않는다 — 확실히 오르는 종목은 없다.",
+    "업종마다 한 종목으로 고르는 방식은 2023~2025년 금융주 강세 탓에 대형주에서 성적이 낮아 쓰지 않는다. " +
+    "증권사 목표가 평균이 3개월 새 10% 넘게 내린 종목을 빼면 1~3위의 6개월 평균 초과가 대형주에서 0.9%p 높았다(해마다 같은 방향, 중소형은 +0.1%p) — 확실히 오르는 종목은 없다.",
 };
 const SCORE_KO = { iss: "주식 수", shy: "주주환원", roic: "ROIC", dy: "배당" };
 
@@ -89,11 +95,12 @@ function finOf(DC, country, theme, ticker, fu) {
     ag: ok(fx.ag) ? fx.ag : null, sroa: ok(fx.sroa) ? fx.sroa : null, dy, fin: !!inc.fin, post, src: "fx" };
 }
 
-// 건강 관문 — 걸린 사유(첫 번째 하나) 또는 null
-function unhealthy(country, s, sig, ev, defState, f) {
+// 건강 관문 — 걸린 사유(첫 번째 하나) 또는 null. rv = revisions.js 항목(목표가 3개월 변화)
+function unhealthy(country, s, sig, ev, defState, f, rv) {
   if (sig[0] === "적극매도" || sig[1] === "적극매도") return "강한 하락세(단기·중기)";
   if (sig.every((v) => /매도/.test(v))) return "추세 붕괴";
   if (country === "korea" && ev && ev.flow && ev.flow.hot) return "수급 과열";
+  if (REV[country] && rv && ok(rv.chg) && rv.chg <= REV[country].cutPct) return "목표가 급락(증권사 평균 " + REV[country].months + "개월 " + rv.chg + "%)";
   if (defState === "결격") return "실질 결격(교체 대기)";
   if (!f) return null;
   const C = CUTS[country];
@@ -124,7 +131,8 @@ function pickTop(ranked, diversify, n) {
   return out.map((x) => x.ticker);
 }
 
-// S = { D: STOCK_DATA, TA: STOCK_TA, EV: events items(티커별), CA: CANDIDATES, DC: DISCOVERY_CANDIDATES, FU: fundamentals items(티커별, 선택) }
+// S = { D: STOCK_DATA, TA: STOCK_TA, EV: events items(티커별), CA: CANDIDATES, DC: DISCOVERY_CANDIDATES, FU: fundamentals items(티커별, 선택),
+//       RV: revisions items(티커별, 선택 — 한국 목표가 3개월 변화) }
 // → { korea: {ranked, excluded, unscored, top, diversify}, us: {…} } — ranked 는 점수 내림차순(1위가 첫째), top = 오늘의 Top Pick 티커 3개(③ 적용)
 function rankPicks(S) {
   const ta = (S.TA && S.TA.ta) || {}, EV = S.EV || {}, defState = {}, dupSlot = new Set();
@@ -146,11 +154,12 @@ function rankPicks(S) {
     rep.forEach((s) => {
       const x = ta[s.ticker] || {}, sig = ["short", "mid", "long"].map((k) => (x[k] && x[k].signal) || "–");
       const f = finOf(S.DC, c, s.theme, s.ticker, (S.FU || {})[s.ticker]);
-      const why = unhealthy(c, s, sig, EV[s.ticker], defState[c + "|" + s.theme + "|" + s.ticker], f);
+      const rv = (S.RV || {})[s.ticker];
+      const why = unhealthy(c, s, sig, EV[s.ticker], defState[c + "|" + s.theme + "|" + s.ticker], f, rv);
       const base = { ticker: s.ticker, name: s.name, theme: s.theme, tier: s.tier };
       if (why) excluded.push(Object.assign(base, { why }));
       else if (!f || !SCORE[c].some((k) => ok(f[k]))) unscored.push(Object.assign(base, { why: "점수 자료 없음(" + SCORE[c].map((k) => SCORE_KO[k]).join("·") + ")" }));
-      else healthy.push({ s, f, base, sec: sectorOf(c, (S.FU || {})[s.ticker]) });
+      else healthy.push({ s, f, base, sec: sectorOf(c, (S.FU || {})[s.ticker]), tp3: rv && ok(rv.chg) ? rv.chg : undefined });
     });
     // 재료마다 같은 나라 관문 통과 종목 안의 백분위 — 주식 수는 줄수록 좋다(1 − 백분위)
     const pr = {};
@@ -159,7 +168,7 @@ function rankPicks(S) {
       const p = {};
       SCORE[c].forEach((k) => { const v = pr[k](h.f[k]); p[k] = v == null ? null : r3(k === "iss" ? 1 - v : v); });
       return Object.assign(h.base, { score: r3(mean(SCORE[c].map((k) => p[k]))), iss: r1(h.f.iss), shy: r1(h.f.shy), roic: r1(h.f.roic), dy: r1(h.f.dy),
-        pct: p, src: h.f.src, issCa: h.f.issCa || undefined, sec: h.sec || undefined, secKo: SEC.sectorKo(c, h.sec) || undefined });
+        pct: p, src: h.f.src, issCa: h.f.issCa || undefined, sec: h.sec || undefined, secKo: SEC.sectorKo(c, h.sec) || undefined, tp3: h.tp3 });
     });
     ranked.sort((p, q) => (q.score - p.score) || ((p.tier || 9) - (q.tier || 9)) || (THEMES.indexOf(p.theme) - THEMES.indexOf(q.theme)) || String(p.name).localeCompare(String(q.name), "ko"));
     ranked.forEach((x, i) => { x.rank = i + 1; });
@@ -182,4 +191,4 @@ function partsLine(x, country) {
   return a.join(" · ");
 }
 
-module.exports = { CUTS, SCORE, NOTE, EVIDENCE, DIVERSIFY, rankPicks, finOf, partsLine, pickTop };
+module.exports = { CUTS, SCORE, NOTE, EVIDENCE, DIVERSIFY, REV, rankPicks, finOf, partsLine, pickTop };

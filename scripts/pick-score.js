@@ -21,13 +21,14 @@ const D = load("recommendations.js", "STOCK_DATA");
 if (!D) { console.error("pick-score: recommendations.js 를 읽지 못함"); process.exit(1); }
 const TA = load("stock-ta.js", "STOCK_TA") || {};
 const DC = load("discovery-candidates.js", "DISCOVERY_CANDIDATES");
+const RVD = load("revisions.js", "STOCK_REVISIONS");
 const R = LP.rankPicks({ D, TA, EV: (load("events.js", "STOCK_EVENTS") || {}).items || {}, CA: load("candidates.js", "CANDIDATES") || { groups: {} }, DC,
-  FU: (load("fundamentals.js", "STOCK_FUND") || {}).items || {} });
+  FU: (load("fundamentals.js", "STOCK_FUND") || {}).items || {}, RV: (RVD && RVD.items) || {} });
 
 if (process.argv.includes("--json")) { console.log(JSON.stringify(R, null, 1)); process.exit(0); }
 
 const THEME_KO = { core: "우량", growth: "성장", value: "저평가", dividend: "배당", rising: "히든" };
-console.log("Top Pick 순위 — 건강 관문 + 상승 가능성 점수 · T " + (TA.asOf || "–") + " · 스크린 " + ((DC && DC.asOf) || "없음"));
+console.log("Top Pick 순위 — 건강 관문 + 상승 가능성 점수 · T " + (TA.asOf || "–") + " · 스크린 " + ((DC && DC.asOf) || "없음") + " · 한국 목표가 3개월 변화 " + ((RVD && RVD.asOf) || "없음"));
 const tp = D.topPicks || {};
 ["korea", "us"].forEach((c) => {
   const r = R[c], cur = (tp[c] || []).map((x) => x.ticker);
@@ -46,8 +47,9 @@ const tp = D.topPicks || {};
 
 if (process.argv.includes("--emit")) {
   const keep = (x) => ({ rank: x.rank, ticker: x.ticker, name: x.name, theme: x.theme, tier: x.tier, score: x.score, iss: x.iss, shy: x.shy, roic: x.roic, dy: x.dy,
-    sec: x.secKo || undefined, pick: x.pick || undefined, skip: x.skip || undefined });
-  const doc = { asOf: TA.asOf || null, builtAt: new Date().toISOString().slice(0, 19) + "Z", screenAsOf: (DC && DC.asOf) || null, note: LP.NOTE, evidence: LP.EVIDENCE, cuts: LP.CUTS };
+    sec: x.secKo || undefined, tp3: x.tp3, pick: x.pick || undefined, skip: x.skip || undefined });
+  const doc = { asOf: TA.asOf || null, builtAt: new Date().toISOString().slice(0, 19) + "Z", screenAsOf: (DC && DC.asOf) || null, revAsOf: (RVD && RVD.asOf) || null,
+    note: LP.NOTE, evidence: LP.EVIDENCE, cuts: LP.CUTS, rev: LP.REV };
   ["korea", "us"].forEach((c) => { doc[c] = { top: R[c].top, diversify: R[c].diversify, ranked: R[c].ranked.map(keep), excluded: R[c].excluded.map((x) => ({ ticker: x.ticker, why: x.why })), unscored: R[c].unscored.map((x) => x.ticker) }; });
   fs.writeFileSync(OUT, "// Top Pick 순위 — scripts/pick-score.js 가 매일 생성(토큰 0). 규칙: scripts/lib-picks.js · 검증: scripts/research/top-pick/\n" +
     "window.PICK_SCORES = " + JSON.stringify(doc) + ";\n");

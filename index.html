@@ -3586,7 +3586,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
 
   // Top Pick 순위 — data/pick-scores.js(scripts/pick-score.js 가 매일 생성: 건강 관문 + 상승 가능성 점수, scripts/lib-picks.js — 2026-10-27~).
   //   큐레이션(topPicks — 이 순위 1~3위에 이유를 붙인 것)이 없거나 일부가 편성에서 빠졌을 때 같은 순위로 채운다. 순위 파일이 없으면 채우지 않는다.
-  var PICK_CRIT = "건강 조건(흑자·희석·자산 급증·이익 변동·추세·수급·결격)을 통과한 정식 추천 중 상승 가능성 점수(미국: 주식 수 감소·주주환원·ROIC, 한국: 주식 수 감소·배당) 1~3위(미국은 업종마다 한 종목) — 확실한 예측이 아니라 확률을 조금 기울이는 기준";
+  var PICK_CRIT = "건강 조건(흑자·희석·자산 급증·이익 변동·추세·수급·결격, 한국은 목표가 급락도)을 통과한 정식 추천 중 상승 가능성 점수(미국: 주식 수 감소·주주환원·ROIC, 한국: 주식 수 감소·배당) 1~3위(미국은 업종마다 한 종목) — 확실한 예측이 아니라 확률을 조금 기울이는 기준";
   //   오늘의 1~3위(top — 미국은 업종마다 한 종목, 10/27 4차 연구)를 앞에 두고 나머지는 점수 순. 업종 분산 나라는 이미 나온 업종을 뒤로 미룬다.
   function rankedPicks(cc) {
     var P = window.PICK_SCORES, x = P && P[cc], r = x && x.ranked;

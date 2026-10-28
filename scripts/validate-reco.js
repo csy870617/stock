@@ -522,7 +522,7 @@ if (require.main === module) {
       const win = (f, k) => { const p = path.join(ROOT, "data", f); return fs.existsSync(p) ? loadGlobalScript(p, k) : null; };
       const R = require("./lib-picks").rankPicks({ D, TA: loadTa(), EV: (win("events.js", "STOCK_EVENTS") || {}).items || {},
         CA: win("candidates.js", "CANDIDATES") || { groups: {} }, DC: win("discovery-candidates.js", "DISCOVERY_CANDIDATES"),
-        FU: (win("fundamentals.js", "STOCK_FUND") || {}).items || {} });
+        FU: (win("fundamentals.js", "STOCK_FUND") || {}).items || {}, RV: (win("revisions.js", "STOCK_REVISIONS") || {}).items || {} });
       ["korea", "us"].forEach((c) => {
         const want = R[c].top, got = (tp[c] || []).map((x) => x.ticker);
         if (want.length === 3 && want.join() !== got.join()) warnings.push("topPicks." + c + " 가 지금 순위 1~3위(" + want.join(", ") + ")와 다르다(" + got.join(", ") +

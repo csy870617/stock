@@ -44,7 +44,7 @@ function loadAll() {
     LQ: L.loadWin("liquidity.js", "LIQUIDITY_DATA"), A: L.loadWin("liquidity-auto.js", "LIQUIDITY_AUTO"), TA: L.loadWin("stock-ta.js", "STOCK_TA"),
     EV: (L.loadWin("events.js", "STOCK_EVENTS") || {}).items || {}, FU: (L.loadWin("fundamentals.js", "STOCK_FUND") || {}).items || {},
     Q: L.loadWin("quotes.js", "STOCK_QUOTES") || {}, CA: L.loadWin("candidates.js", "CANDIDATES") || { groups: {} },
-    DC: L.loadWin("discovery-candidates.js", "DISCOVERY_CANDIDATES"),
+    DC: L.loadWin("discovery-candidates.js", "DISCOVERY_CANDIDATES"), RV: (L.loadWin("revisions.js", "STOCK_REVISIONS") || {}).items || {},
   };
 }
 // 마지막으로 끝난 정규장 날짜(한국·미국) — 저녁 실행이 '새 종가가 생겼나'를 본다
@@ -161,7 +161,7 @@ function liquidityBlock(A, LQ) {
 // Top Pick — lib-picks 순위(건강 관문 + 상승 가능성 점수, 2026-10-27 사용자 요청 '건강하면서 상승 가능성이 가장 높은 종목')의 나라별 1~3위.
 //   종목은 규칙이 고르고 AI 는 그 세 종목의 이유 문장만 쓴다 — 검사가 순서까지 강제한다.
 function pickTable(S) {
-  const R = LP.rankPicks({ D: S.D, TA: S.TA, EV: S.EV, CA: S.CA, DC: S.DC, FU: S.FU });
+  const R = LP.rankPicks({ D: S.D, TA: S.TA, EV: S.EV, CA: S.CA, DC: S.DC, FU: S.FU, RV: S.RV });
   const ta = (S.TA && S.TA.ta) || {}, rows = { korea: [], us: [] }, top = { korea: [], us: [] }, excluded = [];
   ["korea", "us"].forEach((c) => {
     const r = R[c];
