@@ -75,68 +75,72 @@ window.LIQUIDITY_AUTO = {
    },
    {
     "date": "2027-01-27",
-    "rate": 4.215,
-    "stepBp": 10.4,
-    "cumBp": 33.4,
+    "rate": 4.21,
+    "stepBp": 9.9,
+    "cumBp": 32.9,
     "outcomes": [
      {
       "n": 1,
-      "p": 66
+      "p": 68
      },
      {
       "n": 2,
-      "p": 34
+      "p": 32
      }
     ]
    },
    {
     "date": "2027-03-17",
-    "rate": 4.381,
-    "stepBp": 16.6,
-    "cumBp": 50,
+    "rate": 4.387,
+    "stepBp": 17.7,
+    "cumBp": 50.7,
     "outcomes": [
      {
       "n": 2,
-      "p": 100
+      "p": 97
+     },
+     {
+      "n": 3,
+      "p": 3
      }
     ]
    },
    {
     "date": "2027-04-28",
-    "rate": 4.48,
-    "stepBp": 9.9,
-    "cumBp": 59.9,
+    "rate": 4.475,
+    "stepBp": 8.8,
+    "cumBp": 59.4,
     "outcomes": [
      {
       "n": 2,
-      "p": 60
+      "p": 62
      },
      {
       "n": 3,
-      "p": 40
+      "p": 38
      }
     ]
    },
    {
     "date": "2027-06-09",
-    "rate": 4.58,
+    "rate": 4.575,
     "stepBp": 10,
-    "cumBp": 69.9,
+    "cumBp": 69.4,
     "outcomes": [
      {
       "n": 3,
-      "p": 80
+      "p": 78
      },
      {
       "n": 2,
-      "p": 20
+      "p": 22
      }
     ]
    },
    {
     "date": "2027-07-28",
     "rate": 4.61,
-    "stepBp": 3,
+    "stepBp": 3.5,
     "cumBp": 72.9,
     "outcomes": [
      {

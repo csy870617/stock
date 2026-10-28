@@ -1131,6 +1131,20 @@
         "flags": [
           "earn"
         ]
+      },
+      "V": {
+        "verdict": "없음",
+        "note": "10/27 4분기 순매출 121억 달러(+13%), 국경간 거래액 +14%로 핵심 논거가 유지됐다. 4.69억 달러 소송 충당금은 분기 순이익의 약 8% 수준이고, 배당은 16% 인상했다.",
+        "asOf": "2026-10-28",
+        "flags": [
+          "earn"
+        ],
+        "by": "ai",
+        "sources": [
+          "https://www.sec.gov/Archives/edgar/data/0001403161/000140316126000126/q42026earningsrelease.htm",
+          "https://www.investing.com/news/company-news/visa-q4-fy2026-slides-13-revenue-growth-shares-dip-on-outlook-93CH-4977178",
+          "https://www.heygotrade.com/en/news/visa-fiscal-q4-2026-earnings-results/"
+        ]
       }
     },
     "us|growth": {
@@ -1244,10 +1258,16 @@
     "us|dividend": {
       "KO": {
         "verdict": "형식",
-        "note": "주가 상승",
-        "asOf": "2026-10-18",
+        "note": "10/27 3분기 순매출 +7%, 판매량 +5%, 조정 EPS +11%로 EPS 서프라이즈 4.6%를 냈고 연간 조정 EPS 성장률 가이던스를 11% 이상으로 상향했다. 배당 논거는 유지돼 숫자 신호만 뜬 것으로 본다.",
+        "asOf": "2026-10-28",
         "flags": [
-          "theme"
+          "theme",
+          "earn"
+        ],
+        "by": "ai",
+        "sources": [
+          "https://www.coca-colacompany.com/media-center/coca-cola-reports-third-quarter-2026-results",
+          "https://www.morningstar.com/news/business-wire/20261027108554/coca-cola-reports-third-quarter-2026-results-and-raises-full-year-guidance"
         ]
       },
       "JNJ": {
