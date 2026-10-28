@@ -2,13 +2,13 @@
 // groups["<country>|<theme>"] = {defects 편성 결격(state 결격|점검 필요|감시), list 후보(status 검증 통과|보류|검증 대기)}
 // 세션 판정은 data/candidate-notes.json(CLAUDE.md §3-7) — 이 파일을 직접 고치지 않는다.
 window.CANDIDATES = {
- "asOf": "2026-10-27",
- "T": "2026-10-27",
+ "asOf": "2026-10-28",
+ "T": "2026-10-28",
  "screenAsOf": "2026-10-27",
  "screenFresh": true,
  "beta": {
-  "korea": 0.7,
-  "us": 1.03
+  "korea": 0.71,
+  "us": 1.04
  },
  "groups": {
   "korea|core": {
@@ -28,9 +28,9 @@ window.CANDIDATES = {
      "note": "ROE 6%·3년 평균 ROIC 5.7%(우량 정체성 미달) — 검증 통과 대체 없음",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-27",
+     "triedAt": "2026-10-28",
      "since": "2026-10-18",
-     "age": 9
+     "age": 10
     },
     {
      "ticker": "086790",
@@ -46,9 +46,9 @@ window.CANDIDATES = {
      ],
      "note": "중복 편성 — 저평가 주제에 남기고 이 주제는 다른 종목으로 교체",
      "dup": "value",
-     "triedAt": "2026-10-27",
+     "triedAt": "2026-10-28",
      "since": "2026-10-21",
-     "age": 6
+     "age": 7
     },
     {
      "ticker": "278470",
@@ -58,9 +58,9 @@ window.CANDIDATES = {
      "note": "단·중·장기 신호 모두 매도 이하(추세 붕괴) — 3분기 영업이익 추정 하향(원화 강세·유럽 물류비)으로 증권사 목표가 하향, 매출 성장은 유지돼 기초 체력 훼손은 아님 · 검증 통과 대체 후보 없어 감시",
      "judged": "2026-10-21",
      "verdict": "실질",
-     "triedAt": "2026-10-27",
+     "triedAt": "2026-10-28",
      "since": "2026-10-21",
-     "age": 6
+     "age": 7
     }
    ],
    "list": [
@@ -78,21 +78,6 @@ window.CANDIDATES = {
   "korea|growth": {
    "eligible": 46,
    "defects": [
-    {
-     "ticker": "329180",
-     "name": "HD현대중공업",
-     "state": "감시",
-     "flags": [
-      {
-       "k": "trend",
-       "msg": "추세 붕괴(단·중·장기 모두 매도 이하)",
-       "fresh": false
-      }
-     ],
-     "note": "추세 붕괴 신호만 성립했고 논거 훼손은 없다. 올해 1분기 연결 영업이익이 전년보다 크게 늘었고 수주 목표도 높게 유지되며, 3분기 실적은 11월 중순 발표 예정이라 그때까지 감시.",
-     "judged": "2026-10-26",
-     "verdict": "형식"
-    },
     {
      "ticker": "298040",
      "name": "효성중공업",
@@ -395,9 +380,9 @@ window.CANDIDATES = {
      ],
      "note": "중복 편성 — 우량 주제에 남기고 이 주제는 다른 종목으로 교체",
      "dup": "core",
-     "triedAt": "2026-10-27",
+     "triedAt": "2026-10-28",
      "since": "2026-10-21",
-     "age": 6
+     "age": 7
     }
    ],
    "list": [
@@ -502,9 +487,9 @@ window.CANDIDATES = {
      "note": "성장 숫자·PEG 미달 — 품질 최상위라 대체 확보 시 교체",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-27",
+     "triedAt": "2026-10-28",
      "since": "2026-10-18",
-     "age": 9
+     "age": 10
     },
     {
      "ticker": "064760",
@@ -520,9 +505,9 @@ window.CANDIDATES = {
      "note": "3년 매출 연평균 -1.9% — 근접 완화선 미달, 대체 후보 소진",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-27",
+     "triedAt": "2026-10-28",
      "since": "2026-10-18",
-     "age": 9
+     "age": 10
     },
     {
      "ticker": "403870",
@@ -538,9 +523,9 @@ window.CANDIDATES = {
      "note": "3년 성장 2.8%·1·2분기 매출·영업이익 감소",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-27",
+     "triedAt": "2026-10-28",
      "since": "2026-10-18",
-     "age": 9
+     "age": 10
     },
     {
      "ticker": "082920",
@@ -555,13 +540,7 @@ window.CANDIDATES = {
      "ticker": "062040",
      "name": "산일전기",
      "state": "감시",
-     "flags": [
-      {
-       "k": "trend",
-       "msg": "추세 붕괴(단·중·장기 모두 매도 이하)",
-       "fresh": false
-      }
-     ],
+     "flags": [],
      "note": "추세 붕괴 신호는 있으나 논거 훼손 근거는 찾지 못했다. 2분기 수주가 분기 기준 처음 2천억 원을 넘었고 데이터센터용 변압기 수주와 초고압 3공장 증설이 진행 중이라 히든 기준 위반 징후가 없다.",
      "judged": "2026-10-26",
      "verdict": "형식"
@@ -1138,9 +1117,9 @@ window.CANDIDATES = {
      "note": "⑨ 세액공제(45X) 의존 · 최근 낙폭은 회사 고유 악재 미확인(10/28 실적 발표 예정) · 새 신호: 2026.07 분기 매출 +8.2%, EBIT +6.2%, 순이익 +5.2%로 흑자 성장을 유지했고 FY2027 가이던스도 상향됐다. 다만 재무 데이터 공백으로 기준 충족 여부는 확인 전이라 10-28 실적 발표까지 감시한다.",
      "judged": "2026-10-24",
      "verdict": "실질",
-     "triedAt": "2026-10-27",
+     "triedAt": "2026-10-28",
      "since": "2026-10-21",
-     "age": 6
+     "age": 7
     },
     {
      "ticker": "NVT",
@@ -1156,9 +1135,9 @@ window.CANDIDATES = {
      "note": "⑤ 재무 안전 조건 미달 — 남은 대체 후보는 모두 집중 리스크(⑨)·추세 붕괴로 막힘",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-27",
+     "triedAt": "2026-10-28",
      "since": "2026-10-18",
-     "age": 9
+     "age": 10
     },
     {
      "ticker": "FSS",
@@ -1174,9 +1153,9 @@ window.CANDIDATES = {
      "note": "⑤ 재무 안전 조건 미달 — 남은 대체 후보는 모두 집중 리스크(⑨)·추세 붕괴로 막힘",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-27",
+     "triedAt": "2026-10-28",
      "since": "2026-10-18",
-     "age": 9
+     "age": 10
     },
     {
      "ticker": "AAON",
@@ -1192,9 +1171,9 @@ window.CANDIDATES = {
      "note": "⑤ 재무 안전 조건 미달 — 남은 대체 후보는 모두 집중 리스크(⑨)·추세 붕괴로 막힘",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-27",
+     "triedAt": "2026-10-28",
      "since": "2026-10-18",
-     "age": 9
+     "age": 10
     },
     {
      "ticker": "NVMI",
@@ -1300,7 +1279,7 @@ window.CANDIDATES = {
  "summary": {
   "review": 0,
   "defect": 11,
-  "watch": 22,
+  "watch": 21,
   "untried": 0,
   "dup": 2,
   "long": 0
