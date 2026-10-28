@@ -3,6 +3,9 @@
 // 출력: tgt-kr/<code>.json = [{id, d, broker, op, goal, px}]  (goal·px 는 작성 당시 수정 전 가격 단위)
 const fs = require('fs'), path = require('path'), { execFile } = require('child_process');
 const DIR = path.resolve(process.argv[2] || 'research-cache'); const OUT = path.join(DIR, 'tgt-kr'); fs.mkdirSync(OUT, { recursive: true });
+// 선택: --codes <JSON 배열 파일>(대상 종목을 직접 준다 — Top Pick 6차의 중소형 확인용) · --since YYYY-MM-DD(기본 2019-01-01)
+const argOf = (n) => { const i = process.argv.indexOf('--' + n); return i >= 0 ? process.argv[i + 1] : null; };
+const SINCE = argOf('since') || '2019-01-01';
 const curl = (url) => new Promise((res) => execFile('curl', ['-s', '--max-time', '20', '-A', 'Mozilla/5.0', '-H', 'Accept: application/json', url], { maxBuffer: 16 << 20 }, (e, out) => { try { res(JSON.parse(out)); } catch (_e) { res(null); } }));
 async function get(url) { for (let i = 0; i < 3; i++) { const j = await curl(url); if (j) return j; await new Promise((z) => setTimeout(z, 500 * (i + 1))); } return null; }
 const num = (s) => { const v = parseFloat(String(s == null ? '' : s).replace(/,/g, '')); return isFinite(v) && v > 0 ? v : null; };
@@ -13,7 +16,7 @@ async function one(code) {
     const j = await get('https://m.stock.naver.com/api/research/stock/' + code + '?pageSize=20&page=' + p);
     if (!Array.isArray(j) || !j.length) break;
     let older = false;
-    for (const x of j) { if (x.writeDate < '2019-01-01') { older = true; continue; } items.push({ id: x.researchId, d: x.writeDate, broker: x.brokerName }); }
+    for (const x of j) { if (x.writeDate < SINCE) { older = true; continue; } items.push({ id: x.researchId, d: x.writeDate, broker: x.brokerName }); }
     if (older || j.length < 20) break;
   }
   const out = [];
@@ -25,11 +28,15 @@ async function one(code) {
   fs.writeFileSync(f, JSON.stringify(out)); return 'ok:' + out.length;
 }
 (async () => {
-  const U = JSON.parse(fs.readFileSync(path.join(DIR, 'universe.json'))).filter((u) => u.c === 'korea' && !u.bench);
-  const roster = U.filter((u) => u.roster).map((u) => u.sym.slice(0, 6));
-  const top = U.filter((u) => u.market === 'KOSPI').slice(0, 120).map((u) => u.sym.slice(0, 6));
-  const codes = [...new Set(roster.concat(top))];
-  console.log('대상', codes.length, '(편성 이력', roster.length, ')');
+  let codes;
+  if (argOf('codes')) { codes = JSON.parse(fs.readFileSync(argOf('codes'), 'utf8')); console.log('대상', codes.length, '(목록 파일, ' + SINCE + ' 이후)'); }
+  else {
+    const U = JSON.parse(fs.readFileSync(path.join(DIR, 'universe.json'))).filter((u) => u.c === 'korea' && !u.bench);
+    const roster = U.filter((u) => u.roster).map((u) => u.sym.slice(0, 6));
+    const top = U.filter((u) => u.market === 'KOSPI').slice(0, 120).map((u) => u.sym.slice(0, 6));
+    codes = [...new Set(roster.concat(top))];
+    console.log('대상', codes.length, '(편성 이력', roster.length, ')');
+  }
   let k = 0, done = 0; const t0 = Date.now(); let n = 0;
   await Promise.all(Array.from({ length: 4 }, async () => { while (k < codes.length) { const c = codes[k++]; const r = await one(c); done++; if (/^ok:/.test(r)) n += +r.slice(3);
     if (done % 10 === 0) console.log('…', done, '/', codes.length, '리포트', n, ((Date.now() - t0) / 1000 | 0) + 's'); } }));
