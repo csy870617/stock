@@ -1952,6 +1952,8 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   var QUOTES_API = ((window.APP_CONFIG && window.APP_CONFIG.quotesApi) || "").replace(/\/+$/, "");
   var liveCache = {};     // ticker → {price, date} | null(응답에 없음) | undefined(미조회)
   var liveInflight = {};
+  // 5분마다 다시 받는다(2026-10-29 사용자 '종목 시세도 5분마다 자동 갱신') — 받은 시각과, 한 번이라도 화면에 나온 종목
+  var LIVE_MS = 300000, liveAt = {}, liveSeen = {};
   var liveSupported = typeof window.fetch === "function" && typeof AbortController === "function" && !!QUOTES_API;
 
   function symbolFor(s) {
@@ -1967,9 +1969,15 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     stocks.forEach(function (s) {
       if (!s || seen[s.ticker]) return;
       seen[s.ticker] = 1;
-      if (liveCache[s.ticker] === undefined && !liveInflight[s.ticker]) todo.push(s);
+      liveSeen[s.ticker] = s;
+      var stale = liveCache[s.ticker] === undefined || Date.now() - (liveAt[s.ticker] || 0) >= LIVE_MS;
+      if (stale && !liveInflight[s.ticker]) todo.push(s);
     });
     if (!todo.length) return;
+    if (todo.length > 60) {   // 주소가 너무 길어지지 않게 나눠 받는다
+      for (var k = 0; k < todo.length; k += 60) ensureLive(todo.slice(k, k + 60), onDone);
+      return;
+    }
     todo.forEach(function (s) { liveInflight[s.ticker] = 1; });
     var symbols = todo.map(symbolFor);
     var url = QUOTES_API + (QUOTES_API.indexOf("?") >= 0 ? "&" : "?") + "symbols=" + encodeURIComponent(symbols.join(","));
@@ -1982,11 +1990,12 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
         var any = false;
         todo.forEach(function (s) {
           var v = map && map[symbolFor(s)];
+          liveAt[s.ticker] = Date.now();
           if (v && typeof v.price === "number" && isFinite(v.price)) {
             liveCache[s.ticker] = { price: v.price, date: v.date, chg: typeof v.changePct === "number" && isFinite(v.changePct) ? v.changePct : null };
             any = true;
           }
-          else { liveCache[s.ticker] = null; }   // 응답에 없으면 스냅샷 유지
+          else if (!liveCache[s.ticker]) { liveCache[s.ticker] = null; }   // 응답에 없으면 받아 둔 값·스냅샷 유지
           delete liveInflight[s.ticker];
         });
         if (any && onDone) onDone();
@@ -4444,6 +4453,15 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     }
     if (SH.open) renderSheet(true);
   }
+  // 5분마다(화면이 보일 때만) 한 번이라도 나온 종목과 지수·환율·원자재 시세를 다시 받는다. 다른 탭에 있다 돌아오면 5분이 지났을 때 바로 받는다.
+  function liveTick() {
+    if (document.hidden) return;
+    var list = Object.keys(liveSeen).map(function (t) { return liveSeen[t]; });
+    if (list.length) ensureLive(list, refreshLive);
+    if (typeof ensureMacroLive === "function") ensureMacroLive();
+  }
+  setInterval(liveTick, 60000);
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) liveTick(); });
 
   // ── 개인 목록(관심·보유) — 앱에서 직접 추가/삭제하는 브라우저 localStorage 목록 ──
   //  두 목록은 담는 의미만 다르고(모니터링 vs 실제 보유) 동작은 같다: 시세만 보여주다가,
