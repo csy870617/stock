@@ -2,7 +2,7 @@
 // Yahoo 시장지표(금리·일드커브·VIX·HY신용·달러·원달러·코스피)의 가중 합성 → 5단계.
 // 온디맨드 유동성(data/liquidity.js)이 있으면 그것을 우선 표시하고, 이 baseline 을 함께 보여준다.
 window.LIQUIDITY_AUTO = {
- "asOf": "2026-10-28",
+ "asOf": "2026-10-29",
  "note": "Yahoo 시장지표 기반 자동 baseline(금리·일드커브·VIX·HY신용·달러·원달러·코스피). 거시 이벤트·내러티브는 미반영 — 온디맨드 유동성이 보정.",
  "inputs": {
   "us10y": "5.05",
@@ -10,7 +10,7 @@ window.LIQUIDITY_AUTO = {
   "vix": "16.9",
   "hyg20": "0.9",
   "dxy": "102.3",
-  "usdkrw": "1325"
+  "usdkrw": "1327"
  },
  "us": {
   "shortTerm": "우호",
@@ -39,23 +39,11 @@ window.LIQUIDITY_AUTO = {
  },
  "fed": {
   "asOf": "2026-10-28",
-  "current": 3.88,
+  "current": 3.885,
   "meetings": [
    {
-    "date": "2026-10-28",
-    "rate": 3.88,
-    "stepBp": 0,
-    "cumBp": 0,
-    "outcomes": [
-     {
-      "n": 0,
-      "p": 100
-     }
-    ]
-   },
-   {
     "date": "2026-12-09",
-    "rate": 4.091,
+    "rate": 4.096,
     "stepBp": 21.1,
     "cumBp": 21.1,
     "outcomes": [
@@ -71,40 +59,40 @@ window.LIQUIDITY_AUTO = {
    },
    {
     "date": "2027-01-27",
-    "rate": 4.185,
-    "stepBp": 9.4,
-    "cumBp": 30.5,
+    "rate": 4.195,
+    "stepBp": 9.9,
+    "cumBp": 31,
     "outcomes": [
      {
       "n": 1,
-      "p": 78
+      "p": 76
      },
      {
       "n": 2,
-      "p": 22
+      "p": 24
      }
     ]
    },
    {
     "date": "2027-03-17",
-    "rate": 4.34,
-    "stepBp": 15.5,
-    "cumBp": 46,
+    "rate": 4.339,
+    "stepBp": 14.4,
+    "cumBp": 45.4,
     "outcomes": [
      {
       "n": 2,
-      "p": 84
+      "p": 82
      },
      {
       "n": 1,
-      "p": 16
+      "p": 18
      }
     ]
    },
    {
     "date": "2027-04-28",
-    "rate": 4.425,
-    "stepBp": 8.5,
+    "rate": 4.43,
+    "stepBp": 9.1,
     "cumBp": 54.5,
     "outcomes": [
      {
@@ -119,33 +107,33 @@ window.LIQUIDITY_AUTO = {
    },
    {
     "date": "2027-06-09",
-    "rate": 4.518,
-    "stepBp": 9.3,
-    "cumBp": 63.8,
+    "rate": 4.53,
+    "stepBp": 10,
+    "cumBp": 64.5,
     "outcomes": [
      {
       "n": 3,
-      "p": 55
+      "p": 58
      },
      {
       "n": 2,
-      "p": 45
+      "p": 42
      }
     ]
    },
    {
     "date": "2027-07-28",
-    "rate": 4.54,
-    "stepBp": 2.2,
-    "cumBp": 66,
+    "rate": 4.555,
+    "stepBp": 2.5,
+    "cumBp": 67,
     "outcomes": [
      {
       "n": 3,
-      "p": 64
+      "p": 68
      },
      {
       "n": 2,
-      "p": 36
+      "p": 32
      }
     ]
    }

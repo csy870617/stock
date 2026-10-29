@@ -1,47 +1,47 @@
 // 유동성 판단(온디맨드) — 시장지표 baseline(data/liquidity-auto.js, 매일 자동)을 거시 이벤트·내러티브로 보정/덮어쓰기.
 // 앱은 이 파일이 있으면 우선 표시하고 baseline 을 병기, 없으면 baseline 을 게이지로 쓴다.
 window.LIQUIDITY_DATA = {
- "asOf": "2026-10-28",
- "headline": "미국은 10/28 FOMC 결정과 워시 의장 기자회견을 앞두고 12월 인상 기대가 단기 유동성을 누르고, 한국은 코스피가 이틀째 급반등하고 외국인이 이틀 연속 순매수로 돌아섰지만 20일 누적 매도가 커 단기 여건이 아직 부정입니다.",
- "headlineUS": "미국 유동성은 신용·일드커브 지표가 버티지만 FOMC를 앞두고 12월 인상 확률이 90% 반영돼 단기 신중, 금리 경로가 계속 높아지는 중기는 부정입니다.",
- "headlineKR": "한국은 코스피가 6.63% 급등했고 외국인이 이틀 연속 순매수했지만 20일 누적 22조원대 순매도와 한국은행 인상 기대가 남아 단기·중기 모두 부정입니다.",
+ "asOf": "2026-10-29",
+ "headline": "미국은 연준 동결에도 12월 인상 기대가 여전히 높아 단기 신중·중기 부정, 한국은 코스피 급반등에도 외국인 누적 매도와 금리 인상 기대가 커 단기·중기 모두 부정으로 봅니다.",
+ "headlineUS": "연준이 동결했지만 위원 2명이 인상을 주장했고 선물시장은 12월 25bp 인상 확률을 84%로 반영해 단기 유동성은 신중입니다. 미 10년물 5.05%와 내년 상반기까지 이어지는 인상 경로가 중기 여건을 부정으로 누릅니다.",
+ "headlineKR": "코스피가 이틀 연속 급반등하고 외국인이 2일 연속 순매수했지만 20일 누적 외국인 순매도가 22조7,467억원에 이르러 단기 여건은 부정입니다. 시장 금리가 한국은행의 1년 인상 약 2.1회분을 반영하고 있어 중기도 부정으로 봅니다.",
  "us": {
   "shortTerm": "신중",
   "midTerm": "부정",
   "drivers": [
-   "자동 baseline은 단기 우호지만, 연방기금 선물이 12/9 회의 +25bp 인상 확률을 90% 반영하고 있어 한 단계 낮춰 봅니다.",
-   "미 10년물 금리가 4.99%로 5% 부근에 머물러 있어 위험자산 할인율 부담이 큽니다.",
-   "9월 물가가 3.7%로 높아진 반면 비농업 고용은 2만9천명 증가에 그쳐 연준의 긴축 기조와 경기 둔화가 겹쳐 있습니다.",
-   "금리 예측 모델은 3·6·12개월 정책금리를 4.21%/4.52%/4.77%로 보고 있어 중기 금리 경로가 위쪽을 향합니다."
+   "연준은 10/28 금리를 동결했지만 위원 2명이 인상을 주장하며 반대했고, 성명은 인플레이션이 여전히 높다는 표현을 유지했습니다.",
+   "연방기금금리 선물은 12/9 회의에서 25bp 인상 확률을 84%로 반영해, 자동 baseline(단기 우호)보다 한 단계 낮게 봅니다.",
+   "미 10년물 금리가 5.05%이고, 금리 예측 모델은 12개월 뒤 정책금리를 4.84%로 봐 현재 실효 3.89%보다 높습니다.",
+   "VIX가 16.9로 안정적이고 HY 채권이 20일 0.9% 올라 신용 여건은 아직 양호합니다."
   ]
  },
  "korea": {
   "shortTerm": "부정",
   "midTerm": "부정",
   "drivers": [
-   "코스피가 10/28 6.63% 올라 6,012.44에 마감해 이틀째 급반등했지만, 지난 20일 하락 폭을 되돌리는 중이라 단기 여건은 아직 부정으로 둡니다.",
-   "외국인은 10/28 7,890억원을 순매수해 이틀 연속 매수했지만 20일 누적 22조7,268억원, 60일 누적 40조8,562억원 순매도 상태입니다.",
-   "시장금리는 한국은행이 1년 동안 약 2.1회분 인상할 것을 반영(기대 3.53%)하고 있어 중기 금리 부담이 남아 있습니다.",
-   "원/달러 환율이 1,324.77원으로 52주 최저 구간에 머물러 환율 측면의 외국인 자금 부담은 줄었습니다."
+   "코스피 외국인 순매도가 20일 누적 22조7,467억원, 60일 누적 40조8,761억원으로, 최근 2일 순매수 전환으로는 아직 상쇄되지 않았습니다.",
+   "한국은행 기준금리는 3%이지만 시장 금리는 1년간 인상 약 2.1회분(기대 3.532%)을 반영해, 자동 baseline(중기 우호)보다 낮게 봅니다.",
+   "10/28 국고채 10년물 금리가 올라 채권시장이 7거래일 만에 약세로 돌아섰고, 외국인이 3년 국채선물을 17거래일 만에 순매도했습니다.",
+   "원/달러가 3개월 6.6% 내려 원화 강세가 이어진 점은 외국인 수급에 우호적인 요인입니다."
   ]
  },
- "nextCheck": "10/28 FOMC 결정(한국시간 10/29 새벽)과 워시 의장 기자회견의 12월 인상 신호, 그리고 외국인 순매수가 이어지며 코스피가 6,000선을 지키는지 확인합니다.",
+ "nextCheck": "10/29 장 마감 후 아마존 실적과 알파벳 급락 여파로 나스닥이 일봉 지지 26,232를 지키는지, 코스피가 저항 6,148을 넘어서는지 확인합니다.",
  "sources": [
-  "https://www.cnbc.com/2026/10/26/fed-decision-expectations-october-meeting.html",
-  "https://defirate.com/odds/fed-decision/",
-  "https://www.ebc.com/forex/fed-october-2026-rate-decision",
-  "https://www.news1.kr/finance/market-exr/6333691"
+  "https://www.cnn.com/2026/10/28/business/live-news/federal-reserve-interest-rate-october",
+  "https://cnbc.com/2026/10/28/fed-meeting-today-live-updates.html",
+  "https://rockandturner.substack.com/p/wed-oct-28-2026-the-market-today",
+  "https://www.cnbc.com/2026/10/28/stock-market-today-live-updates.html"
  ],
  "policyNews": {
-  "asOf": "2026-10-27",
+  "asOf": "2026-10-29",
   "us": {
    "stance": "매파",
-   "note": "연준은 9월 25bp 인상으로 기준금리를 3.75~4.00%로 올렸고, 로이터 조사에서 이코노미스트 100명 중 94명이 10/28 동결을, 100명 전원이 12월 인상을 예상했습니다. 9월 의사록에는 대부분 참석자가 연내 추가 인상이 적절할 수 있다고 본 내용이 담겼고, 이번 회의는 점도표 없이 워시 의장 발언과 반대표가 주목받고 있습니다.",
+   "note": "연준은 10/28 기준금리를 동결했고 위원 2명이 금리 인상을 주장하며 반대했습니다. 워시 의장은 기자회견에서 물가 안정이 우선이라고 강조하고 고용 상황을 '상당히 긍정적'이라고 평가했으며, 12월 인상 여부에는 분명한 신호를 주지 않았습니다.",
    "sources": [
-    "https://www.cnbc.com/2026/10/26/fed-decision-expectations-october-meeting.html",
-    "https://defirate.com/odds/fed-decision/",
-    "https://www.ebc.com/forex/fed-october-2026-rate-decision",
-    "https://www.itechguides.com/what-to-expect-from-wednesdays-federal-reserve-meeting-on-october-28-2026/"
+    "https://www.cnn.com/2026/10/28/business/live-news/federal-reserve-interest-rate-october",
+    "https://cnbc.com/2026/10/28/fed-meeting-today-live-updates.html",
+    "https://rockandturner.substack.com/p/wed-oct-28-2026-the-market-today",
+    "https://www.bloomberg.com/news/articles/2026-10-27/stock-market-today-dow-s-p-live-updates"
    ]
   },
   "korea": {

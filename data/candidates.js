@@ -2,13 +2,13 @@
 // groups["<country>|<theme>"] = {defects 편성 결격(state 결격|점검 필요|감시), list 후보(status 검증 통과|보류|검증 대기)}
 // 세션 판정은 data/candidate-notes.json(CLAUDE.md §3-7) — 이 파일을 직접 고치지 않는다.
 window.CANDIDATES = {
- "asOf": "2026-10-28",
+ "asOf": "2026-10-29",
  "T": "2026-10-28",
  "screenAsOf": "2026-10-28",
  "screenFresh": true,
  "beta": {
-  "korea": 0.71,
-  "us": 1.04
+  "korea": 0.67,
+  "us": 1.05
  },
  "groups": {
   "korea|core": {
@@ -78,6 +78,21 @@ window.CANDIDATES = {
   "korea|growth": {
    "eligible": 46,
    "defects": [
+    {
+     "ticker": "267260",
+     "name": "HD현대일렉트릭",
+     "state": "점검 필요",
+     "flags": [
+      {
+       "k": "tpcut",
+       "msg": "컨센서스 목표가 14일 새 -19.9% 하향 — 논거 확인",
+       "fresh": true
+      }
+     ],
+     "note": "10/27 3분기 실적 발표 당일이라 확정치는 검색에 아직 없고, 직전 분기까지 논거 훼손·가이던스 하향은 확인되지 않아 발표 후 다음 회차에 다시 본다.",
+     "judged": "2026-10-27",
+     "verdict": "없음"
+    },
     {
      "ticker": "298040",
      "name": "효성중공업",
@@ -383,6 +398,21 @@ window.CANDIDATES = {
      "triedAt": "2026-10-28",
      "since": "2026-10-21",
      "age": 7
+    },
+    {
+     "ticker": "029780",
+     "name": "삼성카드",
+     "state": "점검 필요",
+     "flags": [
+      {
+       "k": "tpcut",
+       "msg": "컨센서스 목표가 14일 새 -15.8% 하향 — 논거 확인",
+       "fresh": true
+      }
+     ],
+     "note": "10/27 3분기 실적 발표 당일이라 확정치는 검색에 아직 없고, 직전 분기까지 논거 훼손·가이던스 하향은 확인되지 않아 발표 후 다음 회차에 다시 본다.",
+     "judged": "2026-10-27",
+     "verdict": "없음"
     }
    ],
    "list": [
@@ -1288,7 +1318,7 @@ window.CANDIDATES = {
   }
  },
  "summary": {
-  "review": 0,
+  "review": 2,
   "defect": 11,
   "watch": 21,
   "untried": 0,
