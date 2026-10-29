@@ -1199,6 +1199,34 @@
           "https://www.investing.com/news/company-news/visa-q4-fy2026-slides-13-revenue-growth-shares-dip-on-outlook-93CH-4977178",
           "https://www.heygotrade.com/en/news/visa-fiscal-q4-2026-earnings-results/"
         ]
+      },
+      "MSFT": {
+        "verdict": "없음",
+        "note": "10/28 실적은 EPS가 컨센서스를 3.8% 웃돌았고 매출 +17.7%, 순이익 +31.3%로 성장했다. Azure는 48% 성장했고 발표 후 주가도 올라, 회사 고유 악재나 가이던스 훼손은 없다.",
+        "asOf": "2026-10-29",
+        "flags": [
+          "earn"
+        ],
+        "by": "ai",
+        "sources": [
+          "https://www.cnbc.com/2026/10/28/microsoft-msft-q1-earnings-report-2027.html",
+          "https://siliconangle.com/2026/10/28/microsofts-stock-rises-on-solid-earnings-and-revenue-beat-with-azure-growing-48/",
+          "https://www.cnbc.com/2026/10/29/alphabet-google-microsoft-msft-shares-today-earnings.html"
+        ]
+      },
+      "GOOGL": {
+        "verdict": "형식",
+        "note": "10/28 3분기 조정 EPS $2.67로 예상치 $3.02 미달, FCF -$9.07B로 적자 전환. 다만 매출 +25%와 클라우드 모멘텀은 유지됐고 2026 capex $195~205B 가이던스도 유지돼, FCF 추이 확인 전까지 감시.",
+        "asOf": "2026-10-29",
+        "flags": [
+          "earn"
+        ],
+        "by": "ai",
+        "sources": [
+          "https://www.cnbc.com/2026/10/28/alphabet-googl-earnings-q3-2026.html",
+          "https://www.fool.com/investing/2026/10/28/microsoft-and-alphabet-just-reported-earnings-putting-the-ai-boom-to-the-test/",
+          "https://tech-insider.org/alphabet-q3-2026-earnings-miss-9-percent-negative-free-cash-flow-developers-2026/"
+        ]
       }
     },
     "us|growth": {
@@ -1256,6 +1284,16 @@
           "https://finance.yahoo.com/markets/stocks/articles/meta-stock-falls-despite-wall-195053217.html",
           "https://www.cnbc.com/2026/10/22/meta-stock-q3-earnings-free-cash-flow.html"
         ]
+      },
+      "NOW": {
+        "verdict": "형식",
+        "note": "10/28 실적에서 EPS 서프라이즈 -8.9%, 최근 분기 매출 +24%, EBIT -19.6%였다. 구독매출 가이던스 유지 여부와 이익 감소의 일회성 여부 확인 전까지 감시한다.",
+        "asOf": "2026-10-29",
+        "flags": [
+          "earn"
+        ],
+        "by": "ai",
+        "sources": []
       }
     },
     "us|value": {
@@ -1394,10 +1432,10 @@
       },
       "NXT": {
         "verdict": "실질",
-        "note": "⑨ 세액공제(45X) 의존 · 최근 낙폭은 회사 고유 악재 미확인(10/28 실적 발표 예정) · 새 신호: 2026.07 분기 매출 +8.2%, EBIT +6.2%, 순이익 +5.2%로 흑자 성장을 유지했고 FY2027 가이던스도 상향됐다. 다만 재무 데이터 공백으로 기준 충족 여부는 확인 전이라 10-28 실적 발표까지 감시한다.",
-        "asOf": "2026-10-24",
+        "note": "⑨ 세액공제(45X) 의존 · 최근 낙폭은 회사 고유 악재 미확인(10/28 실적 발표 예정) · 새 신호: 2026.07 분기 매출 +8.2%, EBIT +6.2%, 순이익 +5.2%로 흑자 성장을 유지했고 FY2027 가이던스도 상향됐다. 다만 재무 데이터 공백으로 기준 충족 여부는 확인 전이라 10-28 실적 발표까지 감시한다. · 새 신호: 10/2",
+        "asOf": "2026-10-29",
         "flags": [
-          "theme"
+          "earn"
         ],
         "sources": [],
         "triedAt": "2026-10-29",
@@ -1435,11 +1473,17 @@
       },
       "STRL": {
         "verdict": "형식",
-        "note": "3년 매출 성장이 문턱 아래지만 수주잔고·최근 분기 성장은 훨씬 높은 근접 후보. 최근 급락은 회사 고유 악재(공시·실적·애널리스트 조치)를 찾지 못했고 11/9 실적 발표에서 확인한다.",
-        "asOf": "2026-10-26",
+        "note": "10/28 3분기 EPS 6.92달러로 예상을 웃돌았고 2026년 가이던스를 상향했으며 합산 수주잔고는 61.4억 달러다. 3년 매출 성장 문턱 미달과 최근 급락 원인은 확인 전까지 감시한다.",
+        "asOf": "2026-10-29",
         "flags": [
           "theme",
-          "drop"
+          "earn"
+        ],
+        "by": "ai",
+        "sources": [
+          "https://www.sec.gov/Archives/edgar/data/0000874238/000087423826000122/a20261028ex991earningsrele.htm",
+          "https://www.tradingview.com/news/prnewswire:691ab3f71bc3a:0-sterling-reports-record-third-quarter-results-and-raises-full-year-2026-guidance/",
+          "https://www.gurufocus.com/news/9148533/sterling-infrastructure-inc-reports-q3-earnings-revenue-hits-156-billion-eps-of-692-beats-estimates"
         ]
       },
       "FIVE": {
