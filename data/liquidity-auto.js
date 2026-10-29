@@ -9,7 +9,7 @@ window.LIQUIDITY_AUTO = {
   "curve": "1.05",
   "vix": "16.9",
   "hyg20": "0.9",
-  "dxy": "102.3",
+  "dxy": "102.2",
   "usdkrw": "1327"
  },
  "us": {
@@ -30,7 +30,7 @@ window.LIQUIDITY_AUTO = {
   "shortScore": -0.06,
   "midScore": 0.57,
   "drivers": [
-   "⚠ 코스피 급락 floor 발동 (20일 -13%)",
+   "⚠ 코스피 급락 floor 발동 (20일 -14%)",
    "코스피 모멘텀(20d) (−2)",
    "원/달러 추세 (+1)",
    "글로벌 신용(20d) (+1)",
@@ -38,77 +38,93 @@ window.LIQUIDITY_AUTO = {
   ]
  },
  "fed": {
-  "asOf": "2026-10-28",
-  "current": 3.885,
+  "asOf": "2026-10-29",
+  "current": 3.88,
   "meetings": [
    {
     "date": "2026-12-09",
-    "rate": 4.096,
-    "stepBp": 21.1,
-    "cumBp": 21.1,
+    "rate": 4.084,
+    "stepBp": 20.4,
+    "cumBp": 20.4,
+    "outcomes": [
+     {
+      "n": 1,
+      "p": 82
+     },
+     {
+      "n": 0,
+      "p": 18
+     }
+    ]
+   },
+   {
+    "date": "2027-01-27",
+    "rate": 4.17,
+    "stepBp": 8.6,
+    "cumBp": 29,
     "outcomes": [
      {
       "n": 1,
       "p": 84
      },
      {
-      "n": 0,
+      "n": 2,
       "p": 16
      }
     ]
    },
    {
-    "date": "2027-01-27",
-    "rate": 4.195,
-    "stepBp": 9.9,
-    "cumBp": 31,
-    "outcomes": [
-     {
-      "n": 1,
-      "p": 76
-     },
-     {
-      "n": 2,
-      "p": 24
-     }
-    ]
-   },
-   {
     "date": "2027-03-17",
-    "rate": 4.339,
+    "rate": 4.314,
     "stepBp": 14.4,
-    "cumBp": 45.4,
+    "cumBp": 43.4,
     "outcomes": [
      {
       "n": 2,
-      "p": 82
+      "p": 74
      },
      {
       "n": 1,
-      "p": 18
+      "p": 26
      }
     ]
    },
    {
     "date": "2027-04-28",
-    "rate": 4.43,
-    "stepBp": 9.1,
-    "cumBp": 54.5,
+    "rate": 4.4,
+    "stepBp": 8.6,
+    "cumBp": 52,
     "outcomes": [
      {
       "n": 2,
-      "p": 82
+      "p": 92
      },
      {
       "n": 3,
-      "p": 18
+      "p": 8
      }
     ]
    },
    {
     "date": "2027-06-09",
-    "rate": 4.53,
-    "stepBp": 10,
+    "rate": 4.493,
+    "stepBp": 9.3,
+    "cumBp": 61.3,
+    "outcomes": [
+     {
+      "n": 2,
+      "p": 55
+     },
+     {
+      "n": 3,
+      "p": 45
+     }
+    ]
+   },
+   {
+    "date": "2027-07-28",
+    "rate": 4.525,
+    "stepBp": 3.2,
     "cumBp": 64.5,
     "outcomes": [
      {
@@ -120,22 +136,6 @@ window.LIQUIDITY_AUTO = {
       "p": 42
      }
     ]
-   },
-   {
-    "date": "2027-07-28",
-    "rate": 4.555,
-    "stepBp": 2.5,
-    "cumBp": 67,
-    "outcomes": [
-     {
-      "n": 3,
-      "p": 68
-     },
-     {
-      "n": 2,
-      "p": 32
-     }
-    ]
    }
   ],
   "source": "CBOT 연방기금금리 선물(ZQ, 야후) — 월물 가격으로 회의별 기대 금리를 푼 값(CME FedWatch 방식)"
@@ -143,11 +143,11 @@ window.LIQUIDITY_AUTO = {
  "bok": {
   "asOf": "2026-10-28",
   "base": 3,
-  "call": 2.995,
+  "call": 2.976,
   "cd91": 3.27,
   "y1": 3.582,
-  "y2": 3.772,
-  "y3": 3.8,
+  "y2": 3.733,
+  "y3": 3.768,
   "exp3m": {
    "rate": 3.09,
    "chg": 0.09,
