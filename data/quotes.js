@@ -406,6 +406,13 @@ window.STOCK_QUOTES = {
    "close": 17380,
    "closeDate": "2026-10-30"
   },
+  "047050": {
+   "price": 48650,
+   "date": "2026-10-30",
+   "changePct": -1.2,
+   "close": 48650,
+   "closeDate": "2026-10-30"
+  },
   "MSFT": {
    "price": 521.91,
    "date": "2026-10-30",
