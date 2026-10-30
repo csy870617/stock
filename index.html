@@ -3632,21 +3632,22 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     box.style.display = "";
     var sel = document.getElementById("rosterDate");
     var opts = ROSTER_HIST.slice().reverse();   // 최신 날짜가 위로
-    // 기본 선택: 변경이 있는 가장 최신 날짜, 없으면 가장 최신
+    var cc = state.country, mine = function (l) { return (l || []).filter(function (x) { return x.c === cc; }); };   // 선택 국가 종목만(2026-10-30 사용자 요청)
+    // 기본 선택: 그 나라 변경이 있는 가장 최신 날짜, 없으면 가장 최신
     var def = null;
-    for (var i = 0; i < opts.length; i++) { if (opts[i].added.length || opts[i].removed.length) { def = opts[i]; break; } }
+    for (var i = 0; i < opts.length; i++) { if (mine(opts[i].added).length || mine(opts[i].removed).length) { def = opts[i]; break; } }
     if (!def) def = opts[0];
-    if (!sel.dataset.init) {
-      // 날짜 옆에 편입·제외 수를 붙여, 펼치지 않고도 어느 날 변화가 있었는지 보이게 한다
+    if (!sel.dataset.init) { sel.addEventListener("change", function () { renderRosterBody(sel.value); }); sel.dataset.init = "1"; }
+    if (sel.dataset.c !== cc) {
+      // 날짜 옆에 그 나라 편입·제외 수를 붙여, 펼치지 않고도 어느 날 변화가 있었는지 보이게 한다
       sel.innerHTML = opts.map(function (e) {
-        var parts = [];
-        if (e.added.length) parts.push("편입 " + e.added.length);
-        if (e.removed.length) parts.push("제외 " + e.removed.length);
+        var parts = [], a = mine(e.added).length, r = mine(e.removed).length;
+        if (a) parts.push("편입 " + a);
+        if (r) parts.push("제외 " + r);
         var label = mdOf(e.date) + " · " + (parts.length ? parts.join(" · ") : "변경 없음");
         return '<option value="' + esc(e.date) + '"' + (e.date === def.date ? " selected" : "") + ">" + esc(label) + "</option>";
       }).join("");
-      sel.addEventListener("change", function () { renderRosterBody(sel.value); });
-      sel.dataset.init = "1";
+      sel.value = def.date; sel.dataset.c = cc;
     }
     renderRosterBody(sel.value || def.date);
   }
@@ -3655,13 +3656,13 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     var entry = null;
     for (var i = 0; i < ROSTER_HIST.length; i++) { if (ROSTER_HIST[i].date === date) { entry = ROSTER_HIST[i]; break; } }
     if (!entry) return;
-    var moved = entry.moved || [];
+    var cc = state.country, mine = function (l) { return (l || []).filter(function (x) { return x.c === cc; }); };
+    var moved = mine(entry.moved);
     function thLabel(key) { return themeMeta(key).label || key; }
-    function flag(c) { return c === "korea" ? "🇰🇷" : c === "us" ? "🇺🇸" : ""; }
     function item(s, cls) {
       var hit = cls !== "out" ? findStock(s.c, s.t, s.th) : null;
       return '<span class="rs-i ' + cls + (hit ? " rs-link" : "") + '"' + (hit ? openAttrs(s.c, s.t, hit.theme) : "") + ">" +
-        '<span class="rs-fl">' + flag(s.c) + "</span>" + esc(s.n) +
+        esc(s.n) +
         (s.from ? '<span class="rs-from">' + esc(thLabel(s.from)) + " →</span>" : "") + "</span>";
     }
     // 편입·제외를 주제별로 묶는다 — 어느 주제에서 바뀌었는지가 한눈에 보이도록(주제 순서 = 칩 순서)
@@ -3678,8 +3679,8 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
         }).join("") + "</div>";
     }
     document.getElementById("rosterBody").innerHTML =
-      (line(entry.added, "in", "편입") + line(entry.removed, "out", "제외") + line(moved, "mv", "주제 이동")) ||
-      '<div class="roster-empty">이 날짜에는 편입·제외 변경이 없습니다.</div>';
+      (line(mine(entry.added), "in", "편입") + line(mine(entry.removed), "out", "제외") + line(moved, "mv", "주제 이동")) ||
+      '<div class="roster-empty">이 날짜에는 ' + (cc === "korea" ? "한국" : "미국") + ' 종목 편입·제외 변경이 없습니다.</div>';
   }
 
   // ── 목록 행 ──
@@ -4849,6 +4850,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     renderTopPicks();
     renderQuad();
     renderTrendChanges();
+    renderRoster();
     updateMineCounts();
     if (state.tab !== "home") renderTab();
   }
