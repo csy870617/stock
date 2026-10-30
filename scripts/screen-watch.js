@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 // 관심종목 후보 스크리닝 — LLM 토큰 0 (순수 스크립트, refresh-quotes Action에서 매일 실행)
 //
-// 역할: 안전 우량주 유니버스(아래 UNIVERSE)의 Yahoo 일봉을 받아 두 가지 차트 패턴을 계산해
-//       data/watch-candidates.js 로 저장한다. LLM 통합 루틴은 이 후보 목록만 읽어
-//       컨센서스 목표가·논거를 리서치한 뒤 theme:"watch" 로 편입한다(차트 탐색 비용 0).
+// 역할: 발굴 스크린 유니버스(data/screen-universe.json — 시총 상위 한국 400·미국 600, 재무 팩터 포함)의 Yahoo 일봉을 받아
+//       두 가지 차트 패턴을 계산하고, '훌륭한 기업' 관문을 통과한 회사만 data/watch-candidates.js 에 후보로 남긴다.
+//       LLM 통합 루틴은 이 후보 목록만 읽어 성장·컨센서스 목표가·논거를 검증한 뒤 theme:"watch" 로 편입한다(차트 탐색 비용 0).
+//       (유니버스 파일이 없으면 아래 UNIVERSE — 예전 손 목록 — 로 차트만 본다.)
 //
 //   ① 턴어라운드 (watchTag:"턴어라운드")
 //      - 바닥 확인: 52주 고점 대비 조정 + 90일 저점에서 반등
@@ -14,8 +15,14 @@
 //      - 베이스 폭 타이트(≤ BASE_WIDTH_MAX)
 //      - 현재가가 그 고점 부근/갓 돌파(REL_MIN~REL_MAX), 직전엔 고점 아래(=갓 돌파)
 //
-//       ※ 성장성(매출·이익 YoY)은 스크립트가 판단하지 못한다 — 최종 편입 전
-//         LLM 루틴이 '안정적으로 성장 중'인지 반드시 검증한다(CLAUDE.md D 절 참조).
+//   ③ 훌륭한 기업 관문(2026-10-30 연구 scripts/research/watch/ — 사용자 '신고가와 턴어라운드에 해당하는 훌륭한 기업을 찾아서'):
+//      Top Pick 건강 관문과 같은 재무 조건 — 순이익 흑자 · 주식 수 연 5% 이하 증가 · 자산 증가율·이익 변동이 시장 상위 10% 밖(lib-picks CUTS).
+//      재무 자료가 없는 회사(외국 ADR 등)는 '훌륭한' 근거가 없어 후보에서 뺀다.
+//      연구(미국 2011~2026·한국 2022~2026): 두 패턴 자체는 이후 6개월 수익이 시장과 비슷하거나 조금 낮았고(유의하지 않음), 이 관문은 패턴 종목의
+//      12개월 −30% 폭락을 줄였다(미국 신고가 4.4% → 3.5%). 수익 차이를 만든 것은 회사 쪽(수익성·성장)이었다 — 그래서 후보 줄에 3년 ROIC·
+//      매출·영업이익 성장(연간·최근 분기)·F 점수를 붙이고, 연간·분기 성장이 모두 플러스인 회사를 앞에 둔다(D절 '안정 성장' 검증과 같은 방향).
+//
+//       ※ 성장의 최종 확인(최근 분기·연간 매출·이익 YoY)·컨센서스는 편입 전 LLM 루틴이 웹으로 검증한다(CLAUDE.md D 절).
 //
 // 또한 현재 편성된 관심종목(theme:"watch")이 자기 태그 조건을 여전히 충족하는지 점검해
 // current[] 에 남긴다(루틴의 교체 판단용).
@@ -29,9 +36,11 @@ const { settleDailyBars } = require("./lib-quote");   // 일봉을 끝난 장 �
 const ROOT = path.join(__dirname, "..");
 const RECO = path.join(ROOT, "data", "recommendations.js");
 const OUT = path.join(ROOT, "data", "watch-candidates.js");
+const UNI = path.join(ROOT, "data", "screen-universe.json");
+const LP = require("./lib-picks");   // 건강 관문 문턱(CUTS) — Top Pick 과 같은 값
 
 // ── 튜닝 파라미터 ──
-const TOP_N = 8;                 // 국가·패턴별로 남길 후보 수(루틴이 이 중 5개를 리서치·편입)
+const TOP_N = 10;                // 국가·패턴별로 남길 후보 수(루틴이 이 중 5개를 리서치·편입)
 const SPREAD_MAX = 5;            // 턴어라운드: 5·20·60일선 수렴 폭 상한(현재가 대비 %)
 const OFF_HIGH_MAX = -8;         // 턴어라운드: 52주 고점 대비 이 이하로 조정됐어야 '바닥'
 const ABOVE_LOW_MIN = 1;         // 턴어라운드: 90일 저점 대비 이 이상 반등
@@ -43,8 +52,8 @@ const REL_MIN = -5;              // 신고가: 직전 고점 대비 하한(돌�
 const REL_MAX = 15;              // 신고가: 직전 고점 대비 상한(이미 급등한 종목 배제)
 const FRESH_GAP = 15;            // 신고가: 이 거래일 전에는 고점 아래였어야 '갓 돌파'
 
-// ── 유니버스: 기본적으로 안전한(대형·우량·안정 성장) 종목 ──
-// 편성(recommendations.js)에 이미 있는 종목은 자동 제외된다. 새 종목은 여기에 추가하면 된다.
+// ── 예비 유니버스: data/screen-universe.json 이 없을 때만 쓰는 손 목록(대형·우량 종목) ──
+// 편성(recommendations.js)에 이미 있는 종목은 자동 제외된다.
 const UNIVERSE = {
   korea: [
     ["005930", "삼성전자", "KOSPI"], ["000660", "SK하이닉스", "KOSPI"], ["373220", "LG에너지솔루션", "KOSPI"],
@@ -271,6 +280,35 @@ function analyze(cl) {
   };
 }
 
+// 발굴 스크린 유니버스(시총 상위 + 재무 팩터) — 없거나 깨졌으면 null(손 목록으로 차트만 본다)
+function loadUniverse() {
+  try {
+    const j = JSON.parse(fs.readFileSync(UNI, "utf8"));
+    return Array.isArray(j.items) && j.items.length > 100 ? j : null;
+  } catch (_e) { return null; }
+}
+// 훌륭한 기업 관문 — Top Pick 건강 관문의 재무 조건(lib-picks CUTS, % 단위). 걸린 사유 또는 null
+function healthWhy(c, u) {
+  const fx = u && u.fx, C = LP.CUTS[c];
+  if (!fx) return "재무 자료 없음";
+  if (fx.niPos === 0) return "순이익 적자";
+  if (fx.iss != null && fx.iss > C.iss) return "희석(주식 수 연 +" + fx.iss + "%)";
+  if (fx.ag != null && fx.ag >= C.ag) return "자산 급증(연 " + fx.ag + "%)";
+  const sc = u.fin ? C.sroaFin : C.sroa;
+  if (sc != null && fx.sroa != null && fx.sroa >= sc) return "이익 변동 큼(ROA 5년 표준편차 " + fx.sroa + "%p)";
+  return null;
+}
+// 후보 줄에 붙이는 회사 사실(%) — 3년 평균 ROIC·연간 매출/영업이익 성장·최근 분기 전년 대비·F 점수(0~9)
+function factsOf(u) {
+  const fx = (u && u.fx) || {}, n = (v) => (v == null || !isFinite(v) ? null : v);
+  const f = { roic3: n(fx.roic3), sg1: n(fx.sg1), opg: n(fx.opg), qRev: n(u.qRevYoY), qOp: n(u.qOpYoY), fscore: n(fx.f), fin: !!u.fin };
+  // 성장 확인: 연간 매출·영업이익이 모두 늘었고, 최근 분기 값이 있으면 그것도 모두 플러스(D절 '안정 성장'의 숫자판 — 최종 확인은 세션 웹 검증)
+  const yr = f.sg1 != null && f.opg != null && f.sg1 > 0 && f.opg > 0;
+  const qOk = (f.qRev == null || f.qRev > 0) && (f.qOp == null || f.qOp > 0);
+  f.growth = yr && qOk;
+  return f;
+}
+
 async function mapLimit(items, limit, fn) {
   const out = new Array(items.length); let i = 0;
   async function worker() { while (i < items.length) { const idx = i++; out[idx] = await fn(items[idx], idx); } }
@@ -282,18 +320,30 @@ async function mapLimit(items, limit, fn) {
   const asOf = argVal("date") || new Date().toISOString().slice(0, 10);
   const { held, watch } = loadRoster();
 
-  // 1) 유니버스 스크리닝(편성 보유 종목 제외)
+  // 1) 유니버스 스크리닝(편성·관심·보유 종목 제외) — 발굴 스크린 유니버스(재무 관문 포함), 없으면 손 목록(차트만)
+  const U = loadUniverse();
   const targets = [];
-  ["korea", "us"].forEach((c) => UNIVERSE[c].forEach((row) => {
-    if (held[row[0]]) return;
-    targets.push({ country: c, ticker: row[0], name: row[1], market: row[2], symbol: symbolFor(row[0], row[2]) });
-  }));
+  if (U) {
+    U.items.forEach((u) => {
+      const c = u.c === "korea" || u.c === "us" ? u.c : null;
+      if (!c || !u.ticker || held[u.ticker]) return;
+      const market = c === "korea" ? (u.market === "KOSDAQ" ? "KOSDAQ" : "KOSPI") : (u.market || "NYSE");
+      targets.push({ country: c, ticker: u.ticker, name: u.name, market, symbol: symbolFor(u.ticker, market), u, why: healthWhy(c, u) });
+    });
+  } else {
+    ["korea", "us"].forEach((c) => UNIVERSE[c].forEach((row) => {
+      if (held[row[0]]) return;
+      targets.push({ country: c, ticker: row[0], name: row[1], market: row[2], symbol: symbolFor(row[0], row[2]), u: null, why: null });
+    }));
+  }
 
   const turnaround = { korea: [], us: [] };
   const breakout = { korea: [], us: [] };
-  // 조건 1개만 아슬아슬하게 미달한 종목 — 후보 0건일 때 '왜 없는지'를 보여준다
+  // 조건 1개만 아슬아슬하게 미달한 종목 — 후보 0건일 때 '왜 없는지'를 보여준다(관문 통과 회사만)
   const nearHigh = { korea: [], us: [] };
   const nearTurn = { korea: [], us: [] };
+  // 차트 패턴은 맞았지만 훌륭한 기업 관문에 걸린 회사 — 사유와 함께(세션이 참고만)
+  const gated = { korea: [], us: [] };
   let ok = 0, fail = 0;
 
   await mapLimit(targets, 8, async (t) => {
@@ -303,6 +353,11 @@ async function mapLimit(items, limit, fn) {
     const a = analyze(cl);
     if (!a) return;
     const base = { ticker: t.ticker, name: t.name, market: t.market, price: Math.round(a.px * 100) / 100 };
+    if (t.u) Object.assign(base, { rank: t.u.rank || null, industry: t.u.industry || undefined }, factsOf(t.u));
+    if (t.why) {
+      if (a.turnOk || a.highOk) gated[t.country].push({ ticker: t.ticker, name: t.name, tag: a.highOk ? "신고가" : "턴어라운드", why: t.why });
+      return;
+    }
     if (a.turnOk) {
       turnaround[t.country].push(Object.assign({}, base, {
         score: a.turnScore, spread: a.spread, offHigh: a.offHigh, aboveLow: a.aboveLow,
@@ -323,15 +378,18 @@ async function mapLimit(items, limit, fn) {
     }
   });
 
+  // 순서: 성장 확인(연간·분기 매출·영업이익 모두 플러스)된 회사 먼저, 그 안에서 패턴 점수 — 세션 검색 예산을 '안정 성장' 후보부터 쓰게
+  const order = (x, y) => (!!y.growth - !!x.growth) || (y.score - x.score) || (x.ticker < y.ticker ? -1 : 1);
   ["korea", "us"].forEach((c) => {
-    turnaround[c].sort((x, y) => y.score - x.score);
-    breakout[c].sort((x, y) => y.score - x.score);
+    turnaround[c].sort(order);
+    breakout[c].sort(order);
     turnaround[c] = turnaround[c].slice(0, TOP_N);
     breakout[c] = breakout[c].slice(0, TOP_N);
     nearHigh[c].sort((x, y) => y.rel - x.rel);
     nearHigh[c] = nearHigh[c].slice(0, 5);
     nearTurn[c].sort((x, y) => x.ticker < y.ticker ? -1 : 1);   // fetch 완료 순서 의존 제거(매일 무의미한 diff 방지)
     nearTurn[c] = nearTurn[c].slice(0, 5);
+    gated[c].sort((x, y) => x.ticker < y.ticker ? -1 : 1);
   });
 
   // 2) 현재 관심종목의 태그 유효성 점검(루틴의 교체 판단용)
@@ -366,13 +424,19 @@ async function mapLimit(items, limit, fn) {
     asOf: asOf,
     note: "관심종목 차트 후보 — scripts/screen-watch.js 가 매일 자동 계산(LLM 토큰 0). " +
           "turnaround=바닥 확인+5·20·60일선 수렴+정배열(근접), breakout=물량 소화 후 신고가 갓 돌파. " +
-          "성장성(매출·이익 YoY)은 미판정 — 편입 전 LLM 루틴이 반드시 검증한다.",
+          (U ? "후보는 훌륭한 기업 관문(Top Pick 건강 관문의 재무 조건) 통과 회사만 — growth=연간·최근 분기 매출·영업이익 모두 플러스(숫자 근사, 앞에 둔다). "
+             : "유니버스 파일이 없어 손 목록으로 차트만 봤다(재무 관문 미적용). ") +
+          "편입 전 LLM 루틴이 최근 분기·연간 성장과 컨센서스를 웹으로 반드시 검증한다.",
     params: { TOP_N, SPREAD_MAX, OFF_HIGH_MAX, ABOVE_LOW_MIN, BASE_MIN_DAYS, BASE_WIDTH_MAX, REL_MIN, REL_MAX },
-    universe: { korea: UNIVERSE.korea.length, us: UNIVERSE.us.length, screened: ok, failed: fail },
+    universe: U ? { source: "screen-universe.json " + U.asOf, korea: U.items.filter((u) => u.c === "korea").length, us: U.items.filter((u) => u.c === "us").length,
+      screened: ok, failed: fail, gate: "건강(흑자·희석 ≤5%·자산 증가·이익 변동 상위 10% 밖)" }
+      : { source: "손 목록", korea: UNIVERSE.korea.length, us: UNIVERSE.us.length, screened: ok, failed: fail },
     turnaround: turnaround,
     breakout: breakout,
     // 조건 1개만 미달한 근접 후보 — 정원을 못 채웠을 때 그 사유를 데이터로 남긴다
     nearMiss: { turnaround: nearTurn, breakout: nearHigh },
+    // 차트는 맞았지만 훌륭한 기업 관문에 걸린 회사(사유)
+    gated: gated,
     current: current,
   };
   fs.writeFileSync(OUT,
@@ -383,10 +447,12 @@ async function mapLimit(items, limit, fn) {
   console.log("watch-candidates.js 갱신 (" + asOf + ") — 스크리닝 " + ok + "종목(실패 " + fail + ")");
   ["korea", "us"].forEach((c) => {
     const kn = c === "korea" ? "한국" : "미국";
+    const nm = (x) => x.name + (x.growth ? "(성장✓)" : "");
     console.log("  [" + kn + "] 턴어라운드 " + turnaround[c].length + "건: " +
-      (turnaround[c].map((x) => x.name).join(", ") || "없음"));
+      (turnaround[c].map(nm).join(", ") || "없음"));
     console.log("  [" + kn + "] 신고가 " + breakout[c].length + "건: " +
-      (breakout[c].map((x) => x.name).join(", ") || "없음"));
+      (breakout[c].map(nm).join(", ") || "없음"));
+    if (gated[c].length) console.log("     └ 차트는 맞지만 관문 탈락 " + gated[c].length + "건: " + gated[c].slice(0, 8).map((x) => x.name + "(" + x.why + ")").join(" · "));
     // 후보가 정원(5)에 못 미치면 '얼마나 모자랐는지'를 함께 찍어 다음 회차 판단을 돕는다
     if (breakout[c].length < 5 && nearHigh[c].length) {
       console.log("     └ 근접(조건 1개 미달): " +

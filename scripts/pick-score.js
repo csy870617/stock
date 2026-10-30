@@ -27,7 +27,6 @@ const R = LP.rankPicks({ D, TA, EV: (load("events.js", "STOCK_EVENTS") || {}).it
 
 if (process.argv.includes("--json")) { console.log(JSON.stringify(R, null, 1)); process.exit(0); }
 
-const THEME_KO = { core: "우량", growth: "성장", value: "저평가", dividend: "배당", rising: "히든" };
 console.log("Top Pick 순위 — 건강 관문 + 상승 가능성 점수 · T " + (TA.asOf || "–") + " · 스크린 " + ((DC && DC.asOf) || "없음") + " · 한국 목표가 3개월 변화 " + ((RVD && RVD.asOf) || "없음"));
 const tp = D.topPicks || {};
 ["korea", "us"].forEach((c) => {
@@ -35,7 +34,7 @@ const tp = D.topPicks || {};
   console.log("\n■ " + (c === "korea" ? "한국" : "미국") + " — 건강 통과 " + r.ranked.length + " · 제외 " + r.excluded.length + " · 점수 자료 없음 " + r.unscored.length +
     " · 지금 Top Pick(" + (tp.asOf || "–") + "): " + (cur.join(", ") || "–") + "\n  점수 = " + LP.SCORE[c].map((k) => ({ iss: "주식 수 감소", shy: "주주환원 수익률", roic: "ROIC", dy: "배당수익률" })[k]).join("·") + " 백분위" + (LP.SCORE[c].length > 1 ? " 평균" : ""));
   if (r.diversify) console.log("  업종 분산: 1~3위는 업종마다 한 종목(lib-picks DIVERSIFY — 미국 나스닥 섹터)");
-  r.ranked.slice(0, 10).forEach((x) => console.log("  " + String(x.rank).padStart(2) + ". " + x.ticker + " " + x.name + " (" + THEME_KO[x.theme] + " T" + x.tier + (x.secKo ? " · " + x.secKo : "") + ") 점수 " +
+  r.ranked.slice(0, 10).forEach((x) => console.log("  " + String(x.rank).padStart(2) + ". " + x.ticker + " " + x.name + " (" + LP.slotKo(x) + (x.secKo ? " · " + x.secKo : "") + ") 점수 " +
     x.score.toFixed(3) + " — " + LP.partsLine(x, c) + (x.src === "hidden" ? " (히든: 희석만)" : "") + (x.pick ? "  ★ Top Pick " + x.pick : "") +
     (x.skip ? "  (같은 업종 " + x.skip + " 가 이미 Top Pick)" : "") + (cur.includes(x.ticker) ? "  ← 지금" : "")));
   if (r.ranked.length > 10) console.log("  … " + (r.ranked.length - 10) + "종목 더");
@@ -46,7 +45,7 @@ const tp = D.topPicks || {};
 });
 
 if (process.argv.includes("--emit")) {
-  const keep = (x) => ({ rank: x.rank, ticker: x.ticker, name: x.name, theme: x.theme, tier: x.tier, score: x.score, iss: x.iss, shy: x.shy, roic: x.roic, dy: x.dy,
+  const keep = (x) => ({ rank: x.rank, ticker: x.ticker, name: x.name, theme: x.theme, tier: x.tier, tag: x.tag, score: x.score, iss: x.iss, shy: x.shy, roic: x.roic, dy: x.dy,
     sec: x.secKo || undefined, tp3: x.tp3, pick: x.pick || undefined, skip: x.skip || undefined });
   const doc = { asOf: TA.asOf || null, builtAt: new Date().toISOString().slice(0, 19) + "Z", screenAsOf: (DC && DC.asOf) || null, revAsOf: (RVD && RVD.asOf) || null,
     note: LP.NOTE, evidence: LP.EVIDENCE, cuts: LP.CUTS, rev: LP.REV };

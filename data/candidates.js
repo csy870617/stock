@@ -8,7 +8,7 @@ window.CANDIDATES = {
  "screenFresh": true,
  "beta": {
   "korea": 0.67,
-  "us": 1.17
+  "us": 1.15
  },
  "groups": {
   "korea|core": {
@@ -58,11 +58,6 @@ window.CANDIDATES = {
       {
        "k": "trend",
        "msg": "추세 붕괴(단·중·장기 모두 매도 이하)",
-       "fresh": false
-      },
-      {
-       "k": "earn",
-       "msg": "실적 발표(10/30) — 가이던스·논거 확인",
        "fresh": false
       }
      ],
@@ -248,13 +243,7 @@ window.CANDIDATES = {
      "ticker": "000270",
      "name": "기아",
      "state": "감시",
-     "flags": [
-      {
-       "k": "earn",
-       "msg": "실적 발표(10/30) · 전년 대비 영업이익 -4.9% — 가이던스·논거 확인",
-       "fresh": false
-      }
-     ],
+     "flags": [],
      "note": "실적 발표 당일(10/30) 확정치 미확인 — 직전 분기 영업이익 흑자 유지, 원재료·믹스 부담은 기존 판정 유지",
      "judged": "2026-10-30",
      "verdict": "형식",
@@ -299,13 +288,7 @@ window.CANDIDATES = {
      "ticker": "086280",
      "name": "현대글로비스",
      "state": "감시",
-     "flags": [
-      {
-       "k": "earn",
-       "msg": "실적 발표(10/30) · 전년 대비 영업이익 -8.1% — 가이던스·논거 확인",
-       "fresh": false
-      }
-     ],
+     "flags": [],
      "note": "실적 발표 당일(10/30) 확정치 미확인 — 영업이익 감소는 유가·운임 요인으로 논거는 유지",
      "judged": "2026-10-30",
      "verdict": "형식",
@@ -731,7 +714,7 @@ window.CANDIDATES = {
       },
       {
        "k": "drop",
-       "msg": "5거래일 -12.5%(시장 중앙값 0.5%) 급락 — 원인 확인",
+       "msg": "5거래일 -12.6%(시장 중앙값 0.9%) 급락 — 원인 확인",
        "fresh": false
       }
      ],
@@ -787,11 +770,11 @@ window.CANDIDATES = {
      "url": "https://m.stock.naver.com/worldstock/stock/MUFG.K/total"
     },
     {
-     "ticker": "BBVA",
-     "name": "Banco Bilbao Vizcaya Argentaria S.a",
+     "ticker": "ETN",
+     "name": "Eaton",
      "status": "검증 대기",
-     "why": "매출 성장 -5.4%",
-     "url": "https://m.stock.naver.com/worldstock/stock/BBVA.K/total"
+     "why": "매출 성장 10.3% · 주식 수 연 -2.1%",
+     "url": "https://m.stock.naver.com/worldstock/stock/ETN/total"
     },
     {
      "ticker": "UBS",
@@ -799,13 +782,6 @@ window.CANDIDATES = {
      "status": "검증 대기",
      "why": "매출 성장 -20.4%",
      "url": "https://m.stock.naver.com/worldstock/stock/UBS/total"
-    },
-    {
-     "ticker": "ETN",
-     "name": "Eaton",
-     "status": "검증 대기",
-     "why": "매출 성장 10.3% · 주식 수 연 -2.1%",
-     "url": "https://m.stock.naver.com/worldstock/stock/ETN/total"
     },
     {
      "ticker": "RY",
@@ -822,6 +798,13 @@ window.CANDIDATES = {
      "url": "https://m.stock.naver.com/worldstock/stock/TD/total"
     },
     {
+     "ticker": "BHP",
+     "name": "BHP",
+     "status": "검증 대기",
+     "why": "매출 성장 14.6%",
+     "url": "https://m.stock.naver.com/worldstock/stock/BHP/total"
+    },
+    {
      "ticker": "MRK",
      "name": "Merck &",
      "status": "검증 대기",
@@ -834,18 +817,11 @@ window.CANDIDATES = {
      "status": "검증 대기",
      "why": "3년 평균 ROIC 25.7% · 매출 성장 5.3% · 주식 수 연 -1.6%",
      "url": "https://m.stock.naver.com/worldstock/stock/CSCO.O/total"
-    },
-    {
-     "ticker": "NVS",
-     "name": "Novartis",
-     "status": "검증 대기",
-     "why": "매출 성장 8.9%",
-     "url": "https://m.stock.naver.com/worldstock/stock/NVS/total"
     }
    ]
   },
   "us|growth": {
-   "eligible": 65,
+   "eligible": 64,
    "defects": [
     {
      "ticker": "META",
@@ -911,7 +887,7 @@ window.CANDIDATES = {
       },
       {
        "k": "drop",
-       "msg": "5거래일 -30.1%(시장 중앙값 0.5%) 급락 — 원인 확인",
+       "msg": "5거래일 -33.9%(시장 중앙값 0.9%) 급락 — 원인 확인",
        "fresh": false
       }
      ],
@@ -987,6 +963,13 @@ window.CANDIDATES = {
      "url": "https://m.stock.naver.com/worldstock/stock/SCCO.K/total"
     },
     {
+     "ticker": "FAST",
+     "name": "Fastenal",
+     "status": "검증 대기",
+     "why": "3년 매출 연평균 5.5% · FCF 마진 12.8% · 3년 평균 ROIC 34.1%",
+     "url": "https://m.stock.naver.com/worldstock/stock/FAST.O/total"
+    },
+    {
      "ticker": "ARGX",
      "name": "argenx",
      "status": "검증 대기",
@@ -999,13 +982,6 @@ window.CANDIDATES = {
      "url": "https://m.stock.naver.com/worldstock/stock/ASX/total"
     },
     {
-     "ticker": "FAST",
-     "name": "Fastenal",
-     "status": "검증 대기",
-     "why": "3년 매출 연평균 5.5% · FCF 마진 12.8% · 3년 평균 ROIC 34.1%",
-     "url": "https://m.stock.naver.com/worldstock/stock/FAST.O/total"
-    },
-    {
      "ticker": "RIO",
      "name": "Rio Tinto",
      "status": "검증 대기",
@@ -1014,7 +990,7 @@ window.CANDIDATES = {
    ]
   },
   "us|value": {
-   "eligible": 84,
+   "eligible": 85,
    "defects": [
     {
      "ticker": "GM",
@@ -1061,7 +1037,7 @@ window.CANDIDATES = {
      "status": "검증 통과",
      "note": "정체성 두 문턱 충족·FQ3 매출 +14% — β 가 높아 β 를 낮추는 교체와 짝일 때 편입",
      "asOf": "2026-10-18",
-     "why": "EBIT/EV 4.7% · FCF/시총 5.1% · 매출 성장 8.9%",
+     "why": "EBIT/EV 4.9% · FCF/시총 5.2% · 매출 성장 8.9%",
      "url": "https://m.stock.naver.com/worldstock/stock/TEL/total"
     },
     {
@@ -1070,7 +1046,7 @@ window.CANDIDATES = {
      "status": "보류",
      "note": "EBIT/EV 문턱 미달(FCF 로만 통과)·오피오이드 소송",
      "asOf": "2026-10-18",
-     "why": "EBIT/EV 3.7% · FCF/시총 5% · 매출 성장 9.3%",
+     "why": "EBIT/EV 3.8% · FCF/시총 5.1% · 매출 성장 9.3%",
      "url": "https://m.stock.naver.com/worldstock/stock/COR/total"
     },
     {
@@ -1079,7 +1055,7 @@ window.CANDIDATES = {
      "status": "보류",
      "note": "방산 중복(GD)·3년 ROIC 낮음·3분기 10/29",
      "asOf": "2026-10-18",
-     "why": "EBIT/EV 3.4% · FCF/시총 5.1% · 매출 성장 2.5%",
+     "why": "EBIT/EV 3.4% · FCF/시총 5.2% · 매출 성장 2.5%",
      "url": "https://m.stock.naver.com/worldstock/stock/LHX/total"
     },
     {
@@ -1097,7 +1073,7 @@ window.CANDIDATES = {
      "status": "보류",
      "note": "컨센 목표가가 현재가 수준",
      "asOf": "2026-10-18",
-     "why": "EBIT/EV 3.7% · FCF/시총 4.6% · 매출 성장 5.9%",
+     "why": "EBIT/EV 3.8% · FCF/시총 4.7% · 매출 성장 5.9%",
      "url": "https://m.stock.naver.com/worldstock/stock/IQV/total"
     },
     {
@@ -1151,7 +1127,7 @@ window.CANDIDATES = {
      "ticker": "CRM",
      "name": "Salesforce",
      "status": "검증 대기",
-     "why": "EBIT/EV 4.2% · FCF/시총 7.6% · 매출 성장 9.6%",
+     "why": "EBIT/EV 4.3% · FCF/시총 7.6% · 매출 성장 9.6%",
      "url": "https://m.stock.naver.com/worldstock/stock/CRM/total"
     }
    ]
@@ -1269,13 +1245,6 @@ window.CANDIDATES = {
      "url": "https://m.stock.naver.com/worldstock/stock/PBRa/total"
     },
     {
-     "ticker": "ABEV",
-     "name": "Ambev SA",
-     "status": "검증 대기",
-     "why": "배당성향 12.5% · 배당 4.9%",
-     "url": "https://m.stock.naver.com/worldstock/stock/ABEV.K/total"
-    },
-    {
      "ticker": "HSBC",
      "name": "HSBC",
      "status": "검증 대기",
@@ -1288,6 +1257,13 @@ window.CANDIDATES = {
      "status": "검증 대기",
      "why": "배당성향 63.3% · 배당 4.7%",
      "url": "https://m.stock.naver.com/worldstock/stock/ING/total"
+    },
+    {
+     "ticker": "ABEV",
+     "name": "Ambev SA",
+     "status": "검증 대기",
+     "why": "배당성향 12.5% · 배당 4.9%",
+     "url": "https://m.stock.naver.com/worldstock/stock/ABEV.K/total"
     },
     {
      "ticker": "SNY",
@@ -1372,6 +1348,11 @@ window.CANDIDATES = {
      "name": "AAON",
      "state": "결격",
      "flags": [
+      {
+       "k": "trend",
+       "msg": "추세 붕괴(단·중·장기 모두 매도 이하)",
+       "fresh": false
+      },
       {
        "k": "theme",
        "msg": "주제 기준 미달 — FCF 적자, 순차입금 > 영업현금흐름, ROIC 미달(3년 평균 16.1%)",

@@ -23,8 +23,11 @@
 //      한국 2022~2026 후보 40종목 중 1~3위 흉내에서 6개월 평균 초과 +0.86%p(t 3.0, 전·후반·해마다 양), 확인용 301~600위 +0.14%p(t 1.1).
 //      미국은 효과가 없어(−0.08%p) 쓰지 않는다. 앞날 기대를 점수에 더하는 후보(목표가 상향·성장 예측·상승여력)는 두 나라 모두 사전 기준 미달(PREREG-6).
 //   나라별 1~3위(③ 적용) = 오늘의 Top Pick(rankPicks 의 top). ai-daily·세션은 이 순서 그대로 쓰고 이유 문장만 쓴다(pick-score.js 로 확인).
+//   후보 = 정식 추천 5주제 + 관심 편성 종목(2026-10-30 사용자 요청 '관심 종목도 Top Pick 조건에 해당하면 빼지 마' — 검증 연구도 편성과 무관한
+//   시총 상위 전체에서 했다). 보유 목록은 사용자가 이미 산 종목이라 넣지 않는다. 같은 종목이 정식 주제에도 있으면 정식 자리를 대표로 쓴다.
 //
 // 재무 값은 발굴 스크린(discovery-candidates.js)이 편성 종목마다 남기는 fx(연간 재무 — lib-factors, 연구와 같은 정의, % 단위).
+// 관심 종목은 같은 스크린이 personal[나라][티커] 에 같은 잣대로 남긴 값을 쓴다.
 // 히든 주제 종목은 fx 가 없어 히든 스크린의 희석(주식 수 연 증가율)만 쓴다 — 히든 스크린의 ROIC 는 현금을 뺀 투하자본이라
 // (100%로 잘린 값도 있다) 같은 백분위에 섞지 않는다. 재무 값이 하나도 없는 종목(외국 ADR·스크린 전 편입 등)은 순위에 넣지 않는다.
 // 주식 수가 한 해 20% 넘게 준 값은 자사주 소각이 아니라 인적분할·주식 병합 같은 자본 거래로 보고 0(순발행·소각 없음)으로 둔다
@@ -39,8 +42,9 @@ const SEC = require("./lib-sectors");
 const ISS_CA = -20, POST_CA = 20;
 const DIVERSIFY = { us: true, korea: false };   // 위 ③
 const REV = { korea: { months: 3, cutPct: -10 } };   // 위 ④ — 나라에 없으면 보지 않는다
-const PERSONAL = new Set(["watch", "hold"]);
-const THEMES = ["core", "growth", "value", "dividend", "rising"];
+const NOT_PICKABLE = new Set(["hold"]);   // 위 '후보' — 관심(watch)은 후보, 보유(hold)는 아님
+const canPick = (theme) => !!theme && !NOT_PICKABLE.has(theme);
+const THEMES = ["core", "growth", "value", "dividend", "rising", "watch"];   // 같은 종목의 대표 자리 순서(관심은 맨 뒤)
 // 고정 문턱(%) — research/top-pick/README.md '라이브 문턱'. 한국 금융은 검증 때도 값이 30개 미만이라 이익 변동 문턱이 없었다.
 const CUTS = {
   us: { iss: 5, ag: 30.1, sroa: 7.6, sroaFin: 2.8 },
@@ -48,7 +52,7 @@ const CUTS = {
 };
 // 점수 재료(나라별) — 위 ②
 const SCORE = { us: ["iss", "shy", "roic"], korea: ["iss", "dy"] };
-const NOTE = "건강 조건(흑자·희석·자산 급증·이익 변동·추세·수급·결격, 한국은 목표가 급락도)을 통과한 정식 추천 중 상승 가능성 점수(미국: 주식 수 감소·주주환원·ROIC, 한국: 주식 수 감소·배당) 1~3위(미국은 업종마다 한 종목) — 확실한 예측이 아니라 확률을 조금 기울이는 기준";
+const NOTE = "건강 조건(흑자·희석·자산 급증·이익 변동·추세·수급·결격, 한국은 목표가 급락도)을 통과한 정식 추천·관심 종목 중 상승 가능성 점수(미국: 주식 수 감소·주주환원·ROIC, 한국: 주식 수 감소·배당) 1~3위(미국은 업종마다 한 종목) — 확실한 예측이 아니라 확률을 조금 기울이는 기준";
 // 앱 ⓘ·문서용 검증 요약(research/top-pick/README.md — 자본 거래 정리 뒤 값, 앱과 같은 처리)
 const EVIDENCE = {
   us: "과거 검증(미국 2011~2026 시총 상위 500, 매월 후보 40종목 중 1~3위를 고르는 상황을 흉내): 3개월 뒤 시장보다 오른 경우 52.5%(무작위 49.8%), " +
@@ -79,7 +83,7 @@ function pctRank(vals) {
 // 편성 종목의 재무 값 — {niPos, iss, shy, roic, ag, sroa, dy, fin, post}(%), 없으면 null. fu = fundamentals.js 항목(배당수익률·결산 뒤 주식 수 변화)
 function finOf(DC, country, theme, ticker, fu) {
   const g = DC && DC.groups && DC.groups[country + "|" + theme];
-  const inc = g && (g.incumbents || []).find((x) => x.ticker === ticker);
+  const inc = theme === "watch" ? ((DC && DC.personal && DC.personal[country]) || {})[ticker] : g && (g.incumbents || []).find((x) => x.ticker === ticker);
   if (!inc) return null;
   const sh = fu && fu.sh, dy = fu && !fu.dyFlag && ok(fu.dy) ? fu.dy : null;
   const post = sh && ok(sh.chg) && Math.abs(sh.chg) > POST_CA ? sh : null;
@@ -143,10 +147,10 @@ function rankPicks(S) {
   }));
   const out = {};
   ["korea", "us"].forEach((c) => {
-    // 종목마다 대표 자리 하나 — 중복 자리를 빼고 티어가 높은 쪽, 같으면 주제 순서
+    // 종목마다 대표 자리 하나 — 중복 자리를 빼고 티어가 높은 쪽, 같으면 주제 순서(관심 자리는 티어가 없어 정식 자리가 있으면 그쪽)
     const rep = new Map();
     ((S.D && S.D[c]) || []).forEach((s) => {
-      if (PERSONAL.has(s.theme) || dupSlot.has(c + "|" + s.theme + "|" + s.ticker)) return;
+      if (!canPick(s.theme) || dupSlot.has(c + "|" + s.theme + "|" + s.ticker)) return;
       const cur = rep.get(s.ticker);
       if (!cur || (s.tier || 9) < (cur.tier || 9) || ((s.tier || 9) === (cur.tier || 9) && THEMES.indexOf(s.theme) < THEMES.indexOf(cur.theme))) rep.set(s.ticker, s);
     });
@@ -156,7 +160,7 @@ function rankPicks(S) {
       const f = finOf(S.DC, c, s.theme, s.ticker, (S.FU || {})[s.ticker]);
       const rv = (S.RV || {})[s.ticker];
       const why = unhealthy(c, s, sig, EV[s.ticker], defState[c + "|" + s.theme + "|" + s.ticker], f, rv);
-      const base = { ticker: s.ticker, name: s.name, theme: s.theme, tier: s.tier };
+      const base = { ticker: s.ticker, name: s.name, theme: s.theme, tier: s.tier, tag: s.watchTag || undefined };
       if (why) excluded.push(Object.assign(base, { why }));
       else if (!f || !SCORE[c].some((k) => ok(f[k]))) unscored.push(Object.assign(base, { why: "점수 자료 없음(" + SCORE[c].map((k) => SCORE_KO[k]).join("·") + ")" }));
       else healthy.push({ s, f, base, sec: sectorOf(c, (S.FU || {})[s.ticker]), tp3: rv && ok(rv.chg) ? rv.chg : undefined });
@@ -191,4 +195,8 @@ function partsLine(x, country) {
   return a.join(" · ");
 }
 
-module.exports = { CUTS, SCORE, NOTE, EVIDENCE, DIVERSIFY, REV, rankPicks, finOf, partsLine, pickTop };
+// 화면·프롬프트용 자리 이름 — '저평가 T1' · '관심(신고가)'
+const THEME_KO = { core: "우량", growth: "성장", value: "저평가", dividend: "배당", rising: "히든", watch: "관심" };
+const slotKo = (x) => (x.theme === "watch" ? "관심" + (x.tag ? "(" + x.tag + ")" : "") : (THEME_KO[x.theme] || x.theme) + " T" + x.tier);
+
+module.exports = { CUTS, SCORE, NOTE, EVIDENCE, DIVERSIFY, REV, rankPicks, finOf, partsLine, pickTop, canPick, slotKo };

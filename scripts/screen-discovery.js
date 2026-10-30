@@ -421,9 +421,25 @@ function view(s, score) {
   // 주제 팩터를 못 받은 종목(미국은 대개 IFRS 로 공시하는 외국 ADR — SEC us-gaap frames 에 없다). 저평가 정체성(EBIT/EV·FCF)은 팩터가 없으면 통과할 수 없어
   // 이 목록의 종목은 저평가 후보에서 빠진다 — 서브에이전트가 gateThresholds 로 직접 판정할 수 있게 남긴다.
   const noFx = (c, cap) => all.filter((s) => s.c === c && !s.extra && !s.fx && s.rank <= cap).sort((a, b) => a.rank - b.rank).map((s) => s.ticker + " " + s.name + " #" + s.rank);
+  // 관심 종목의 재무 값(같은 잣대) — Top Pick 후보에 관심 편성 종목도 넣는다(2026-10-30 사용자 요청, lib-picks.js). 출력만 더한다(주제 후보·편성 판정 불변).
+  const personal = { korea: {}, us: {} };
+  ["korea", "us"].forEach((c) => (D[c] || []).filter((m) => m.theme === "watch").forEach((m) => {
+    const row = all.find((s) => s.c === c && s.ticker === m.ticker);
+    if (row && !personal[c][m.ticker]) personal[c][m.ticker] = view(row, null);
+  }));
   const outObj = { asOf: today, builtAt: new Date().toISOString(), hiddenBuiltAt, source: "네이버 증권 시가총액 순위·재무(연간·분기)·컨센서스 — scripts/screen-discovery.js",
     universe: { korea: kr.length, us: us.length, failed: fail.length }, note: "후보 생성용 스크린 — 편입·교체 판단은 세션 검증과 CLAUDE.md §5 기준으로만",
-    noFactors: { us: noFx("us", 450), korea: noFx("korea", 250) }, groups };
+    noFactors: { us: noFx("us", 450), korea: noFx("korea", 250) }, personal, groups };
+  // 전 유니버스 재무 값 — 관심 스크린(screen-watch.js)의 '우량 기업' 관문용(2026-10-30). 가격에 따라 매일 바뀌는 값(시세·시총·PER·PBR·배당수익률·
+  //   상승여력)은 빼고 한 줄에 한 종목으로 쓴다(매일 커밋의 차이를 줄인다). 앱은 읽지 않는다.
+  const uni = all.filter((s) => s.c === "korea" || s.c === "us").sort((a, b) => (a.c < b.c ? -1 : a.c > b.c ? 1 : 0) || ((a.rank || 1e9) - (b.rank || 1e9)) || (a.ticker < b.ticker ? -1 : 1))
+    .map((s) => {
+      const v = view(s, null); ["price", "mcap", "upside", "tp", "tpDate", "per", "cnsPer", "pbr", "divY", "score", "recomm"].forEach((k) => delete v[k]);
+      // 관심 스크린 관문 재료 중 view 에 없는 것 — 영업이익 1년 성장·ROA 변화(%)·피오트로스키 F(0~9)
+      if (v.fx && s.fx) { const p1 = (x) => (x == null || !isFinite(x) ? null : r1(x * 100)); v.fx.opg = p1(s.fx.OPG); v.fx.droa = p1(s.fx.DROA); v.fx.f = s.fx.F == null ? null : s.fx.F; }
+      return JSON.stringify(Object.assign({ c: s.c }, v));
+    });
+  fs.writeFileSync(path.join(ROOT, "data", "screen-universe.json"), "{\"asOf\":\"" + today + "\",\"note\":\"발굴 스크린 유니버스의 재무 값(시총 순위·연간·분기 성장·lib-factors 팩터) — screen-discovery.js 가 쓰고 screen-watch.js 가 읽는다\",\"items\":[\n" + uni.join(",\n") + "\n]}\n");
   fs.writeFileSync(OUT,
     "// 주간 심층 발굴 후보 — scripts/screen-discovery.js 가 생성(LLM 토큰 0). 앱은 로드하지 않는다(sw.js SHELL 에 넣지 말 것).\n" +
     "// groups[\"<country>|<theme>\"] = {rule 하드 조건, weights 점수 가중, eligible 적격 수, incumbents 현 편성(점수 낮은 순·같은 잣대), candidates 상위 후보}\n" +

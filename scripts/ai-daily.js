@@ -26,12 +26,11 @@ const path = require("path");
 const { spawnSync } = require("child_process");
 const L = require("./lib-claude");
 const LP = require("./lib-picks");
-const { isPersonalTheme, isBlockedSource, priceNumberIn } = require("./validate-reco");
+const { isBlockedSource, priceNumberIn } = require("./validate-reco");
 
 const args = process.argv.slice(2);
 const IF_STALE = args.includes("--if-stale"), REAPPLY = args.includes("--reapply"), DRY = args.includes("--dry"), WHO = args.includes("--who");
 const today = new Date().toISOString().slice(0, 10);
-const THEME_KO = { core: "우량", growth: "성장", value: "저평가", dividend: "배당", rising: "히든" };
 const IDX_KEYS = ["nasdaq", "dow", "kospi", "kosdaq"];
 const MACRO_KEYS = ["usdkrw", "dxy", "wti", "gold"];   // 환율·원자재(indices.js macro, 2026-10-23~) — 지수와 같은 형식의 분석을 index-notes.js 에 함께 쓴다
 const ITEMS = ["market", "liquidity", "indexNotes", "topPicks"];
@@ -41,7 +40,7 @@ const macroOf = (k) => ((IX_CACHE && IX_CACHE.macro) || []).find((m) => m.key ==
 function loadAll() {
   return {
     D: L.loadWin("recommendations.js", "STOCK_DATA"), IX: (IX_CACHE = L.loadWin("indices.js", "INDEX_TA")), IN: L.loadWin("index-notes.js", "INDEX_NOTES"),
-    LQ: L.loadWin("liquidity.js", "LIQUIDITY_DATA"), A: L.loadWin("liquidity-auto.js", "LIQUIDITY_AUTO"), TA: L.loadWin("stock-ta.js", "STOCK_TA"),
+    LQ: L.loadWin("liquidity.js", "LIQUIDITY_DATA"), A: L.loadWin("liquidity-auto.js", "LIQUIDITY_AUTO"), FW: L.loadWin("liquidity-flow.js", "LIQUIDITY_FLOW"), TA: L.loadWin("stock-ta.js", "STOCK_TA"),
     EV: (L.loadWin("events.js", "STOCK_EVENTS") || {}).items || {}, FU: (L.loadWin("fundamentals.js", "STOCK_FUND") || {}).items || {},
     Q: L.loadWin("quotes.js", "STOCK_QUOTES") || {}, CA: L.loadWin("candidates.js", "CANDIDATES") || { groups: {} },
     DC: L.loadWin("discovery-candidates.js", "DISCOVERY_CANDIDATES"), RV: (L.loadWin("revisions.js", "STOCK_REVISIONS") || {}).items || {},
@@ -136,13 +135,27 @@ function macroBlock(IX) {
     return "\n- " + m.key + " (" + m.name + " · " + m.sub + "): " + m.level + m.unit + " " + m.change + " (" + m.asOf + " 마감" + (m.key === "usdkrw" ? ", 등급은 달러 기준" : "") + ")\n" + lines.join("\n");
   }).join("");
 }
-function liquidityBlock(A, LQ) {
-  if (!A) return "(baseline 없음)";
+// 돈의 흐름(update-liquidity-flow.js — 사전 등록 검증을 통과한 흐름 점수·지표, 2026-10-30~)
+function flowBlock(FW) {
+  if (!FW || !FW.us) return "";
+  const one = (c, nm) => {
+    const o = FW[c]; if (!o) return "";
+    const comps = (o.comps || []).map((x) => x.name + " " + (x.value == null ? "–" : x.value + (x.unit ? " " + x.unit : "")) + (x.chg != null ? "(3개월 " + (x.chg > 0 ? "+" : "") + x.chg + x.chgUnit + ")" : "") + " " + (x.state || "")).join(" · ");
+    return "돈의 흐름 " + nm + "(" + FW.asOf + "): " + o.level + " — 흐름 점수 " + o.score + ", 최근 5년 중 하위부터 " + Math.round((o.pct || 0) * 100) + "% 위치 · " + comps +
+      (o.risk ? " · 신용 경고 " + o.risk.on + "/" + o.risk.of + "(" + o.risk.items.filter((x) => x.on).map((x) => x.name).join("·") + ")" : "");
+  };
+  const E = FW.evidence || {};
+  return [one("us", "미국"), one("korea", "한국"),
+    "검증(사전 등록): 미국 — " + ((E.us || {}).flow || "") + " " + ((E.us || {}).risk || "") + " / 한국 — " + ((E.korea || {}).flow || "") + " " + ((E.korea || {}).risk || "") + " / " + (E.gauge || "")].filter(Boolean).join("\n");
+}
+function liquidityBlock(A, LQ, FW) {
+  if (!A) return flowBlock(FW) || "(baseline 없음)";
   const g = (x) => x ? "단기 " + x.shortTerm + "(" + sgn(x.shortScore) + ") · 중기 " + x.midTerm + "(" + sgn(x.midScore) + ") · 근거 " + (x.drivers || []).join(", ") : "–";
   const inp = A.inputs || {};
   const out = [
-    "자동 baseline(" + A.asOf + ") 미국: " + g(A.us),
-    "자동 baseline 한국: " + g(A.korea),
+    flowBlock(FW),
+    "시장 여건 baseline(" + A.asOf + ", 과거 검증 미달 — 참고) 미국: " + g(A.us),
+    "시장 여건 baseline 한국: " + g(A.korea),
     "지표: 미 10년물 " + inp.us10y + "% · 장단기 금리차 " + inp.curve + "%p · VIX " + inp.vix + " · HY 채권 20일 " + inp.hyg20 + "% · 달러지수 " + inp.dxy + " · 원/달러 " + inp.usdkrw,
   ];
   if (A.fed && A.fed.meetings) out.push("연준 금리 경로(연방기금금리 선물, " + A.fed.asOf + "): 현재 실효 " + n2(A.fed.current) + "% · " +
@@ -172,7 +185,7 @@ function pickTable(S) {
       const t = ta[x.ticker] || {}, sg = ["short", "mid", "long"].map((k) => (t[k] && t[k].signal) || "–");
       const ev = S.EV[x.ticker] || {}, fu = S.FU[x.ticker] || {}, q = fu.q || {};
       const parts = [(i + 1) + "위 " + x.ticker + " " + x.name + (x.rank !== i + 1 ? "(점수 " + x.rank + "위 — 앞 순위가 같은 업종이라 업종마다 한 종목)" : ""),
-        THEME_KO[x.theme] + " T" + x.tier + (x.secKo ? " · " + x.secKo : ""), "점수 " + x.score + "(" + LP.partsLine(x, c) + ")", "신호 " + sg.join("/")];
+        LP.slotKo(x) + (x.secKo ? " · " + x.secKo : ""), "점수 " + x.score + "(" + LP.partsLine(x, c) + ")", "신호 " + sg.join("/")];
       if (t.risk) parts.push("60일 변동성 " + t.risk.vol + "% · 1년 최대낙폭 " + t.risk.mdd + "%");
       const yo = (k, lab) => (q[k] && q[k].yoy != null ? lab + " " + sgn(q[k].yoy) + "%" : null);
       const qq = [yo("rev", "매출"), yo("op", q.opLabel === "EBIT" ? "EBIT" : "영업이익"), yo("np", "순이익")].filter(Boolean);
@@ -253,7 +266,9 @@ const COMPOSE_SYSTEM = [
   "항목별",
   "- marketNote: 미국·한국 통합 시황 2~4문장. marketNoteUS·marketNoteKR: 각 나라 시황 2~4문장(지수 등락·원인·이번 주 일정).",
   "- liquidity: 미국·한국 거시 유동성 단기(1~3개월)·중기(6~12개월) 5단계(매우 우호/우호/신중/부정/매우 부정).",
-  "  자동 baseline 을 출발점으로 하되 baseline 이 못 읽는 거시 이벤트(FOMC·금통위·지정학)·느린 거시(물가·M2·외국인 수급)·내러티브로 보정한다.",
+  "  출발점은 [데이터]의 '돈의 흐름'(검증을 통과한 흐름 점수·지표 — 미국은 흐름 점수→다음 12개월, 한국은 예탁금·신용융자→다음 3개월, 미국 신용 경고→급락 위험)이고,",
+  "  '시장 여건 baseline'(금리 수준·VIX·하이일드·코스피 모멘텀)은 과거 검증을 통과하지 못한 참고값이다. 거시 이벤트(FOMC·금통위·지정학)·내러티브로 보정한다.",
+  "  drivers 에 돈의 흐름 지표(예탁금·신용융자·외국인·신용 스프레드·순유동성 등)의 지금 값·3개월 변화를 근거로 쓰고, 검증 범위를 넘는 확신('오른다')은 쓰지 않는다.",
   "  baseline 과 다른 등급을 주면 drivers 에 그 근거 수치를 쓴다. drivers 는 나라별 2~4개, 각 1문장.",
   "  headline(통합 1문장)·headlineUS·headlineKR(각 1~2문장). nextCheck: 다음에 확인할 가격·지표·일정 1문장.",
   "- policyNews: 연준·한국은행 각각 stance(매파·중립·비둘기파)와 note(누가·무엇을 말하거나 결정했는지 사실 1~2문장). 조사 메모에 근거가 없으면 note 에 직전 판단을 유지한다고 쓰지 말고 sources 를 빈 배열로 둔다.",
@@ -285,7 +300,7 @@ function composePrompt(S, ctx, memo, urls, picks) {
     indexBlock(S.IX),
     "",
     "[데이터 — 거시 유동성·금리]",
-    liquidityBlock(S.A, S.LQ),
+    liquidityBlock(S.A, S.LQ, S.FW),
     "",
     "[조사 메모]",
     memo || "(조사 실패 — 데이터만으로 쓰고, 뉴스 사실은 쓰지 않는다)",
@@ -293,7 +308,7 @@ function composePrompt(S, ctx, memo, urls, picks) {
     "[출처 목록]",
     urls.length ? urls.map((u, i) => (i + 1) + ". " + u.url + (u.title ? " — " + u.title : "")).join("\n") : "(없음)",
     "",
-    "[Top Pick 순위 — 건강 관문(강한 하락세·추세 붕괴·수급 과열·실질 결격·적자·희석·자산 급증·이익 변동 제외)을 통과한 정식 추천의 상승 가능성 점수(미국: 주식 수 감소·주주환원·ROIC, 한국: 주식 수 감소·배당) 1~3위 — 미국은 업종마다 한 종목]",
+    "[Top Pick 순위 — 건강 관문(강한 하락세·추세 붕괴·수급 과열·실질 결격·적자·희석·자산 급증·이익 변동 제외)을 통과한 정식 추천·관심 종목의 상승 가능성 점수(미국: 주식 수 감소·주주환원·ROIC, 한국: 주식 수 감소·배당) 1~3위 — 미국은 업종마다 한 종목]",
     "한국(통과 " + picks.counts.korea + "종목):", picks.rows.korea.join("\n") || "(없음)",
     "미국(통과 " + picks.counts.us + "종목):", picks.rows.us.join("\n") || "(없음)",
     "직전 Top Pick: " + prevPicks + (tp.asOf ? " (" + tp.asOf + ")" : ""),
@@ -378,7 +393,7 @@ function buildOutputs(S, out, urls, ctx, ok) {
     if (ok.market) Object.assign(patch, { marketNote: out.marketNote.trim(), marketNoteUS: out.marketNoteUS.trim(), marketNoteKR: out.marketNoteKR.trim(), marketNoteAsOf: today });
     if (ok.topPicks) {
       const by = {};
-      ["korea", "us"].forEach((c) => (S.D[c] || []).forEach((s) => { if (!isPersonalTheme(s.theme) && !by[c + ":" + s.ticker]) by[c + ":" + s.ticker] = s; }));
+      ["korea", "us"].forEach((c) => (S.D[c] || []).forEach((s) => { if (LP.canPick(s.theme) && !by[c + ":" + s.ticker]) by[c + ":" + s.ticker] = s; }));
       const tp = { asOf: today, note: LP.NOTE };
       ["korea", "us"].forEach((c) => {
         tp[c] = out.topPicks[c].map((it, i) => { const s = by[c + ":" + it.ticker]; return { rank: i + 1, ticker: it.ticker, market: s.market, name: s.name, reason: cleanReason(it.reason) }; });

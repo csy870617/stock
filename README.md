@@ -7,7 +7,8 @@
 - **`data/quotes.js`** — **시세 스냅샷** (`scripts/update-quotes.js` 가 자동 생성, LLM 토큰 0). 분석과 분리되어 매일 저비용 갱신.
 - **`data/indices.js`** — **지수 기술적 분석 스냅샷** (`scripts/update-indices.js` 가 자동 생성, LLM 토큰 0). 나스닥·다우·코스피·코스닥을 **단기(1–3M: 5·20·60일선·RSI14)·장기(6–12M+: 60·120·200일선·골든크로스)** 로 분리 계산. 없으면 지수 섹션 자동 숨김. 원/달러('미국 USD')·달러인덱스·WTI·국제 금도 `macro` 에 같은 방식으로 담고, 기간 등락·52주 위치·변동성·시장과 같이 움직인 종목을 함께 계산한다(홈 '오늘의 시장' 칸 → 상세). 코스피·코스닥은 **투자자별 순매수**(개인·외국인·기관, `scripts/lib-flows.js` — 다음 금융의 한국거래소 집계를 `data/market-flows.json` 에 10년치 쌓음)를 `flows`(최근일·5·20·60일 합·연속 일수)와 지수 차트 행에 함께 써서, 지수 상세 차트 아래 수급 막대와 '수급'(누적 순매수 꺾은선 — 20일·60일·1년·3년 — 과 기간 합 표)으로 보인다.
 - **`data/stock-ta.js`** — **개별 종목 기술적 분석 스냅샷** (`scripts/update-stock-ta.js` 가 자동 생성, LLM 토큰 0). 전 종목의 단기·장기 추세·신호·RSI·이동평균·지지/저항을 Yahoo 2년 일봉에서 매일 계산해 종목 카드에 표시. (지수·종목 공통 계산은 `scripts/lib-ta.js`.)
-- **`data/liquidity-auto.js`** — **유동성 게이지 자동 baseline** (`scripts/update-liquidity-gauge.js` 가 자동 생성, LLM 토큰 0). 금리·일드커브·VIX·HY신용·달러·원달러·코스피를 가중 합성해 미국·한국 단기/중기 게이지를 매일 산출.
+- **`data/liquidity-flow.js`** — **돈의 흐름(유동성)** (`scripts/update-liquidity-flow.js`, LLM 토큰 0). 연준 순유동성·신용 스프레드·금융여건·달러·실질 M2(미국), 투자자예탁금·신용융자·외국인·원/달러·회사채 스프레드(한국)의 흐름 점수·5단계·미국 신용 경고 — 사전 등록 검증(`scripts/research/liquidity/`)을 통과한 신호. 월말 원자료는 `data/liquidity-hist.json`.
+- **`data/liquidity-auto.js`** — **시장 여건 게이지(참고 — 검증 미달)** (`scripts/update-liquidity-gauge.js` 가 자동 생성, LLM 토큰 0). 금리·일드커브·VIX·HY신용·달러·원달러·코스피를 가중 합성해 미국·한국 단기/중기 게이지를 매일 산출.
 - **`data/liquidity.js`** — 거시 유동성 **판단층** (`macro-liquidity-monitor` 스킬 결과, 온디맨드). 하이브리드: 있으면 이 값을 우선 표시하고 auto baseline 을 병기, 없으면 baseline 이 게이지. 둘 다 없으면 섹션 자동 숨김.
 
 ### 💡 토큰 절약 구조 (시세 분리 + 증분 갱신)
@@ -19,7 +20,8 @@
 | **시세** (`data/quotes.js`) | `scripts/update-quotes.js` (Yahoo 조회) — 자동화: `.github/workflows/refresh-quotes.yml` | 매일 | **0** |
 | **지수 기술적 분석** (`data/indices.js`) | `scripts/update-indices.js` (Yahoo 일봉 → 단기/장기 MA·RSI·추세·지지/저항·신호) — 같은 워크플로우 | 매일 | **0** |
 | **종목 기술적 분석** (`data/stock-ta.js`) | `scripts/update-stock-ta.js` (Yahoo 2년 일봉 → 전 종목 단기/장기 TA, 공유 `lib-ta.js`) — 같은 워크플로우 | 매일 | **0** |
-| **유동성 baseline** (`data/liquidity-auto.js`) | `scripts/update-liquidity-gauge.js` (Yahoo 금리·커브·VIX·신용·달러·FX → 5단계 합성) — 같은 워크플로우 | 매일 | **0** |
+| **돈의 흐름** (`data/liquidity-flow.js`) | `scripts/update-liquidity-flow.js` (FRED·금융투자협회·한국은행·야후 → 흐름 점수·지표·신용 경고) — 같은 워크플로우 | 매일 | **0** |
+| **시장 여건 게이지** (`data/liquidity-auto.js`) | `scripts/update-liquidity-gauge.js` (Yahoo 금리·커브·VIX·신용·달러·FX → 5단계 합성) — 같은 워크플로우 | 매일 | **0** |
 | **분석** (`data/recommendations.js`) | `scripts/update-reco.js` 로 **바뀐 종목만** 패치 | 필요 시 | 변경분만 |
 | **유동성 판단층** (`data/liquidity.js`) | `macro-liquidity-monitor` 스킬 — 이벤트·내러티브로 baseline 보정 | 온디맨드 | 요청 시 |
 
