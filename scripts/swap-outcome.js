@@ -6,7 +6,7 @@
 //   node scripts/swap-outcome.js                    # 전체 이력
 //   node scripts/swap-outcome.js --since 2026-10-12 # C 모드(주간 심층 발굴) 도입 이후만
 //
-// data/history.js 스냅샷을 차례로 비교해 정식 편성(우량·성장·저평가·배당·히든)의 편입·편출을 뽑고, 같은 날·같은 나라의
+// data/history.js 스냅샷을 차례로 비교해 정식 편성(우량·성장·저평가·배당)의 편입·편출을 뽑고, 같은 날·같은 나라의
 // 편입 묶음과 편출 묶음을 '교체 1회'로 짝지어 교체일 종가 → (현재, 20거래일 뒤) 같은 나라 지수 대비 초과수익을 비교한다.
 // 2026-10-12 점검: 미국 교체일 7회 중 6회 편입이 나았고(평균 +4.5% vs -2.0%), 한국은 4회 중 1회(-2.8% vs +2.3%).
 // 한계: 스냅샷은 (국가,티커)로 중복 제거되므로, 여러 주제에 있는 종목의 한 주제만 뺀 교체(예: TSM value 슬롯)는
@@ -14,7 +14,7 @@
 
 const path = require("path");
 const ROOT = path.join(__dirname, "..");
-const FORMAL = new Set(["core", "growth", "value", "dividend", "rising"]);
+const FORMAL = new Set(["core", "growth", "value", "dividend"]);   // 2026-10-30 히든 폐지 — 그 주제의 교체는 더 세지 않는다
 const si = process.argv.indexOf("--since");
 const SINCE = si >= 0 ? process.argv[si + 1] : "0000-00-00";
 

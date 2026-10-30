@@ -9,7 +9,6 @@
 //   종목별 연간·분기 재무(매출·영업이익/EBIT·순이익·ROE/ROA·부채비율·배당)와 컨센서스·밸류(PER·PBR·배당수익률)를
 //   모은 뒤, 주제 정의(core 우량·growth 성장·value 저평가·dividend 배당)에 맞는 '하드 조건 + 점수'로
 //   (국가×주제) 그룹마다 후보 상위 10개와, 같은 잣대로 잰 현 편성 9종목을 함께 data/discovery-candidates.js 에 쓴다.
-//   히든(rising) 두 그룹은 scripts/screen-hidden.js 가 채운다('10배 가능성 + 영구 손실 위험 낮음' 기준, CLAUDE.md §6).
 //
 // ★ 이것은 '후보 생성'이지 '선정 규칙'이 아니다(CLAUDE.md §6 — 검증 안 된 팩터를 선정에 쓰지 않는다).
 //   편입·교체는 세션이 웹 검색으로 검증하고 §5 교체 기준(편출 종목 결격 등)을 그대로 따른다.
@@ -17,10 +16,9 @@
 //
 // 사용법: node scripts/screen-discovery.js            # 받기 + 기록
 //         node scripts/screen-discovery.js --if-stale [일]  # 그 일수(기본 6) 이내 생성본이 있으면 건너뜀
-//         node scripts/screen-discovery.js --if-stale 0.75 --hidden-stale 6  # Action: 매일 다시 만들고 히든 두 그룹(15~20분)은 6일마다
+//         node scripts/screen-discovery.js --if-stale 0.75  # Action: 매일 다시 만든다
 //           (2026-10-18 매일 결격 점검 도입 — 편성 종목의 주제 기준 미달을 매일 보려면 스크린이 매일 새로워야 한다)
 //         node scripts/screen-discovery.js --limit 40  # 시험용(국가별 상위 N종목만)
-//         node scripts/screen-discovery.js --skip-hidden  # 히든 두 그룹은 이전 결과 유지(약 15분 절약 — 주제 기준만 다시 볼 때)
 const fs = require("fs");
 const path = require("path");
 const { execFile } = require("child_process");
@@ -32,7 +30,6 @@ const LIMIT = Number(argVal("limit") || 0);
 const IF_STALE = process.argv.includes("--if-stale");
 const numArg = (n, d) => { const v = Number(argVal(n)); return isFinite(v) && v > 0 ? v : d; };
 const STALE_DAYS = numArg("if-stale", 6);
-const HIDDEN_STALE = process.argv.includes("--hidden-stale") ? numArg("hidden-stale", 6) : 0;
 const TOP_N = 25;   // 2026-10-18 10→25 — 사용자 지시 '최선의 종목'으로 그룹당 검증 후보를 넓힘
 const today = new Date().toISOString().slice(0, 10);
 
@@ -136,7 +133,7 @@ const KR_FIN_INDUSTRY = new Set(["301", "315", "321", "330", "337"]);
 const coKey = (n) => String(n || "").toLowerCase().replace(/\bclass\s+[a-z]\b/g, "").replace(/\b(inc|corp|corporation|co|company|ltd|plc|holdings?|group|the|n\.?v|s\.?a|ag|se)\b\.?/g, "")
   .replace(/[^a-z0-9가-힣]/g, "");
 const US_FIN_RE = /(은행|보험|대출|금융|투자 관리|투자 은행|중개|자산 관리|증권|리츠|REIT|캐피털|신용)/;
-// 원자재 가격에 실적이 좌우되는 업종 — 성장·히든 후보에서 뺀다(금값·유가 급등이 '구조적 성장'처럼 보이는 착시 방지)
+// 원자재 가격에 실적이 좌우되는 업종 — 성장 후보에서 뺀다(금값·유가 급등이 '구조적 성장'처럼 보이는 착시 방지)
 const US_CYCL_RE = /^(금|은|귀금속)$|광업|광산|탐사 및 생산|석탄|철강|알루미늄|구리/;
 // 합자회사(MLP 등) — 미국 K-1 세금 처리로 개인 투자에 부적합
 const PARTNERSHIP_RE = /\b(units?|l\.?p\.?)\b/i;
@@ -246,7 +243,6 @@ const RULES = {
     dividend: { label: "배당수익률 ≥ 3.5% · 배당성향 ≤ 90% · 순이익 흑자 · 시총 상위 250 · 매출 역성장·희석 5% 초과·자산 급증 상위 10% 제외 — 점수: 이익 안정성·배당 연속 비감소·주식 수 감소(배당수익률 크기는 점수에서 뺌)",
       ok: (s) => s.rank <= 250 && s.divY >= 3.5 && s.npPos && (s.payout == null || s.payout <= 0.9),
       ex: ["agTop", "dil", "payout", "revDown", "trend"], w: { sroa: 0.35, streak: 0.35, iss: 0.3 } },
-    // rising(히든)은 scripts/screen-hidden.js — 시총 수천억~수조·성장 20%·ROIC 15%·PEG 1.5·순현금/FCF 기준이라 더 작은 종목·5년 재무가 필요하다(2026-10-17)
   },
   us: {
     core: { label: "시총 상위 120 · TTM EBIT 흑자 · EBIT 마진 ≥ 10% · ROA ≥ 5%(금융 제외) · 3년 평균 ROIC 상위 절반(비금융) — 점수: 3년 평균 ROIC·매출총이익/자산·주식 수 감소·순자사주 매입·상승여력(배당 무관)",
@@ -261,7 +257,6 @@ const RULES = {
     dividend: { label: "배당수익률 ≥ 2.5% · 배당성향 ≤ 100% · TTM 순이익 흑자 · 시총 상위 450 · 합자회사(MLP) 제외 · 매출 역성장·희석 5% 초과·자산 급증 상위 10% 제외 — 점수: 이익 안정성·배당 연속 비감소·주식 수 감소·주주환원·상승여력",
       ok: (s) => s.rank <= 450 && !s.lp && s.divY >= 2.5 && s.ttmNi > 0 && (s.payout == null || s.payout <= 1.0),
       ex: ["agTop", "dil", "payout", "revDown", "trend"], w: { sroa: 0.2, streak: 0.2, iss: 0.15, shy: 0.15, upside: 0.3 } },
-    // rising(히든)은 scripts/screen-hidden.js (SEC XBRL·나스닥 EPS 컨센서스)
   },
 };
 // 점수용 파생값(높을수록 좋게) — 주제 기준 연구에서 검증된 지표만
@@ -377,8 +372,8 @@ function view(s, score) {
       const score = (s) => Object.keys(rule.w).reduce((acc, k) => acc + rule.w[k] * rk(k, s), 0);
       const otherTheme = (t) => (roster[c + ":" + t] || []).map((x) => x.theme).filter((x) => x !== th);
       // 이미 정식 편성(어느 주제든)에 있는 종목·같은 회사(다른 주식 종류)는 '새 종목'이 아니라 뺀다.
-      // 관심·보유(개인 목록) 종목은 후보로 남기되 alsoIn 으로 표시한다. 후보끼리도 같은 회사는 한 번만.
-      const formalRows = (D[c] || []).filter((m) => !/^(watch|hold)$/.test(m.theme));
+      // 주목·관심·보유(정식 밖 목록) 종목은 후보로 남기되 alsoIn 으로 표시한다. 후보끼리도 같은 회사는 한 번만.
+      const formalRows = (D[c] || []).filter((m) => !/^(spotlight|watch|hold)$/.test(m.theme));
       const formalT = new Set(formalRows.map((m) => m.ticker));
       const groupCos = new Set(formalRows.map((m) => coKey(m.name)).concat(pool.filter((s) => formalT.has(s.ticker)).map((s) => coKey(s.name))));
       const seenCo = new Set();
@@ -399,43 +394,24 @@ function view(s, score) {
     });
   });
 
-  // 히든 두 그룹 — 별도 스크린(유니버스·지표가 다르다). 실패하면(또는 --skip-hidden) 이전 파일의 히든 그룹을 그대로 둔다.
-  // 히든 생성 시각 — 히든을 다시 만들지 않으면 이전 값을 잇는다(--hidden-stale 판정용)
-  let hiddenBuiltAt = null;
-  const prevHiddenAt = (() => { try { global.window = {}; delete require.cache[require.resolve(OUT)]; require(OUT);
-    const o = global.window.DISCOVERY_CANDIDATES || {}; return o.hiddenBuiltAt || o.builtAt || null; } catch (_e) { return null; } })();
-  const hiddenFresh = HIDDEN_STALE && prevHiddenAt && (Date.now() - Date.parse(prevHiddenAt)) / 86400000 < HIDDEN_STALE;
-  try {
-    if (process.argv.includes("--skip-hidden") || hiddenFresh) throw new Error("--skip-hidden");
-    Object.assign(groups, await require("./screen-hidden").hiddenGroups(D, { log: (m) => console.log("  [히든] " + m) }));
-    hiddenBuiltAt = new Date().toISOString();
-  } catch (e) {
-    hiddenBuiltAt = prevHiddenAt;
-    if (hiddenFresh) console.log("히든 두 그룹은 " + prevHiddenAt + " 생성본 유지(--hidden-stale " + HIDDEN_STALE + "일)");
-    if (!(e && e.message === "--skip-hidden")) console.error("히든 스크린 실패 — 이전 히든 그룹 유지:", e && e.message);
-    try { global.window = {}; delete require.cache[require.resolve(OUT)]; require(OUT); const old = (global.window.DISCOVERY_CANDIDATES || {}).groups || {};
-      const skip = e && e.message === "--skip-hidden";
-      ["korea|rising", "us|rising"].forEach((k) => { if (old[k]) groups[k] = skip ? old[k] : Object.assign({ stale: true }, old[k]); }); } catch (_e) { /* 없음 */ }
-  }
-
   // 주제 팩터를 못 받은 종목(미국은 대개 IFRS 로 공시하는 외국 ADR — SEC us-gaap frames 에 없다). 저평가 정체성(EBIT/EV·FCF)은 팩터가 없으면 통과할 수 없어
   // 이 목록의 종목은 저평가 후보에서 빠진다 — 서브에이전트가 gateThresholds 로 직접 판정할 수 있게 남긴다.
   const noFx = (c, cap) => all.filter((s) => s.c === c && !s.extra && !s.fx && s.rank <= cap).sort((a, b) => a.rank - b.rank).map((s) => s.ticker + " " + s.name + " #" + s.rank);
-  // 관심 종목의 재무 값(같은 잣대) — Top Pick 후보에 관심 편성 종목도 넣는다(2026-10-30 사용자 요청, lib-picks.js). 출력만 더한다(주제 후보·편성 판정 불변).
+  // 주목·관심 종목의 재무 값(같은 잣대) — Top Pick 후보에 주목·관심 편성 종목도 넣는다(2026-10-30 사용자 요청, lib-picks.js). 출력만 더한다(주제 후보·편성 판정 불변).
   const personal = { korea: {}, us: {} };
-  ["korea", "us"].forEach((c) => (D[c] || []).filter((m) => m.theme === "watch").forEach((m) => {
+  ["korea", "us"].forEach((c) => (D[c] || []).filter((m) => m.theme === "spotlight" || m.theme === "watch").forEach((m) => {
     const row = all.find((s) => s.c === c && s.ticker === m.ticker);
     if (row && !personal[c][m.ticker]) personal[c][m.ticker] = view(row, null);
   }));
-  const outObj = { asOf: today, builtAt: new Date().toISOString(), hiddenBuiltAt, source: "네이버 증권 시가총액 순위·재무(연간·분기)·컨센서스 — scripts/screen-discovery.js",
+  const outObj = { asOf: today, builtAt: new Date().toISOString(), source: "네이버 증권 시가총액 순위·재무(연간·분기)·컨센서스 — scripts/screen-discovery.js",
     universe: { korea: kr.length, us: us.length, failed: fail.length }, note: "후보 생성용 스크린 — 편입·교체 판단은 세션 검증과 CLAUDE.md §5 기준으로만",
     noFactors: { us: noFx("us", 450), korea: noFx("korea", 250) }, personal, groups };
-  // 전 유니버스 재무 값 — 관심 스크린(screen-watch.js)의 '우량 기업' 관문용(2026-10-30). 가격에 따라 매일 바뀌는 값(시세·시총·PER·PBR·배당수익률·
+  // 전 유니버스 재무 값 — 주목 스크린(screen-watch.js)의 '우량 기업' 관문용(2026-10-30). 가격에 따라 매일 바뀌는 값(시세·시총·PER·PBR·배당수익률·
   //   상승여력)은 빼고 한 줄에 한 종목으로 쓴다(매일 커밋의 차이를 줄인다). 앱은 읽지 않는다.
   const uni = all.filter((s) => s.c === "korea" || s.c === "us").sort((a, b) => (a.c < b.c ? -1 : a.c > b.c ? 1 : 0) || ((a.rank || 1e9) - (b.rank || 1e9)) || (a.ticker < b.ticker ? -1 : 1))
     .map((s) => {
       const v = view(s, null); ["price", "mcap", "upside", "tp", "tpDate", "per", "cnsPer", "pbr", "divY", "score", "recomm"].forEach((k) => delete v[k]);
-      // 관심 스크린 관문 재료 중 view 에 없는 것 — 영업이익 1년 성장·ROA 변화(%)·피오트로스키 F(0~9)
+      // 주목 스크린 관문 재료 중 view 에 없는 것 — 영업이익 1년 성장·ROA 변화(%)·피오트로스키 F(0~9)
       if (v.fx && s.fx) { const p1 = (x) => (x == null || !isFinite(x) ? null : r1(x * 100)); v.fx.opg = p1(s.fx.OPG); v.fx.droa = p1(s.fx.DROA); v.fx.f = s.fx.F == null ? null : s.fx.F; }
       return JSON.stringify(Object.assign({ c: s.c }, v));
     });

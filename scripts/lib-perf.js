@@ -9,7 +9,9 @@
 // t: 일간 초과수익(편성 − 지수)의 평균 ÷ 표준오차, β 반영 초과는 회귀 절편의 t — |t| < 2 면 우연과 구별되지 않는 차이.
 "use strict";
 
-const PERSONAL = { watch: 1, hold: 1 };
+// 정식 밖 목록 — 주목(spotlight, 2026-10-30~ 신고가·턴어라운드)·관심·보유. 정식 전체·티어 묶음에 넣지 않고 각자 따로 잰다.
+//   (없어진 주제 — 2026-10-30 폐지한 'rising' — 는 그 시절 기록에선 정식이었으므로 정식 전체 계산에 그대로 남는다)
+const PERSONAL = { spotlight: 1, watch: 1, hold: 1 };
 const MIN_DAYS = 20;   // β·t 를 계산하는 최소 거래일
 const HELD_DAYS = 90;  // '지금 편성'의 시장 민감도를 재는 최근 기록 창(달력일) — 결격 점검의 β 밴드·앱 '지금 비중 기준 β'
 
@@ -26,7 +28,7 @@ function anchorsFor(country, sel, date, mode) {
   return A.w;
 }
 
-// 선택자: null = 정식 전체(관심·보유 제외), "core" 등 = 그 주제, "tier:1" = 정식 중 그 티어, "watch"/"hold" = 개인 목록,
+// 선택자: null = 정식 전체(주목·관심·보유 제외), "core" 등 = 그 주제, "tier:1" = 정식 중 그 티어, "spotlight"/"watch"/"hold" = 정식 밖 목록,
 //   "picks" = 그 기록일의 그 나라 Top Pick(스냅샷 picks — chain 이 기록일마다 고른다, inGroup 으로는 가릴 수 없다)
 function inGroup(sel, th, tier) {
   if (!sel) return !PERSONAL[th];

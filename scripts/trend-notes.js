@@ -24,7 +24,7 @@ const ROOT = path.join(__dirname, "..");
 const DIR = path.join(ROOT, "data", "trend");
 const AGE_DAYS = 21;
 const LABELS = "ABCDEFGHIJ";
-const PERSONAL = { watch: 1, hold: 1 };
+const PERSONAL = { spotlight: 1, watch: 1, hold: 1 };   // 정식 밖 목록 — 정식 편성 다음 순서
 const args = process.argv.slice(2);
 const opt = (k, d) => { const i = args.indexOf(k); return i >= 0 && args[i + 1] && !/^--/.test(args[i + 1]) ? args[i + 1] : d; };
 

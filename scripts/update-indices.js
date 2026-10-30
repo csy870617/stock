@@ -223,7 +223,7 @@ function corrBeta(base, other) {
   return { corr: rnd(sxy / Math.sqrt(sxx * syy), 2), beta: rnd(sxy / sxx, 2), n: n };
 }
 const CORR_WEEKS = 104, MOVERS = 5, MOVER_MIN = 0.2;
-const THEME_KO = { core: "우량", growth: "성장", value: "저평가", dividend: "배당", rising: "히든", watch: "관심", hold: "보유" };
+const THEME_KO = { core: "우량", growth: "성장", value: "저평가", dividend: "배당", spotlight: "주목", watch: "관심", hold: "보유" };
 function loadReco() {
   try { const w = {}; new Function("window", fs.readFileSync(path.join(ROOT, "data", "recommendations.js"), "utf8"))(w); return w.STOCK_DATA || null; } catch (_e) { return null; }
 }

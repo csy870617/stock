@@ -33,7 +33,7 @@ const ROOT = path.join(__dirname, "..");
 const DATA = path.join(ROOT, "data");
 const NOTES = path.join(DATA, "candidate-notes.json");
 const OUT = path.join(DATA, "candidates.js");
-const THEMES = ["core", "growth", "value", "dividend", "rising"];
+const THEMES = ["core", "growth", "value", "dividend"];   // 정식 편성(주목·관심·보유는 결격 점검 대상이 아니다)
 const COUNTRIES = ["korea", "us"];
 const LIST_MAX = 12;           // 그룹당 앱에 보이는 후보 수(검증 통과·보류는 모두, 나머지는 스크린 점수순)
 const EARN_DAYS = 10, DROP_PCT = -12, TPCUT_PCT = -10, TPCUT_DAYS = 14;
@@ -158,7 +158,6 @@ function why(th, r) {
   else if (th === "growth") { p("3년 매출 연평균", fx.sg3); p("FCF 마진", fx.fcfm); p("3년 평균 ROIC", fx.roic3); }
   else if (th === "value") { p("EBIT/EV", fx.ebitev); p("FCF/시총", fx.fcfp); p("매출 성장", fx.sg1 != null ? fx.sg1 : r.revG); }
   else if (th === "dividend") { if (fx.streak != null) a.push("배당 비감소 " + fx.streak + "년"); p("배당성향", fx.payoutFy != null ? fx.payoutFy : r.payout); p("배당", r.divY); }
-  else if (th === "rising") { p("3년 매출 연평균", r.revG3); p("3년 평균 ROIC", r.roicAvg); if (r.peg != null) a.push("PEG " + pct(r.peg)); }
   return a.slice(0, 3).join(" · ");
 }
 const shortName = (n) => String(n || "").replace(/,?\s+(Inc\.?|Corporation|Corp\.?|Co\.?|Ltd\.?|Limited|PLC|plc|N\.V\.|S\.A\.|SE|AG|Holdings?|Group|ADR|Company)\b\.?/g, "").replace(/\s{2,}/g, " ").trim();
@@ -170,9 +169,9 @@ function link(c, r) {
 
 // 중복 편성(2026-10-21 사용자 승인 — 분산 가드레일): 같은 종목이 정식 주제 2곳 이상에 있으면 한 곳만 남기고
 // 나머지 자리는 '중복' 결격으로 올린다(검색 없이 확정 — 같은 주제 후보로 교체). 남길 곳 = ①그 주제 스크린 기준을 통과하는 곳
-// (fails 없음 — 예: SK하이닉스는 성장 필터 미달·우량 통과 → 우량) ②tier 가 높은(숫자 작은) 곳 ③주제 순서(우량→성장→저평가→배당→히든).
+// (fails 없음 — 예: SK하이닉스는 성장 필터 미달·우량 통과 → 우량) ②tier 가 높은(숫자 작은) 곳 ③주제 순서(우량→성장→저평가→배당).
 // 앱(대표 종목 선택)·ai-daily(Top Pick 후보)도 이 판정을 그대로 따른다(candidates.js 의 dup).
-const THEME_KO = { core: "우량", growth: "성장", value: "저평가", dividend: "배당", rising: "히든" };
+const THEME_KO = { core: "우량", growth: "성장", value: "저평가", dividend: "배당" };
 const DUP = {};
 COUNTRIES.forEach((c) => {
   const occ = {};
@@ -326,7 +325,7 @@ if (queue.swap.length) {
     const b = BETA[c];
     if (b == null) return;
     const out = b < 0.7 || b > 1.3;
-    console.log("  · " + c + " 정식 편성 β " + b.toFixed(2) + (out ? " — 밴드(0.7~1.3) 밖: 배당·히든 외 교체는 β 를 " + (b < 0.7 ? "높이는" : "낮추는") + " 후보만(vol-beta.js 로 확인)" : " — 밴드 안"));
+    console.log("  · " + c + " 정식 편성 β " + b.toFixed(2) + (out ? " — 밴드(0.7~1.3) 밖: 배당 외 교체는 β 를 " + (b < 0.7 ? "높이는" : "낮추는") + " 후보만(vol-beta.js 로 확인)" : " — 밴드 안"));
   });
   queue.swap.forEach((x) => {
     // 이 자리와 맞바꿀 때 분산 상한에 걸리는 후보는 표시(update-reco 가 거부한다 — 다른 후보로)

@@ -7,17 +7,15 @@ const fs = require("fs");
 const path = require("path");
 const L = require("../theme/lib");
 const LF = require("../../lib-factors");
-const SH = require("../../screen-hidden");
 
 const DIR = path.resolve(process.argv[2] || "theme-cache");
 const argVal = (n) => { const i = process.argv.indexOf("--" + n); return i >= 0 ? process.argv[i + 1] : null; };
 const OUT = argVal("out");
 const log = (...a) => console.error(new Date().toISOString().slice(11, 19), ...a);
 
-// ── 기준: screen-hidden.js 와 같은 값(어긋나면 멈춘다) ──
+// ── 기준: 시험 당시 screen-hidden.js 의 값 그대로(그 스크립트는 2026-10-30 히든 주제와 함께 지웠다 — 커밋 6b8d882 에 남아 있다) ──
 const C = { krMcap: [3000e8, 8e12], usMcap: [0.5e9, 15e9], growth: 0.20, growthFloor: 0.10, roicAvg: 0.15, roicLast: 0.12, peg: 1.5, dilution: 0.03, tax: 0.22, histFloor: 0.05 };
 const RELAX = Object.assign({}, C, { krMcap: [3000e8, 12e12], usMcap: [0.5e9, 22.5e9], growth: 0.15, growthFloor: 0.05, histFloor: 0, roicAvg: 0.12, roicLast: 0.10, peg: 2.0, dilution: 0.05 });
-for (const k of Object.keys(C)) if (JSON.stringify(C[k]) !== JSON.stringify(SH.CRITERIA[k])) throw new Error("screen-hidden.js 기준과 다름: " + k);
 const US_EX_SECTOR = /^Finance$/;
 const US_EX_IND = /(Real Estate|REIT|Oil and Gas Field|Oil & Gas|Oilfield|Blank Check|Oil & Gas Production|Integrated oil|Precious Metals|Metal Mining|Mining & Quarrying|Coal Mining|Steel\/Iron Ore|Marine Transportation|Oil Refining|Natural Gas Distribution|Banks|Savings Institutions|Finance)/i;
 const US_EX_NAME = /(Acquisition Corp|Warrant|Rights?\b|Units?\b|Preferred|Depositary Shares? Representing|ETF|Fund\b|Trust\b|Notes due|% Senior)/i;

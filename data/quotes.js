@@ -21,13 +21,6 @@ window.STOCK_QUOTES = {
    "close": 155500,
    "closeDate": "2026-10-30"
   },
-  "119850": {
-   "price": 31900,
-   "date": "2026-10-30",
-   "changePct": -8.3,
-   "close": 31900,
-   "closeDate": "2026-10-30"
-  },
   "138040": {
    "price": 133200,
    "date": "2026-10-30",
@@ -61,13 +54,6 @@ window.STOCK_QUOTES = {
    "date": "2026-10-30",
    "changePct": 8.9,
    "close": 1487000,
-   "closeDate": "2026-10-30"
-  },
-  "214450": {
-   "price": 212000,
-   "date": "2026-10-30",
-   "changePct": -4.7,
-   "close": 212000,
    "closeDate": "2026-10-30"
   },
   "241560": {
@@ -138,13 +124,6 @@ window.STOCK_QUOTES = {
    "date": "2026-10-30",
    "changePct": 0.5,
    "close": 14970,
-   "closeDate": "2026-10-30"
-  },
-  "403870": {
-   "price": 42600,
-   "date": "2026-10-30",
-   "changePct": -6.7,
-   "close": 42600,
    "closeDate": "2026-10-30"
   },
   "005930": {
@@ -224,39 +203,11 @@ window.STOCK_QUOTES = {
    "close": 42450,
    "closeDate": "2026-10-30"
   },
-  "058470": {
-   "price": 56100,
-   "date": "2026-10-30",
-   "changePct": -9.1,
-   "close": 56100,
-   "closeDate": "2026-10-30"
-  },
-  "082920": {
-   "price": 24000,
-   "date": "2026-10-30",
-   "changePct": -1.4,
-   "close": 24000,
-   "closeDate": "2026-10-30"
-  },
-  "064760": {
-   "price": 193600,
-   "date": "2026-10-30",
-   "changePct": -9.1,
-   "close": 193600,
-   "closeDate": "2026-10-30"
-  },
   "035900": {
    "price": 39400,
    "date": "2026-10-30",
    "changePct": 1.3,
    "close": 39400,
-   "closeDate": "2026-10-30"
-  },
-  "021240": {
-   "price": 104000,
-   "date": "2026-10-30",
-   "changePct": 2.4,
-   "close": 104000,
    "closeDate": "2026-10-30"
   },
   "036570": {
@@ -294,32 +245,11 @@ window.STOCK_QUOTES = {
    "close": 1418000,
    "closeDate": "2026-10-30"
   },
-  "033780": {
-   "price": 196200,
-   "date": "2026-10-30",
-   "changePct": 1.6,
-   "close": 196200,
-   "closeDate": "2026-10-30"
-  },
   "001120": {
    "price": 40300,
    "date": "2026-10-30",
    "changePct": 0.2,
    "close": 40300,
-   "closeDate": "2026-10-30"
-  },
-  "062040": {
-   "price": 146700,
-   "date": "2026-10-30",
-   "changePct": -6.4,
-   "close": 146700,
-   "closeDate": "2026-10-30"
-  },
-  "041830": {
-   "price": 46550,
-   "date": "2026-10-30",
-   "changePct": 1.9,
-   "close": 46550,
    "closeDate": "2026-10-30"
   },
   "005830": {
@@ -357,13 +287,6 @@ window.STOCK_QUOTES = {
    "close": 48400,
    "closeDate": "2026-10-30"
   },
-  "095340": {
-   "price": 155800,
-   "date": "2026-10-30",
-   "changePct": -6.3,
-   "close": 155800,
-   "closeDate": "2026-10-30"
-  },
   "005490": {
    "price": 273500,
    "date": "2026-10-30",
@@ -399,18 +322,32 @@ window.STOCK_QUOTES = {
    "close": 334000,
    "closeDate": "2026-10-30"
   },
-  "030190": {
-   "price": 17380,
-   "date": "2026-10-30",
-   "changePct": 0.9,
-   "close": 17380,
-   "closeDate": "2026-10-30"
-  },
   "047050": {
    "price": 48650,
    "date": "2026-10-30",
    "changePct": -1.2,
    "close": 48650,
+   "closeDate": "2026-10-30"
+  },
+  "021240": {
+   "price": 104000,
+   "date": "2026-10-30",
+   "changePct": 2.4,
+   "close": 104000,
+   "closeDate": "2026-10-30"
+  },
+  "033780": {
+   "price": 196200,
+   "date": "2026-10-30",
+   "changePct": 1.6,
+   "close": 196200,
+   "closeDate": "2026-10-30"
+  },
+  "030190": {
+   "price": 17380,
+   "date": "2026-10-30",
+   "changePct": 0.9,
+   "close": 17380,
    "closeDate": "2026-10-30"
   },
   "MSFT": {
@@ -532,13 +469,6 @@ window.STOCK_QUOTES = {
    "close": 273.2,
    "closeDate": "2026-10-30"
   },
-  "NXT": {
-   "price": 79.33,
-   "date": "2026-10-30",
-   "changePct": -0.6,
-   "close": 79.33,
-   "closeDate": "2026-10-30"
-  },
   "LLY": {
    "price": 1417.54,
    "date": "2026-10-30",
@@ -609,76 +539,6 @@ window.STOCK_QUOTES = {
    "close": 406.97,
    "closeDate": "2026-10-30"
   },
-  "GILD": {
-   "price": 170.68,
-   "date": "2026-10-30",
-   "changePct": 3.1,
-   "close": 170.68,
-   "closeDate": "2026-10-30"
-  },
-  "BRK.B": {
-   "price": 542.49,
-   "date": "2026-10-30",
-   "changePct": 0.1,
-   "close": 542.49,
-   "closeDate": "2026-10-30"
-  },
-  "TMO": {
-   "price": 697,
-   "date": "2026-10-30",
-   "changePct": -1.7,
-   "close": 697,
-   "closeDate": "2026-10-30"
-  },
-  "ECL": {
-   "price": 302.98,
-   "date": "2026-10-30",
-   "changePct": 0.7,
-   "close": 302.98,
-   "closeDate": "2026-10-30"
-  },
-  "NVT": {
-   "price": 125.98,
-   "date": "2026-10-30",
-   "changePct": -8.8,
-   "close": 125.98,
-   "closeDate": "2026-10-30"
-  },
-  "FSS": {
-   "price": 112.67,
-   "date": "2026-10-30",
-   "changePct": -2.2,
-   "close": 112.67,
-   "closeDate": "2026-10-30"
-  },
-  "AAON": {
-   "price": 67.4,
-   "date": "2026-10-30",
-   "changePct": -10.5,
-   "close": 67.4,
-   "closeDate": "2026-10-30"
-  },
-  "NVMI": {
-   "price": 312.24,
-   "date": "2026-10-30",
-   "changePct": -6.7,
-   "close": 312.24,
-   "closeDate": "2026-10-30"
-  },
-  "POWL": {
-   "price": 156.26,
-   "date": "2026-10-30",
-   "changePct": -7.3,
-   "close": 156.26,
-   "closeDate": "2026-10-30"
-  },
-  "MSI": {
-   "price": 491.53,
-   "date": "2026-10-30",
-   "changePct": -0.1,
-   "close": 491.53,
-   "closeDate": "2026-10-30"
-  },
   "DVN": {
    "price": 52.15,
    "date": "2026-10-30",
@@ -728,27 +588,6 @@ window.STOCK_QUOTES = {
    "close": 116.07,
    "closeDate": "2026-10-30"
   },
-  "MSCI": {
-   "price": 623.38,
-   "date": "2026-10-30",
-   "changePct": 0.8,
-   "close": 623.38,
-   "closeDate": "2026-10-30"
-  },
-  "RSG": {
-   "price": 244.04,
-   "date": "2026-10-30",
-   "changePct": 3.3,
-   "close": 244.04,
-   "closeDate": "2026-10-30"
-  },
-  "CTAS": {
-   "price": 219.82,
-   "date": "2026-10-30",
-   "changePct": 0.8,
-   "close": 219.82,
-   "closeDate": "2026-10-30"
-  },
   "TJX": {
    "price": 140.31,
    "date": "2026-10-30",
@@ -770,11 +609,11 @@ window.STOCK_QUOTES = {
    "close": 372.59,
    "closeDate": "2026-10-30"
   },
-  "APPF": {
-   "price": 213.25,
+  "LMT": {
+   "price": 636.95,
    "date": "2026-10-30",
-   "changePct": 3,
-   "close": 213.25,
+   "changePct": -1,
+   "close": 636.95,
    "closeDate": "2026-10-30"
   },
   "CB": {
@@ -784,18 +623,67 @@ window.STOCK_QUOTES = {
    "close": 364.12,
    "closeDate": "2026-10-30"
   },
+  "GILD": {
+   "price": 170.68,
+   "date": "2026-10-30",
+   "changePct": 3.1,
+   "close": 170.68,
+   "closeDate": "2026-10-30"
+  },
+  "BRK.B": {
+   "price": 542.49,
+   "date": "2026-10-30",
+   "changePct": 0.1,
+   "close": 542.49,
+   "closeDate": "2026-10-30"
+  },
+  "TMO": {
+   "price": 697,
+   "date": "2026-10-30",
+   "changePct": -1.7,
+   "close": 697,
+   "closeDate": "2026-10-30"
+  },
+  "ECL": {
+   "price": 302.98,
+   "date": "2026-10-30",
+   "changePct": 0.7,
+   "close": 302.98,
+   "closeDate": "2026-10-30"
+  },
+  "MSI": {
+   "price": 491.53,
+   "date": "2026-10-30",
+   "changePct": -0.1,
+   "close": 491.53,
+   "closeDate": "2026-10-30"
+  },
+  "MSCI": {
+   "price": 623.38,
+   "date": "2026-10-30",
+   "changePct": 0.8,
+   "close": 623.38,
+   "closeDate": "2026-10-30"
+  },
+  "RSG": {
+   "price": 244.04,
+   "date": "2026-10-30",
+   "changePct": 3.3,
+   "close": 244.04,
+   "closeDate": "2026-10-30"
+  },
+  "CTAS": {
+   "price": 219.82,
+   "date": "2026-10-30",
+   "changePct": 0.8,
+   "close": 219.82,
+   "closeDate": "2026-10-30"
+  },
   "ADP": {
    "price": 293.84,
    "date": "2026-10-30",
    "changePct": 2.7,
    "close": 293.84,
-   "closeDate": "2026-10-30"
-  },
-  "LMT": {
-   "price": 636.95,
-   "date": "2026-10-30",
-   "changePct": -1,
-   "close": 636.95,
    "closeDate": "2026-10-30"
   },
   "ORLY": {
@@ -810,20 +698,6 @@ window.STOCK_QUOTES = {
    "date": "2026-10-30",
    "changePct": 0.5,
    "close": 155.4,
-   "closeDate": "2026-10-30"
-  },
-  "FIVE": {
-   "price": 240.955,
-   "date": "2026-10-30",
-   "changePct": -1.9,
-   "close": 240.955,
-   "closeDate": "2026-10-30"
-  },
-  "STRL": {
-   "price": 345.91,
-   "date": "2026-10-30",
-   "changePct": -7.4,
-   "close": 345.91,
    "closeDate": "2026-10-30"
   }
  },

@@ -2,7 +2,7 @@
 // 선정 규칙 동결 지킴이 — 2026-10-21 ~ 2027-01-21(CLAUDE.md §6, 사용자 승인, LLM 토큰 0).
 //
 // 왜: 10/17~10/19 에 기준을 여러 번 바꾸고 하루 25종목을 교체해, 성과 기록으로 어떤 규칙이 맞는지 판단할 수 없게 됐다.
-//   동결 중엔 주제 정의·스크린 RULES·점수 가중·결격 기준·히든 기준·그림자 규칙을 바꾸지 않는다. 문서 규칙만으로는
+//   동결 중엔 주제 정의·스크린 RULES·점수 가중·결격 기준·그림자 규칙을 바꾸지 않는다. 문서 규칙만으로는
 //   세션이 '개선'하다 모르고 바꿀 수 있어, 규칙이 든 파일의 지문을 기준선과 비교해 validate-reco.js 가 경고한다.
 // 받아들일 수 있는 변경: ①명백한 버그·데이터 오류 수정 ②사전 등록 검증(§7 방식)을 통과하고 사용자가 승인한 변경 —
 //   --accept 로 사유를 남기면 지금 상태가 새 기준선이 된다(HISTORY 에도 날짜·근거).
@@ -17,14 +17,14 @@ const crypto = require("crypto");
 const ROOT = path.join(__dirname, "..");
 const OUT = path.join(ROOT, "data", "rules-freeze.json");
 const FROM = "2026-10-21", UNTIL = "2027-01-21";
-// 선정 결과를 바꾸는 파일 — 스크린(주제 정의·필터·점수)·히든 기준·결격 신호·신호 엔진(추세 붕괴)·그림자 규칙·검증 에이전트 지침
+// 선정 결과를 바꾸는 파일 — 스크린(주제 정의·필터·점수)·결격 신호·신호 엔진(추세 붕괴)·그림자 규칙·검증 에이전트 지침
 const FILES = [
-  "scripts/screen-discovery.js", "scripts/screen-hidden.js", "scripts/screen-factors.js", "scripts/lib-factors.js",
+  "scripts/screen-discovery.js", "scripts/screen-factors.js", "scripts/lib-factors.js",
   "scripts/check-defects.js", "scripts/lib-ta.js", "scripts/shadow-track.js",
   "docs/DEEP-AUDIT-AGENT.md", "docs/DEEP-DISCOVERY-AGENT.md",
 ];
 const THEMES_KEY = "recommendations.js themes";
-const PERSONAL = new Set(["watch", "hold"]);
+const PERSONAL = new Set(["spotlight", "watch", "hold"]);   // 정식 밖 목록(주목·관심·보유)은 정식 주제 정의 지문에서 뺀다
 
 const sha = (s) => crypto.createHash("sha256").update(s).digest("hex").slice(0, 16);
 // 줄 끝 공백·CRLF 차이는 무시(내용이 같으면 같은 지문)

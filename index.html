@@ -375,7 +375,6 @@ svg { display: block; }
 .mc-cb b.up { left: 50%; background: var(--up); } .mc-cb b.down { right: 50%; background: var(--down); }
 .mc-cv { text-align: right; font-weight: 700; font-variant-numeric: tabular-nums; }
 /* 돈의 흐름(유동성) — 홈 카드와 상세(data/liquidity-flow.js, 2026-10-30). 단계 색은 예전 유동성 게이지와 같은 --lq0~4 */
-.list-meta .lm-tip { display: inline-grid; vertical-align: middle; margin: -4px 0 -4px 2px; width: 26px; height: 26px; }
 .fw-wrap { margin-top: 14px; }
 .fw-wrap:empty { display: none; }
 .fw-card { display: block; padding: 12px 14px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--sf2); cursor: pointer; -webkit-tap-highlight-color: transparent; }
@@ -1900,19 +1899,21 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     if (isTierKey(key)) {
       var tn = tierOfKey(key);
       return { key: key, label: "Tier " + tn, emoji: "", tier: tn,
-        desc: "정식 추천 5개 주제(우량·성장·저평가·배당·히든)에서 ‘" + TIER_NAMES[tn] + "’으로 분류된 종목을 주제별로 모아 봅니다(관심·보유 제외)." };
+        desc: "정식 추천 4개 주제(우량·성장·저평가·배당)에서 ‘" + TIER_NAMES[tn] + "’으로 분류된 종목을 주제별로 모아 봅니다(주목·관심·보유 제외)." };
     }
     var t = (D.themes || []).filter(function (x) { return x.key === key; })[0];
-    return t || { key: key, label: key, emoji: "", desc: "" };
+    return t || { key: key, label: RETIRED_THEMES[key] || key, emoji: "", desc: "" };
   }
+  // 없어진 주제 — 과거 보기(그날 편성 기록)에만 나온다(2026-10-30 히든 폐지)
+  var RETIRED_THEMES = { rising: "히든(종료)" };
   // 티어별 모아보기 — 선택 키에 주제 대신 "tier:1|2|3" 을 넣어 같은 화면 경로를 그대로 쓴다.
-  //   대상은 정식 추천(관심·보유 제외)이며, 한 티커가 두 주제에 있으면 주제별로 각각 보인다.
+  //   대상은 정식 추천(주목·관심·보유 제외)이며, 한 티커가 두 주제에 있으면 주제별로 각각 보인다.
   var TIER_KEYS = ["tier:1", "tier:2", "tier:3"];
   function isTierKey(k) { return typeof k === "string" && k.indexOf("tier:") === 0; }
   function tierOfKey(k) { return +k.slice(5); }
   // 선택 키(주제 또는 티어)에 해당하는지 — th(주제)·tier 를 받는다(종목·성과행·스냅샷 공용).
   function inSel(key, th, tier) {
-    return isTierKey(key) ? (!isPersonal(th) && tier === tierOfKey(key)) : th === key;
+    return isTierKey(key) ? (isFormal(th) && tier === tierOfKey(key)) : th === key;
   }
 
   // 시세(quotes.js)는 매일 갱신되므로 최신성은 "오늘" 대비로 판단한다.
@@ -3165,15 +3166,16 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   function detailBadges(s, c, e) {
     var out = [];
     if (NEW_TICKERS[s.ticker]) out.push('<span class="bd bd-new">NEW</span>');
-    if (!isPersonal(s.theme)) {
+    if (isFormal(s.theme)) {
       out.push('<span class="bd bd-t"><b>T' + esc(s.tier) + "</b>" + esc(themeMeta(s.theme).label) + " · " + esc((TIER_NAMES[s.tier] || "").split(" · ")[1] || "") + "</span>");
       var aw = anchorOf(c, s.ticker);
       if (aw) out.push('<span class="bd" data-basis="' + esc(WT_TIP) + '">편성 비중 ' + esc(aw.w) + "%</span>");
-    } else if (s.theme === "watch") out.push('<span class="bd">관심종목' + (s.watchTag ? " · " + esc(s.watchTag) : "") + "</span>");
+    } else if (isSpot(s.theme)) out.push('<span class="bd" data-basis="' + esc(SPOT_TIP) + '">' + esc(themeMeta(s.theme).label) + (s.watchTag ? " · " + esc(s.watchTag) : "") + "</span>");
+    else if (s.theme === "watch") out.push('<span class="bd">관심종목</span>');
     else out.push('<span class="bd">보유종목</span>');
     if (e.upside != null && e.upside <= 0) out.push('<span class="bd bd-warn" data-basis="' + esc(TP_HIT_TIP) + '">목표가 도달</span>');
     if (isValueTrap(s, e.upside)) out.push('<span class="bd bd-warn" data-basis="' + esc(VT_TIP) + '">낙폭발 상승여력</span>');
-    var df = isPersonal(s.theme) ? null : defectOf(c, s.theme, s.ticker);
+    var df = !isFormal(s.theme) ? null : defectOf(c, s.theme, s.ticker);
     if (df && df.state === "결격") out.push('<span class="bd' + (df.dup ? "" : " bd-warn") + '" data-basis="' + esc(defectText(df)) + '">' + (df.dup ? "중복 · 교체 대기" : "결격 · 교체 대기") + "</span>");
     else if (df && df.state === "점검 필요") out.push('<span class="bd" data-basis="' + esc(defectText(df)) + '">결격 점검 중</span>');
     if (s.priceUnverified && !e.live) out.push('<span class="bd bd-warn" data-basis="최근 시세를 확인하지 못해 옛 가격 기준입니다. 표시된 상승여력이 실제와 다를 수 있습니다.">현재가 확인 필요</span>');
@@ -3195,7 +3197,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   var DUP_LEAD = "같은 종목이 정식 주제 두 곳 이상에 있어 한 곳에만 남깁니다 — 회사 자체의 결격은 아닙니다. 이 자리는 검증을 통과한 다른 후보로 바꿉니다.";
   function detailAlerts(s, c, e) {
     var out = [];
-    var df = isPersonal(s.theme) ? null : defectOf(c, s.theme, s.ticker);
+    var df = !isFormal(s.theme) ? null : defectOf(c, s.theme, s.ticker);
     if (df && (df.state === "결격" || df.state === "점검 필요")) {
       var why = [];
       if (df.note) why.push(df.note);
@@ -3690,7 +3692,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
 
   // Top Pick 순위 — data/pick-scores.js(scripts/pick-score.js 가 매일 생성: 건강 관문 + 상승 가능성 점수, scripts/lib-picks.js — 2026-10-27~).
   //   큐레이션(topPicks — 이 순위 1~3위에 이유를 붙인 것)이 없거나 일부가 편성에서 빠졌을 때 같은 순위로 채운다. 순위 파일이 없으면 채우지 않는다.
-  var PICK_CRIT = "건강 조건(흑자·희석·자산 급증·이익 변동·추세·수급·결격, 한국은 목표가 급락도)을 통과한 정식 추천·관심 종목 중 상승 가능성 점수(미국: 주식 수 감소·주주환원·ROIC, 한국: 주식 수 감소·배당) 1~3위(미국은 업종마다 한 종목) — 확실한 예측이 아니라 확률을 조금 기울이는 기준";
+  var PICK_CRIT = "건강 조건(흑자·희석·자산 급증·이익 변동·추세·수급·결격, 한국은 목표가 급락도)을 통과한 정식 추천·주목·관심 종목 중 상승 가능성 점수(미국: 주식 수 감소·주주환원·ROIC, 한국: 주식 수 감소·배당) 1~3위(미국은 업종마다 한 종목) — 확실한 예측이 아니라 확률을 조금 기울이는 기준";
   //   오늘의 1~3위(top — 미국은 업종마다 한 종목, 10/27 4차 연구)를 앞에 두고 나머지는 점수 순. 업종 분산 나라는 이미 나온 업종을 뒤로 미룬다.
   function rankedPicks(cc) {
     var P = window.PICK_SCORES, x = P && P[cc], r = x && x.ranked;
@@ -3853,21 +3855,20 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   function rowHtml(s, o) {
     o = o || {};
     var c = o.c || state.country, e = effective(s), dv = divOf(s), tag;
-    if (isPersonal(s.theme)) {
-      tag = s.theme === "watch"
-        ? (s.watchTag ? '<span class="wtag ' + (s.watchTag === "신고가" ? "wt-high" : "wt-turn") + '">' + esc(s.watchTag) + "</span>" : '<span class="wtag wt-light">관심</span>')
-        : '<span class="wtag wt-hold">보유</span>';
+    if (isSpot(s.theme)) tag = o.noTag ? "" : spotTagHtml(s);
+    else if (isPersonal(s.theme)) {
+      tag = s.theme === "watch" ? '<span class="wtag wt-light">관심</span>' : '<span class="wtag wt-hold">보유</span>';
     } else if (o.noTag) tag = "";
     else tag = '<span class="tb t' + esc(s.tier) + '">T' + esc(s.tier) + "</span>";
     var sub = [esc(s.ticker)];
     if (dv != null && dv >= 0.05) sub.push("배당 " + fmtDiv(dv));
     var flags = (NEW_TICKERS[s.ticker] ? '<span class="r-new" title="최근 편입">N</span>' : "") +
       (isValueTrap(s, e.upside) ? '<span class="r-warn" title="' + esc(VT_TIP) + '" data-basis="' + esc("낙폭발 상승여력 — " + VT_TIP) + '">!</span>' : "");
-    var df = isPersonal(s.theme) ? null : defectOf(c, s.theme, s.ticker);
+    var df = !isFormal(s.theme) ? null : defectOf(c, s.theme, s.ticker);
     if (df && df.state !== "감시") flags += '<span class="r-def' + (df.state === "결격" && !df.dup ? "" : " r-chk") + '" title="' + esc(defectText(df)) + '" data-basis="' + esc(defectText(df)) + '">' + (df.dup ? "중복" : df.state === "결격" ? "결격" : "점검") + "</span>";
     var er = earnRisk(s.ticker);
     if (er) flags += '<span class="r-def" title="' + esc(earnRiskTip(er, c)) + '" data-basis="' + esc(earnRiskTip(er, c)) + '">실적 주의</span>';
-    var aw = isPersonal(s.theme) ? null : anchorOf(c, s.ticker);
+    var aw = !isFormal(s.theme) ? null : anchorOf(c, s.ticker);
     if (aw) flags += '<span class="r-wt" data-basis="' + esc(WT_TIP) + '">비중 ' + esc(aw.w) + "%</span>";
     return '<div class="row"' + openAttrs(c, s.ticker, s.theme, o.pkey ? ' data-pkey="' + esc(o.pkey) + '"' : "") + ">" +
       (o.edit ? '<span class="r-grip" title="끌어서 순서 바꾸기">' + ICON.grip + "</span>" : "") +
@@ -3906,7 +3907,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   function pickRow(s, cc, n, reason) {
     var e = effective(s);
     reason = pickReason(reason);
-    var slot = s.theme === "watch" ? plist("watch").label + (s.watchTag ? " · " + s.watchTag : "") : themeMeta(s.theme).label + " · T" + s.tier;
+    var slot = slotLabel(s);
     return '<div class="row pk"' + openAttrs(cc, s.ticker, s.theme, ' data-why="' + esc(reason || "") + '"') + ">" +
       '<span class="pk-n">' + n + "</span>" +
       '<div class="r-l"><div class="r-nm"><span class="r-name">' + esc(s.name) + '</span><span class="pk-th">' + esc(slot) + "</span></div>" +
@@ -3939,7 +3940,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   // 묶음이 판정(상승·하락)을 말해 주므로 행에는 판정 칩 대신 다른 목록과 같은 신호 칸·현재가를 둔다
   function trendChangeRow(r, cc) {
     var s = r.s, m = r.m, e = effective(s);
-    var th = isPersonal(s.theme) ? plist(s.theme).label : themeMeta(s.theme).label + " · T" + s.tier;
+    var th = slotLabel(s);
     return '<div class="row tc"' + openAttrs(cc, s.ticker, s.theme, ' data-sec="dt-trend"') + ">" +
       '<div class="r-l"><div class="r-nm"><span class="r-name">' + esc(s.name) + '</span><span class="pk-th">' + esc(th) + "</span></div>" +
         '<div class="r-sub"><span>' + esc(mdOf(m.conf.d)) + " 확인" + (m.conf.n > 0 ? " · 그 뒤 " + signedSpan(m.conf.ret, fmtPct(m.conf.ret * 100)) : " · 마지막 거래일") + "</span></div></div>" +
@@ -4001,7 +4002,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   }
   function quadRow(r, cc) {
     var s = r.s, m = r.m, e = effective(s);
-    var th = isPersonal(s.theme) ? plist(s.theme).label : themeMeta(s.theme).label + " · T" + s.tier;
+    var th = slotLabel(s);
     return '<div class="row qc"' + openAttrs(cc, s.ticker, s.theme) + ">" +
       '<div class="r-l"><div class="r-nm"><span class="r-name">' + esc(s.name) + '</span><span class="pk-th">' + esc(th) + "</span></div>" +
         '<div class="r-sub"><span>' + esc(s.ticker) + " · 추세 " + esc(mdOf(m.from)) + "부터 " + signedSpan(m.ret, fmtPct(m.ret * 100)) + "</span></div></div>" +
@@ -4034,8 +4035,9 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   // 국가별 상위 3 폴백(큐레이션 데이터 없을 때) — 그 국가 정식 추천 중 종합점수 상위 3
   // 같은 티커가 두 주제에 있으면(예: 하나금융 — 저평가 T1·우량 T3) 가장 높은 티어의 편성을 대표로 쓴다(관심·보유 제외)
   // 같은 종목이 여러 주제에 있으면 대표 하나 — check-defects 의 중복 판정이 '남길 곳'으로 정한 주제를 따른다
-  // (중복 자리는 교체 대상이라 Top Pick·대표 표시에 쓰지 않는다). 판정이 없으면 tier → 주제 순서(우량→성장→저평가→배당→히든).
-  var THEME_ORDER = ["core", "growth", "value", "dividend", "rising"];
+  // (중복 자리는 교체 대상이라 Top Pick·대표 표시에 쓰지 않는다). 판정이 없으면 tier → 주제 순서(우량→성장→저평가→배당→주목).
+  //   주목은 tier 가 없어 같은 종목이 정식 주제에도 있으면 정식 자리가 대표다.
+  var THEME_ORDER = ["core", "growth", "value", "dividend", "spotlight"];
   function bestByTicker(cc) {
     var m = {};
     (D[cc] || []).forEach(function (s) {
@@ -4048,7 +4050,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     });
     return m;
   }
-  // Top Pick 후보 자리 — 정식 추천 대표 자리(bestByTicker) + 정식에 없는 관심 편성 종목(2026-10-30 사용자 요청 '관심 종목도 Top Pick 조건에 해당하면 빼지 마').
+  // Top Pick 후보 자리 — 정식 추천·주목 대표 자리(bestByTicker) + 거기에 없는 관심 편성 종목(2026-10-30 사용자 요청 '관심 종목도 Top Pick 조건에 해당하면 빼지 마').
   //   보유 목록은 후보가 아니다(lib-picks canPick 과 같다).
   function pickByTicker(cc) {
     var m = bestByTicker(cc);
@@ -4129,7 +4131,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     var tmeta = themeMeta(state.theme);
     var list = (D[state.country] || []).filter(function (s) { return inSel(state.theme, s.theme, s.tier); });
     document.getElementById("recoCount").innerHTML = "<b>" + (state.country === "us" ? "미국" : "한국") + "</b> " + list.length + "종목";
-    var tdk = "td:" + state.theme;   // 긴 주제 설명(히든 기준 등)은 2줄만 — 탭하면 전문
+    var tdk = "td:" + state.theme;   // 긴 주제 설명(주목 기준 등)은 2줄만 — 탭하면 전문
     document.getElementById("themeDesc").innerHTML = tmeta.desc
       ? '<div class="td-body' + clampCls(tdk, "clamp2") + '"' + clampAttr(tdk, "clamp2") + ">" + esc(tmeta.desc) + "</div>" : "";
     var host = document.getElementById("recoList");
@@ -4141,6 +4143,14 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
         var g = list.filter(function (s) { return s.theme === th.key; }).sort(byName);
         if (!g.length) return;
         html += '<div class="gh">' + esc(th.label) + ' <span class="gh-n">' + g.length + "</span></div>" +
+          g.map(function (s) { return rowHtml(s, { noTag: true }); }).join("");
+      });
+    } else if (isSpot(state.theme)) {
+      // 주목 — 티어 대신 모양(신고가·턴어라운드)으로 묶는다
+      ["신고가", "턴어라운드"].forEach(function (tg) {
+        var g = list.filter(function (s) { return s.watchTag === tg; }).sort(byName);
+        if (!g.length) return;
+        html += '<div class="gh">' + spotTagHtml({ watchTag: tg }) + ' <span class="gh-n">' + g.length + "</span></div>" +
           g.map(function (s) { return rowHtml(s, { noTag: true }); }).join("");
       });
     } else {
@@ -4396,7 +4406,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     var mine = (C.stocks || []).filter(function (r) { return LPinGroup(key, r.th, r.tier); })
       .sort(function (a, b) { return (b.ret == null ? -1e9 : b.ret) - (a.ret == null ? -1e9 : a.ret); });
     var list = mine.map(function (r) {
-      var hit = findStock(c, r.t, r.th), tag = isPersonal(r.th) ? '<span class="wtag wt-light">' + esc(themeMeta(r.th).label) + "</span>" : '<span class="tb t' + esc(r.tier) + '">T' + esc(r.tier) + "</span>";
+      var hit = findStock(c, r.t, r.th), tag = !isFormal(r.th) ? '<span class="wtag wt-light">' + esc(themeMeta(r.th).label) + "</span>" : '<span class="tb t' + esc(r.tier) + '">T' + esc(r.tier) + "</span>";
       var thl = isTierKey(key) ? esc(themeMeta(r.th).label) + " · " : "";
       return '<div class="row pr' + (hit ? "" : " no-open") + '"' + (hit ? openAttrs(c, r.t, hit.theme) : "") + ">" +
         '<div class="r-l"><div class="r-nm"><span class="r-name">' + esc(r.n) + "</span></div>" +
@@ -4415,7 +4425,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       (list ? '<div class="list" data-ctx="perf">' + list + "</div>" : '<div class="empty">지금 편성된 종목이 없습니다.</div>') + goneHtml + "</div>";
   }
   function LPinGroup(key, th, tier) {
-    if (isTierKey(key)) return !isPersonal(th) && tier === tierOfKey(key);
+    if (isTierKey(key)) return isFormal(th) && tier === tierOfKey(key);
     return th === key;
   }
 
@@ -4579,6 +4589,16 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
              order: "holdOrder.v1",  reqPrefix: "보유종목 정밀분석 요청" }
   };
   function isPersonal(theme) { return !!PLIST[theme]; }
+  // 주목(spotlight) — 정기 분석이 차트(신고가·턴어라운드)와 훌륭한 기업 관문으로 고르는 목록(2026-10-30~). 추천 종목 탭의 주제지만 tier·결격·비중이 없다.
+  function isSpot(theme) { return theme === "spotlight"; }
+  function isFormal(theme) { return !!theme && !isPersonal(theme) && !isSpot(theme) && !RETIRED_THEMES[theme]; }
+  function spotTagHtml(s) { return '<span class="wtag ' + (s.watchTag === "신고가" ? "wt-high" : "wt-turn") + '">' + esc(s.watchTag || "주목") + "</span>"; }
+  // 목록 행의 자리 이름 — '저평가 · T1' · '주목 · 신고가' · '관심'
+  function slotLabel(s) {
+    return isPersonal(s.theme) ? plist(s.theme).label : isSpot(s.theme) ? themeMeta(s.theme).label + (s.watchTag ? " · " + s.watchTag : "") : themeMeta(s.theme).label + " · T" + s.tier;
+  }
+  var SPOT_TIP = "주목 — 시가총액 상위 회사 가운데 흑자·희석 없음·이익 안정(Top Pick 건강 조건)을 통과하고 매출·영업이익이 늘고 있는 회사 중, 차트가 신고가(오래 다진 뒤 1년 고점을 막 넘어섬)나 턴어라운드(바닥을 다진 뒤 5·20·60일선이 모여 정배열로 돌아섬) 모양인 종목입니다. 나라·모양별 5종목까지, 티어는 없습니다.\n\n" +
+    "과거 시험(미국 2011~2026·한국 2022~2026): 두 모양 자체는 이후 6개월 수익이 시장과 비슷하거나 조금 낮았고, 신고가 종목은 12개월 −30% 넘게 떨어진 경우가 적었습니다(미국 4.4% vs 전체 6.8%). 차이를 만든 것은 회사 쪽(수익성·성장)이었습니다 — 살 때를 알려 주는 신호가 아니라 지켜볼 목록입니다.";
   function plist(k) { return PLIST[k] || PLIST.watch; }
   var wlCache = {};   // "country:ticker" → undefined(미조회) | "loading" | null(실패) | {price,date,ta,sym}
   function readList(key) {
@@ -4880,12 +4900,6 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       b.querySelector(".cnt").textContent = n ? String(n) : "";
     });
   }
-  // 관심 종목 기준 — 정기 분석(D절)의 차트 스크린 + 훌륭한 기업 관문, 검증 사실(scripts/research/watch/, 2026-10-30)
-  var WATCH_TIP = "관심 종목 — 정기 분석이 차트로 찾아 회사를 확인한 뒤 담은 종목(신고가·턴어라운드 이름표)과 직접 담은 종목입니다.\n\n" +
-    "신고가 = 한동안 좁게 움직이며 물량을 소화한 뒤 1년 고점을 막 넘은 종목. 턴어라운드 = 고점에서 조정받은 뒤 5·20·60일선이 모이며 정배열로 돌아서는 종목.\n\n" +
-    "후보는 시총 상위(한국 400·미국 600) 중 재무가 건강한 회사(흑자·주식 수 희석 없음·자산 급증·이익 변동 없음)만 고르고, 최근 분기·연간 매출과 영업이익이 늘었는지와 증권사 목표가를 확인한 뒤 담습니다. 이름표마다 나라별 5종목까지.\n\n" +
-    "검증(미국 2011~·한국 2022~2026, 결과를 보기 전에 기준을 정한 시험): 두 차트 모양 자체는 이후 6개월 수익이 시장과 비슷하거나 조금 낮았습니다 — 사는 시점을 골라 주는 신호는 아닙니다. " +
-    "신고가 종목은 크게 잃는 일이 적었고(12개월 −30%: 미국 4.4% vs 전체 6.8%), 차이를 만든 것은 회사 쪽(수익성·성장)이었습니다. 관심 종목도 Top Pick 조건에 맞으면 Top Pick 에 오릅니다.";
   function renderMine() {
     var lk = state.mine, pm = plist(lk), country = state.country;
     updateMineCounts();
@@ -4895,8 +4909,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     // 목록 위 한 줄 — 국가·종목 수 + 편집(순서 손잡이·빼기 버튼). 목록 이름·수는 위 분절 버튼에 이미 있다.
     var html = '<section class="blk blk-list">';
     if (r.items.length) {
-      html += '<div class="list-meta"><span><b>' + (country === "us" ? "미국" : "한국") + "</b> " + r.items.length + "종목" +
-        (lk === "watch" ? '<button class="ic-tip lm-tip" type="button" data-basis="' + esc(WATCH_TIP) + '" aria-label="관심 종목 기준 보기">' + ICON.info + "</button>" : "") + "</span>" +
+      html += '<div class="list-meta"><span><b>' + (country === "us" ? "미국" : "한국") + "</b> " + r.items.length + "종목</span>" +
         '<button class="txt-btn" id="mineEdit" type="button" aria-pressed="' + state.mineEdit + '">' + (state.mineEdit ? "완료" : "편집") + "</button></div>" +
         '<div class="list pl-list' + (state.mineEdit ? " editing" : "") + '" data-ctx="mine">' + r.items.map(function (it) {
         return it.full ? rowHtml(it.full, { c: country, k: lk, pkey: it.key, edit: state.mineEdit })
@@ -5920,7 +5933,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     var ev = ((window.STOCK_EVENTS || {}).items || {})[t] || {}, ta = ((window.STOCK_TA || {}).ta || {})[t] || {};
     var out = [
       "종목: " + s.name + " (" + t + ", " + (c === "us" ? "미국" : "한국") + " " + (s.market || "") + ")" +
-        (isPersonal(s.theme) ? " · 사용자의 " + plist(s.theme).label + " 목록" : " · 추천 주제 '" + themeMeta(s.theme).label + "' Tier " + s.tier),
+        (isPersonal(s.theme) ? " · 사용자의 " + plist(s.theme).label + " 목록" : isSpot(s.theme) ? " · 추천 주제 '주목'(" + (s.watchTag || "") + " — 차트로 지켜볼 자리에 온 훌륭한 기업, 티어 없음)" : " · 추천 주제 '" + themeMeta(s.theme).label + "' Tier " + s.tier),
       "현재가: " + fmtPrice(e.price, c) + " (" + (e.priceDate || "") + (e.live ? " 장중" : e.intra ? " 장중(갱신 시점)" : " 종가") + (e.chg != null ? ", 전일 대비 " + pctTxt(e.chg) : "") + ")",
       s.targetPrice ? "증권사 컨센서스 목표가: " + fmtPrice(s.targetPrice, c) + (s.tpLow && s.tpHigh ? " (최저 " + fmtPrice(s.tpLow, c) + " ~ 최고 " + fmtPrice(s.tpHigh, c) + ")" : "") + (s.tpAsOf ? " · 집계 " + s.tpAsOf : "") : "",
       s.aiTarget ? "앱의 AI 적정가: " + fmtPrice(s.aiTarget, c) + " — " + (s.aiBasis || "") : "",
@@ -5938,7 +5951,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       ev.flow ? "20일 수급(거래량 대비): 외국인 " + pctTxt(ev.flow.f20 * 100) + " · 기관 " + pctTxt(ev.flow.o20 * 100) + (ev.flow.hot ? " · 수급 과열(이후 지수 대비 약세가 검증된 경고)" : "") : "",
       newsTxt(t)
     ];
-    var df = isPersonal(s.theme) ? null : defectOf(c, s.theme, t);
+    var df = !isFormal(s.theme) ? null : defectOf(c, s.theme, t);
     if (df) out.push("결격 점검: " + df.state + " — " + defectText(df).replace(/\n/g, " "));
     var tp = (D.topPicks || {})[c] || [];
     tp.forEach(function (x) { if (x.ticker === t) out.push("오늘의 Top Pick 선정 이유: " + x.reason); });

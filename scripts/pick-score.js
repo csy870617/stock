@@ -35,7 +35,7 @@ const tp = D.topPicks || {};
     " · 지금 Top Pick(" + (tp.asOf || "–") + "): " + (cur.join(", ") || "–") + "\n  점수 = " + LP.SCORE[c].map((k) => ({ iss: "주식 수 감소", shy: "주주환원 수익률", roic: "ROIC", dy: "배당수익률" })[k]).join("·") + " 백분위" + (LP.SCORE[c].length > 1 ? " 평균" : ""));
   if (r.diversify) console.log("  업종 분산: 1~3위는 업종마다 한 종목(lib-picks DIVERSIFY — 미국 나스닥 섹터)");
   r.ranked.slice(0, 10).forEach((x) => console.log("  " + String(x.rank).padStart(2) + ". " + x.ticker + " " + x.name + " (" + LP.slotKo(x) + (x.secKo ? " · " + x.secKo : "") + ") 점수 " +
-    x.score.toFixed(3) + " — " + LP.partsLine(x, c) + (x.src === "hidden" ? " (히든: 희석만)" : "") + (x.pick ? "  ★ Top Pick " + x.pick : "") +
+    x.score.toFixed(3) + " — " + LP.partsLine(x, c) + (x.pick ? "  ★ Top Pick " + x.pick : "") +
     (x.skip ? "  (같은 업종 " + x.skip + " 가 이미 Top Pick)" : "") + (cur.includes(x.ticker) ? "  ← 지금" : "")));
   if (r.ranked.length > 10) console.log("  … " + (r.ranked.length - 10) + "종목 더");
   if (r.excluded.length) console.log("  건강 조건 제외: " + r.excluded.map((x) => x.name + "(" + x.why + ")").join(", "));

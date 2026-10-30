@@ -3,16 +3,15 @@
  "until": "2027-01-21",
  "note": "선정 규칙 동결(CLAUDE.md §6) — 아래 파일·주제 정의가 기준선과 다르면 validate-reco 가 경고한다. 받아들인 변경은 accepted 에 사유와 함께 남는다.",
  "baseline": {
-  "scripts/screen-discovery.js": "2897e1307edfe60b",
-  "scripts/screen-hidden.js": "b325a08be46c6828",
+  "scripts/screen-discovery.js": "ab4a74c8fcff6794",
   "scripts/screen-factors.js": "343af9eeaec1acdc",
   "scripts/lib-factors.js": "022c5e81e2c7d0f5",
-  "scripts/check-defects.js": "a04407f3fa2551d2",
+  "scripts/check-defects.js": "5e7631ae79a4c3a0",
   "scripts/lib-ta.js": "8a05760b3846ae73",
-  "scripts/shadow-track.js": "d35bb652f0110452",
-  "docs/DEEP-AUDIT-AGENT.md": "cfbb1d482ffea791",
-  "docs/DEEP-DISCOVERY-AGENT.md": "d12ae0dc75221330",
-  "recommendations.js themes": "8eb27174d8ccbe5f"
+  "scripts/shadow-track.js": "52321294ad58c3cf",
+  "docs/DEEP-AUDIT-AGENT.md": "84a8d8333ac5486d",
+  "docs/DEEP-DISCOVERY-AGENT.md": "af21a0140a2ff2de",
+  "recommendations.js themes": "04cf1ab1ada9f1aa"
  },
  "accepted": [
   {
@@ -28,6 +27,18 @@
     "scripts/screen-discovery.js"
    ],
    "reason": "출력 추가만(2026-10-30 사용자 요청): screen-discovery.js 가 관심 편성 종목의 재무 값(personal — Top Pick 후보에 관심 포함)과 전 유니버스 재무 값(data/screen-universe.json — 관심 스크린의 훌륭한 기업 관문)을 함께 쓴다. 주제 후보·필터·점수·편성 판정 계산은 그대로"
+  },
+  {
+   "at": "2026-10-30",
+   "items": [
+    "scripts/screen-discovery.js",
+    "scripts/check-defects.js",
+    "scripts/shadow-track.js",
+    "docs/DEEP-AUDIT-AGENT.md",
+    "docs/DEEP-DISCOVERY-AGENT.md",
+    "recommendations.js themes"
+   ],
+   "reason": "히든 주제 폐지·주목 신설(사용자 결정 2026-10-30 — 사전 등록 검증 scripts/research/hidden/ '약함'): screen-hidden.js 삭제, 스크린·결격 점검·그림자에서 히든 제거, 주제 정의 교체(주목은 정식 밖 목록)"
   }
  ]
 }

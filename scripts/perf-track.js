@@ -18,9 +18,11 @@ const ROOT = path.join(__dirname, "..");
 const DATA = path.join(ROOT, "data");
 const OUT = path.join(DATA, "perf.json");
 const OFFLINE = process.argv.includes("--offline");
-const FORMAL = ["core", "growth", "value", "dividend", "rising"];
+const FORMAL = ["core", "growth", "value", "dividend"];
+// 없어진 주제(2026-10-30 히든 폐지) — 그 시절 성적은 정식 전체·티어 묶음에 그대로 남기고(기록), 주제 묶음·교체·편출 목록에는 보이지 않는다
+const RETIRED = new Set(["rising"]);
 // picks = 홈 'Top Pick'(그날 고른 나라별 3종목 — 스냅샷 picks, 2026-07-31~): 가장 눈에 띄는 추천이라 같은 방식으로 성적을 잰다
-const GROUPS = ["all"].concat(FORMAL, ["tier:1", "tier:2", "tier:3", "picks", "watch", "hold"]);
+const GROUPS = ["all"].concat(FORMAL, ["spotlight", "tier:1", "tier:2", "tier:3", "picks", "watch", "hold"]);
 // Top Pick 선정 규칙이 바뀐 날 — 2026-10-27 '균형' 큐레이션 → '건강 + 상승 가능성' 순위(lib-picks.js). 그날 기록의 Top Pick 부터
 //   새 규칙이라 picks 묶음에 그 뒤 구간만 잰 창(w.rule)을 더한다 — 앱 '지난 성적'은 새 규칙이 5거래일 쌓이면 그 성적을 보인다.
 const PICKS_RULE = { from: "2026-10-27", label: "건강 + 상승 가능성" };
@@ -208,7 +210,7 @@ async function main() {
       return { t: e.t, n: e.n, th: e.th, tier: e.tier, d0: H[j].date, ret: r2(ret), ex: ret != null && ir != null ? r2(ret - ir) : null };
     });
     const nowIdx = lastClose(idx[c]);
-    const removed = recentExits.filter((x) => x.c === c && !lastC.some((e) => e.t === x.t)).map((x) => {
+    const removed = recentExits.filter((x) => x.c === c && !RETIRED.has(x.e.th) && !lastC.some((e) => e.t === x.t)).map((x) => {
       const j = runStart(x.i - 1, x.t, x.e.th), p0 = priceIn(j, x.t), ex = cache[c + ":" + x.t + "@" + x.d];
       const px = ex ? ex.p : x.e.p, i0 = ix(j), i1 = ix(x.i);
       const ret = p0 && px ? (px / p0 - 1) * 100 : null, ir = i0 && i1 ? (i1 / i0 - 1) * 100 : null;

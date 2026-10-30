@@ -14,10 +14,10 @@
 //   techNote   : 단기·중기·장기 3기간 대응+신호 + techNote.asOf == T (최신 거래일 = stock-ta.js asOf)
 //   valueNote  : 비어 있지 않음
 //   verified   : 7일 회전 — 전 종목의 verifiedAt 이 7일 이내(큐는 --quota 만큼만 준다)
-//   discovery  : 7일 회전 — 10개 (주제×국가) 그룹의 D.discovery["<country>|<theme>"] 가 7일 이내
+//   discovery  : 7일 회전 — 8개 (주제×국가) 그룹의 D.discovery["<country>|<theme>"] 가 7일 이내
 //   aiTarget   : 7일 회전 — 전 종목의 aiCheckedAt(재시도한 날)이 7일 이내. 값 자체가 없는 건
 //                정상이지만(입력값 검증 실패) 재시도조차 안 하는 건 갱신 누락이라 게이트다.
-//   tier       : 7일 회전(그룹 단위) — 10개 (주제×국가) 그룹 전부 tierAsOf 가 7일 이내.
+//   tier       : 7일 회전(그룹 단위) — 8개 (주제×국가) 그룹 전부 tierAsOf 가 7일 이내.
 //                큐(--remaining tier)는 만료 그룹 + 선행(LOOKAHEAD 일+) 그룹, 최대 3그룹. 관심·보유 제외.
 //   topPicks·liquidity·시황 : asOf ≥ T(최신 거래일) — '== 오늘'이 아니다(2026-10-03 개정).
 //                주말·휴장일엔 T 가 그대로라 직전 거래일 판단이 그대로 유효하다. 예전 '== 오늘' 게이트는
@@ -37,7 +37,7 @@ const fs = require("fs");
 const path = require("path");
 const ROOT = path.join(__dirname, "..");
 // 관심(watch)·보유(hold)는 사용자 개인 목록이라 tier 구조·주제 커버리지에서 제외한다.
-const { isPersonalTheme } = require("./validate-reco.js");
+const { isFormalTheme } = require("./validate-reco.js");
 
 function argVal(name) {
   const i = process.argv.indexOf("--" + name);
@@ -148,12 +148,12 @@ const verifQueue = exhausted.concat(withLookahead(staleVerif.filter((s) => !exha
   all.filter((s) => !exhausted.includes(s)), (s) => s.verifiedAt, VERIF_QUOTA, LOOKAHEAD_DAYS)).slice(0, VERIF_QUOTA);
 const verifiedToday = all.filter((s) => s.verifiedAt === today);
 
-const tierable  = all.filter((s) => !isPersonalTheme(s.theme));
+const tierable  = all.filter((s) => isFormalTheme(s.theme));   // 주목·관심·보유는 tier 가 없다
 // ── tier 재평가 — 7일 회전(그룹 단위, 2026-10-03 개정) ──
 // tier 는 그룹 내 품질 순위라 잘 변하지 않는다(10/2 변경 4건·10/3 0건). 매일 90종목 전량은
 // 날짜만 찍는 의식이 돼서, 다른 회전 항목처럼 '전 그룹이 7일 이내'로 게이트한다.
 // 그룹 나이 = 그 그룹에서 가장 오래된 tierAsOf. 큐는 만료 그룹 먼저, 남는 자리는 선행(LOOKAHEAD 일+) 그룹,
-// 동률이면 한·미 교대. A 하루 1회 × 3그룹이면 10그룹이 7일 안에 넉넉히 돈다.
+// 동률이면 한·미 교대. A 하루 1회 × 3그룹이면 8그룹이 7일 안에 넉넉히 돈다.
 // (실적 발표·가이던스 급변이 있는 그룹은 회전과 무관하게 즉시 재평가 — CLAUDE.md)
 const TIER_QUOTA = Number(argVal("tierQuota") || 3);
 const tierGroups = {};
@@ -207,25 +207,25 @@ else {
   });
 }
 
-// 신규 후보 탐색 — 재검증과 같은 7일 회전이다. 10개 (주제×국가) 그룹 각각을 마지막으로
+// 신규 후보 탐색 — 재검증과 같은 7일 회전이다. 8개 (주제×국가) 그룹 각각을 마지막으로
 // 탐색한 날을 D.discovery["<country>|<theme>"] 에 기록하고, 전 그룹이 7일 이내이면 통과한다.
 // (전 그룹을 매일 도는 건 예산상 불가능하고, 굶게 두면 발굴이 영영 안 된다 — 그 사이가 회전이다.)
 const DISC_GROUPS = [];
 ["korea", "us"].forEach((c) => {
-  const seen = new Set((D[c] || []).filter((s) => !isPersonalTheme(s.theme)).map((s) => s.theme));
+  const seen = new Set((D[c] || []).filter((s) => isFormalTheme(s.theme)).map((s) => s.theme));
   [...seen].sort().forEach((t) => DISC_GROUPS.push(c + "|" + t));
 });
 const discMap = D.discovery || {};
 const byDiscAge = (a, b) => daysAgo(discMap[b]) - daysAgo(discMap[a]);
 const staleDisc = DISC_GROUPS.filter((g) => daysAgo(discMap[g]) > VERIF_CYCLE_DAYS).sort(byDiscAge);
 const missDisc = staleDisc.map((g) => g + "(" + (discMap[g] || "기록 없음") + ")");
-// 2026-10-12: 매주 C 모드(주간 심층 발굴)가 10그룹을 한꺼번에 깊게 훑으므로 평일 회차의 '선행' 얕은 탐색은 없앴다
+// 2026-10-12: 매주 C 모드(주간 심층 발굴)가 8그룹을 한꺼번에 깊게 훑으므로 평일 회차의 '선행' 얕은 탐색은 없앴다
 // (B 회차가 그룹당 검색 몇 번으로 4그룹씩 훑어 같은 7월 후보만 돌려 막던 문제). 여기 큐는 C 를 놓쳐
 // 7일을 넘긴 그룹만 담는 안전망이다.
 const DISC_QUOTA = Number(argVal("discQuota") || 4);
 const discQueue = staleDisc.slice(0, DISC_QUOTA);
 
-// 주간 심층 발굴(C 모드) — 일요일 A 회차(또는 사용자 요청)가 스크린(screen-discovery.js) 후보와 10그룹 편성을
+// 주간 심층 발굴(C 모드) — 일요일 A 회차(또는 사용자 요청)가 스크린(screen-discovery.js) 후보와 8그룹 편성을
 // 함께 검증하고 D.deepDiscovery = {asOf, …} 를 남긴다. 7일을 넘기면 미완료 — 다음 A 회차가 C 모드를 돈다.
 const DEEP = D.deepDiscovery || {};
 const deepAge = daysAgo(DEEP.asOf);

@@ -3,7 +3,7 @@
 // 거시 유동성 '게이지 등급'은 판단 영역이라 data/liquidity.js 에서 온디맨드로 남는다.
 window.INDEX_TA = {
  "asOf": "2026-10-30",
- "builtAt": "2026-10-30T22:16:23Z",
+ "builtAt": "2026-10-30T22:49:15Z",
  "note": "기술적 지표는 Yahoo 일봉에서 매일 자동 계산(LLM 토큰 0). 이동평균(SMA·EMA)과 오실레이터(RSI·MACD·스토캐스틱·CCI·Williams %R·ADX·모멘텀)를 종합 투표한 5단계 신호 — 단기=일봉, 중기=주봉, 장기=월봉 3기간.",
  "indices": [
   {
@@ -711,7 +711,7 @@ window.INDEX_TA = {
        "c": "korea",
        "t": "192400",
        "name": "쿠쿠홀딩스",
-       "th": "관심",
+       "th": "주목",
        "corr": -0.27,
        "beta": -0.8
       },
@@ -732,7 +732,7 @@ window.INDEX_TA = {
        "beta": -1.43
       }
      ],
-     "universe": 57
+     "universe": 49
     }
    }
   },
@@ -932,7 +932,7 @@ window.INDEX_TA = {
        "beta": -0.98
       }
      ],
-     "universe": 116
+     "universe": 99
     }
    }
   },
@@ -1100,17 +1100,17 @@ window.INDEX_TA = {
       },
       {
        "c": "korea",
-       "t": "058470",
-       "name": "리노공업",
-       "th": "히든",
-       "corr": 0.2,
-       "beta": 0.26
+       "t": "047050",
+       "name": "포스코인터내셔널",
+       "th": "보유",
+       "corr": 0.25,
+       "beta": 0.25
       },
       {
        "c": "us",
        "t": "RSG",
        "name": "Republic Services",
-       "th": "관심",
+       "th": "주목",
        "corr": 0.2,
        "beta": 0.07
       }
@@ -1120,7 +1120,7 @@ window.INDEX_TA = {
        "c": "us",
        "t": "ECL",
        "name": "Ecolab",
-       "th": "관심",
+       "th": "주목",
        "corr": -0.39,
        "beta": -0.17
       },
@@ -1134,17 +1134,9 @@ window.INDEX_TA = {
       },
       {
        "c": "us",
-       "t": "AAON",
-       "name": "AAON",
-       "th": "히든",
-       "corr": -0.27,
-       "beta": -0.36
-      },
-      {
-       "c": "us",
        "t": "YUM",
        "name": "Yum! Brands",
-       "th": "관심",
+       "th": "주목",
        "corr": -0.24,
        "beta": -0.12
       },
@@ -1155,9 +1147,17 @@ window.INDEX_TA = {
        "th": "성장",
        "corr": -0.23,
        "beta": -0.15
+      },
+      {
+       "c": "korea",
+       "t": "241560",
+       "name": "두산밥캣",
+       "th": "저평가",
+       "corr": -0.22,
+       "beta": -0.17
       }
      ],
-     "universe": 116
+     "universe": 99
     }
    }
   },
@@ -1327,7 +1327,7 @@ window.INDEX_TA = {
        "c": "us",
        "t": "GILD",
        "name": "Gilead Sciences",
-       "th": "관심",
+       "th": "주목",
        "corr": 0.26,
        "beta": 0.3
       },
@@ -1340,24 +1340,24 @@ window.INDEX_TA = {
        "beta": 0.71
       },
       {
-       "c": "korea",
-       "t": "041830",
-       "name": "인바디",
-       "th": "히든",
-       "corr": 0.22,
-       "beta": 0.61
-      },
-      {
        "c": "us",
        "t": "KO",
        "name": "Coca-Cola",
        "th": "배당",
        "corr": 0.22,
        "beta": 0.17
+      },
+      {
+       "c": "us",
+       "t": "MU",
+       "name": "마이크론 테크놀로지",
+       "th": "성장",
+       "corr": 0.21,
+       "beta": 0.69
       }
      ],
      "neg": [],
-     "universe": 116
+     "universe": 99
     }
    }
   }

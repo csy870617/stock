@@ -130,7 +130,7 @@ function macroBlock(IX) {
     const mkt = Object.keys(mk).map((k) => (k === "kospi" ? "코스피" : "나스닥") + " 상관 " + mk[k].corr + "(β " + mk[k].beta + ")").join(" · ");
     if (mkt) lines.push("  최근 " + rel.weeks + "주 주간 상관: " + mkt);
     const mv = (a) => (a || []).map((x) => x.name + "(" + x.th + " " + x.corr + ")").join(", ");
-    if ((rel.pos || []).length) lines.push("  같이 움직인 편성·관심·보유 종목: " + mv(rel.pos));
+    if ((rel.pos || []).length) lines.push("  같이 움직인 편성·주목·관심·보유 종목: " + mv(rel.pos));
     if ((rel.neg || []).length) lines.push("  반대로 움직인 종목: " + mv(rel.neg));
     return "\n- " + m.key + " (" + m.name + " · " + m.sub + "): " + m.level + m.unit + " " + m.change + " (" + m.asOf + " 마감" + (m.key === "usdkrw" ? ", 등급은 달러 기준" : "") + ")\n" + lines.join("\n");
   }).join("");
@@ -308,7 +308,7 @@ function composePrompt(S, ctx, memo, urls, picks) {
     "[출처 목록]",
     urls.length ? urls.map((u, i) => (i + 1) + ". " + u.url + (u.title ? " — " + u.title : "")).join("\n") : "(없음)",
     "",
-    "[Top Pick 순위 — 건강 관문(강한 하락세·추세 붕괴·수급 과열·실질 결격·적자·희석·자산 급증·이익 변동 제외)을 통과한 정식 추천·관심 종목의 상승 가능성 점수(미국: 주식 수 감소·주주환원·ROIC, 한국: 주식 수 감소·배당) 1~3위 — 미국은 업종마다 한 종목]",
+    "[Top Pick 순위 — 건강 관문(강한 하락세·추세 붕괴·수급 과열·실질 결격·적자·희석·자산 급증·이익 변동 제외)을 통과한 정식 추천·주목·관심 종목의 상승 가능성 점수(미국: 주식 수 감소·주주환원·ROIC, 한국: 주식 수 감소·배당) 1~3위 — 미국은 업종마다 한 종목]",
     "한국(통과 " + picks.counts.korea + "종목):", picks.rows.korea.join("\n") || "(없음)",
     "미국(통과 " + picks.counts.us + "종목):", picks.rows.us.join("\n") || "(없음)",
     "직전 Top Pick: " + prevPicks + (tp.asOf ? " (" + tp.asOf + ")" : ""),
@@ -359,7 +359,7 @@ function check(out, picks) {
 }
 const errCount = (e) => Object.values(e).reduce((a, x) => a + x.length, 0);
 
-const cleanReason = (r) => String(r || "").replace(/^\s*(?:우량|성장|가치|저평가|배당|히든)(?:\s*주제)?\s*(?:Tier|T)\s*\d\s*[—\-–:]\s*/i, "").trim();
+const cleanReason = (r) => String(r || "").replace(/^\s*(?:우량|성장|가치|저평가|배당)(?:\s*주제)?\s*(?:Tier|T)\s*\d\s*[—\-–:]\s*/i, "").replace(/^\s*(?:주목|관심)(?:\s*\((?:신고가|턴어라운드)\))?\s*[—\-–:]\s*/, "").trim();
 function srcList(idxs, urls) {
   const out = [];
   (idxs || []).forEach((i) => {

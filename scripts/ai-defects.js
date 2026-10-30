@@ -23,13 +23,12 @@ const REAPPLY = args.includes("--reapply");
 const MAX = +(args[args.indexOf("--max") + 1] || process.env.AI_DEFECTS_MAX || 8) || 8;
 const today = new Date().toISOString().slice(0, 10);
 const NOTES = path.join(L.DATA, "candidate-notes.json");
-const THEME_KO = { core: "우량", growth: "성장", value: "저평가", dividend: "배당", rising: "히든" };
+const THEME_KO = { core: "우량", growth: "성장", value: "저평가", dividend: "배당" };
 const THEME_DEF = {
   core: "우량 — 대형·흑자·높은 자본효율(3년 평균 ROIC 상위)·재무 건전",
   growth: "성장 — 매출이 꾸준히 크고(3년 연평균) 현금을 벌며 희석·적자 없이 성장",
   value: "저평가 — 이익·현금흐름 대비 싸고(EBIT/EV·FCF/시총 상위) 이익이 붕괴하지 않는 회사",
   dividend: "배당 — 이익이 안정적이고 배당을 줄이지 않아 온 회사(배당성향 100% 이하)",
-  rising: "히든 — 작은 출발점·긴 성장 활주로·높은 ROIC·순현금/흑자·해자가 있는 '10배 가능성 + 영구 손실 위험 낮음' 회사",
 };
 
 const readNotes = () => (fs.existsSync(NOTES) ? JSON.parse(fs.readFileSync(NOTES, "utf8")) : { candidates: {}, defects: {} });

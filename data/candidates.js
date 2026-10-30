@@ -276,7 +276,7 @@ window.CANDIDATES = {
       },
       {
        "k": "drop",
-       "msg": "5거래일 -13.5%(시장 중앙값 -1.1%) 급락 — 원인 확인",
+       "msg": "5거래일 -13.5%(시장 중앙값 -0.7%) 급락 — 원인 확인",
        "fresh": false
       }
      ],
@@ -548,157 +548,6 @@ window.CANDIDATES = {
     }
    ]
   },
-  "korea|rising": {
-   "eligible": 14,
-   "defects": [
-    {
-     "ticker": "058470",
-     "name": "리노공업",
-     "state": "결격",
-     "flags": [
-      {
-       "k": "theme",
-       "msg": "주제 기준 미달 — 매출 성장 미달(3년 4.9%·향후 18.4%)",
-       "fresh": false
-      }
-     ],
-     "note": "성장 숫자·PEG 미달 — 품질 최상위라 대체 확보 시 교체",
-     "judged": "2026-10-18",
-     "verdict": "실질",
-     "triedAt": "2026-10-30",
-     "since": "2026-10-18",
-     "age": 12
-    },
-    {
-     "ticker": "064760",
-     "name": "티씨케이",
-     "state": "결격",
-     "flags": [
-      {
-       "k": "theme",
-       "msg": "주제 기준 미달 — 매출 성장 미달(3년 -1.9%·향후 31.3%)",
-       "fresh": false
-      }
-     ],
-     "note": "3년 매출 연평균 -1.9% — 근접 완화선 미달, 대체 후보 소진",
-     "judged": "2026-10-18",
-     "verdict": "실질",
-     "triedAt": "2026-10-30",
-     "since": "2026-10-18",
-     "age": 12
-    },
-    {
-     "ticker": "403870",
-     "name": "HPSP",
-     "state": "결격",
-     "flags": [
-      {
-       "k": "theme",
-       "msg": "주제 기준 미달 — 매출 성장 미달(3년 2.8%·향후 48.8%)",
-       "fresh": false
-      }
-     ],
-     "note": "3년 성장 2.8%·1·2분기 매출·영업이익 감소",
-     "judged": "2026-10-18",
-     "verdict": "실질",
-     "triedAt": "2026-10-30",
-     "since": "2026-10-18",
-     "age": 12
-    },
-    {
-     "ticker": "082920",
-     "name": "비츠로셀",
-     "state": "감시",
-     "flags": [],
-     "note": "상반기 매출 +30.7%·영업이익 +25.1%로 성장 유지, 최근 목표가 하향 원인 미확인 — 감시",
-     "judged": "2026-10-18",
-     "verdict": "형식"
-    },
-    {
-     "ticker": "062040",
-     "name": "산일전기",
-     "state": "감시",
-     "flags": [
-      {
-       "k": "trend",
-       "msg": "추세 붕괴(단·중·장기 모두 매도 이하)",
-       "fresh": false
-      }
-     ],
-     "note": "추세 붕괴 신호는 있으나 논거 훼손 근거는 찾지 못했다. 2분기 수주가 분기 기준 처음 2천억 원을 넘었고 데이터센터용 변압기 수주와 초고압 3공장 증설이 진행 중이라 히든 기준 위반 징후가 없다.",
-     "judged": "2026-10-26",
-     "verdict": "형식"
-    },
-    {
-     "ticker": "119850",
-     "name": "지엔씨에너지",
-     "state": "감시",
-     "flags": [
-      {
-       "k": "drop",
-       "msg": "5거래일 -21.3%(시장 중앙값 -1.1%) 급락 — 원인 확인",
-       "fresh": false
-      }
-     ],
-     "note": "급락을 설명하는 회사 고유 공시·악재는 찾지 못했다. 데이터센터용 비상발전기 수주 공시가 7월 이후 이어지고 있고 매출 반영은 2027년부터로 전망된다.",
-     "judged": "2026-10-29",
-     "verdict": "형식"
-    },
-    {
-     "ticker": "095340",
-     "name": "ISC",
-     "state": "감시",
-     "flags": [
-      {
-       "k": "theme",
-       "msg": "주제 기준 미달 — ROIC 미달(3년 평균 14.4%)",
-       "fresh": false
-      }
-     ],
-     "note": "3년 평균 ROIC가 기준 15%에 근소 미달(14.4%)한 숫자 경계이고 사업 논거 훼손은 확인되지 않아 형식 결격으로 본다.",
-     "judged": "2026-10-27",
-     "verdict": "형식",
-     "by": "ai"
-    }
-   ],
-   "list": [
-    {
-     "ticker": "092730",
-     "name": "네오팜",
-     "status": "보류",
-     "note": "2분기 매출 +36%·영업이익 +40%, 월봉 추세 정상. 컨센서스 목표가를 신뢰 출처 2곳으로 확인하지 못해 대기 — 3분기 실적(11월) 뒤 리포트 확인.",
-     "asOf": "2026-10-26",
-     "why": "3년 매출 연평균 15.9% · 3년 평균 ROIC 38.9% · PEG 0.5",
-     "url": "https://m.stock.naver.com/domestic/stock/092730/total"
-    },
-    {
-     "ticker": "003350",
-     "name": "한국화장품제조",
-     "status": "보류",
-     "note": "2분기 매출 +32%·영업이익 +29%, 월봉 추세 정상. 증권사 커버리지가 없어 목표가·해자 근거 미확인 — 11-16 기한 안에 커버리지가 없으면 기각.",
-     "asOf": "2026-10-26",
-     "why": "3년 매출 연평균 21.1% · 3년 평균 ROIC 40.7% · PEG 0.4",
-     "url": "https://m.stock.naver.com/domestic/stock/003350/total"
-    },
-    {
-     "ticker": "278470",
-     "name": "에이피알",
-     "status": "검증 대기",
-     "why": "3년 매출 연평균 56.6% · 3년 평균 ROIC 67.7% · PEG 0.6",
-     "near": "시총 범위 밖",
-     "alsoIn": "core",
-     "url": "https://m.stock.naver.com/domestic/stock/278470/total"
-    },
-    {
-     "ticker": "084370",
-     "name": "유진테크",
-     "status": "검증 대기",
-     "why": "3년 매출 연평균 4.1% · 3년 평균 ROIC 16.8% · PEG 1.3",
-     "near": "매출 성장 미달(3년 4.1%·향후 40.5%)",
-     "url": "https://m.stock.naver.com/domestic/stock/084370/total"
-    }
-   ]
-  },
   "us|core": {
    "eligible": 60,
    "defects": [
@@ -714,7 +563,7 @@ window.CANDIDATES = {
       },
       {
        "k": "drop",
-       "msg": "5거래일 -12.6%(시장 중앙값 0.9%) 급락 — 원인 확인",
+       "msg": "5거래일 -12.6%(시장 중앙값 1.3%) 급락 — 원인 확인",
        "fresh": false
       }
      ],
@@ -887,7 +736,7 @@ window.CANDIDATES = {
       },
       {
        "k": "drop",
-       "msg": "5거래일 -33.9%(시장 중앙값 0.9%) 급락 — 원인 확인",
+       "msg": "5거래일 -33.9%(시장 중앙값 1.3%) 급락 — 원인 확인",
        "fresh": false
       }
      ],
@@ -1280,203 +1129,12 @@ window.CANDIDATES = {
      "url": "https://m.stock.naver.com/worldstock/stock/RIO/total"
     }
    ]
-  },
-  "us|rising": {
-   "eligible": 12,
-   "defects": [
-    {
-     "ticker": "NXT",
-     "name": "Nextpower",
-     "state": "결격",
-     "flags": [
-      {
-       "k": "earn",
-       "msg": "실적 발표(10/28) · EPS 서프라이즈 30.2% — 가이던스·논거 확인",
-       "fresh": false
-      }
-     ],
-     "note": "⑨ 세액공제(45X) 의존 · 최근 낙폭은 회사 고유 악재 미확인(10/28 실적 발표 예정) · 새 신호: 2026.07 분기 매출 +8.2%, EBIT +6.2%, 순이익 +5.2%로 흑자 성장을 유지했고 FY2027 가이던스도 상향됐다. 다만 재무 데이터 공백으로 기준 충족 여부는 확인 전이라 10-28 실적 발표까지 감시한다. · 새 신호: 10/2",
-     "judged": "2026-10-29",
-     "verdict": "실질",
-     "triedAt": "2026-10-30",
-     "since": "2026-10-21",
-     "age": 9
-    },
-    {
-     "ticker": "NVT",
-     "name": "nVent Electric",
-     "state": "결격",
-     "flags": [
-      {
-       "k": "theme",
-       "msg": "주제 기준 미달 — 시총 범위 밖, 순차입금 > 영업현금흐름, ROIC 미달(3년 평균 8.3%)",
-       "fresh": false
-      }
-     ],
-     "note": "⑤ 재무 안전 조건 미달 — 남은 대체 후보는 모두 집중 리스크(⑨)·추세 붕괴로 막힘",
-     "judged": "2026-10-18",
-     "verdict": "실질",
-     "triedAt": "2026-10-30",
-     "since": "2026-10-18",
-     "age": 12
-    },
-    {
-     "ticker": "FSS",
-     "name": "Federal Signal",
-     "state": "결격",
-     "flags": [
-      {
-       "k": "theme",
-       "msg": "주제 기준 미달 — 순차입금 > 영업현금흐름, 매출 성장 미달(3년 15%·최근 17.1%), ROIC 미달(3년 평균 15%), PEG 2.18",
-       "fresh": false
-      },
-      {
-       "k": "earn",
-       "msg": "실적 발표(10/29) · EPS 서프라이즈 1.5% — 가이던스·논거 확인",
-       "fresh": false
-      }
-     ],
-     "note": "⑤ 재무 안전 조건 미달 — 남은 대체 후보는 모두 집중 리스크(⑨)·추세 붕괴로 막힘 · 새 신호: 2026-10-29 3분기 매출 약 +18%, 영업이익 +19%, 수주 +33%로 분기 최대 실적이고 연간 EPS 가이던스 하한도 올렸다. 매출 범위 축소는 외부 납품 지연 때문이며, 지연 지속 여부 확인 전까지 감시한다.",
-     "judged": "2026-10-30",
-     "verdict": "실질",
-     "triedAt": "2026-10-30",
-     "since": "2026-10-18",
-     "age": 12
-    },
-    {
-     "ticker": "AAON",
-     "name": "AAON",
-     "state": "결격",
-     "flags": [
-      {
-       "k": "trend",
-       "msg": "추세 붕괴(단·중·장기 모두 매도 이하)",
-       "fresh": false
-      },
-      {
-       "k": "theme",
-       "msg": "주제 기준 미달 — FCF 적자, 순차입금 > 영업현금흐름, ROIC 미달(3년 평균 16.1%)",
-       "fresh": false
-      }
-     ],
-     "note": "⑤ 재무 안전 조건 미달 — 남은 대체 후보는 모두 집중 리스크(⑨)·추세 붕괴로 막힘",
-     "judged": "2026-10-18",
-     "verdict": "실질",
-     "triedAt": "2026-10-30",
-     "since": "2026-10-18",
-     "age": 12
-    },
-    {
-     "ticker": "NVMI",
-     "name": "Nova Ltd.",
-     "state": "감시",
-     "flags": [],
-     "note": "SEC 재무 수치가 비어 있어 기준 미달로 잡혔으나, 2026.06 분기 매출 +15.9%, 순이익 +9.8%로 흑자 성장은 유지 중이다. 회사 고유 악재는 확인되지 않아 11월 5일 실적 발표까지 감시한다.",
-     "judged": "2026-10-24",
-     "verdict": "형식",
-     "by": "ai"
-    },
-    {
-     "ticker": "POWL",
-     "name": "Powell Industries",
-     "state": "감시",
-     "flags": [
-      {
-       "k": "theme",
-       "msg": "주제 기준 미달 — 매출 성장 미달(3년 27.5%·최근 9.1%)",
-       "fresh": false
-      }
-     ],
-     "note": "근접 후보",
-     "judged": "2026-10-18",
-     "verdict": "형식"
-    },
-    {
-     "ticker": "APPF",
-     "name": "AppFolio",
-     "state": "감시",
-     "flags": [
-      {
-       "k": "theme",
-       "msg": "주제 기준 미달 — PEG 1.75",
-       "fresh": false
-      },
-      {
-       "k": "earn",
-       "msg": "실적 발표(10/22) · EPS 서프라이즈 0.8% — 가이던스·논거 확인",
-       "fresh": false
-      }
-     ],
-     "note": "주제 기준 미달 신호는 대부분 값이 비어 있어 데이터 공백으로 보이며, 2026년 6월 분기 매출 +19.3%·영업이익 +30.8%·순이익 +15.5%로 흑자 성장이 이어진다. 3분기 원문 확인 전까지 감시한다.",
-     "judged": "2026-10-24",
-     "verdict": "형식",
-     "by": "ai"
-    },
-    {
-     "ticker": "FIVE",
-     "name": "Five Below",
-     "state": "감시",
-     "flags": [
-      {
-       "k": "theme",
-       "msg": "주제 기준 미달 — PEG 1.98",
-       "fresh": false
-      }
-     ],
-     "note": "PEG 가 상한을 넘어 근접 후보 범위(완화선 안) — 재무·ROIC 는 충족, 해자 약세는 기존 위험으로 감시.",
-     "judged": "2026-10-26",
-     "verdict": "형식"
-    },
-    {
-     "ticker": "STRL",
-     "name": "Sterling Infrastructure",
-     "state": "감시",
-     "flags": [
-      {
-       "k": "theme",
-       "msg": "주제 기준 미달 — 매출 성장 미달(3년 12.1%·최근 17.7%)",
-       "fresh": false
-      },
-      {
-       "k": "earn",
-       "msg": "실적 발표(10/28) · EPS 서프라이즈 26% — 가이던스·논거 확인",
-       "fresh": false
-      }
-     ],
-     "note": "10/28 3분기 EPS 6.92달러로 예상을 웃돌았고 2026년 가이던스를 상향했으며 합산 수주잔고는 61.4억 달러다. 3년 매출 성장 문턱 미달과 최근 급락 원인은 확인 전까지 감시한다.",
-     "judged": "2026-10-29",
-     "verdict": "형식",
-     "by": "ai"
-    }
-   ],
-   "list": [
-    {
-     "ticker": "CORT",
-     "name": "Corcept Therapeutics Incorporated",
-     "status": "보류",
-     "note": "⑨ 주력 제품 매출 비중 약 80% — 12-17 신약 승인 결정과 희석 연 3% 이하 복귀 뒤 재검토.",
-     "asOf": "2026-10-26",
-     "why": "3년 매출 연평균 23.7% · 3년 평균 ROIC 36.4% · PEG 0.8",
-     "near": "희석 주식 수 연 3.6% 증가",
-     "url": "https://finance.yahoo.com/quote/CORT"
-    },
-    {
-     "ticker": "CAMT",
-     "name": "Camtek",
-     "status": "보류",
-     "note": "반등 중이나 매출의 약 절반이 중국(⑨)이고 성장 문턱 미달 — 중국 비중 감소 시 재검토.",
-     "asOf": "2026-10-26",
-     "why": "3년 매출 연평균 15.6% · 3년 평균 ROIC 21.5% · PEG 1.5",
-     "near": "매출 성장 미달(3년 15.6%·최근 15.6%)",
-     "url": "https://finance.yahoo.com/quote/CAMT"
-    }
-   ]
   }
  },
  "summary": {
   "review": 0,
-  "defect": 11,
-  "watch": 29,
+  "defect": 4,
+  "watch": 20,
   "untried": 0,
   "dup": 2,
   "long": 0

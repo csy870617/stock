@@ -3,10 +3,11 @@
 //
 // 왜: 추천 편성의 지수 대비 초과가 대부분 β(시장 민감도) 차이에서 나왔다(한국 β 0.40 — β 반영 시 -2%). 사람이 고른 편성이
 //   '같은 스크린 점수 상위를 기계적으로 고른 편성'보다 나은지를 같은 날·같은 방식으로 재야 선별 실력을 알 수 있다.
-// 규칙(고정): 국가마다 주제 순서(우량→성장→저평가→배당→히든)로 스크린(discovery-candidates.js)의 후보+현 편성 행 중
-//   주제 기준 미달(fails)이 없는 것을 점수순으로 9개씩, 앞 주제에서 고른 종목은 건너뛴다(중복 없음 — 국가 45종목).
+// 규칙(고정): 국가마다 주제 순서(우량→성장→저평가→배당)로 스크린(discovery-candidates.js)의 후보+현 편성 행 중
+//   주제 기준 미달(fails)이 없는 것을 점수순으로 9개씩, 앞 주제에서 고른 종목은 건너뛴다(중복 없음 — 국가 36종목).
+//   (2026-10-30 히든 주제 폐지 — 그날부터 4주제로 잰다. 주목은 정식 편성이 아니라 비교하지 않는다.)
 //   매주 월요일(또는 마지막 재선정 7일 경과·보유가 비었을 때) 다시 고르고, 그 사이는 그대로 보유한다. 동일비중·일별 연결.
-// 비교 대상도 같은 방식으로 잰다: 추천 편성(정식 5주제 고유 종목 — 매 기록일 그날 편성으로 갈아 끼움, 다음 기록일에 빠진 종목도
+// 비교 대상도 같은 방식으로 잰다: 추천 편성(정식 4주제 고유 종목 — 매 기록일 그날 편성으로 갈아 끼움, 다음 기록일에 빠진 종목도
 //   야후 종가로 그날 수익을 잰다), 지수(KOSPI·S&P500, 미국은 RSP 도). 주제별로도 같은 계산(추천 그 주제 9종목 vs 그림자 그 주제 9종목).
 // 출력: data/shadow.json — {startedAt, rule, korea|us: {series[{d, s 그림자, f 추천, i 지수, e RSP}], th{주제:{s,f}}, hold, formal, picks, summary}}
 //
@@ -19,7 +20,7 @@ const { yahooQuote } = require("./lib-quote");
 const ROOT = path.join(__dirname, "..");
 const DATA = path.join(ROOT, "data");
 const OUT = path.join(DATA, "shadow.json");
-const THEMES = ["core", "growth", "value", "dividend", "rising"];
+const THEMES = ["core", "growth", "value", "dividend"];
 const PER = 9, CONC = 6, REBAL_DAYS = 7;
 const FORCE_REBAL = process.argv.includes("--rebalance");
 
@@ -142,6 +143,7 @@ async function main() {
     const fNow = await formalCloses(c, needF, dNow);
     const sNow = hold ? await yahooCloses(hold.items, dNow) : {};
     C.th = C.th || {};
+    Object.keys(C.th).forEach((th) => { if (!THEMES.includes(th)) delete C.th[th]; });   // 없어진 주제(2026-10-30 히든)는 기록에서 뺀다
     THEMES.forEach((th) => { C.th[th] = C.th[th] || { s: 1, f: 1 }; });
     const rspOk = c === "us" && ix.rsp && ix.rsp.close > 0;
     if (last && dNow > last.d && C.idxClose > 0) {

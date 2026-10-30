@@ -97,6 +97,13 @@ const MARKETS = { korea: ["KOSPI", "KOSDAQ"], us: ["NASDAQ", "NYSE", "AMEX"] }; 
 // (종목별 필드 검증·신뢰 출처·목표가 가드레일은 추천 종목과 똑같이 적용된다.)
 const PERSONAL_THEMES = ["watch", "hold"];
 const isPersonalTheme = (t) => PERSONAL_THEMES.includes(t);
+// 주목(spotlight, 2026-10-30 히든 자리) — 정기 분석이 차트(신고가·턴어라운드)와 훌륭한 기업 관문으로 고르는 목록(§4-7).
+//   tier 가 없고 나라·모양별 5종목까지라 9종목·tier 구조와 정식 편성 규칙(결격·티어·발굴·β·그림자)에서 빠진다.
+const SPOTLIGHT = "spotlight";
+const SPOT_TAGS = ["신고가", "턴어라운드"];
+const SPOT_PER_TAG = 5;
+const NONFORMAL_THEMES = [SPOTLIGHT].concat(PERSONAL_THEMES);
+const isFormalTheme = (t) => !NONFORMAL_THEMES.includes(t);
 const PER_GROUP = 9;              // (주제×국가)당 종목 수
 const PER_TIER = 3;               // 티어당 종목 수
 const UPSIDE_TOL = 1.5;           // upside 필드 vs (target-price)/price*100 허용 오차(%p)
@@ -162,7 +169,7 @@ function concentration(D) {
   const sf = screenFin();
   ["korea", "us"].forEach((c) => {
     const occ = {};
-    (D[c] || []).filter((s) => !isPersonalTheme(s.theme)).forEach((s) => { (occ[s.ticker] = occ[s.ticker] || { n: 0, s }).n++; });
+    (D[c] || []).filter((s) => isFormalTheme(s.theme)).forEach((s) => { (occ[s.ticker] = occ[s.ticker] || { n: 0, s }).n++; });
     Object.keys(occ).forEach((t) => {
       const o = occ[t];
       if (o.n > 1) { out.dup += o.n - 1; out.dupList.push(c + ":" + t + "×" + o.n); }
@@ -227,9 +234,13 @@ function validate(D, opts) {
 
       if (!s || typeof s !== "object") { errors.push(tag + ": 항목이 객체가 아님"); return; }
       if (!themeKeys.includes(s.theme)) errors.push(tag + ": 미정의 theme '" + s.theme + "'");
-      // 관심·보유는 tier 구조 면제 대상이라 tier 자체도 선택 — 있으면 형식만 검사
-      if (isPersonalTheme(s.theme)) {
+      // 관심·보유는 tier 구조 면제 대상이라 tier 자체도 선택 — 있으면 형식만 검사. 주목은 tier 대신 모양 이름표(신고가·턴어라운드)
+      if (s.theme === SPOTLIGHT) {
+        if (s.tier != null) errors.push(tag + ": 주목은 tier 가 없다 (" + s.tier + ")");
+        if (!SPOT_TAGS.includes(s.watchTag)) errors.push(tag + ": 주목 종목은 watchTag 가 " + SPOT_TAGS.join("|") + " 여야 함 ('" + s.watchTag + "')");
+      } else if (isPersonalTheme(s.theme)) {
         if (s.tier != null && ![1, 2, 3].includes(s.tier)) errors.push(tag + ": tier 는 1|2|3 이어야 함 (" + s.tier + ")");
+        if (s.watchTag) warnings.push(tag + ": 관심·보유는 사용자가 직접 담은 종목이라 신고가·턴어라운드 이름표를 쓰지 않는다(그런 종목은 주목, §4-7)");
       } else if (![1, 2, 3].includes(s.tier)) errors.push(tag + ": tier 는 1|2|3 이어야 함 (" + s.tier + ")");
       if (!s.name || typeof s.name !== "string") errors.push(tag + ": name 누락");
 
@@ -390,8 +401,8 @@ function validate(D, opts) {
         if (age > STALE_PRICE_DAYS) warnings.push(tag + ": 시세가 " + Math.round(age) + "일 경과 (" + effDate +
           (effDate === s.priceDate && !q ? ", quotes.js 미보유" : "") + ")");
       }
-      // 티어 신선도 — 티어는 항상 최신 펀더멘털로 유지(관심·보유는 tier 구조 면제라 제외)
-      if (!isPersonalTheme(s.theme)) {
+      // 티어 신선도 — 티어는 항상 최신 펀더멘털로 유지(주목·관심·보유는 tier 가 없어 제외)
+      if (isFormalTheme(s.theme)) {
         if (!RE_DATE.test(s.tierAsOf || "")) {
           warnings.push(tag + ": tierAsOf(티어 품질 평가일) 없음 — 최신 데이터로 티어 재평가 필요");
         } else {
@@ -409,9 +420,16 @@ function validate(D, opts) {
       if (dupCheck[k] > 1) errors.push(c + ": (" + k + ") 이 같은 주제에 " + dupCheck[k] + "번 등장");
     });
 
-    // 주제별 9종목 · Tier 3×3 구조 (관심 'watch'·보유 'hold' 는 사용자 편성이라 구조 규칙 면제)
+    // 주제별 9종목 · Tier 3×3 구조 (주목 'spotlight'·관심 'watch'·보유 'hold' 는 구조 규칙 면제 — 주목은 모양별 정원만 본다)
+    {
+      const sp = groups[SPOTLIGHT] || [];
+      SPOT_TAGS.forEach((tg) => {
+        const n = sp.filter((s) => s.watchTag === tg).length;
+        if (n > SPOT_PER_TAG) warnings.push(c + "/" + SPOTLIGHT + ": " + tg + " " + n + "종목 — 정원 " + SPOT_PER_TAG + " 초과(§4-7)");
+      });
+    }
     themeKeys.forEach((tk) => {
-      if (isPersonalTheme(tk)) return;
+      if (!isFormalTheme(tk)) return;
       const g = groups[tk] || [];
       if (g.length !== PER_GROUP) {
         errors.push(c + "/" + tk + ": 종목 수 " + g.length + " ≠ " + PER_GROUP);
@@ -423,12 +441,12 @@ function validate(D, opts) {
     });
   });
 
-  // ── 오늘의 Top Pick (선택) — 국가별(korea·us) 정식 추천·관심 종목(보유 제외 — 2026-10-30 사용자 요청) 3종목씩 ──
+  // ── 오늘의 Top Pick (선택) — 국가별(korea·us) 정식 추천·주목·관심 종목(보유 제외 — 2026-10-30 사용자 요청) 3종목씩 ──
   // 추세 붕괴(2026-10-17 사용자 결정, CLAUDE.md §6): 엔진 단·중·장기 신호가 모두 '매도' 이하인 종목은 추천하지 않는다.
   //   정식 편성에 있으면 경고(다음 C 모드·회차에서 검증된 대체 후보와 교체), Top Pick 이면 오류.
   const trendBroken = (t) => { const x = opts.ta && opts.ta.ta && opts.ta.ta[t]; return !!(x && ["short", "mid", "long"].every((k) => x[k] && /매도/.test(x[k].signal || ""))); };
   ["korea", "us"].forEach((c) => (D[c] || []).forEach((s) => {
-    if (!isPersonalTheme(s.theme) && trendBroken(s.ticker)) warnings.push(c + ":" + s.ticker + " " + s.name + "(" + s.theme + "): 추세 붕괴(단·중·장기 모두 매도 이하) — 정식 추천 결격, 검증된 대체 후보와 교체 대상");
+    if (isFormalTheme(s.theme) && trendBroken(s.ticker)) warnings.push(c + ":" + s.ticker + " " + s.name + "(" + s.theme + "): 추세 붕괴(단·중·장기 모두 매도 이하) — 정식 추천 결격, 검증된 대체 후보와 교체 대상");
   }));
   {
     const cc = concentration(D);
@@ -468,7 +486,7 @@ function validate(D, opts) {
           if (!it.ticker) errors.push(tag + ": ticker 누락");
           else if (trendBroken(it.ticker)) errors.push(tag + ": " + it.ticker + " 추세 붕괴(단·중·장기 모두 매도 이하) — Top Pick 제외 대상");
           else {
-            if (!pickable.has(it.ticker)) errors.push(tag + ": '" + it.ticker + "' 는 " + (g === "us" ? "미국" : g === "korea" ? "한국" : "") + " 정식 추천·관심 종목이 아님 (보유·타국·미편성 불가)");
+            if (!pickable.has(it.ticker)) errors.push(tag + ": '" + it.ticker + "' 는 " + (g === "us" ? "미국" : g === "korea" ? "한국" : "") + " 정식 추천·주목·관심 종목이 아님 (보유·타국·미편성 불가)");
             seen[it.ticker] = (seen[it.ticker] || 0) + 1;
           }
           if (!it.reason || !RE_HANGUL.test(it.reason)) errors.push(tag + ": reason(선정 이유) 누락 또는 한국어 아님");
@@ -545,4 +563,5 @@ if (require.main === module) {
   console.log("✓ 검증 통과: " + total + "종목, 오류 0건, 경고 " + warnings.length + "건 (" + path.relative(ROOT, file) + ")");
 }
 
-module.exports = { concentration, GROUP_CAP, FIN_CAP, validate, loadTa, isTrustedSource, isBlockedSource, sourceHost, trustedDomainOf, PERSONAL_THEMES, isPersonalTheme, priceNumberIn };
+module.exports = { concentration, GROUP_CAP, FIN_CAP, validate, loadTa, isTrustedSource, isBlockedSource, sourceHost, trustedDomainOf, PERSONAL_THEMES, isPersonalTheme,
+  SPOTLIGHT, SPOT_TAGS, SPOT_PER_TAG, NONFORMAL_THEMES, isFormalTheme, priceNumberIn };

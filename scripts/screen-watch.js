@@ -1,9 +1,10 @@
 #!/usr/bin/env node
-// 관심종목 후보 스크리닝 — LLM 토큰 0 (순수 스크립트, refresh-quotes Action에서 매일 실행)
+// 주목(spotlight) 후보 스크리닝 — LLM 토큰 0 (순수 스크립트, refresh-quotes Action에서 매일 실행)
 //
 // 역할: 발굴 스크린 유니버스(data/screen-universe.json — 시총 상위 한국 400·미국 600, 재무 팩터 포함)의 Yahoo 일봉을 받아
 //       두 가지 차트 패턴을 계산하고, '훌륭한 기업' 관문을 통과한 회사만 data/watch-candidates.js 에 후보로 남긴다.
-//       LLM 통합 루틴은 이 후보 목록만 읽어 성장·컨센서스 목표가·논거를 검증한 뒤 theme:"watch" 로 편입한다(차트 탐색 비용 0).
+//       LLM 통합 루틴은 이 후보 목록만 읽어 성장·컨센서스 목표가·논거를 검증한 뒤 theme:"spotlight" 로 편입한다(차트 탐색 비용 0).
+//       (2026-10-30 전엔 관심(watch) 목록에 이름표를 붙여 담았다 — 사용자 결정으로 '주목' 주제로 옮겼고, 관심은 사용자가 직접 담은 종목만.)
 //       (유니버스 파일이 없으면 아래 UNIVERSE — 예전 손 목록 — 로 차트만 본다.)
 //
 //   ① 턴어라운드 (watchTag:"턴어라운드")
@@ -20,11 +21,11 @@
 //      재무 자료가 없는 회사(외국 ADR 등)는 '훌륭한' 근거가 없어 후보에서 뺀다.
 //      연구(미국 2011~2026·한국 2022~2026): 두 패턴 자체는 이후 6개월 수익이 시장과 비슷하거나 조금 낮았고(유의하지 않음), 이 관문은 패턴 종목의
 //      12개월 −30% 폭락을 줄였다(미국 신고가 4.4% → 3.5%). 수익 차이를 만든 것은 회사 쪽(수익성·성장)이었다 — 그래서 후보 줄에 3년 ROIC·
-//      매출·영업이익 성장(연간·최근 분기)·F 점수를 붙이고, 연간·분기 성장이 모두 플러스인 회사를 앞에 둔다(D절 '안정 성장' 검증과 같은 방향).
+//      매출·영업이익 성장(연간·최근 분기)·F 점수를 붙이고, 연간·분기 성장이 모두 플러스인 회사를 앞에 둔다(주목 편입 '안정 성장' 검증과 같은 방향).
 //
-//       ※ 성장의 최종 확인(최근 분기·연간 매출·이익 YoY)·컨센서스는 편입 전 LLM 루틴이 웹으로 검증한다(CLAUDE.md D 절).
+//       ※ 성장의 최종 확인(최근 분기·연간 매출·이익 YoY)·컨센서스는 편입 전 LLM 루틴이 웹으로 검증한다(CLAUDE.md §4-7).
 //
-// 또한 현재 편성된 관심종목(theme:"watch")이 자기 태그 조건을 여전히 충족하는지 점검해
+// 또한 현재 주목 종목(theme:"spotlight")이 자기 태그 조건을 여전히 충족하는지 점검해
 // current[] 에 남긴다(루틴의 교체 판단용).
 //
 // 사용법: node scripts/screen-watch.js [--date YYYY-MM-DD]
@@ -167,18 +168,18 @@ function sma(arr, n, off) {
 }
 function r1(v) { return Math.round(v * 10) / 10; }
 
-// 현재 편성(recommendations.js) 로드 — 후보 제외용 + 관심종목 태그 점검용
+// 현재 편성(recommendations.js) 로드 — 후보 제외용 + 주목 종목 태그 점검용
 function loadRoster() {
   global.window = {};
   delete require.cache[require.resolve(RECO)];
   require(RECO);
   const D = global.window.STOCK_DATA || {};
   const held = {};      // ticker → true (모든 편성 종목: 후보에서 제외)
-  const watch = [];     // 현재 관심종목(태그 유효성 점검 대상)
+  const watch = [];     // 현재 주목 종목(태그 유효성 점검 대상)
   ["korea", "us"].forEach((c) => (D[c] || []).forEach((s) => {
     if (!s || !s.ticker) return;
     held[s.ticker] = true;
-    if (s.theme === "watch") watch.push({ country: c, ticker: s.ticker, name: s.name, market: s.market, tag: s.watchTag || "" });
+    if (s.theme === "spotlight") watch.push({ country: c, ticker: s.ticker, name: s.name, market: s.market, tag: s.watchTag || "" });
   }));
   return { held: held, watch: watch };
 }
@@ -302,7 +303,7 @@ function healthWhy(c, u) {
 function factsOf(u) {
   const fx = (u && u.fx) || {}, n = (v) => (v == null || !isFinite(v) ? null : v);
   const f = { roic3: n(fx.roic3), sg1: n(fx.sg1), opg: n(fx.opg), qRev: n(u.qRevYoY), qOp: n(u.qOpYoY), fscore: n(fx.f), fin: !!u.fin };
-  // 성장 확인: 연간 매출·영업이익이 모두 늘었고, 최근 분기 값이 있으면 그것도 모두 플러스(D절 '안정 성장'의 숫자판 — 최종 확인은 세션 웹 검증)
+  // 성장 확인: 연간 매출·영업이익이 모두 늘었고, 최근 분기 값이 있으면 그것도 모두 플러스(주목 편입 '안정 성장'의 숫자판 — 최종 확인은 세션 웹 검증)
   const yr = f.sg1 != null && f.opg != null && f.sg1 > 0 && f.opg > 0;
   const qOk = (f.qRev == null || f.qRev > 0) && (f.qOp == null || f.qOp > 0);
   f.growth = yr && qOk;
@@ -392,7 +393,7 @@ async function mapLimit(items, limit, fn) {
     gated[c].sort((x, y) => x.ticker < y.ticker ? -1 : 1);
   });
 
-  // 2) 현재 관심종목의 태그 유효성 점검(루틴의 교체 판단용)
+  // 2) 현재 주목 종목의 태그 유효성 점검(루틴의 교체 판단용)
   const current = [];
   await mapLimit(watch, 6, async (w) => {
     const cl = await fetchCloses(symbolFor(w.ticker, w.market));
@@ -422,7 +423,7 @@ async function mapLimit(items, limit, fn) {
 
   const W = {
     asOf: asOf,
-    note: "관심종목 차트 후보 — scripts/screen-watch.js 가 매일 자동 계산(LLM 토큰 0). " +
+    note: "주목 차트 후보 — scripts/screen-watch.js 가 매일 자동 계산(LLM 토큰 0). " +
           "turnaround=바닥 확인+5·20·60일선 수렴+정배열(근접), breakout=물량 소화 후 신고가 갓 돌파. " +
           (U ? "후보는 훌륭한 기업 관문(Top Pick 건강 관문의 재무 조건) 통과 회사만 — growth=연간·최근 분기 매출·영업이익 모두 플러스(숫자 근사, 앞에 둔다). "
              : "유니버스 파일이 없어 손 목록으로 차트만 봤다(재무 관문 미적용). ") +
@@ -440,8 +441,8 @@ async function mapLimit(items, limit, fn) {
     current: current,
   };
   fs.writeFileSync(OUT,
-    "// 관심종목 차트 후보 스냅샷 — scripts/screen-watch.js 가 자동 생성 (LLM 토큰 0, 순수 스크립트)\n" +
-    "// turnaround/breakout = 국가별 상위 후보(점수순), current = 현재 관심종목의 태그 유효성 점검.\n" +
+    "// 주목 차트 후보 스냅샷 — scripts/screen-watch.js 가 자동 생성 (LLM 토큰 0, 순수 스크립트)\n" +
+    "// turnaround/breakout = 국가별 상위 후보(점수순), current = 현재 주목 종목의 태그 유효성 점검.\n" +
     "window.WATCH_CANDIDATES = " + JSON.stringify(W) + ";\n");
 
   console.log("watch-candidates.js 갱신 (" + asOf + ") — 스크리닝 " + ok + "종목(실패 " + fail + ")");
