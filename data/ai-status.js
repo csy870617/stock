@@ -2,100 +2,69 @@
 // 앱 'AI 연결' 창이 '매일 자동 분석' 칸에 보여 준다. 비용은 토큰 기준 추정(웹 검색은 횟수만 — 검색당 요금 별도).
 window.AI_STATUS = {
  "defects": {
-  "at": "2026-10-29T13:44:16.363Z",
+  "at": "2026-10-30T00:01:48.371Z",
   "model": "claude-sonnet-5-5",
   "ok": true,
-  "pending": 5,
-  "judged": 5,
-  "items": [
-   {
-    "g": "us|core",
-    "t": "MSFT",
-    "name": "Microsoft",
-    "verdict": "없음"
-   },
-   {
-    "g": "us|core",
-    "t": "GOOGL",
-    "name": "Alphabet",
-    "verdict": "형식"
-   },
-   {
-    "g": "us|growth",
-    "t": "NOW",
-    "name": "ServiceNow",
-    "verdict": "형식"
-   },
-   {
-    "g": "us|rising",
-    "t": "NXT",
-    "name": "Nextpower",
-    "verdict": "실질"
-   },
-   {
-    "g": "us|rising",
-    "t": "STRL",
-    "name": "Sterling Infrastructure",
-    "verdict": "형식"
-   }
-  ],
+  "pending": 0,
+  "judged": 0,
+  "items": [],
   "usage": {
-   "calls": 11,
-   "input": 148009,
-   "output": 7335,
+   "calls": 0,
+   "input": 0,
+   "output": 0,
    "cacheRead": 0,
-   "searches": 15,
-   "usd": 0.369
+   "searches": 0,
+   "usd": 0
   }
  },
  "news": {
-  "at": "2026-10-29T13:49:59.270Z",
+  "at": "2026-10-30T00:05:38.992Z",
   "model": "claude-haiku-5-5",
   "ok": true,
   "stocks": 115,
   "fetched": 115,
-  "called": 93,
-  "lines": 91,
+  "called": 86,
+  "lines": 87,
   "usage": {
-   "calls": 93,
-   "input": 139328,
-   "output": 7091,
+   "calls": 86,
+   "input": 128184,
+   "output": 6703,
    "cacheRead": 0,
    "searches": 0,
-   "usd": 0.017
+   "usd": 0.016
   }
  },
  "daily": {
-  "at": "2026-10-29T13:46:22.466Z",
+  "at": "2026-10-30T00:01:57.428Z",
   "T": "2026-10-29",
   "basis": {
    "kr": "2026-10-29",
-   "us": "2026-10-28"
+   "us": "2026-10-29"
   },
   "model": "claude-opus-5-5",
   "ok": true,
   "seen": {
-   "at": "2026-10-29T13:49:59.194Z",
+   "at": "2026-10-30T00:05:38.889Z",
    "items": {
     "market": {
-     "sig": "미국 증시는 10/28 연준의 매파적 동결 속에서도 3거래일 연속 올랐지#8ggmw5",
+     "sig": "알파벳 급락과 삼성전자 실적 발표 후 실망 매물이 겹치며 10/29 미국#rowx3n",
      "basis": {
       "kr": "2026-10-29",
-      "us": "2026-10-28"
+      "us": "2026-10-29"
      }
     },
     "liquidity": {
-     "sig": "연준의 매파적 동결과 12월 인상 기대, 한국은행의 인상 기대와 외국인 #1fwekya",
+     "sig": "연준의 12월 인상 기대와 한국은행의 인상 쪽 기울기가 이어져 두 나라 #u0gahh",
      "basis": {
       "kr": "2026-10-29",
-      "us": "2026-10-28"
+      "us": "2026-10-29"
      }
     },
     "indexNotes": {
-     "sig": "횡보: 일봉 구름 아래에서 전환선이 기준선 아래이고 RSI는 44.9이며#1vcipv0",
+     "sig": "횡보입니다. 일봉이 구름 아래에 있고 전환선이 기준선 아래에 있지만 MA#4x94g8",
      "basis": {
       "kr": "2026-10-29",
-      "us": "2026-10-28"
+      "us": "2026-10-29"
      }
     },
     "topPicks": {
@@ -109,21 +78,23 @@ window.AI_STATUS = {
   },
   "wrote": [
    "liquidity",
+   "indexNotes",
    "market"
   ],
   "sig": {
-   "liquidity": "연준의 매파적 동결과 12월 인상 기대, 한국은행의 인상 기대와 외국인 #1fwekya",
-   "indexNotes": "횡보: 급등에도 일봉 구름 아래이고 전환선이 기준선 아래이며 RSI는 4#1m9j8s2",
-   "market": "미국 증시는 10/28 연준의 매파적 동결 속에서도 3거래일 연속 올랐지#8ggmw5"
+   "liquidity": "연준의 12월 인상 기대와 한국은행의 인상 쪽 기울기가 이어져 두 나라 #u0gahh",
+   "indexNotes": "횡보입니다. 일봉이 구름 아래에 있고 전환선이 기준선 아래에 있지만 MA#4x94g8",
+   "market": "알파벳 급락과 삼성전자 실적 발표 후 실망 매물이 겹치며 10/29 미국#rowx3n"
   },
   "sources": 40,
   "usage": {
    "calls": 3,
-   "input": 339286,
-   "output": 21666,
+   "input": 558585,
+   "output": 23117,
    "cacheRead": 0,
    "searches": 6,
-   "usd": 1.79
-  }
+   "usd": 2.697
+  },
+  "note": "새 종가로 세션 문장 갱신: indexNotes"
  }
 };

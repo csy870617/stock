@@ -2,13 +2,13 @@
 // groups["<country>|<theme>"] = {defects 편성 결격(state 결격|점검 필요|감시), list 후보(status 검증 통과|보류|검증 대기)}
 // 세션 판정은 data/candidate-notes.json(CLAUDE.md §3-7) — 이 파일을 직접 고치지 않는다.
 window.CANDIDATES = {
- "asOf": "2026-10-29",
+ "asOf": "2026-10-30",
  "T": "2026-10-29",
  "screenAsOf": "2026-10-29",
  "screenFresh": true,
  "beta": {
   "korea": 0.67,
-  "us": 1.05
+  "us": 1.17
  },
  "groups": {
   "korea|core": {
@@ -85,14 +85,34 @@ window.CANDIDATES = {
    "eligible": 46,
    "defects": [
     {
+     "ticker": "009540",
+     "name": "HD한국조선해양",
+     "state": "점검 필요",
+     "flags": [
+      {
+       "k": "tpcut",
+       "msg": "컨센서스 목표가 14일 새 -16.4% 하향 — 논거 확인",
+       "fresh": true
+      }
+     ],
+     "note": "실적 발표(10/28) 전후 확인: 직전 2분기 영업이익이 1조6천억원대로 상반기 누적이 전년보다 늘었고 논거 훼손 징후는 없다.",
+     "judged": "2026-10-28",
+     "verdict": "없음"
+    },
+    {
      "ticker": "329180",
      "name": "HD현대중공업",
-     "state": "감시",
+     "state": "점검 필요",
      "flags": [
       {
        "k": "trend",
        "msg": "추세 붕괴(단·중·장기 모두 매도 이하)",
        "fresh": false
+      },
+      {
+       "k": "tpcut",
+       "msg": "컨센서스 목표가 14일 새 -26.9% 하향 — 논거 확인",
+       "fresh": true
       }
      ],
      "note": "추세 붕괴 신호는 있으나 가이던스 하향·역성장은 확인되지 않았다. 7월 말 생산중단·중대재해 공시, 모회사의 교환사채 발행에 따른 수급 부담, 캐나다 잠수함 사업 탈락, 노조 부분파업 보도가 겹친 하락으로 10월의 새 악재는 찾지 못했다.",
@@ -106,7 +126,7 @@ window.CANDIDATES = {
      "flags": [
       {
        "k": "tpcut",
-       "msg": "컨센서스 목표가 14일 새 -19.9% 하향 — 논거 확인",
+       "msg": "컨센서스 목표가 14일 새 -20.6% 하향 — 논거 확인",
        "fresh": false
       }
      ],
@@ -431,7 +451,7 @@ window.CANDIDATES = {
      "flags": [
       {
        "k": "tpcut",
-       "msg": "컨센서스 목표가 14일 새 -15.8% 하향 — 논거 확인",
+       "msg": "컨센서스 목표가 14일 새 -16.5% 하향 — 논거 확인",
        "fresh": false
       }
      ],
@@ -1424,9 +1444,9 @@ window.CANDIDATES = {
   }
  },
  "summary": {
-  "review": 0,
+  "review": 2,
   "defect": 11,
-  "watch": 27,
+  "watch": 26,
   "untried": 0,
   "dup": 2,
   "long": 0

@@ -2,7 +2,7 @@
 // Yahoo 시장지표(금리·일드커브·VIX·HY신용·달러·원달러·코스피)의 가중 합성 → 5단계.
 // 온디맨드 유동성(data/liquidity.js)이 있으면 그것을 우선 표시하고, 이 baseline 을 함께 보여준다.
 window.LIQUIDITY_AUTO = {
- "asOf": "2026-10-29",
+ "asOf": "2026-10-30",
  "note": "Yahoo 시장지표 기반 자동 baseline(금리·일드커브·VIX·HY신용·달러·원달러·코스피). 거시 이벤트·내러티브는 미반영 — 온디맨드 유동성이 보정.",
  "inputs": {
   "us10y": "4.99",
@@ -10,7 +10,7 @@ window.LIQUIDITY_AUTO = {
   "vix": "17.2",
   "hyg20": "0.9",
   "dxy": "102.2",
-  "usdkrw": "1327"
+  "usdkrw": "1340"
  },
  "us": {
   "shortTerm": "우호",
@@ -59,81 +59,81 @@ window.LIQUIDITY_AUTO = {
    },
    {
     "date": "2027-01-27",
-    "rate": 4.135,
-    "stepBp": 6.5,
-    "cumBp": 25.5,
+    "rate": 4.14,
+    "stepBp": 7,
+    "cumBp": 26,
     "outcomes": [
      {
       "n": 1,
-      "p": 98
+      "p": 96
      },
      {
       "n": 2,
-      "p": 2
+      "p": 4
      }
     ]
    },
    {
     "date": "2027-03-17",
-    "rate": 4.268,
+    "rate": 4.273,
     "stepBp": 13.3,
-    "cumBp": 38.8,
+    "cumBp": 39.3,
     "outcomes": [
      {
       "n": 2,
-      "p": 55
+      "p": 57
      },
      {
       "n": 1,
-      "p": 45
+      "p": 43
      }
     ]
    },
    {
     "date": "2027-04-28",
-    "rate": 4.33,
-    "stepBp": 6.2,
-    "cumBp": 45,
+    "rate": 4.34,
+    "stepBp": 6.7,
+    "cumBp": 46,
     "outcomes": [
      {
       "n": 2,
-      "p": 80
+      "p": 84
      },
      {
       "n": 1,
-      "p": 20
+      "p": 16
      }
     ]
    },
    {
     "date": "2027-06-09",
-    "rate": 4.409,
+    "rate": 4.419,
     "stepBp": 7.9,
-    "cumBp": 52.9,
+    "cumBp": 53.9,
     "outcomes": [
      {
       "n": 2,
-      "p": 88
+      "p": 84
      },
      {
       "n": 3,
-      "p": 12
+      "p": 16
      }
     ]
    },
    {
     "date": "2027-07-28",
-    "rate": 4.43,
+    "rate": 4.44,
     "stepBp": 2.1,
-    "cumBp": 55,
+    "cumBp": 56,
     "outcomes": [
      {
       "n": 2,
-      "p": 80
+      "p": 76
      },
      {
       "n": 3,
-      "p": 20
+      "p": 24
      }
     ]
    }
