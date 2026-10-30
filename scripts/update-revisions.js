@@ -4,6 +4,8 @@
 //   변화 = ln(컨센서스(T) ÷ 컨센서스(T − 3개월)), 둘 다 있을 때만. 10% 넘게 내렸으면 Top Pick 후보에서 뺀다(lib-picks.js, 한국만).
 //   리포트는 data/analyst-kr.json 에 400일치를 쌓아 두고 매번 새 리포트만 받는다(토큰 0). 목표가 ÷ 작성일 주가가 0.2~5 밖이면 자료 오류로 뺀다.
 //   분할·병합: 작성일 주가(px)와 차트의 수정 종가가 30% 넘게 어긋날 때만 그 비율로 목표가를 지금 단위로 고친다.
+//   리포트 제목·요약 앞부분도 함께 둔다(2026-10-30~) — update-earn-risk.js 가 실적 발표 전 '프리뷰 경고' 문구를 찾는다.
+//   캐시 한 줄 = [id, 작성일, 증권사, 목표가, 작성일 주가, 제목, 요약 앞부분]
 // 사용: node scripts/update-revisions.js   → data/revisions.js(window.STOCK_REVISIONS) + data/analyst-kr.json
 "use strict";
 const fs = require("fs");
@@ -49,7 +51,7 @@ async function refresh(code, list, cutoff) {
     for (const x of j) {
       if (!x.writeDate || x.writeDate < cutoff) { older = true; continue; }
       if (known.has(x.researchId)) { allNew = false; continue; }
-      fresh.push({ id: x.researchId, d: x.writeDate, broker: x.brokerName || "" });
+      fresh.push({ id: x.researchId, d: x.writeDate, broker: x.brokerName || "", title: String(x.title || "").slice(0, 80), prev: String(x.previewContent || "").replace(/\s+/g, " ").slice(0, 160) });
     }
     if (older || !allNew || j.length < 20) break;
   }
@@ -58,9 +60,24 @@ async function refresh(code, list, cutoff) {
     const j = await get("https://m.stock.naver.com/api/research/stock/" + code + "/" + it.id);
     const r = j && j.researchContent;
     if (!r) continue;   // 이번에 못 받은 상세는 다음 실행이 다시 받는다
-    add.push([it.id, it.d, it.broker, num(r.goalPrice), num(r.priceAtWriteDate)]);
+    add.push([it.id, it.d, it.broker, num(r.goalPrice), num(r.priceAtWriteDate), it.title, it.prev]);
   }
   return add;
+}
+// 제목이 없는 최근 리포트(제목을 저장하기 전에 받은 것)는 목록 몇 쪽만 다시 받아 채운다
+async function backfillTitles(code, list, since) {
+  const need = new Map(list.filter((x) => x[1] >= since && x[5] == null).map((x) => [x[0], x]));
+  for (let p = 1; p <= 4 && need.size; p++) {
+    const j = await get("https://m.stock.naver.com/api/research/stock/" + code + "?pageSize=20&page=" + p);
+    if (!Array.isArray(j) || !j.length) break;
+    let oldest = "9999";
+    for (const x of j) {
+      if (x.writeDate < oldest) oldest = x.writeDate;
+      const e = need.get(x.researchId);
+      if (e) { e[5] = String(x.title || "").slice(0, 80); e[6] = String(x.previewContent || "").replace(/\s+/g, " ").slice(0, 160); need.delete(x.researchId); }
+    }
+    if (oldest < since || j.length < 20) break;
+  }
 }
 
 // 차트 수정 종가(그 날짜 이전 마지막 봉) — 분할·병합 점검용
@@ -105,6 +122,7 @@ function consensus(list, D, adj) {
       if (add == null) { failed++; cache.items[c] = list; continue; }
       added += add.length;
       cache.items[c] = list.concat(add).sort((a, b) => (a[1] < b[1] ? -1 : a[1] > b[1] ? 1 : a[0] - b[0]));
+      await backfillTitles(c, cache.items[c], dayShift(T, -40));
     }
   }));
   // 편성에서 빠진 종목은 지운다

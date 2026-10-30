@@ -1201,6 +1201,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
 <script src="data/coverage-status.js"></script>
 <script src="data/candidates.js"></script>
 <script src="data/pick-scores.js"></script>
+<script src="data/earn-risk.js"></script>
 <script src="data/news.js"></script>
 <script src="data/ai-status.js"></script>
 <script src="data/quotes.js"></script>
@@ -2249,6 +2250,27 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     var t0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     return { md: (+p[1]) + "/" + (+p[2]) + "(" + WD[d.getDay()] + ")", dd: Math.round((d - t0) / 86400000) };
   }
+  // 실적 발표 전 변동 위험(data/earn-risk.js — update-earn-risk.js, 검증 scripts/research/earn-shock/, 2026-10-30 사용자 선택):
+  //   발표 7거래일 안이고 위험 신호(목표가 하향·직전 실적 충격·주가 약세·프리뷰 경고)가 3개 이상이면 '실적 주의'.
+  //   방향 예측이 아니다 — 과거 이런 발표는 위로든 아래로든 크게 움직일 때가 많았다.
+  function earnRisk(t) {
+    var R = window.EARN_RISK, x = R && R.items && R.items[t];
+    if (!x || !x.risk) return null;
+    var day = evDay(x.date);
+    return day && day.dd >= 0 ? x : null;
+  }
+  function earnRiskWhy(x, c) {
+    var w = [], has = function (k) { return (x.flags || []).indexOf(k) >= 0; };
+    if (has("tp")) w.push("증권사 목표가 평균 3개월 " + fmtPct(x.tp));
+    if (has("prev") && x.prev) w.push("직전 실적 발표(" + mdOf(x.prev.d) + ") 반응 시장 대비 " + fmtPct(x.prev.ar) + "p");
+    if (has("weak")) w.push("최근 60거래일 시장 대비 " + fmtPct(x.weak) + "p");
+    if (has("pre") && x.pre) w.push(c === "korea" ? "프리뷰 경고 — " + x.pre.by + " " + mdOf(x.pre.d) + " ‘…" + x.pre.hit + "…’" : "최근 30일 목표가 내림 " + x.pre.lo + "건 · 올림 " + x.pre.up + "건");
+    return w;
+  }
+  function earnRiskDay(x) { var d = evDay(x.date); return d && d.dd === 0 ? "오늘" : "D-" + (d ? d.dd : x.dn); }
+  function earnRiskTip(x, c) {
+    return "실적 발표 " + earnRiskDay(x) + " · 위험 신호 " + x.n + "/4 — " + earnRiskWhy(x, c).join(" · ") + "\n\n" + ((window.EARN_RISK && window.EARN_RISK.evidence) || "");
+  }
   function eventLine(s, country) {
     var E = window.STOCK_EVENTS, ev = E && E.items && E.items[s.ticker], n = ev && ev.next;
     if (!n || !n.date) return "";
@@ -3095,7 +3117,9 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       else if (Math.abs(f.fStreak || 0) >= 5) out.push('<span class="bd">외국인 ' + Math.abs(f.fStreak) + "일 연속 순" + (f.fStreak > 0 ? "매수" : "매도") + "</span>");
     }
     var nx = ev && ev.next, day = nx && nx.date ? evDay(nx.date) : null;
-    if (day && day.dd >= 0 && day.dd <= 30) out.push('<span class="bd bd-ev" title="' + esc(nx.title || "실적 발표") + '">실적 ' + (day.dd === 0 ? "오늘" : "D-" + day.dd) + "</span>");
+    var er = earnRisk(s.ticker);
+    if (er) out.push('<span class="bd bd-warn" data-basis="' + esc(earnRiskTip(er, c)) + '">실적 주의 ' + earnRiskDay(er) + "</span>");
+    else if (day && day.dd >= 0 && day.dd <= 30) out.push('<span class="bd bd-ev" title="' + esc(nx.title || "실적 발표") + '">실적 ' + (day.dd === 0 ? "오늘" : "D-" + day.dd) + "</span>");
     return out.join("");
   }
   // 주의 배지(결격·점검·목표가 도달·낙폭발 상승여력·현재가 확인·수급 과열)의 이유 — 배지를 누르지 않아도 상세 위쪽에 펼쳐 보인다
@@ -3119,6 +3143,9 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     if (s.priceUnverified && !e.live) out.push({ warn: true, k: "현재가 확인 필요", lead: PU_TIP, why: [] });
     var E = window.STOCK_EVENTS, ev = E && E.items && E.items[s.ticker], f = ev && ev.flow;
     if (c === "korea" && f && f.hot) out.push({ warn: true, k: "수급 과열", lead: HOT_TIP, why: [] });
+    var er = earnRisk(s.ticker);
+    if (er) out.push({ warn: true, k: "실적 주의 · 발표 " + earnRiskDay(er) + " · 위험 신호 " + er.n + "/4",
+      lead: (window.EARN_RISK && window.EARN_RISK.evidence) || "", why: earnRiskWhy(er, c) });
     if (!out.length) return "";
     return '<div class="dt-alert">' + out.map(function (a) {
       return '<div class="al-i"><div class="al-k' + (a.warn ? " al-w" : "") + '">' + esc(a.k) + (a.at ? ' <span class="al-at">' + (a.by === "ai" ? "AI " : "") + "판정 " + esc(mdOf(a.at)) + "</span>" : "") + "</div>" +
@@ -3770,6 +3797,8 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       (isValueTrap(s, e.upside) ? '<span class="r-warn" title="' + esc(VT_TIP) + '" data-basis="' + esc("낙폭발 상승여력 — " + VT_TIP) + '">!</span>' : "");
     var df = isPersonal(s.theme) ? null : defectOf(c, s.theme, s.ticker);
     if (df && df.state !== "감시") flags += '<span class="r-def' + (df.state === "결격" && !df.dup ? "" : " r-chk") + '" title="' + esc(defectText(df)) + '" data-basis="' + esc(defectText(df)) + '">' + (df.dup ? "중복" : df.state === "결격" ? "결격" : "점검") + "</span>";
+    var er = earnRisk(s.ticker);
+    if (er) flags += '<span class="r-def" title="' + esc(earnRiskTip(er, c)) + '" data-basis="' + esc(earnRiskTip(er, c)) + '">실적 주의</span>';
     var aw = isPersonal(s.theme) ? null : anchorOf(c, s.ticker);
     if (aw) flags += '<span class="r-wt" data-basis="' + esc(WT_TIP) + '">비중 ' + esc(aw.w) + "%</span>";
     return '<div class="row"' + openAttrs(c, s.ticker, s.theme, o.pkey ? ' data-pkey="' + esc(o.pkey) + '"' : "") + ">" +
@@ -5614,6 +5643,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       trendLine(t, c),
       ta.outlook && ta.outlook.m1 ? "다음 1개월 범위(방향 중립 통계): 80% " + fmtPrice(ta.outlook.m1[0], c) + "~" + fmtPrice(ta.outlook.m1[1], c) + (ta.outlook.c1 ? " · 50% " + fmtPrice(ta.outlook.c1[0], c) + "~" + fmtPrice(ta.outlook.c1[1], c) : "") : "",
       ev.next && ev.next.date ? "다음 실적 발표: " + ev.next.date + (ev.next.title ? " (" + ev.next.title + ")" : "") : "",
+      (function () { var R = window.EARN_RISK, x = R && R.items && R.items[t]; return x && x.n ? "실적 발표 전 위험 신호 " + x.n + "/4(" + earnRiskWhy(x, c).join(" · ") + ") — 과거 이런 발표는 위·아래로 크게 움직인 경우가 많았다(방향 예측 아님)" : ""; })(),
       ev.flow ? "20일 수급(거래량 대비): 외국인 " + pctTxt(ev.flow.f20 * 100) + " · 기관 " + pctTxt(ev.flow.o20 * 100) + (ev.flow.hot ? " · 수급 과열(이후 지수 대비 약세가 검증된 경고)" : "") : "",
       newsTxt(t)
     ];
