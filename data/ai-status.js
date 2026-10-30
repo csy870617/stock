@@ -2,76 +2,113 @@
 // 앱 'AI 연결' 창이 '매일 자동 분석' 칸에 보여 준다. 비용은 토큰 기준 추정(웹 검색은 횟수만 — 검색당 요금 별도).
 window.AI_STATUS = {
  "defects": {
-  "at": "2026-10-30T00:01:48.371Z",
+  "at": "2026-10-30T13:34:38.866Z",
   "model": "claude-sonnet-5-5",
   "ok": true,
-  "pending": 0,
-  "judged": 0,
-  "items": [],
+  "pending": 6,
+  "judged": 6,
+  "items": [
+   {
+    "g": "us|core",
+    "t": "MA",
+    "name": "Mastercard",
+    "verdict": "없음"
+   },
+   {
+    "g": "us|core",
+    "t": "LLY",
+    "name": "Eli Lilly",
+    "verdict": "없음"
+   },
+   {
+    "g": "us|growth",
+    "t": "AMZN",
+    "name": "Amazon",
+    "verdict": "형식"
+   },
+   {
+    "g": "us|value",
+    "t": "AMP",
+    "name": "Ameriprise Financial",
+    "verdict": "형식"
+   },
+   {
+    "g": "us|dividend",
+    "t": "WEC",
+    "name": "WEC Energy Group",
+    "verdict": "없음"
+   },
+   {
+    "g": "us|rising",
+    "t": "FSS",
+    "name": "Federal Signal",
+    "verdict": "실질"
+   }
+  ],
   "usage": {
-   "calls": 0,
-   "input": 0,
-   "output": 0,
+   "calls": 13,
+   "input": 177373,
+   "output": 9267,
    "cacheRead": 0,
-   "searches": 0,
-   "usd": 0
+   "searches": 18,
+   "usd": 0.447
   }
  },
  "news": {
-  "at": "2026-10-30T00:05:38.992Z",
+  "at": "2026-10-30T13:40:38.698Z",
   "model": "claude-haiku-5-5",
   "ok": true,
   "stocks": 115,
   "fetched": 115,
-  "called": 86,
+  "called": 98,
   "lines": 87,
   "usage": {
-   "calls": 86,
-   "input": 128184,
-   "output": 6703,
+   "calls": 98,
+   "input": 147948,
+   "output": 9299,
    "cacheRead": 0,
    "searches": 0,
-   "usd": 0.016
+   "usd": 0.019
   }
  },
  "daily": {
-  "at": "2026-10-30T00:01:57.428Z",
-  "T": "2026-10-29",
+  "at": "2026-10-30T13:37:19.550Z",
+  "T": "2026-10-30",
   "basis": {
-   "kr": "2026-10-29",
+   "kr": "2026-10-30",
    "us": "2026-10-29"
   },
   "model": "claude-opus-5-5",
   "ok": true,
   "seen": {
-   "at": "2026-10-30T00:05:38.889Z",
+   "at": "2026-10-30T13:40:38.621Z",
    "items": {
     "market": {
-     "sig": "알파벳 급락과 삼성전자 실적 발표 후 실망 매물이 겹치며 10/29 미국#rowx3n",
+     "sig": "미국 빅테크 실적 실망이 AI 투자 수익성 우려로 번지면서 10/29 나#tre7ru",
      "basis": {
-      "kr": "2026-10-29",
+      "kr": "2026-10-30",
       "us": "2026-10-29"
      }
     },
     "liquidity": {
-     "sig": "연준의 12월 인상 기대와 한국은행의 인상 쪽 기울기가 이어져 두 나라 #u0gahh",
+     "sig": "연준 인상 기대와 10년물 4.99%가 미국 유동성을 누르고, 한국은 코#am1g0g",
      "basis": {
-      "kr": "2026-10-29",
+      "kr": "2026-10-30",
       "us": "2026-10-29"
      }
     },
     "indexNotes": {
-     "sig": "횡보입니다. 일봉이 구름 아래에 있고 전환선이 기준선 아래에 있지만 MA#4x94g8",
+     "sig": "횡보 — 일목 구름 아래·전환<기준에 RSI 40.7이며, MACD는 시#1a4xl2p",
      "basis": {
-      "kr": "2026-10-29",
+      "kr": "2026-10-30",
       "us": "2026-10-29"
      }
     },
     "topPicks": {
-     "sig": "자사주 매입·소각으로 주식 수가 한 해 5% 줄었고, 결산 배당을 크게 #np1oxn",
+     "sig": "자사주 매입·소각으로 주식 수가 한 해 5% 줄었고, 결산 배당을 크게 #c4r3cm",
      "basis": {
-      "kr": "2026-10-28",
-      "us": "2026-10-28"
+      "kr": "2026-10-30",
+      "us": "2026-10-29"
      }
     }
    }
@@ -82,19 +119,18 @@ window.AI_STATUS = {
    "market"
   ],
   "sig": {
-   "liquidity": "연준의 12월 인상 기대와 한국은행의 인상 쪽 기울기가 이어져 두 나라 #u0gahh",
-   "indexNotes": "횡보입니다. 일봉이 구름 아래에 있고 전환선이 기준선 아래에 있지만 MA#4x94g8",
-   "market": "알파벳 급락과 삼성전자 실적 발표 후 실망 매물이 겹치며 10/29 미국#rowx3n"
+   "liquidity": "연준 인상 기대와 10년물 4.99%가 미국 유동성을 누르고, 한국은 코#am1g0g",
+   "indexNotes": "횡보 — 일목 구름 아래·전환<기준에 RSI 40.7이며, MACD는 시#1a4xl2p",
+   "market": "미국 빅테크 실적 실망이 AI 투자 수익성 우려로 번지면서 10/29 나#tre7ru"
   },
-  "sources": 40,
+  "sources": 38,
   "usage": {
    "calls": 3,
-   "input": 558585,
-   "output": 23117,
+   "input": 167249,
+   "output": 21351,
    "cacheRead": 0,
    "searches": 6,
-   "usd": 2.697
-  },
-  "note": "새 종가로 세션 문장 갱신: indexNotes"
+   "usd": 1.096
+  }
  }
 };

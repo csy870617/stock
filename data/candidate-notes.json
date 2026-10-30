@@ -1235,6 +1235,30 @@
           "https://www.fool.com/investing/2026/10/28/microsoft-and-alphabet-just-reported-earnings-putting-the-ai-boom-to-the-test/",
           "https://tech-insider.org/alphabet-q3-2026-earnings-miss-9-percent-negative-free-cash-flow-developers-2026/"
         ]
+      },
+      "MA": {
+        "verdict": "없음",
+        "note": "10/29 실적에서 EPS 서프라이즈 +3.3%였고, 직전 분기(2026.06) 매출 +14.1%, EBIT +16.6%, 순이익 +18.6%로 이익 성장이 이어졌다. 가이던스 하향이나 회사 고유 악재는 확인되지 않았다.",
+        "asOf": "2026-10-30",
+        "flags": [
+          "earn"
+        ],
+        "by": "ai",
+        "sources": []
+      },
+      "LLY": {
+        "verdict": "없음",
+        "note": "10/29 3분기 실적은 매출 244억달러로 전년 대비 39% 증가하며 예상을 웃돌았고, 연간 매출 가이던스도 상향됐다. 발표 당일 주가는 약 6.5~7% 올랐고 회사 고유 악재는 없다.",
+        "asOf": "2026-10-30",
+        "flags": [
+          "earn"
+        ],
+        "by": "ai",
+        "sources": [
+          "https://www.gurufocus.com/news/9152092/eli-lilly-lly-reports-strong-q3-results-raises-2026-revenue-guidance",
+          "https://www.stocktitan.net/news/LLY/lilly-reports-third-quarter-2026-financial-results-raises-full-year-6pqpbpd0gw14.html",
+          "https://www.nasdaq.com/press-release/lilly-reports-third-quarter-2026-financial-results-raises-full-year-guidance-and"
+        ]
       }
     },
     "us|growth": {
@@ -1306,6 +1330,19 @@
           "https://investor.servicenow.com/news/news-details/2026/ServiceNow-Reports-Third-Quarter-2026-Financial-Results/default.aspx",
           "https://www.investing.com/news/transcripts/earnings-call-transcript-servicenow-q3-2026-revenue-beats-shares-sink-after-hours-93CH-4981127"
         ]
+      },
+      "AMZN": {
+        "verdict": "형식",
+        "note": "10/29 3분기 EPS는 시장 예상을 6% 밑돌았지만 AWS 매출은 +39%로 6분기 연속 가속했고 영업이익률 13.9%는 분기 사상 최고다. 4Q 가이던스·capex·잉여현금흐름 확인 전까지 감시한다.",
+        "asOf": "2026-10-30",
+        "flags": [
+          "earn"
+        ],
+        "by": "ai",
+        "sources": [
+          "https://www.investing.com/news/analyst-ratings/evercore-isi-reiterates-amazon-stock-rating-on-aws-growth-93CH-4986576",
+          "https://seekingalpha.com/news/4661063-amazon-outlines-aws-growing-north-of-40-percent-in-2027-and-2028-as-it-targets-1t-revenue-in"
+        ]
       }
     },
     "us|value": {
@@ -1357,6 +1394,16 @@
           "https://finance.biggo.com/news/US_VZ_2026-10-26",
           "https://news.google.com/read/CBMirAFBVV95cUxPOXhWdzlTb24wTm4tOW9OZEVYYWZ5cENVajFwYkVVdnE2V1FyczdYQXhxdWtscDRqWjA5QXJvZTdEdEIxc096b1FSdll2T1NKS2JGTVZ2UHhGemdweW1xUEhiSE1CczVUaXZoUzN2bVZYOEFxMnZQUXpJNUxjenJINjNLVmwzNmc4TXk5RnNxM1RjVzRlMDNWMXpWTjlVRHh3WkJrQXFxUTFHNlI2?hl=en-US&gl=US&ceid=US%3Aen"
         ]
+      },
+      "AMP": {
+        "verdict": "형식",
+        "note": "10/29 3분기 EPS가 시장 예상을 4.1% 웃돌았고 순이익도 +5%였으나 EBIT는 전년 대비 -1%였다. 가이던스 훼손과 회사 고유 악재는 확인되지 않아 EBIT 감소 원인과 Comerica 자산 유출 영향 확인 전까지 감시한다.",
+        "asOf": "2026-10-30",
+        "flags": [
+          "earn"
+        ],
+        "by": "ai",
+        "sources": []
       }
     },
     "us|dividend": {
@@ -1410,6 +1457,20 @@
         "sources": [
           "https://www.sec.gov/Archives/edgar/data/0000936468/000162828026066780/ex991q32026.htm"
         ]
+      },
+      "WEC": {
+        "verdict": "없음",
+        "note": "10/29 3분기 EPS가 시장 예상을 20.4% 웃돌았고, 순이익이 전년 대비 21.9% 늘었다. 연간 EPS 가이던스는 5.60~5.64달러로 상향돼 배당 논거는 유지된다.",
+        "asOf": "2026-10-30",
+        "flags": [
+          "earn"
+        ],
+        "by": "ai",
+        "sources": [
+          "https://www.prnewswire.com/news-releases/wec-energy-group-reports-third-quarter-results-302922792.html",
+          "https://kalkinemedia.com/us/news/announcements/wec-energy-group-reports-q3-2026-eps-of-118-raises-full-year-earnings-forecast",
+          "https://www.indexbox.io/blog/wec-energy-group-q3-2026-earnings-net-income-rises-to-3893-million-guidance-raised/"
+        ]
       }
     },
     "us|rising": {
@@ -1425,12 +1486,19 @@
       },
       "FSS": {
         "verdict": "실질",
-        "note": "⑤ 재무 안전 조건 미달 — 남은 대체 후보는 모두 집중 리스크(⑨)·추세 붕괴로 막힘",
-        "asOf": "2026-10-18",
+        "note": "⑤ 재무 안전 조건 미달 — 남은 대체 후보는 모두 집중 리스크(⑨)·추세 붕괴로 막힘 · 새 신호: 2026-10-29 3분기 매출 약 +18%, 영업이익 +19%, 수주 +33%로 분기 최대 실적이고 연간 EPS 가이던스 하한도 올렸다. 매출 범위 축소는 외부 납품 지연 때문이며, 지연 지속 여부 확인 전까지 감시한다.",
+        "asOf": "2026-10-30",
         "flags": [
-          "theme"
+          "theme",
+          "earn"
         ],
-        "triedAt": "2026-10-30"
+        "sources": [
+          "https://www.fool.com/earnings/call-transcripts/2026/10/29/federal-signal-fss-q3-2026-earnings-call-transcript/",
+          "https://www.rttnews.com/story.aspx?Id=3705473",
+          "https://www.securities.io/federal-signal-raises-2026-adjusted-eps-outlook-as-q3-orders-rise-33/"
+        ],
+        "triedAt": "2026-10-30",
+        "since": "2026-10-18"
       },
       "NVT": {
         "verdict": "실질",
