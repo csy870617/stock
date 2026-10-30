@@ -421,10 +421,11 @@ function validate(D, opts) {
     });
 
     // 주제별 9종목 · Tier 3×3 구조 (주목 'spotlight'·관심 'watch'·보유 'hold' 는 구조 규칙 면제 — 주목은 모양별 정원만 본다)
+    // 사용자가 직접 담은 주목 종목(userPick)은 정원 밖이다(§4-7)
     {
       const sp = groups[SPOTLIGHT] || [];
       SPOT_TAGS.forEach((tg) => {
-        const n = sp.filter((s) => s.watchTag === tg).length;
+        const n = sp.filter((s) => s.watchTag === tg && !s.userPick).length;
         if (n > SPOT_PER_TAG) warnings.push(c + "/" + SPOTLIGHT + ": " + tg + " " + n + "종목 — 정원 " + SPOT_PER_TAG + " 초과(§4-7)");
       });
     }
