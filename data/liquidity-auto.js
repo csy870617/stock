@@ -5,10 +5,10 @@ window.LIQUIDITY_AUTO = {
  "asOf": "2026-10-30",
  "note": "Yahoo 시장지표 기반 자동 baseline(금리·일드커브·VIX·HY신용·달러·원달러·코스피). 거시 이벤트·내러티브는 미반영 — 온디맨드 유동성이 보정.",
  "inputs": {
-  "us10y": "4.99",
-  "curve": "0.99",
-  "vix": "17.2",
-  "hyg20": "0.9",
+  "us10y": "4.93",
+  "curve": "0.96",
+  "vix": "19.4",
+  "hyg20": "0.7",
   "dxy": "102.0",
   "usdkrw": "1340"
  },
@@ -21,7 +21,7 @@ window.LIQUIDITY_AUTO = {
    "10Y 추세 (+2)",
    "일드커브 (+2)",
    "HY 신용(20d) (+1)",
-   "VIX 17.2 (·0)"
+   "VIX 19.4 (·0)"
   ]
  },
  "korea": {
@@ -43,24 +43,24 @@ window.LIQUIDITY_AUTO = {
   "meetings": [
    {
     "date": "2026-12-09",
-    "rate": 4.07,
-    "stepBp": 19,
-    "cumBp": 19,
+    "rate": 4.063,
+    "stepBp": 18.3,
+    "cumBp": 18.3,
     "outcomes": [
      {
       "n": 1,
-      "p": 76
+      "p": 73
      },
      {
       "n": 0,
-      "p": 24
+      "p": 27
      }
     ]
    },
    {
     "date": "2027-01-27",
     "rate": 4.135,
-    "stepBp": 6.5,
+    "stepBp": 7.2,
     "cumBp": 25.5,
     "outcomes": [
      {
@@ -107,33 +107,33 @@ window.LIQUIDITY_AUTO = {
    },
    {
     "date": "2027-06-09",
-    "rate": 4.421,
-    "stepBp": 8.6,
-    "cumBp": 54.1,
+    "rate": 4.428,
+    "stepBp": 9.3,
+    "cumBp": 54.8,
     "outcomes": [
      {
       "n": 2,
-      "p": 84
+      "p": 81
      },
      {
       "n": 3,
-      "p": 16
+      "p": 19
      }
     ]
    },
    {
     "date": "2027-07-28",
-    "rate": 4.44,
-    "stepBp": 1.9,
-    "cumBp": 56,
+    "rate": 4.445,
+    "stepBp": 1.7,
+    "cumBp": 56.5,
     "outcomes": [
      {
       "n": 2,
-      "p": 76
+      "p": 74
      },
      {
       "n": 3,
-      "p": 24
+      "p": 26
      }
     ]
    }
@@ -165,32 +165,32 @@ window.LIQUIDITY_AUTO = {
  "rateModel": {
   "validatedAt": "2026-10-20",
   "us": {
-   "asOf": "2026-10-28",
+   "asOf": "2026-10-29",
    "policy": 3.88,
    "forecasts": [
     {
      "h": 3,
-     "rate": 4.17,
-     "chg": 0.29,
+     "rate": 4.16,
+     "chg": 0.28,
      "rmse": 0.33,
      "noChangeRmse": 0.47,
-     "market": 4.01
+     "market": 4
     },
     {
      "h": 6,
-     "rate": 4.47,
-     "chg": 0.59,
+     "rate": 4.42,
+     "chg": 0.54,
      "rmse": 0.52,
      "noChangeRmse": 0.86,
-     "market": 4.18
+     "market": 4.15
     },
     {
      "h": 12,
-     "rate": 4.77,
-     "chg": 0.89,
+     "rate": 4.66,
+     "chg": 0.78,
      "rmse": 1.08,
      "noChangeRmse": 1.53,
-     "market": 4.47
+     "market": 4.42
     }
    ],
    "taylor": {
