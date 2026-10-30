@@ -50,20 +50,33 @@ async function kofia(obj, cols) {
   }
   return m;
 }
+// 견본 키는 한 번에 10줄 — 쪽마다 받되, 중간에 빈 응답(속도 제한)이면 쉬었다가 다시(전체 건수까지)
 async function ecos(stat, item, from) {
   const to = new Date().toISOString().slice(0, 7).replace("-", ""), m = {};
+  let total = null;
   for (let s = 1; s < 2000; s += 10) {
-    const t = await curl(["https://ecos.bok.or.kr/api/StatisticSearch/sample/json/kr/" + s + "/" + (s + 9) + "/" + stat + "/M/" + from + "/" + to + "/" + item]);
+    if (total != null && s > total) break;
     let r = [];
-    try { r = (JSON.parse(t).StatisticSearch || {}).row || []; } catch (_e) { r = []; }
+    for (let i = 0; i < 6; i++) {
+      const t = await curl(["https://ecos.bok.or.kr/api/StatisticSearch/sample/json/kr/" + s + "/" + (s + 9) + "/" + stat + "/M/" + from + "/" + to + "/" + item]);
+      try { const j = JSON.parse(t).StatisticSearch || {}; r = j.row || []; if (j.list_total_count) total = j.list_total_count; } catch (_e) { r = []; }
+      if (r.length) break;
+      await sleep(2000 * (i + 1));
+    }
     r.forEach((x) => { const v = parseFloat(x.DATA_VALUE); if (isFinite(v)) m[x.TIME.slice(0, 4) + "-" + x.TIME.slice(4, 6)] = v; });
-    if (r.length < 10) break;
-    await sleep(150);
+    if (!r.length || (total == null && r.length < 10)) break;
+    await sleep(300);
   }
   return m;
 }
 
 (async () => {
+  if (process.argv.includes("--only-ecos")) {
+    const E = { m2: await ecos("161Y005", "BBHS00", "200310"), corp3: await ecos("721Y001", "7020000", "200301"), ktb3: await ecos("721Y001", "5020000", "200301"), cd91: await ecos("721Y001", "2010000", "200301") };
+    console.log("ECOS " + Object.keys(E).map((k) => k + " " + Object.keys(E[k]).length).join(" · "));
+    fs.writeFileSync(path.join(OUT, "ecos.json"), JSON.stringify(E));
+    return;
+  }
   const F = {};
   for (const id of ["WALCL", "WTREGEN", "RRPONTSYD", "M2SL", "CPIAUCSL", "TOTBKCR", "BAA10Y", "NFCI", "T10Y3M", "DFII10", "DTB3"]) {
     F[id] = await fred(id); console.log("FRED " + id + " " + (F[id] ? Object.keys(F[id]).length : "실패"));

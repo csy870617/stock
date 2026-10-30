@@ -246,3 +246,5 @@ const line = (R) => {
 console.log("범위: " + JSON.stringify(res.coverage));
 res.us.concat(res.kr).forEach((R) => console.log(line(R)));
 if (arg("out")) fs.writeFileSync(arg("out"), JSON.stringify(res, null, 1));
+// 사후 분석용(판정과 무관) — 월별 신호·초과수익·하락 여부를 그대로 쓴다
+if (arg("dump")) fs.writeFileSync(arg("dump"), JSON.stringify({ months, SIG, EX, DD, KS: months.map((m) => g(US[m], "KS")), SPY: months.map((m) => g(US[m], "SPY")) }));
