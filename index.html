@@ -468,7 +468,6 @@ svg { display: block; }
 .fed-h { color: var(--mut); font-size: 11.5px; border-top: 0; padding-top: 0; }
 .fed-r .up { color: var(--up); } .fed-r .down { color: var(--down); }
 .bok-r { grid-template-columns: 44px 62px 64px minmax(0, 1fr); }
-.rm-blk + .rm-blk { margin-top: 14px; }
 .rm-r { grid-template-columns: 52px 60px 64px minmax(0, 1fr); }
 .rm-news { margin-top: 8px; font-size: 13px; line-height: 1.6; color: var(--ink2); }
 .rm-news a { color: var(--mut); text-decoration: underline; text-underline-offset: 2px; margin-left: 4px; font-size: 12px; }
@@ -5504,35 +5503,37 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       }).join("") + "</div></div>";
   }
   // 정책금리 예측 모델 — 표본 밖 검증을 통과한 방식(liquidity-auto.js rateModel, scripts/lib-ratemodel.js) + 루틴의 뉴스 판단(liquidity.js policyNews)
+  //   선택한 나라 것만 보인다(2026-10-31 사용자 '금리 예측도 국가별로 따로') — 미국 = 연준, 한국 = 한국은행
   function rateModelHtml(R, N, cc) {
-    if (!R || (!R.us && !R.korea)) return "";
-    var tip = "2000~2026년(한국 2006~) 매달 그 시점에 알 수 있던 자료만으로 3·6·12개월 뒤 정책금리를 예측해 실제와 비교했습니다(표본 밖 검증).\n" +
-      "· 미국: 국채 3·6·12개월 금리로 푼 예측이 '변화 없음'보다 오차가 30~40% 작아 예측으로 씁니다.\n" +
-      "· 한국: CD·국고채 금리로 푼 예측이 '변화 없음'보다 정확하지 않아, 예측은 현재 금리 유지로 둡니다(시장 금리 기대는 아래 '한국은행 금리 전망'에 따로 보입니다).\n" +
-      "· 물가·실업률로 계산한 테일러 준칙 금리를 더해도 두 나라 모두 오차가 커져 예측에 넣지 않고 참고선으로만 보입니다.\n" +
-      "± 는 과거 같은 기간 예측의 평균 오차(RMSE)입니다. 뉴스 판단은 매일 루틴이 연준·한은 발언을 읽고 쓴 것으로 숫자 예측에는 섞지 않습니다.";
+    var c = cc === "korea" ? "korea" : "us", M = R && R[c];
+    if (!M || !M.forecasts || !M.forecasts.length) return "";
+    var tip = (c === "us"
+      ? "2000~2026년 매달 그 시점에 알 수 있던 자료만으로 3·6·12개월 뒤 연준 정책금리를 예측해 실제와 비교했습니다(표본 밖 검증).\n" +
+        "· 국채 3·6·12개월 금리로 푼 예측이 '변화 없음'보다 오차가 30~40% 작아 예측으로 씁니다.\n"
+      : "2006~2026년 매달 그 시점에 알 수 있던 자료만으로 3·6·12개월 뒤 한국은행 기준금리를 예측해 실제와 비교했습니다(표본 밖 검증).\n" +
+        "· CD·국고채 금리로 푼 예측이 '변화 없음'보다 정확하지 않아, 예측은 현재 금리 유지로 둡니다(시장 금리에 반영된 기대는 아래 '한국은행 시장 기대'에 따로 보입니다).\n") +
+      "· 물가·실업률로 계산한 테일러 준칙 금리를 더하면 오차가 커져 예측에 넣지 않고 참고선으로만 보입니다.\n" +
+      "± 는 과거 같은 기간 예측의 평균 오차(RMSE)입니다. 뉴스 판단은 매일 루틴이 " + (c === "us" ? "연준" : "한국은행") + " 발언·결정을 읽고 쓴 것으로 숫자 예측에는 섞지 않습니다.";
     var lab = { 3: "3개월", 6: "6개월", 12: "1년" };
-    function blk(c, M) {
-      if (!M || !M.forecasts) return "";
-      var name = c === "us" ? "미국 연준" : "한국은행";
-      var flat = M.forecasts.every(function (f) { return f.chg === 0; });
-      var rows = M.forecasts.map(function (f) {
-        return '<div class="fed-r rm-r"><span>' + lab[f.h] + "</span><span><b>" + f.rate.toFixed(2) + '%</b></span><span class="' + (f.chg > 0.004 ? "up" : f.chg < -0.004 ? "down" : "") + '">' +
-          (f.chg > 0 ? "+" : f.chg < 0 ? "−" : "±") + Math.abs(f.chg).toFixed(2) + "%p</span><span>± " + f.rmse.toFixed(2) + "%p</span></div>";
-      }).join("");
-      var n = N && N[c];
-      var news = n && n.note ? '<div class="rm-news"><span class="rm-st rm-' + (n.stance === "매파" ? "hawk" : n.stance === "비둘기파" ? "dove" : "neu") + '">' + esc(n.stance || "중립") + "</span>" + esc(n.note) +
-        (n.sources && n.sources.length ? " " + n.sources.slice(0, 3).map(function (u, i) { return '<a href="' + esc(safeUrl(u)) + '" target="_blank" rel="noopener">출처' + (i + 1) + "</a>"; }).join(" ") : "") + "</div>" : "";
-      return '<div class="rm-blk"><div class="fed-next"><b>' + name + "</b> 정책금리 " + M.policy.toFixed(2) + "% → " +
-        (flat ? "<b>유지</b> 예측" : "1년 뒤 <b>" + M.forecasts[M.forecasts.length - 1].rate.toFixed(2) + "%</b> 예측") + "</div>" +
-        '<div class="fed-tbl"><div class="fed-r rm-r fed-h"><span>시점</span><span>예측</span><span>변화</span><span>과거 오차</span></div>' + rows + "</div>" +
-        (M.taylor ? '<div class="fed-sub">참고 — 물가·실업률 준칙 금리 ' + M.taylor.rate.toFixed(2) + "% (근원물가 " + M.taylor.infl.toFixed(1) + "%·실업률 " + M.taylor.unemp + "%)" +
-          (c === "korea" ? " · 시장 금리는 과거에 '유지' 가정보다 덜 맞아 예측에 쓰지 않음" : "") + "</div>" : "") + news + "</div>";
-    }
-    var order = cc === "korea" ? ["korea", "us"] : ["us", "korea"];
-    return '<div class="md-sec fed"><div class="md-t">금리 예측 모델<span class="md-as">검증 ' + esc(mdOf(R.validatedAt || "")) + (N && N.asOf ? " · 뉴스 " + esc(mdOf(N.asOf)) : "") + "</span>" +
+    var flat = M.forecasts.every(function (f) { return f.chg === 0; });
+    var rows = M.forecasts.map(function (f) {
+      return '<div class="fed-r rm-r"><span>' + lab[f.h] + "</span><span><b>" + f.rate.toFixed(2) + '%</b></span><span class="' + (f.chg > 0.004 ? "up" : f.chg < -0.004 ? "down" : "") + '">' +
+        (f.chg > 0 ? "+" : f.chg < 0 ? "−" : "±") + Math.abs(f.chg).toFixed(2) + "%p</span><span>± " + f.rmse.toFixed(2) + "%p</span></div>";
+    }).join("");
+    var n = N && N[c] && N[c].note ? N[c] : null;
+    var news = n ? '<div class="rm-news"><span class="rm-st rm-' + (n.stance === "매파" ? "hawk" : n.stance === "비둘기파" ? "dove" : "neu") + '">' + esc(n.stance || "중립") + "</span>" + esc(n.note) +
+      (n.sources && n.sources.length ? " " + n.sources.slice(0, 3).map(function (u, i) { return '<a href="' + esc(safeUrl(u)) + '" target="_blank" rel="noopener">출처' + (i + 1) + "</a>"; }).join(" ") : "") + "</div>" : "";
+    return '<div class="md-sec fed"><div class="md-t">금리 예측 모델<span class="md-as">검증 ' + esc(mdOf(R.validatedAt || "")) + (n && N.asOf ? " · 뉴스 " + esc(mdOf(N.asOf)) : "") + "</span>" +
       '<button class="ic-tip" type="button" data-basis="' + esc(tip) + '" aria-label="모델 설명">' + ICON.info + "</button></div>" +
-      order.map(function (c) { return blk(c, R[c]); }).join("") + "</div>";
+      '<div class="rm-blk"><div class="fed-next"><b>' + (c === "us" ? "미국 연준" : "한국은행") + "</b> 정책금리 " + M.policy.toFixed(2) + "% → " +
+      (flat ? "<b>유지</b> 예측" : "1년 뒤 <b>" + M.forecasts[M.forecasts.length - 1].rate.toFixed(2) + "%</b> 예측") + "</div>" +
+      '<div class="fed-tbl"><div class="fed-r rm-r fed-h"><span>시점</span><span>예측</span><span>변화</span><span>과거 오차</span></div>' + rows + "</div>" +
+      (M.taylor ? '<div class="fed-sub">참고 — 물가·실업률 준칙 금리 ' + M.taylor.rate.toFixed(2) + "% (근원물가 " + M.taylor.infl.toFixed(1) + "%·실업률 " + M.taylor.unemp + "%)" +
+        (c === "korea" ? " · 시장 금리는 과거에 '유지' 가정보다 덜 맞아 예측에 쓰지 않음" : "") + "</div>" : "") + news + "</div></div>";
+  }
+  // 금리 경로 — 선택한 나라만: 미국 = 예측 모델 + 연준 선물 경로, 한국 = 예측 모델 + 한국은행 시장 기대
+  function ratePathHtml(A, N, cc) {
+    return rateModelHtml(A && A.rateModel, N, cc) + (cc === "korea" ? bokHtml(A && A.bok) : fedHtml(A && A.fed));
   }
   // 한국은행 기준금리 시장 기대 — CD 91일·국고 1년에서 과거 평균 기간 프리미엄을 뺀 값(liquidity-auto.js bok, scripts/lib-bokpath.js)
   function bokHtml(B) {
@@ -5564,7 +5565,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   var LQ_RANKS = ["매우 부정", "부정", "신중", "우호", "매우 우호"];
   // ══ 돈의 흐름(유동성) — data/liquidity-flow.js(scripts/update-liquidity-flow.js, 매일 자동·토큰 0) ══
   //   2026-10-30 사용자 '유동성은 돈의 흐름이고 정말 중요하다 — 철저히 연구하고 화면에 직관적으로'. 검증: scripts/research/liquidity/README.md
-  //   홈 '오늘의 시장'의 카드(5단계 막대·구성 지표 화살표·미국 신용 경고) → 누르면 상세(흐름 점수·지수 3년 그래프·지표별 추이·검증 사실·판단·연준/한은 경로).
+  //   홈 '오늘의 시장'의 카드(5단계 막대·구성 지표 화살표·미국 신용 경고) → 누르면 상세(흐름 점수·지수 3년 그래프·지표별 추이·검증 사실·판단·그 나라 금리 경로).
   //   흐름 점수만 '앞으로'(검증 통과)를 말하고, 예전 게이지(금리·VIX·하이일드·코스피 모멘텀)는 검증 미달이라 '지금 시장 여건(참고)'으로만 보인다.
   function flowOf(c) { var F = window.LIQUIDITY_FLOW, k = c === "us" ? "us" : "korea"; return F && F[k] && F[k].levelIdx != null ? F[k] : null; }
   function fwBar(i, big) {
@@ -5664,7 +5665,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     var ev = '<section class="dt-sec" id="fw-ev"><h3>무엇이 검증됐나</h3>' +
       ["flow", "risk", "same"].filter(function (k) { return E[k]; }).map(function (k) { return '<p class="fw-evp"><span class="fw-evk">' + { flow: "앞으로", risk: "급락", same: "같이 움직임" }[k] + "</span>" + esc(E[k]) + "</p>"; }).join("") +
       (F.evidence && F.evidence.gauge ? '<p class="fw-evp"><span class="fw-evk">미달</span>' + esc(F.evidence.gauge) + "</p>" : "") + "</section>";
-    // 판단(세션·AI)·시장 여건(예전 게이지 — 참고)·연준/한은 경로
+    // 판단(세션·AI)·시장 여건(예전 게이지 — 참고)·금리 경로(선택한 나라만)
     var A = window.LIQUIDITY_AUTO, hasL = L && L[c === "us" ? "us" : "korea"], s0 = hasL ? L[c === "us" ? "us" : "korea"] : A && A[c === "us" ? "us" : "korea"];
     var head = hasL ? (c === "us" ? (L.headlineUS || L.headline) : (L.headlineKR || L.headline)) : "";
     var judge = "";
@@ -5681,8 +5682,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
         (auto && hasL ? "<div>시장 여건(금리·VIX·하이일드·달러·지수 모멘텀) · 단기 " + esc(auto.shortTerm) + " · 중기 " + esc(auto.midTerm) + " — 과거 검증 미달이라 참고만</div>" : "") +
         bits.map(function (x) { return "<div>" + x + "</div>"; }).join("") + "</div></section>";
     }
-    var rates = '<section class="dt-sec" id="fw-rt"><h3>금리 경로</h3>' + rateModelHtml(A && A.rateModel, hasL ? L.policyNews : null, c) +
-      (c === "korea" ? bokHtml(A && A.bok) + fedHtml(A && A.fed) : fedHtml(A && A.fed) + bokHtml(A && A.bok)) + "</section>";
+    var rates = '<section class="dt-sec" id="fw-rt"><h3>금리 경로</h3>' + ratePathHtml(A, hasL ? L.policyNews : null, c) + "</section>";
     var nav = '<nav class="dt-nav" aria-label="돈의 흐름 항목">' + [["fw-sc", "점수"], ["fw-cp", "지표"]].concat(o.risk ? [["fw-rk", "급락 위험"]] : [], [["fw-ev", "검증"]], judge ? [["fw-jd", "판단"]] : [], [["fw-rt", "금리"], ["fw-ai", "AI"]])
       .map(function (p) { return '<a href="#' + p[0] + '" data-sec="' + p[0] + '">' + p[1] + "</a>"; }).join("") + "</nav>";
     return hero + nav + chart + comps + risk + ev + judge + rates +
@@ -5793,8 +5793,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       (head ? '<div class="md-head">' + esc(head) + "</div>" : "") +
       (drivers ? '<ul class="liq-drivers">' + drivers + "</ul>" : "") +
       (bits.length ? '<div class="md-bits">' + bits.map(function (x) { return "<div>" + x + "</div>"; }).join("") + "</div>" : "") + "</div>" +
-      rateModelHtml(A && A.rateModel, hasL ? L.policyNews : null, lqCC) +
-      (lqCC === "korea" ? bokHtml(A && A.bok) + fedHtml(A && A.fed) : fedHtml(A && A.fed) + bokHtml(A && A.bok));
+      ratePathHtml(A, hasL ? L.policyNews : null, lqCC);
     syncMktBox();
   }
 
