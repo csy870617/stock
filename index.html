@@ -2320,7 +2320,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   // 실적 발표 전 '실적 주의'(data/earn-risk.js — update-earn-risk.js, 검증 scripts/research/earn-shock/) — 나라마다 뜻이 다르다(근거는 evidenceBy):
   //   미국 = 위험 신호(목표가 하향·직전 실적 충격·주가 약세·목표가 내림 우세) 3개 이상, 발표가 얼마나 남았든 — 발표 때 크게 움직일 가능성(방향 아님).
   //   한국(kind "preview", 2026-10-31 사용자 선택) = 발표 20거래일 안, 최근 30일 리포트에 부정 낱말이 긍정보다 많음 — 기대에 못 미칠 가능성.
-  //   날짜를 모르면 지난해 같은 분기로 추정('추정').
+  //   날짜를 모르면 지난해 같은 분기로 추정('추정'), 잠정실적 공시를 하지 않는 한국 회사는 정기보고서 제출 기한('보고서 기한' — 검증 표본 밖, basis "deadline").
   function earnRisk(t) {
     var R = window.EARN_RISK, x = R && R.items && R.items[t];
     if (!x || !x.risk) return null;
@@ -2333,6 +2333,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     if (x.kind === "preview") {
       var p = x.pre || {}, pw = ["최근 30일 증권사 리포트 " + p.n + "건 — 부정적인 말 " + p.neg + "건 · 긍정적인 말 " + p.pos + "건"];
       if (p.hit) pw.push("최근 부정 프리뷰 — " + p.by + " " + mdOf(p.d) + " ‘…" + p.hit + "…’");
+      if (x.basis === "deadline") pw.push("잠정실적 공시를 하지 않는 회사라 정기보고서 제출 기한을 발표일로 봅니다 — 검증 표본(잠정실적 공시 회사) 밖이라 같은 결과를 기대할 근거는 약합니다");
       return pw;
     }
     var w = [], has = function (k) { return (x.flags || []).indexOf(k) >= 0; };
@@ -2344,9 +2345,9 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   }
   function earnRiskDay(x) {
     if (!x.date) return "";
-    var d = evDay(x.date); return d && d.dd === 0 ? "오늘" : "D-" + (d ? d.dd : x.dn) + (x.est || x.tentative ? "(추정)" : "");
+    var d = evDay(x.date); return d && d.dd === 0 ? "오늘" : "D-" + (d ? d.dd : x.dn) + (x.basis === "deadline" ? "(보고서 기한)" : x.est || x.tentative ? "(추정)" : "");
   }
-  function earnRiskWhen(x) { return x.date ? "다음 실적 발표 " + earnRiskDay(x) : "다음 실적 발표일 미정"; }
+  function earnRiskWhen(x) { return x.date ? (x.basis === "deadline" ? "다음 실적 공개 " : "다음 실적 발표 ") + earnRiskDay(x) : "다음 실적 발표일 미정"; }
   function earnRiskWhat(x) { return x.kind === "preview" ? "프리뷰 부정 우세(" + (x.pre ? x.pre.neg + " vs " + x.pre.pos : "") + ")" : "위험 신호 " + x.n + "/4"; }
   function earnRiskTip(x, c) {
     return earnRiskWhen(x) + " · " + earnRiskWhat(x) + " — " + earnRiskWhy(x, c).join(" · ") + "\n\n" + earnRiskEv(c);

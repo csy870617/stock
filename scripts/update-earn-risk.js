@@ -10,7 +10,8 @@
 //   한국(2026-10-31 한국 프리뷰 시험 PREREG-KR — 사전 기준 미달이지만 사용자 선택 '프리뷰 기준으로 바꾸기'): 다음 발표가 20거래일 안이고
 //     최근 30일 증권사 리포트(제목 + 미리보기 240자)에서 부정 낱말 리포트가 긍정 낱말 리포트보다 많으면. 뜻은 '기대에 못 미칠 가능성' —
 //     과거 발표에서 반응이 평균 1.5%p 낮았고, 그 차이는 크게 빠지는 쪽이 아니라 크게 오르지 못하는 쪽에서 나왔다.
-//     발표일을 공지하지 않았으면 작년 같은 분기 잠정실적 공시일(52주 뒤)로 추정한다('추정' 표시).
+//     발표일을 공지하지 않았으면 작년 같은 분기 잠정실적 공시일(52주 뒤)로 추정한다('추정' 표시). 잠정실적 공시를 하지 않는 회사는
+//     다음 정기보고서 제출 기한을 발표일로 본다('보고서 기한' — 연구 표본 밖이라 화면에 그 사실을 함께 보인다).
 // 사용: node scripts/update-earn-risk.js → data/earn-risk.js(window.EARN_RISK)
 "use strict";
 const fs = require("fs");
@@ -63,6 +64,17 @@ function estimateNext(dates, T) {
   const ds = (dates || []).filter(Boolean).sort(), last = ds[ds.length - 1];
   for (const d of ds) { const e = dayShift(d, 364); if (e > T && (!last || Date.parse(e) - Date.parse(last) > 45 * 864e5)) return e; }
   return null;
+}
+// 잠정실적 공시를 하지 않는 회사(2026-10-31 사용자 '잠정실적 공시 안 하는 회사도 표시해줘'): 실적이 정기보고서로 처음 공개되므로
+// 다음 제출 기한(분기·반기보고서 분기 끝 45일 뒤 — 5/15·8/14·11/14, 사업보고서 90일 뒤 — 3/31; 주말이면 다음 월요일)을 발표일로 본다. 화면엔 '보고서 기한'.
+function nextReportDeadline(T) {
+  const y = +T.slice(0, 4), out = [];
+  for (const yy of [y, y + 1]) for (const md of ["03-31", "05-15", "08-14", "11-14"]) {
+    let d = Date.parse(yy + "-" + md + "T00:00:00Z");
+    while ([0, 6].includes(new Date(d).getUTCDay())) d += 864e5;
+    out.push(new Date(d).toISOString().slice(0, 10));
+  }
+  return out.filter((d) => d >= T).sort()[0];
 }
 
 // ── 미국: 야후 증권사별 목표가 이력(이번 대상 종목만) ──
@@ -145,16 +157,17 @@ async function krReports(code, T) {
       todo.push({ c, t: s.ticker, name: s.name, date: n ? n.date : null, dn: n ? tdays(T, n.date) : null, tentative: !!(n && n.tentative), est: !!(n && n.est) });
       continue;
     }
-    if (!n) {   // 한국 — 공지한 일정이 없으면 작년 같은 분기로 추정(잠정 공시를 하지 않는 회사는 연구 표본 밖이라 건너뜀)
+    if (!n) {   // 한국 — 공지한 일정이 없으면 작년 같은 분기 잠정실적 공시로 추정, 잠정 공시를 하지 않는 회사는 정기보고서 제출 기한
       const ds = await krEarningsDates(s.ticker, T);
       if (ds == null) { krFail++; continue; }
-      const e = estimateNext(ds, T); if (e) n = { date: e, tentative: true, est: true };
+      if (ds.length) { const e = estimateNext(ds, T); if (e) n = { date: e, tentative: true, est: true }; }
+      else n = { date: nextReportDeadline(T), tentative: true, est: true, basis: "deadline" };
       await wait(150);
     }
     if (!n) continue;
     const dn = tdays(T, n.date);
     if (dn > WIN.korea) continue;
-    todo.push({ c, t: s.ticker, name: s.name, date: n.date, dn, tentative: !!n.tentative, est: !!n.est });
+    todo.push({ c, t: s.ticker, name: s.name, date: n.date, dn, tentative: !!n.tentative, est: !!n.est, basis: n.basis });
   }
   const items = {};
   let yFail = 0;
@@ -169,7 +182,7 @@ async function krReports(code, T) {
         const h = neg.sort((a, b) => (a.d < b.d ? -1 : 1))[neg.length - 1], txt = h.txt.replace(/\s+/g, " "), m = txt.search(NEG);
         pre = Object.assign(pre, { by: h.by, d: h.d, hit: txt.slice(Math.max(0, m - 14), m + 12).trim() });
       }
-      items[x.t] = { c: x.c, kind: "preview", date: x.date, dn: x.dn, tentative: x.tentative || undefined, est: x.est || undefined, n: neg.length, flags: risk ? ["pre"] : [], risk, pre };
+      items[x.t] = { c: x.c, kind: "preview", date: x.date, dn: x.dn, tentative: x.tentative || undefined, est: x.est || undefined, basis: x.basis, n: neg.length, flags: risk ? ["pre"] : [], risk, pre };
       await wait(150);
       continue;
     }
@@ -207,7 +220,7 @@ async function krReports(code, T) {
   const doc = { asOf: T, builtAt: new Date().toISOString().slice(0, 19) + "Z", rule: { days: WIN, min: MIN, korea: "preview" }, evidence: EVIDENCE.us, evidenceBy: EVIDENCE, items };
   fs.writeFileSync(OUT, "// 실적 발표 전 '실적 주의' — scripts/update-earn-risk.js 가 매일 생성(토큰 0). 검증: scripts/research/earn-shock/ — 미국은 변동 크기, 한국은 기대 하회 가능성\n" +
     "window.EARN_RISK = " + JSON.stringify(doc) + ";\n");
-  const when = (v) => (v.dn == null ? "발표일 미정" : "D-" + v.dn + (v.est ? " 추정" : ""));
+  const when = (v) => (v.dn == null ? "발표일 미정" : "D-" + v.dn + (v.basis === "deadline" ? " 보고서 기한" : v.est ? " 추정" : ""));
   const kr = Object.entries(items).filter(([, v]) => v.c === "korea"), us = Object.entries(items).filter(([, v]) => v.c === "us");
   console.log("한국(발표 20거래일 안) " + kr.length + "종목 · 프리뷰 부정 우세: " + (kr.filter(([, v]) => v.risk).map(([t, v]) => t + "(부정 " + v.pre.neg + " vs 긍정 " + v.pre.pos + ", " + when(v) + ")").join(", ") || "없음") +
     " | 미국(다음 발표까지) " + us.length + "종목 · 위험 신호 3개 이상: " + (us.filter(([, v]) => v.risk).map(([t, v]) => t + "(" + v.n + "/4, " + when(v) + ")").join(", ") || "없음") +
