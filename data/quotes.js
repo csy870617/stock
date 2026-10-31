@@ -679,13 +679,6 @@ window.STOCK_QUOTES = {
    "close": 219.82,
    "closeDate": "2026-10-30"
   },
-  "ADP": {
-   "price": 293.84,
-   "date": "2026-10-30",
-   "changePct": 2.7,
-   "close": 293.84,
-   "closeDate": "2026-10-30"
-  },
   "ORLY": {
    "price": 88.12,
    "date": "2026-10-30",
@@ -698,6 +691,13 @@ window.STOCK_QUOTES = {
    "date": "2026-10-30",
    "changePct": 0.5,
    "close": 155.4,
+   "closeDate": "2026-10-30"
+  },
+  "ADP": {
+   "price": 293.84,
+   "date": "2026-10-30",
+   "changePct": 2.7,
+   "close": 293.84,
    "closeDate": "2026-10-30"
   }
  },
