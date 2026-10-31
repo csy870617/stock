@@ -40,7 +40,7 @@ function sdk() {
 function client() {
   if (!process.env.ANTHROPIC_API_KEY) return null;
   const A = sdk();
-  if (!A) throw new Error("@anthropic-ai/sdk 가 설치되지 않았습니다 — 저장소 루트에서 npm ci");
+  if (!A) throw new Error("@anthropic-ai/sdk 미설치 — 저장소 루트에서 npm ci");
   return new A({ maxRetries: 3, timeout: 10 * 60 * 1000 });
 }
 
@@ -80,8 +80,8 @@ function describeError(e) {
   const A = sdk();
   if (e instanceof AiError) return e.message;
   if (A) {
-    if (e instanceof A.AuthenticationError) return "인증 실패 — ANTHROPIC_API_KEY 가 올바르지 않습니다";
-    if (e instanceof A.PermissionDeniedError) return "권한 없음 — 키의 워크스페이스·모델 권한을 확인하세요";
+    if (e instanceof A.AuthenticationError) return "인증 실패 — ANTHROPIC_API_KEY 가 올바르지 않음";
+    if (e instanceof A.PermissionDeniedError) return "권한 없음 — 키의 워크스페이스·모델 권한 확인";
     if (e instanceof A.RateLimitError) return "요청 한도 초과(429) — 잠시 후 다시 시도";
     if (e instanceof A.BadRequestError) return "요청 오류(400) — " + String(e.message || "").slice(0, 160);
     if (e instanceof A.APIConnectionError) return "API 연결 실패 — " + String(e.message || "").slice(0, 120);
@@ -128,7 +128,7 @@ async function research(cl, { model, system, prompt, maxSearches = 5, effort = "
     if (msg.stop_reason !== "pause_turn") break;
     messages = messages.concat([{ role: "assistant", content: msg.content }]);
   }
-  if (msg.stop_reason === "refusal") throw new AiError("refusal", "모델이 요청을 거절했습니다(" + ((msg.stop_details && msg.stop_details.category) || "분류 없음") + ")");
+  if (msg.stop_reason === "refusal") throw new AiError("refusal", "모델이 요청을 거절함(" + ((msg.stop_details && msg.stop_details.category) || "분류 없음") + ")");
   const text = blocks.filter((b) => b.type === "text").map((b) => b.text).join("").trim();
   const searchErrors = blocks.filter((b) => b.type === "web_search_tool_result" && b.content && !Array.isArray(b.content))
     .map((b) => b.content.error_code).filter(Boolean);
@@ -145,8 +145,8 @@ async function compose(cl, { model, system, prompt, schema, effort = "high", max
   });
   const msg = await cl.beta.messages.stream(params).finalMessage();
   addUsage(usage, model, msg.usage);
-  if (msg.stop_reason === "refusal") throw new AiError("refusal", "모델이 요청을 거절했습니다(" + ((msg.stop_details && msg.stop_details.category) || "분류 없음") + ")");
-  if (msg.stop_reason === "max_tokens") throw new AiError("max_tokens", "출력이 max_tokens 에서 잘렸습니다");
+  if (msg.stop_reason === "refusal") throw new AiError("refusal", "모델이 요청을 거절함(" + ((msg.stop_details && msg.stop_details.category) || "분류 없음") + ")");
+  if (msg.stop_reason === "max_tokens") throw new AiError("max_tokens", "출력이 max_tokens 에서 잘림");
   const text = (msg.content || []).filter((b) => b.type === "text").map((b) => b.text).join("");
   try { return { data: JSON.parse(text), usage }; }
   catch (_e) { throw new AiError("json", "JSON 출력 해석 실패: " + text.slice(0, 120)); }

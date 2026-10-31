@@ -138,6 +138,16 @@ function priceNumberIn(text) {
   for (const re of PRICE_NUM_RES) { const m = t.match(re); if (m) return m[0]; }
   return null;
 }
+// 화면 문장 문체(§4 공통, 2026-10-31 사용자 '설명하는 부분을 존댓말로 할 필요 없고 핵심만 간략하게') — 존댓말 종결(ㅂ니다·세요·해요)을 찾는다(경고만)
+function politeIn(text) {
+  if (typeof text !== "string" || !text) return null;
+  for (const m of text.matchAll(/([가-힣])니(?:다|까)/g)) {
+    const c = m[1].charCodeAt(0) - 0xAC00;
+    if (c >= 0 && c < 11172 && c % 28 === 17) return text.slice(Math.max(0, m.index - 6), m.index + 3);
+  }
+  const m = text.match(/[가-힣]{0,4}(?:세요|에요|예요|해요)(?![가-힣])/);
+  return m ? m[0] : null;
+}
 
 // 분산 가드레일(2026-10-21 사용자 승인): ①같은 종목은 정식 주제 1곳에만 ②한국 같은 기업집단·금융 업종은 국가 정식 편성(고유 종목)의
 // 일정 수 이하. 기존 초과는 경고(check-defects 가 중복을 결격으로 올려 교체), update-reco 는 '더 나빠지는' 편입을 거부한다.
@@ -214,6 +224,7 @@ function validate(D, opts) {
   else if (D.generatedAt > today) errors.push("generatedAt 이 미래 날짜: " + D.generatedAt);
   if (!D.marketNote || !RE_HANGUL.test(D.marketNote)) errors.push("marketNote 누락 또는 한국어 아님");
   if (!D.disclaimer || !RE_HANGUL.test(D.disclaimer)) errors.push("disclaimer 누락 또는 한국어 아님");
+  ["marketNote", "marketNoteUS", "marketNoteKR", "disclaimer"].forEach((k) => { const p = politeIn(D[k]); if (p) warnings.push(k + " 에 존댓말('" + p + "') — 평서체(~다)·핵심만(§4 공통)"); });
   if (!Array.isArray(D.themes) || !D.themes.length) errors.push("themes 배열 누락");
 
   const themeKeys = (D.themes || []).map((t) => t && t.key).filter(Boolean);
@@ -353,6 +364,9 @@ function validate(D, opts) {
       // 화면 문장 속 가격 의존 수치(§4 공통) — 기존 데이터는 경고(다음 회전에서 수치 없이 재작성), 새로 쓰는 패치는 update-reco 가 거부
       ["valueNote", "thesis", "earnings"].forEach((k) => { const hit = priceNumberIn(s[k]); if (hit) warnings.push(tag + ": " + k + " 에 가격 의존 수치('" + hit + "') — 카드 상단 칸이 맡는다, 수치 없이 재작성"); });
       (Array.isArray(s.risks) ? s.risks : []).forEach((r, i) => { const hit = priceNumberIn(r); if (hit) warnings.push(tag + ": risks[" + i + "] 에 가격 의존 수치('" + hit + "') — 수치 없이 재작성"); });
+      // 화면 문장 문체 — 존댓말 없이 평서체(§4 공통)
+      ["valueNote", "thesis", "earnings"].forEach((k) => { const p = politeIn(s[k]); if (p) warnings.push(tag + ": " + k + " 에 존댓말('" + p + "') — 평서체(~다)로"); });
+      (Array.isArray(s.risks) ? s.risks : []).forEach((r, i) => { const p = politeIn(r); if (p) warnings.push(tag + ": risks[" + i + "] 에 존댓말('" + p + "') — 평서체(~다)로"); });
 
       // 컨센서스 신선도 — 네이버 집계 기준일이 30일을 넘었거나(tpStale) 수기 목표가인데 재확인이 14일 넘게 없으면 경고
       {
@@ -497,6 +511,8 @@ function validate(D, opts) {
           if (ng && ng.gap > 10) warnings.push(tag + ": 이유 속 상승여력 " + ng.said + "% 가 실계산 " + ng.real + "% 와 " + ng.gap.toFixed(1) + "%p 괴리 — 최신가 기준으로 다시 쓸 것");
           const pn = priceNumberIn(it.reason);
           if (pn) warnings.push(tag + ": 이유에 가격 의존 수치('" + pn + "') — 상승여력 크기로 고르지 않는다(§4-6), 수치 없이 쓸 것");
+          const pl = politeIn(it.reason);
+          if (pl) warnings.push(tag + ": 이유에 존댓말('" + pl + "') — 평서체(~다)로");
         });
         Object.keys(seen).forEach((t) => { if (seen[t] > 1) errors.push("topPicks." + g + ": '" + t + "' 중복 선정"); });
       });
@@ -565,4 +581,4 @@ if (require.main === module) {
 }
 
 module.exports = { concentration, GROUP_CAP, FIN_CAP, validate, loadTa, isTrustedSource, isBlockedSource, sourceHost, trustedDomainOf, PERSONAL_THEMES, isPersonalTheme,
-  SPOTLIGHT, SPOT_TAGS, SPOT_PER_TAG, NONFORMAL_THEMES, isFormalTheme, priceNumberIn };
+  SPOTLIGHT, SPOT_TAGS, SPOT_PER_TAG, NONFORMAL_THEMES, isFormalTheme, priceNumberIn, politeIn };

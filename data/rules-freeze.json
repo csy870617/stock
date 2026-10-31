@@ -11,7 +11,7 @@
   "scripts/shadow-track.js": "52321294ad58c3cf",
   "docs/DEEP-AUDIT-AGENT.md": "84a8d8333ac5486d",
   "docs/DEEP-DISCOVERY-AGENT.md": "af21a0140a2ff2de",
-  "recommendations.js themes": "04cf1ab1ada9f1aa"
+  "recommendations.js themes": "e9c3fe860e73fe46"
  },
  "accepted": [
   {
@@ -39,6 +39,13 @@
     "recommendations.js themes"
    ],
    "reason": "히든 주제 폐지·주목 신설(사용자 결정 2026-10-30 — 사전 등록 검증 scripts/research/hidden/ '약함'): screen-hidden.js 삭제, 스크린·결격 점검·그림자에서 히든 제거, 주제 정의 교체(주목은 정식 밖 목록)"
+  },
+  {
+   "at": "2026-10-31",
+   "items": [
+    "recommendations.js themes"
+   ],
+   "reason": "주제 설명(desc) 문체만 변경 — 존댓말을 평서체로, 기준 내용은 그대로(2026-10-31 사용자 '설명은 존댓말 없이 핵심만')"
   }
  ]
 }

@@ -70,7 +70,7 @@ async function run(browser, base) {
   await step("성과", async () => {
     await tab("perf");
     await page.waitForFunction(() => { const b = document.getElementById("perfBody"); return b && b.querySelector(".blk") && !/불러오는 중/.test(b.textContent); }, null, T);
-    const fail = await page.evaluate(() => /불러오지 못했습니다/.test(document.getElementById("perfBody").textContent));
+    const fail = await page.evaluate(() => /불러오기 실패|불러오지 못했/.test(document.getElementById("perfBody").textContent));
     if (fail) throw new Error("perf.json 을 읽지 못했다");
   });
   await step("과거 보기", async () => {
