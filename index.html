@@ -5162,10 +5162,13 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   document.getElementById("countrySeg").addEventListener("click", function (e) {
     var b = e.target.closest("button[data-c]"); if (b) setCountry(b.dataset.c);
   });
-  document.getElementById("mineSeg").addEventListener("click", function (e) {
-    var b = e.target.closest("button[data-k]"); if (!b || b.dataset.k === state.mine) return;
-    state.mine = b.dataset.k; lsSet("ui.mine", state.mine); state.mineEdit = false;
+  function selectMine(k) {
+    if (!k || k === state.mine) return;
+    state.mine = k; lsSet("ui.mine", state.mine); state.mineEdit = false;
     renderMine();
+  }
+  document.getElementById("mineSeg").addEventListener("click", function (e) {
+    var b = e.target.closest("button[data-k]"); if (b) selectMine(b.dataset.k);
   });
   document.getElementById("themeChips").addEventListener("click", function (e) {
     if (chipDragMoved) { chipDragMoved = false; return; }   // 방금 드래그로 순서를 바꿨으면 선택 무시
@@ -5357,6 +5360,27 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       var i = keys.indexOf(state.theme); if (i < 0) return;
       state.theme = keys[dx < 0 ? (i + 1) % keys.length : (i - 1 + keys.length) % keys.length];
       renderReco();
+    }, { passive: true });
+  })();
+
+  // 내 종목 좌우 스와이프 — 보유 ⇄ 관심(추천 목록과 같은 몸짓, 2026-10-31 사용자 요청).
+  //   길게 눌러 끄는 순서 바꾸기가 시작된 몸짓과 편집 중에는 넘기지 않는다.
+  (function () {
+    var el = document.getElementById("mineBody"), sx = null, sy = null, dragSeen = false;
+    el.addEventListener("touchstart", function (e) {
+      if (e.touches.length !== 1) { sx = null; return; }
+      sx = e.touches[0].clientX; sy = e.touches[0].clientY; dragSeen = false;
+    }, { passive: true });
+    el.addEventListener("touchmove", function () { if (plDragging) dragSeen = true; }, { passive: true });
+    el.addEventListener("touchend", function (e) {
+      if (sx == null) return;
+      var dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
+      sx = null;
+      if (dragSeen || plDragging || plDragMoved || state.mineEdit) return;
+      if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;      // 가로 스와이프만 인식
+      var keys = Array.prototype.map.call(document.querySelectorAll("#mineSeg button[data-k]"), function (b) { return b.dataset.k; });
+      var i = keys.indexOf(state.mine); if (i < 0) return;
+      selectMine(keys[dx < 0 ? (i + 1) % keys.length : (i - 1 + keys.length) % keys.length]);
     }, { passive: true });
   })();
 
