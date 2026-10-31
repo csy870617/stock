@@ -2318,14 +2318,17 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     return { md: (+p[1]) + "/" + (+p[2]) + "(" + WD[d.getDay()] + ")", dd: Math.round((d - t0) / 86400000) };
   }
   // 실적 발표 전 변동 위험(data/earn-risk.js — update-earn-risk.js, 검증 scripts/research/earn-shock/, 2026-10-30 사용자 선택):
-  //   발표 7거래일 안이고 위험 신호(목표가 하향·직전 실적 충격·주가 약세·프리뷰 경고)가 3개 이상이면 '실적 주의'.
-  //   방향 예측이 아니다 — 과거 이런 발표는 위로든 아래로든 크게 움직일 때가 많았다.
+  //   위험 신호(목표가 하향·직전 실적 충격·주가 약세·프리뷰 경고)가 3개 이상이면 '실적 주의' — 한국은 발표 7거래일 안만,
+  //   미국은 발표가 얼마나 남았든(2026-10-31 앞당기기 시험 — 발표 3개월 전 신호도 큰 움직임 2배, 날짜를 모르면 지난해로 추정·미정).
+  //   방향 예측이 아니다 — 과거 이런 발표는 위로든 아래로든 크게 움직일 때가 많았다(근거는 나라별 evidenceBy).
   function earnRisk(t) {
     var R = window.EARN_RISK, x = R && R.items && R.items[t];
     if (!x || !x.risk) return null;
+    if (!x.date) return x;
     var day = evDay(x.date);
     return day && day.dd >= 0 ? x : null;
   }
+  function earnRiskEv(c) { var R = window.EARN_RISK; return (R && R.evidenceBy && R.evidenceBy[c]) || (R && R.evidence) || ""; }
   function earnRiskWhy(x, c) {
     var w = [], has = function (k) { return (x.flags || []).indexOf(k) >= 0; };
     if (has("tp")) w.push("증권사 목표가 평균 3개월 " + fmtPct(x.tp));
@@ -2334,9 +2337,13 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     if (has("pre") && x.pre) w.push(c === "korea" ? "프리뷰 경고 — " + x.pre.by + " " + mdOf(x.pre.d) + " ‘…" + x.pre.hit + "…’" : "최근 30일 목표가 내림 " + x.pre.lo + "건 · 올림 " + x.pre.up + "건");
     return w;
   }
-  function earnRiskDay(x) { var d = evDay(x.date); return d && d.dd === 0 ? "오늘" : "D-" + (d ? d.dd : x.dn); }
+  function earnRiskDay(x) {
+    if (!x.date) return "";
+    var d = evDay(x.date); return d && d.dd === 0 ? "오늘" : "D-" + (d ? d.dd : x.dn) + (x.est || x.tentative ? "(추정)" : "");
+  }
+  function earnRiskWhen(x) { return x.date ? "다음 실적 발표 " + earnRiskDay(x) : "다음 실적 발표일 미정"; }
   function earnRiskTip(x, c) {
-    return "실적 발표 " + earnRiskDay(x) + " · 위험 신호 " + x.n + "/4 — " + earnRiskWhy(x, c).join(" · ") + "\n\n" + ((window.EARN_RISK && window.EARN_RISK.evidence) || "");
+    return earnRiskWhen(x) + " · 위험 신호 " + x.n + "/4 — " + earnRiskWhy(x, c).join(" · ") + "\n\n" + earnRiskEv(c);
   }
   function eventLine(s, country) {
     var E = window.STOCK_EVENTS, ev = E && E.items && E.items[s.ticker], n = ev && ev.next;
@@ -3186,7 +3193,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     }
     var nx = ev && ev.next, day = nx && nx.date ? evDay(nx.date) : null;
     var er = earnRisk(s.ticker);
-    if (er) out.push('<span class="bd bd-warn" data-basis="' + esc(earnRiskTip(er, c)) + '">실적 주의 ' + earnRiskDay(er) + "</span>");
+    if (er) out.push('<span class="bd bd-warn" data-basis="' + esc(earnRiskTip(er, c)) + '">실적 주의' + (er.date ? " " + earnRiskDay(er) : "") + "</span>");
     else if (day && day.dd >= 0 && day.dd <= 30) out.push('<span class="bd bd-ev" title="' + esc(nx.title || "실적 발표") + '">실적 ' + (day.dd === 0 ? "오늘" : "D-" + day.dd) + "</span>");
     return out.join("");
   }
@@ -3212,8 +3219,8 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     var E = window.STOCK_EVENTS, ev = E && E.items && E.items[s.ticker], f = ev && ev.flow;
     if (c === "korea" && f && f.hot) out.push({ warn: true, k: "수급 과열", lead: HOT_TIP, why: [] });
     var er = earnRisk(s.ticker);
-    if (er) out.push({ warn: true, k: "실적 주의 · 발표 " + earnRiskDay(er) + " · 위험 신호 " + er.n + "/4",
-      lead: (window.EARN_RISK && window.EARN_RISK.evidence) || "", why: earnRiskWhy(er, c) });
+    if (er) out.push({ warn: true, k: "실적 주의 · " + earnRiskWhen(er) + " · 위험 신호 " + er.n + "/4",
+      lead: earnRiskEv(c), why: earnRiskWhy(er, c) });
     if (!out.length) return "";
     return '<div class="dt-alert">' + out.map(function (a) {
       return '<div class="al-i"><div class="al-k' + (a.warn ? " al-w" : "") + '">' + esc(a.k) + (a.at ? ' <span class="al-at">' + (a.by === "ai" ? "AI " : "") + "판정 " + esc(mdOf(a.at)) + "</span>" : "") + "</div>" +
@@ -5947,7 +5954,8 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       trendLine(t, c),
       ta.outlook && ta.outlook.m1 ? "다음 1개월 범위(방향 중립 통계): 80% " + fmtPrice(ta.outlook.m1[0], c) + "~" + fmtPrice(ta.outlook.m1[1], c) + (ta.outlook.c1 ? " · 50% " + fmtPrice(ta.outlook.c1[0], c) + "~" + fmtPrice(ta.outlook.c1[1], c) : "") : "",
       ev.next && ev.next.date ? "다음 실적 발표: " + ev.next.date + (ev.next.title ? " (" + ev.next.title + ")" : "") : "",
-      (function () { var R = window.EARN_RISK, x = R && R.items && R.items[t]; return x && x.n ? "실적 발표 전 위험 신호 " + x.n + "/4(" + earnRiskWhy(x, c).join(" · ") + ") — 과거 이런 발표는 위·아래로 크게 움직인 경우가 많았다(방향 예측 아님)" : ""; })(),
+      (function () { var R = window.EARN_RISK, x = R && R.items && R.items[t]; return x && x.n ? "다음 실적 발표 전 위험 신호 " + x.n + "/4(" + earnRiskWhy(x, c).join(" · ") + ") — " +
+        (c === "us" ? "과거 미국 발표에선 3개 이상이면 위·아래로 크게(±10%) 움직인 경우가 약 2배였다(발표 3개월 전에 잰 신호도 같음, 방향 예측 아님)" : "한국 발표에선 이 신호들이 큰 움직임과 일관된 관계가 없었다") : ""; })(),
       ev.flow ? "20일 수급(거래량 대비): 외국인 " + pctTxt(ev.flow.f20 * 100) + " · 기관 " + pctTxt(ev.flow.o20 * 100) + (ev.flow.hot ? " · 수급 과열(이후 지수 대비 약세가 검증된 경고)" : "") : "",
       newsTxt(t)
     ];

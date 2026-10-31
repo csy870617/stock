@@ -2,7 +2,9 @@
 // 실적 발표 전 '크게 움직일 가능성' 표시(2026-10-30 사용자 선택 — 검증: scripts/research/earn-shock/)
 //   과거 한·미 실적 발표 2만 2천여 건에서 아래 네 신호는 발표 때 크게 움직일 확률(위·아래 모두)을 높였지만 방향은 가르지 못했다.
 //   그래서 선정 규칙에는 쓰지 않고, 3개 이상이면 앱이 '실적 주의'로 알리기만 한다(매도 신호가 아니다).
-//   대상: 편성(정식·관심·보유) 종목 중 다음 실적 발표가 기준일(T)부터 7거래일 안인 종목. 신호 정의는 연구와 같다:
+//   대상: 편성(정식·주목·관심·보유) 종목. 한국은 다음 실적 발표가 기준일(T)부터 7거래일 안인 종목만, 미국은 발표가 얼마나 남았든
+//   (2026-10-31 사용자 '발표날이 가깝지 않더라도 미리' — 앞당기기 시험 PREREG-LEAD: 미국은 발표 60거래일 전에 잰 신호도 큰 움직임 2배,
+//   한국은 어느 시점에서도 일관되지 않아 사전 기준 미달 → 사용자 선택 '일단 미국은 미리'). 신호 정의는 연구와 같다:
 //     tp   증권사 목표가 평균 3개월 −5% 이하(한국 revisions.js — 네이버 리서치, 미국 야후 증권사별 이력 — 180일 안 증권사별 최신, 3곳 이상)
 //     prev 직전 실적 발표 반응(발표 전날 → 다음 날 종가, 지수 대비) −5% 이하(200일 안) — 한국 네이버 공시 '(연결)영업(잠정)실적', 미국 events.js 지난 발표일
 //     weak 최근 60거래일 지수 대비 −10% 이하(data/trend 의 1년 일봉·지수)
@@ -17,11 +19,23 @@ const { execFile } = require("child_process");
 const ROOT = path.join(__dirname, "..");
 const DATA = path.join(ROOT, "data");
 const OUT = path.join(DATA, "earn-risk.js");
-const WIN = 7, MIN = 3;
+const WIN = { korea: 7, us: null }, MIN = 3;   // 발표까지 남은 거래일 상한 — null 은 '얼마나 남았든(다음 발표까지)'
 const NEG = /하회|부진|쇼크|우려|눈높이|하향|적자|감익/;
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36";
-const EVIDENCE = "과거 한·미 실적 발표 2만 2천여 건(2017~2026)에서 위험 신호가 3개 이상인 발표는 그날 전후 −10% 이하 폭락이 8.9%, +10% 이상 급등이 8.8%였습니다" +
-  "(신호가 없을 때 4.3%·5.9%). 크게 움직일 때가 많았지만 평균 방향은 같았습니다 — 매도 신호가 아니라 발표 때 변동이 커질 수 있다는 표시입니다.";
+// 나라별 근거(scripts/research/earn-shock/README.md '앞당기기 시험' — 2026-10-31 다시 받은 발표 2만 2천여 건)
+const EVIDENCE = {
+  us: "미국 실적 발표 1만 8천여 건(2017~2026)에서 위험 신호가 3개 이상이면 발표 때 −10% 이하 폭락이 약 10%, +10% 이상 급등이 약 11%였습니다(신호가 없을 때 4%·6%). " +
+    "발표 3개월 전에 잰 신호로도 비율이 거의 같았습니다. 크게 움직일 때가 많았지만 평균 방향은 같았습니다 — 매도 신호가 아니라 발표 때 변동이 커질 수 있다는 표시입니다.",
+  korea: "한국 실적 발표 4천여 건(2021~2026)에서는 이 신호들이 큰 움직임과 일관된 관계를 보이지 않았습니다(발표 직전에 잰 신호 3개 이상: ±10% 넘게 움직인 비율 8.5% vs 신호가 없을 때 12%) — " +
+    "미국에서만 뚜렷했습니다. 매도 신호가 아닙니다.",
+};
+// 미국 다음 발표일 추정(나스닥 예정일이 없을 때 — 대개 방금 발표한 종목): 지난 4분기 발표일의 52주 뒤(요일 유지) 가운데
+// T 뒤이고 마지막 발표보다 45일 넘게 뒤인 첫 날. 화면엔 '추정'으로 보인다.
+function estimateNext(hist, T) {
+  const ds = (hist || []).map((h) => h.date).filter(Boolean).sort(), last = ds[ds.length - 1];
+  for (const d of ds) { const e = dayShift(d, 364); if (e > T && (!last || Date.parse(e) - Date.parse(last) > 45 * 864e5)) return e; }
+  return null;
+}
 
 function load(file, key) {
   const p = path.join(DATA, file);
@@ -91,10 +105,19 @@ async function krPrevEarnings(code, before) {
   const seen = new Set(), todo = [];
   for (const c of ["korea", "us"]) for (const s of D[c] || []) {
     if (seen.has(s.ticker)) continue; seen.add(s.ticker);
-    const n = EV[s.ticker] && EV[s.ticker].next;
-    if (!n || !n.date || n.date < T) continue;
+    const ev = EV[s.ticker] || {};
+    let n = ev.next && ev.next.date && ev.next.date >= T ? ev.next : null;
+    if (WIN[c] == null) {
+      // 발표가 얼마나 남았든 — 다만 방금 발표해 반응이 끝나지 않았으면(발표 다음 날까지) 이번 발표를 미리 본 것이 아니라 건너뛴다(연구와 같은 조건)
+      const last = (ev.hist || []).map((h) => h.date).filter((d) => d && d <= T).sort().pop();
+      if (last && tdays(last, T) < 2) continue;
+      if (!n) { const e = estimateNext(ev.hist, T); if (e) n = { date: e, tentative: true, est: true }; }
+      todo.push({ c, t: s.ticker, name: s.name, date: n ? n.date : null, dn: n ? tdays(T, n.date) : null, tentative: !!(n && n.tentative), est: !!(n && n.est) });
+      continue;
+    }
+    if (!n) continue;
     const dn = tdays(T, n.date);
-    if (dn > WIN) continue;
+    if (dn > WIN[c]) continue;
     todo.push({ c, t: s.ticker, name: s.name, date: n.date, dn, tentative: !!n.tentative });
   }
   const items = {};
@@ -109,9 +132,10 @@ async function krPrevEarnings(code, before) {
       if (i >= 60 && bars[i - 60][2] > 0) sig.weak = (bars[i][1] / bars[i - 60][1] - 1) - (bars[i][2] / bars[i - 60][2] - 1); }
     // prev — 직전 발표 반응
     let pd = null;
+    const ref = x.date || T;   // 다음 발표일(모르면 기준일)
     if (x.c === "korea") pd = await krPrevEarnings(x.t, x.date);
-    else pd = ((EV[x.t] && EV[x.t].hist) || []).map((h) => h.date).filter((d) => d && d < x.date && d <= T).sort().pop() || null;
-    if (pd && Date.parse(x.date) - Date.parse(pd) <= 200 * 864e5) {
+    else pd = ((EV[x.t] && EV[x.t].hist) || []).map((h) => h.date).filter((d) => d && d < ref && d <= T).sort().pop() || null;
+    if (pd && Date.parse(ref) - Date.parse(pd) <= 200 * 864e5) {
       const i = idxOn(pd);
       if (i >= 1 && i + 1 < bars.length && bars[i - 1][2] > 0) sig.prev = { d: pd, ar: (bars[i + 1][1] / bars[i - 1][1] - 1) - (bars[i + 1][2] / bars[i - 1][2] - 1) };
     }
@@ -140,13 +164,14 @@ async function krPrevEarnings(code, before) {
     if (sig.prev && sig.prev.ar <= -0.05) flags.push("prev");
     if (ok(sig.weak) && sig.weak <= -0.10) flags.push("weak");
     if (sig.pre && (x.c === "korea" ? sig.pre.n > 0 : sig.pre.lo >= 2 && sig.pre.lo > sig.pre.up)) flags.push("pre");
-    items[x.t] = { c: x.c, date: x.date, dn: x.dn, tentative: x.tentative || undefined, n: flags.length, flags, risk: flags.length >= MIN,
+    items[x.t] = { c: x.c, date: x.date, dn: x.dn, tentative: x.tentative || undefined, est: x.est || undefined, n: flags.length, flags, risk: flags.length >= MIN,
       tp: r1(sig.tp), prev: sig.prev ? { d: sig.prev.d, ar: r1(sig.prev.ar) } : null, weak: r1(sig.weak), pre: sig.pre || null };
   }
-  const doc = { asOf: T, builtAt: new Date().toISOString().slice(0, 19) + "Z", rule: { days: WIN, min: MIN }, evidence: EVIDENCE, items };
+  const doc = { asOf: T, builtAt: new Date().toISOString().slice(0, 19) + "Z", rule: { days: WIN, min: MIN }, evidence: EVIDENCE.us, evidenceBy: EVIDENCE, items };
   fs.writeFileSync(OUT, "// 실적 발표 전 변동 위험 — scripts/update-earn-risk.js 가 매일 생성(토큰 0). 검증: scripts/research/earn-shock/ — 방향 예측이 아니다\n" +
     "window.EARN_RISK = " + JSON.stringify(doc) + ";\n");
-  const flagged = Object.entries(items).filter(([, v]) => v.risk).map(([t, v]) => t + "(" + v.n + "/4, D-" + v.dn + ")");
-  console.log("실적 발표 7거래일 안 " + todo.length + "종목 · 위험 신호 3개 이상: " + (flagged.join(", ") || "없음") + (yFail ? " · 야후 이력 실패 " + yFail : ""));
+  const flagged = Object.entries(items).filter(([, v]) => v.risk).map(([t, v]) => t + "(" + v.n + "/4, " + (v.dn == null ? "발표일 미정" : "D-" + v.dn + (v.est ? " 추정" : "")) + ")");
+  console.log("대상 한국(발표 7거래일 안) " + todo.filter((x) => x.c === "korea").length + "종목 · 미국(다음 발표까지) " + todo.filter((x) => x.c === "us").length +
+    "종목 · 위험 신호 3개 이상: " + (flagged.join(", ") || "없음") + (yFail ? " · 야후 이력 실패 " + yFail : ""));
   if (yFail && yFail === todo.filter((x) => x.c === "us").length && yFail > 2) console.log("::warning::update-earn-risk: 야후 목표가 이력을 받지 못했다 — 미국은 목표가·프리뷰 신호 없이 계산");
 })();
