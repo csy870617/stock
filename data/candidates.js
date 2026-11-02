@@ -2,13 +2,13 @@
 // groups["<country>|<theme>"] = {defects 편성 결격(state 결격|점검 필요|감시), list 후보(status 검증 통과|보류|검증 대기)}
 // 세션 판정은 data/candidate-notes.json(CLAUDE.md §3-7) — 이 파일을 직접 고치지 않는다.
 window.CANDIDATES = {
- "asOf": "2026-11-01",
- "T": "2026-10-30",
+ "asOf": "2026-11-02",
+ "T": "2026-11-02",
  "screenAsOf": "2026-10-30",
  "screenFresh": true,
  "beta": {
-  "korea": 0.67,
-  "us": 1.15
+  "korea": 0.68,
+  "us": 1
  },
  "groups": {
   "korea|core": {
@@ -28,9 +28,10 @@ window.CANDIDATES = {
      "note": "ROE 6%·3년 평균 ROIC 5.7%(우량 정체성 미달) — 검증 통과 대체 없음",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-10-30",
+     "triedAt": "2026-11-02",
      "since": "2026-10-18",
-     "age": 12
+     "age": 15,
+     "long": 1
     },
     {
      "ticker": "086790",
@@ -46,9 +47,9 @@ window.CANDIDATES = {
      ],
      "note": "중복 편성 — 저평가 주제에 남기고 이 주제는 다른 종목으로 교체",
      "dup": "value",
-     "triedAt": "2026-10-30",
+     "triedAt": "2026-11-02",
      "since": "2026-10-21",
-     "age": 9
+     "age": 12
     },
     {
      "ticker": "278470",
@@ -64,9 +65,9 @@ window.CANDIDATES = {
      "note": "실적 발표 전(10/30) — 직전 분기까지 매출 성장 유지, 추세 붕괴와 목표가 하향은 기존 판정 유지",
      "judged": "2026-10-30",
      "verdict": "실질",
-     "triedAt": "2026-10-30",
+     "triedAt": "2026-11-02",
      "since": "2026-10-30",
-     "age": 0
+     "age": 3
     }
    ],
    "list": [
@@ -83,6 +84,8 @@ window.CANDIDATES = {
      "ticker": "323410",
      "name": "카카오뱅크",
      "status": "검증 대기",
+     "note": "스크린 상위 — 아직 세션 검증 전",
+     "asOf": "2026-11-02",
      "why": "3년 평균 ROIC 6.9% · 매출 성장 4.8% · 주식 수 연 0%",
      "cap": "금융 상한",
      "url": "https://m.stock.naver.com/domestic/stock/323410/total"
@@ -93,13 +96,33 @@ window.CANDIDATES = {
    "eligible": 45,
    "defects": [
     {
+     "ticker": "012450",
+     "name": "한화에어로스페이스",
+     "state": "감시",
+     "flags": [
+      {
+       "k": "tpcut",
+       "msg": "컨센서스 목표가 14일 새 -16.2% 하향 — 논거 확인",
+       "fresh": false
+      }
+     ],
+     "note": "3분기 지상방산 납품 일정 조정으로 영업이익이 기대에 못 미쳤고 회사는 4분기 납품 집중으로 만회를 예상한다. 증권사 목표가 하향은 시점 조정이라 논거 훼손은 아니다.",
+     "judged": "2026-11-02",
+     "verdict": "형식"
+    },
+    {
      "ticker": "329180",
      "name": "HD현대중공업",
      "state": "감시",
      "flags": [
       {
+       "k": "trend",
+       "msg": "추세 붕괴(단·중·장기 모두 매도 이하)",
+       "fresh": false
+      },
+      {
        "k": "tpcut",
-       "msg": "컨센서스 목표가 14일 새 -25.9% 하향 — 논거 확인",
+       "msg": "컨센서스 목표가 14일 새 -27.5% 하향 — 논거 확인",
        "fresh": false
       }
      ],
@@ -121,6 +144,21 @@ window.CANDIDATES = {
      ],
      "note": "3분기 매출 +18.5%·영업이익 +15.1%에 수주잔고도 늘었다. 3분기 수주는 전분기보다 줄었고 환율 하락이 수익성 부담으로 언급됐으며 실적 역성장·논거 훼손은 확인되지 않았다.",
      "judged": "2026-10-29",
+     "verdict": "형식"
+    },
+    {
+     "ticker": "267250",
+     "name": "HD현대",
+     "state": "감시",
+     "flags": [
+      {
+       "k": "tpcut",
+       "msg": "컨센서스 목표가 14일 새 -13.7% 하향 — 논거 확인",
+       "fresh": false
+      }
+     ],
+     "note": "3분기 영업이익이 컨센서스를 밑돌았으나 조선 부문이 실적을 이끌었고 감소분은 정유 계열 영향이 컸다. 증권사 목표가 하향은 실적 하회 조정이라 논거 훼손은 아니다.",
+     "judged": "2026-11-02",
      "verdict": "형식"
     },
     {
@@ -275,13 +313,13 @@ window.CANDIDATES = {
        "fresh": false
       },
       {
-       "k": "drop",
-       "msg": "5거래일 -13.5%(시장 중앙값 -0.7%) 급락 — 원인 확인",
+       "k": "tpcut",
+       "msg": "컨센서스 목표가 14일 새 -22.4% 하향 — 논거 확인",
        "fresh": false
       }
      ],
-     "note": "3분기 영업이익은 합병 전 두 회사 합산 전년보다 23.9% 늘었다. 순이익은 환율 하락에 따른 외화채권 환산 손실로 줄었고 급락은 그 발표와 같은 시기였다. 영업 실적과 논거는 유지됐다.",
-     "judged": "2026-10-29",
+     "note": "합병 뒤 첫 분기 영업이익은 합산 전년보다 늘었고 순이익 감소는 외화채권 환산 손실 때문이다. 증권사 목표가 하향은 급락한 주가와 합병 효과 재산정이 겹친 조정이라 논거 훼손은 아니다.",
+     "judged": "2026-11-02",
      "verdict": "형식"
     },
     {
@@ -429,9 +467,9 @@ window.CANDIDATES = {
      ],
      "note": "중복 편성 — 우량 주제에 남기고 이 주제는 다른 종목으로 교체",
      "dup": "core",
-     "triedAt": "2026-10-30",
+     "triedAt": "2026-11-02",
      "since": "2026-10-21",
-     "age": 9
+     "age": 12
     },
     {
      "ticker": "029780",
@@ -528,6 +566,8 @@ window.CANDIDATES = {
      "ticker": "001800",
      "name": "오리온홀딩스",
      "status": "검증 대기",
+     "note": "스크린 상위 — 아직 세션 검증 전",
+     "asOf": "2026-11-02",
      "why": "배당 비감소 4년 · 배당성향 54.7% · 배당 4.8%",
      "url": "https://m.stock.naver.com/domestic/stock/001800/total"
     },
@@ -535,6 +575,8 @@ window.CANDIDATES = {
      "ticker": "005380",
      "name": "현대차",
      "status": "검증 대기",
+     "note": "스크린 상위 — 아직 세션 검증 전",
+     "asOf": "2026-11-02",
      "why": "배당 비감소 0년 · 배당성향 27.7% · 배당 3.6%",
      "url": "https://m.stock.naver.com/domestic/stock/005380/total"
     },
@@ -676,13 +718,7 @@ window.CANDIDATES = {
      "ticker": "META",
      "name": "Meta Platforms",
      "state": "감시",
-     "flags": [
-      {
-       "k": "earn",
-       "msg": "실적 발표(10/21) · EPS 서프라이즈 13.5% — 가이던스·논거 확인",
-       "fresh": false
-      }
-     ],
+     "flags": [],
      "note": "3분기 실적 발표(10/21) 후 법적 비용 98.9억 달러와 capex 확대 계획, 비의결권 신규 주식 발표로 5거래일 -11.9% 하락했다. 매출 성장은 유지돼 비의결권 주식의 규모·용도와 희석 여부 확인 전까지 감시한다.",
      "judged": "2026-10-22",
      "verdict": "형식",
@@ -731,7 +767,7 @@ window.CANDIDATES = {
       },
       {
        "k": "earn",
-       "msg": "실적 발표(10/28) · EPS 서프라이즈 -8.9% · 전년 대비 EBIT -19.6% — 가이던스·논거 확인",
+       "msg": "실적 발표(10/28) · EPS 서프라이즈 -8.9% · 전년 대비 EBIT -17.6% — 가이던스·논거 확인",
        "fresh": false
       },
       {
@@ -850,11 +886,6 @@ window.CANDIDATES = {
        "k": "theme",
        "msg": "주제 기준 미달 — 매출 역성장(가치 함정)",
        "fresh": false
-      },
-      {
-       "k": "earn",
-       "msg": "실적 발표(10/20) · EPS 서프라이즈 4.2% — 가이던스·논거 확인",
-       "fresh": false
       }
      ],
      "note": "10/20 3분기 EPS가 예상을 4.2% 웃돌았다 — 가이던스·GAAP 이익 확인 전까지 감시.",
@@ -869,7 +900,7 @@ window.CANDIDATES = {
      "flags": [
       {
        "k": "earn",
-       "msg": "실적 발표(10/29) · EPS 서프라이즈 4.1% · 전년 대비 EBIT -1% — 가이던스·논거 확인",
+       "msg": "실적 발표(10/29) · EPS 서프라이즈 4.1% · 전년 대비 EBIT -2.9% — 가이던스·논거 확인",
        "fresh": false
       }
      ],
@@ -1029,11 +1060,6 @@ window.CANDIDATES = {
        "k": "theme",
        "msg": "주제 기준 미달 — 정체성 조건 미달",
        "fresh": false
-      },
-      {
-       "k": "earn",
-       "msg": "실적 발표(10/22) · EPS 서프라이즈 6.4% · 전년 대비 EBIT -11% — 가이던스·논거 확인",
-       "fresh": false
       }
      ],
      "note": "2분기 EBIT 감소로 주제 기준 미달 신호가 떴지만, 10월 22일 3분기 매출 +11%·EPS 7.97달러(전년 6.95달러)로 4개 부문이 모두 성장하고 수주잔고가 사상 최대로 늘었으며 연간 매출·EPS·잉여현금흐름 전망을 다시 올려 실질 결격은 아니다.",
@@ -1134,9 +1160,9 @@ window.CANDIDATES = {
  "summary": {
   "review": 0,
   "defect": 4,
-  "watch": 20,
+  "watch": 22,
   "untried": 0,
   "dup": 2,
-  "long": 0
+  "long": 1
  }
 };
