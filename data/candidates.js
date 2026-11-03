@@ -2,13 +2,13 @@
 // groups["<country>|<theme>"] = {defects 편성 결격(state 결격|점검 필요|감시), list 후보(status 검증 통과|보류|검증 대기)}
 // 세션 판정은 data/candidate-notes.json(CLAUDE.md §3-7) — 이 파일을 직접 고치지 않는다.
 window.CANDIDATES = {
- "asOf": "2026-11-02",
+ "asOf": "2026-11-03",
  "T": "2026-11-02",
  "screenAsOf": "2026-11-02",
  "screenFresh": true,
  "beta": {
   "korea": 0.68,
-  "us": 0.99
+  "us": 0.98
  },
  "groups": {
   "korea|core": {
@@ -54,20 +54,23 @@ window.CANDIDATES = {
     {
      "ticker": "278470",
      "name": "에이피알",
-     "state": "결격",
+     "state": "점검 필요",
      "flags": [
       {
        "k": "trend",
        "msg": "추세 붕괴(단·중·장기 모두 매도 이하)",
        "fresh": false
+      },
+      {
+       "k": "tpcut",
+       "msg": "컨센서스 목표가 14일 새 -10% 하향 — 논거 확인",
+       "fresh": true
       }
      ],
      "note": "실적 발표 전(10/30) — 직전 분기까지 매출 성장 유지, 추세 붕괴와 목표가 하향은 기존 판정 유지",
      "judged": "2026-10-30",
      "verdict": "실질",
-     "triedAt": "2026-11-02",
-     "since": "2026-10-30",
-     "age": 3
+     "triedAt": "2026-11-02"
     }
    ],
    "list": [
@@ -94,13 +97,28 @@ window.CANDIDATES = {
    "eligible": 44,
    "defects": [
     {
+     "ticker": "298040",
+     "name": "효성중공업",
+     "state": "점검 필요",
+     "flags": [
+      {
+       "k": "tpcut",
+       "msg": "컨센서스 목표가 14일 새 -13% 하향 — 논거 확인",
+       "fresh": true
+      }
+     ],
+     "note": "3분기 건설 부문 일회성 원가 반영 전망(중공업 부문은 증익 예상) — 확정 실적 확인 전까지 감시",
+     "judged": "2026-10-18",
+     "verdict": "형식"
+    },
+    {
      "ticker": "012450",
      "name": "한화에어로스페이스",
      "state": "감시",
      "flags": [
       {
        "k": "tpcut",
-       "msg": "컨센서스 목표가 14일 새 -16.2% 하향 — 논거 확인",
+       "msg": "컨센서스 목표가 14일 새 -19.2% 하향 — 논거 확인",
        "fresh": false
       }
      ],
@@ -151,21 +169,12 @@ window.CANDIDATES = {
      "flags": [
       {
        "k": "tpcut",
-       "msg": "컨센서스 목표가 14일 새 -13.7% 하향 — 논거 확인",
+       "msg": "컨센서스 목표가 14일 새 -18.3% 하향 — 논거 확인",
        "fresh": false
       }
      ],
      "note": "3분기 영업이익이 컨센서스를 밑돌았으나 조선 부문이 실적을 이끌었고 감소분은 정유 계열 영향이 컸다. 증권사 목표가 하향은 실적 하회 조정이라 논거 훼손은 아니다.",
      "judged": "2026-11-02",
-     "verdict": "형식"
-    },
-    {
-     "ticker": "298040",
-     "name": "효성중공업",
-     "state": "감시",
-     "flags": [],
-     "note": "3분기 건설 부문 일회성 원가 반영 전망(중공업 부문은 증익 예상) — 확정 실적 확인 전까지 감시",
-     "judged": "2026-10-18",
      "verdict": "형식"
     }
    ],
@@ -280,7 +289,13 @@ window.CANDIDATES = {
      "ticker": "000270",
      "name": "기아",
      "state": "감시",
-     "flags": [],
+     "flags": [
+      {
+       "k": "tpcut",
+       "msg": "컨센서스 목표가 14일 새 -13.9% 하향 — 논거 확인",
+       "fresh": false
+      }
+     ],
      "note": "실적 발표 당일(10/30) 확정치 미확인 — 직전 분기 영업이익 흑자 유지, 원재료·믹스 부담은 기존 판정 유지",
      "judged": "2026-10-30",
      "verdict": "형식",
@@ -1187,9 +1202,9 @@ window.CANDIDATES = {
   }
  },
  "summary": {
-  "review": 0,
-  "defect": 4,
-  "watch": 23,
+  "review": 2,
+  "defect": 3,
+  "watch": 22,
   "untried": 0,
   "dup": 2,
   "long": 1

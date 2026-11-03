@@ -1,7 +1,7 @@
 // 자동 생성 — scripts/coverage.js --emit (refresh-quotes Action, 토큰 0)
 // 앱 상단 '데이터 신선도' 패널이 읽는다. 직접 수정하지 말 것.
 window.COVERAGE_STATUS = {
- "asOf": "2026-11-02",
+ "asOf": "2026-11-03",
  "T": "2026-11-02",
  "total": 103,
  "cycleDays": 7,
@@ -65,9 +65,9 @@ window.COVERAGE_STATUS = {
   {
    "key": "defects",
    "label": "결격 점검",
-   "done": 1,
+   "done": 0,
    "total": 1,
-   "ok": true
+   "ok": false
   }
  ],
  "rotation": [
@@ -76,33 +76,33 @@ window.COVERAGE_STATUS = {
    "label": "목표가 재검증",
    "fresh": 103,
    "total": 103,
-   "oldestDays": 5,
+   "oldestDays": 6,
    "ok": true
   },
   {
    "key": "discovery",
    "label": "신규 후보 탐색",
-   "fresh": 8,
+   "fresh": 0,
    "total": 8,
    "unit": "그룹",
-   "oldestDays": 7,
-   "ok": true
+   "oldestDays": 8,
+   "ok": false
   },
   {
    "key": "deepDiscovery",
    "label": "주간 심층 발굴",
-   "fresh": 1,
+   "fresh": 0,
    "total": 1,
    "unit": "회",
-   "oldestDays": 7,
-   "ok": true
+   "oldestDays": 8,
+   "ok": false
   },
   {
    "key": "aiTarget",
    "label": "AI 적정가 재시도",
    "fresh": 103,
    "total": 103,
-   "oldestDays": 11,
+   "oldestDays": 12,
    "ok": true
   },
   {
@@ -111,9 +111,9 @@ window.COVERAGE_STATUS = {
    "fresh": 8,
    "total": 8,
    "unit": "그룹",
-   "oldestDays": 3,
+   "oldestDays": 4,
    "ok": true
   }
  ],
- "ok": true
+ "ok": false
 };
