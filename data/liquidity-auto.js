@@ -5,151 +5,151 @@ window.LIQUIDITY_AUTO = {
  "asOf": "2026-11-03",
  "note": "Yahoo 시장지표 기반 자동 baseline(금리·일드커브·VIX·HY신용·달러·원달러·코스피). 거시 이벤트·내러티브는 미반영 — 온디맨드 유동성이 보정.",
  "inputs": {
-  "us10y": "4.89",
-  "curve": "0.91",
-  "vix": "21.1",
-  "hyg20": "-0.1",
+  "us10y": "4.95",
+  "curve": "0.93",
+  "vix": "20.8",
+  "hyg20": "-0.4",
   "dxy": "101.8",
   "usdkrw": "1326"
  },
  "us": {
   "shortTerm": "우호",
   "midTerm": "부정",
-  "shortScore": 0.54,
-  "midScore": -0.73,
+  "shortScore": 0.75,
+  "midScore": -0.61,
   "drivers": [
    "10Y 추세 (+2)",
    "일드커브 (+2)",
-   "VIX 21.1 (−1)",
+   "VIX 20.8 (·0)",
    "HY 신용(20d) (·0)"
   ]
  },
  "korea": {
   "shortTerm": "매우 부정",
   "midTerm": "부정",
-  "shortScore": -0.42,
-  "midScore": -0.72,
+  "shortScore": -0.24,
+  "midScore": -0.59,
   "drivers": [
    "⚠ 코스피 급락 floor 발동 (20일 -19%)",
    "코스피 모멘텀(20d) (−2)",
    "원/달러 추세 (+1)",
-   "글로벌 변동성 VIX (−1)",
+   "글로벌 변동성 VIX (·0)",
    "글로벌 신용(20d) (·0)"
   ]
  },
  "fed": {
   "asOf": "2026-11-03",
-  "current": 3.882,
+  "current": 3.88,
   "meetings": [
    {
     "date": "2026-12-09",
-    "rate": 4.069,
-    "stepBp": 18.7,
-    "cumBp": 18.7,
+    "rate": 4.077,
+    "stepBp": 19.7,
+    "cumBp": 19.7,
     "outcomes": [
      {
       "n": 1,
-      "p": 75
+      "p": 79
      },
      {
       "n": 0,
-      "p": 25
+      "p": 21
      }
     ]
    },
    {
     "date": "2027-01-27",
-    "rate": 4.135,
-    "stepBp": 6.6,
-    "cumBp": 25.3,
+    "rate": 4.15,
+    "stepBp": 7.3,
+    "cumBp": 27,
     "outcomes": [
      {
       "n": 1,
-      "p": 99
+      "p": 92
      },
      {
       "n": 2,
-      "p": 1
+      "p": 8
      }
     ]
    },
    {
     "date": "2027-03-17",
-    "rate": 4.279,
+    "rate": 4.294,
     "stepBp": 14.4,
-    "cumBp": 39.6,
+    "cumBp": 41.4,
+    "outcomes": [
+     {
+      "n": 2,
+      "p": 66
+     },
+     {
+      "n": 1,
+      "p": 34
+     }
+    ]
+   },
+   {
+    "date": "2027-04-28",
+    "rate": 4.37,
+    "stepBp": 7.6,
+    "cumBp": 49,
+    "outcomes": [
+     {
+      "n": 2,
+      "p": 96
+     },
+     {
+      "n": 1,
+      "p": 4
+     }
+    ]
+   },
+   {
+    "date": "2027-06-09",
+    "rate": 4.456,
+    "stepBp": 8.6,
+    "cumBp": 57.6,
+    "outcomes": [
+     {
+      "n": 2,
+      "p": 70
+     },
+     {
+      "n": 3,
+      "p": 30
+     }
+    ]
+   },
+   {
+    "date": "2027-07-28",
+    "rate": 4.485,
+    "stepBp": 2.9,
+    "cumBp": 60.5,
     "outcomes": [
      {
       "n": 2,
       "p": 58
      },
      {
-      "n": 1,
+      "n": 3,
       "p": 42
      }
     ]
    },
    {
-    "date": "2027-04-28",
-    "rate": 4.34,
-    "stepBp": 6.1,
-    "cumBp": 45.7,
-    "outcomes": [
-     {
-      "n": 2,
-      "p": 83
-     },
-     {
-      "n": 1,
-      "p": 17
-     }
-    ]
-   },
-   {
-    "date": "2027-06-09",
-    "rate": 4.426,
-    "stepBp": 8.6,
-    "cumBp": 54.3,
-    "outcomes": [
-     {
-      "n": 2,
-      "p": 83
-     },
-     {
-      "n": 3,
-      "p": 17
-     }
-    ]
-   },
-   {
-    "date": "2027-07-28",
-    "rate": 4.44,
-    "stepBp": 1.4,
-    "cumBp": 55.8,
-    "outcomes": [
-     {
-      "n": 2,
-      "p": 77
-     },
-     {
-      "n": 3,
-      "p": 23
-     }
-    ]
-   },
-   {
     "date": "2027-09-15",
-    "rate": 4.47,
+    "rate": 4.515,
     "stepBp": 3,
-    "cumBp": 58.8,
+    "cumBp": 63.5,
     "outcomes": [
      {
-      "n": 2,
-      "p": 65
+      "n": 3,
+      "p": 54
      },
      {
-      "n": 3,
-      "p": 35
+      "n": 2,
+      "p": 46
      }
     ]
    }
@@ -157,11 +157,11 @@ window.LIQUIDITY_AUTO = {
   "source": "CBOT 연방기금금리 선물(ZQ, 야후) — 월물 가격으로 회의별 기대 금리를 푼 값(CME FedWatch 방식)"
  },
  "bok": {
-  "asOf": "2026-11-02",
+  "asOf": "2026-11-03",
   "base": 3,
   "call": 3.041,
   "cd91": 3.34,
-  "y1": 3.561,
+  "y1": 3.553,
   "y2": 3.697,
   "y3": 3.744,
   "exp3m": {
@@ -171,8 +171,8 @@ window.LIQUIDITY_AUTO = {
    "label": "3개월 동결 우세 — 인상 쪽으로 기움"
   },
   "exp12m": {
-   "rate": 3.511,
-   "chg": 0.511,
+   "rate": 3.503,
+   "chg": 0.503,
    "sd": 0.17,
    "label": "1년 인상 기대 — 기간 평균 금리가 지금보다 인상 약 2.0회분 높다"
   },
@@ -181,32 +181,32 @@ window.LIQUIDITY_AUTO = {
  "rateModel": {
   "validatedAt": "2026-10-20",
   "us": {
-   "asOf": "2026-10-30",
+   "asOf": "2026-11-02",
    "policy": 3.88,
    "forecasts": [
     {
      "h": 3,
-     "rate": 4.15,
-     "chg": 0.27,
+     "rate": 4.19,
+     "chg": 0.31,
      "rmse": 0.33,
      "noChangeRmse": 0.47,
-     "market": 3.99
+     "market": 4.03
     },
     {
      "h": 6,
-     "rate": 4.35,
-     "chg": 0.47,
+     "rate": 4.41,
+     "chg": 0.53,
      "rmse": 0.52,
      "noChangeRmse": 0.86,
-     "market": 4.11
+     "market": 4.14
     },
     {
      "h": 12,
-     "rate": 4.53,
-     "chg": 0.65,
+     "rate": 4.58,
+     "chg": 0.7,
      "rmse": 1.08,
      "noChangeRmse": 1.53,
-     "market": 4.36
+     "market": 4.38
     }
    ],
    "taylor": {
