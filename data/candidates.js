@@ -3,7 +3,7 @@
 // 세션 판정은 data/candidate-notes.json(CLAUDE.md §3-7) — 이 파일을 직접 고치지 않는다.
 window.CANDIDATES = {
  "asOf": "2026-11-03",
- "T": "2026-11-02",
+ "T": "2026-11-03",
  "screenAsOf": "2026-11-02",
  "screenFresh": true,
  "beta": {
@@ -30,7 +30,7 @@ window.CANDIDATES = {
      "verdict": "실질",
      "triedAt": "2026-11-02",
      "since": "2026-10-18",
-     "age": 15,
+     "age": 16,
      "long": 1
     },
     {
@@ -49,12 +49,12 @@ window.CANDIDATES = {
      "dup": "value",
      "triedAt": "2026-11-02",
      "since": "2026-10-21",
-     "age": 12
+     "age": 13
     },
     {
      "ticker": "278470",
      "name": "에이피알",
-     "state": "점검 필요",
+     "state": "결격",
      "flags": [
       {
        "k": "trend",
@@ -62,15 +62,22 @@ window.CANDIDATES = {
        "fresh": false
       },
       {
+       "k": "drop",
+       "msg": "5거래일 -11.5%(시장 중앙값 0.6%) 급락 — 원인 확인",
+       "fresh": false
+      },
+      {
        "k": "tpcut",
        "msg": "컨센서스 목표가 14일 새 -10% 하향 — 논거 확인",
-       "fresh": true
+       "fresh": false
       }
      ],
-     "note": "실적 발표 전(10/30) — 직전 분기까지 매출 성장 유지, 추세 붕괴와 목표가 하향은 기존 판정 유지",
-     "judged": "2026-10-30",
+     "note": "실적 발표 전(10/30) — 직전 분기까지 매출 성장 유지, 추세 붕괴와 목표가 하향은 기존 판정 유지 · 새 신호: 3분기 영업이익 1,606억원(+67.1%)은 기대치를 11.5% 밑돌았으나 원화 강세·운송비 탓이다. 매출 7,731억원(+100.3%)으로 성장은 유지돼 메디큐브 인기 하락 우려 확인 전까지 감시한다.",
+     "judged": "2026-11-03",
      "verdict": "실질",
-     "triedAt": "2026-11-02"
+     "triedAt": "2026-11-02",
+     "since": "2026-10-30",
+     "age": 4
     }
    ],
    "list": [
@@ -97,28 +104,13 @@ window.CANDIDATES = {
    "eligible": 44,
    "defects": [
     {
-     "ticker": "298040",
-     "name": "효성중공업",
-     "state": "점검 필요",
-     "flags": [
-      {
-       "k": "tpcut",
-       "msg": "컨센서스 목표가 14일 새 -13% 하향 — 논거 확인",
-       "fresh": true
-      }
-     ],
-     "note": "3분기 건설 부문 일회성 원가 반영 전망(중공업 부문은 증익 예상) — 확정 실적 확인 전까지 감시",
-     "judged": "2026-10-18",
-     "verdict": "형식"
-    },
-    {
      "ticker": "012450",
      "name": "한화에어로스페이스",
      "state": "감시",
      "flags": [
       {
        "k": "tpcut",
-       "msg": "컨센서스 목표가 14일 새 -19.2% 하향 — 논거 확인",
+       "msg": "컨센서스 목표가 14일 새 -18.1% 하향 — 논거 확인",
        "fresh": false
       }
      ],
@@ -132,13 +124,8 @@ window.CANDIDATES = {
      "state": "감시",
      "flags": [
       {
-       "k": "trend",
-       "msg": "추세 붕괴(단·중·장기 모두 매도 이하)",
-       "fresh": false
-      },
-      {
        "k": "tpcut",
-       "msg": "컨센서스 목표가 14일 새 -27.5% 하향 — 논거 확인",
+       "msg": "컨센서스 목표가 14일 새 -26.8% 하향 — 논거 확인",
        "fresh": false
       }
      ],
@@ -154,7 +141,7 @@ window.CANDIDATES = {
      "flags": [
       {
        "k": "tpcut",
-       "msg": "컨센서스 목표가 14일 새 -20.6% 하향 — 논거 확인",
+       "msg": "컨센서스 목표가 14일 새 -19.6% 하향 — 논거 확인",
        "fresh": false
       }
      ],
@@ -176,6 +163,22 @@ window.CANDIDATES = {
      "note": "3분기 영업이익이 컨센서스를 밑돌았으나 조선 부문이 실적을 이끌었고 감소분은 정유 계열 영향이 컸다. 증권사 목표가 하향은 실적 하회 조정이라 논거 훼손은 아니다.",
      "judged": "2026-11-02",
      "verdict": "형식"
+    },
+    {
+     "ticker": "298040",
+     "name": "효성중공업",
+     "state": "감시",
+     "flags": [
+      {
+       "k": "tpcut",
+       "msg": "컨센서스 목표가 14일 새 -11.1% 하향 — 논거 확인",
+       "fresh": false
+      }
+     ],
+     "note": "목표가 하향은 건설 부문 일회성 원가 상승과 중동 물량 이연에 따른 3분기 실적 눈높이 하향 때문이다. 수주 증가와 이익 성장은 그대로이며, 11월 4일 실적과 노조 파업 영향 확인 전까지 감시한다.",
+     "judged": "2026-11-03",
+     "verdict": "형식",
+     "by": "ai"
     }
    ],
    "list": [
@@ -292,7 +295,7 @@ window.CANDIDATES = {
      "flags": [
       {
        "k": "tpcut",
-       "msg": "컨센서스 목표가 14일 새 -13.9% 하향 — 논거 확인",
+       "msg": "컨센서스 목표가 14일 새 -13.4% 하향 — 논거 확인",
        "fresh": false
       }
      ],
@@ -483,7 +486,7 @@ window.CANDIDATES = {
      "dup": "core",
      "triedAt": "2026-11-02",
      "since": "2026-10-21",
-     "age": 12
+     "age": 13
     },
     {
      "ticker": "029780",
@@ -1202,10 +1205,10 @@ window.CANDIDATES = {
   }
  },
  "summary": {
-  "review": 2,
-  "defect": 3,
-  "watch": 22,
-  "untried": 0,
+  "review": 0,
+  "defect": 4,
+  "watch": 23,
+  "untried": 4,
   "dup": 2,
   "long": 1
  }

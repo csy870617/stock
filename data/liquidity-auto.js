@@ -9,7 +9,7 @@ window.LIQUIDITY_AUTO = {
   "curve": "0.91",
   "vix": "21.1",
   "hyg20": "-0.1",
-  "dxy": "101.9",
+  "dxy": "101.8",
   "usdkrw": "1326"
  },
  "us": {
@@ -25,11 +25,12 @@ window.LIQUIDITY_AUTO = {
   ]
  },
  "korea": {
-  "shortTerm": "부정",
+  "shortTerm": "매우 부정",
   "midTerm": "부정",
   "shortScore": -0.42,
   "midScore": -0.72,
   "drivers": [
+   "⚠ 코스피 급락 floor 발동 (20일 -20%)",
    "코스피 모멘텀(20d) (−2)",
    "원/달러 추세 (+1)",
    "글로벌 변동성 VIX (−1)",
@@ -42,113 +43,109 @@ window.LIQUIDITY_AUTO = {
   "meetings": [
    {
     "date": "2026-12-09",
-    "rate": 4.07,
-    "stepBp": 19,
-    "cumBp": 19,
+    "rate": 4.063,
+    "stepBp": 18.3,
+    "cumBp": 18.3,
     "outcomes": [
      {
       "n": 1,
-      "p": 76
+      "p": 73
      },
      {
       "n": 0,
-      "p": 24
+      "p": 27
      }
     ]
    },
    {
     "date": "2027-01-27",
-    "rate": 4.135,
-    "stepBp": 6.5,
-    "cumBp": 25.5,
+    "rate": 4.13,
+    "stepBp": 6.7,
+    "cumBp": 25,
     "outcomes": [
      {
       "n": 1,
-      "p": 98
-     },
-     {
-      "n": 2,
-      "p": 2
+      "p": 100
      }
     ]
    },
    {
     "date": "2027-03-17",
-    "rate": 4.279,
+    "rate": 4.274,
     "stepBp": 14.4,
-    "cumBp": 39.9,
+    "cumBp": 39.4,
     "outcomes": [
      {
       "n": 2,
-      "p": 60
+      "p": 58
      },
      {
       "n": 1,
-      "p": 40
+      "p": 42
      }
     ]
    },
    {
     "date": "2027-04-28",
-    "rate": 4.345,
-    "stepBp": 6.6,
-    "cumBp": 46.5,
+    "rate": 4.335,
+    "stepBp": 6.1,
+    "cumBp": 45.5,
+    "outcomes": [
+     {
+      "n": 2,
+      "p": 82
+     },
+     {
+      "n": 1,
+      "p": 18
+     }
+    ]
+   },
+   {
+    "date": "2027-06-09",
+    "rate": 4.414,
+    "stepBp": 7.9,
+    "cumBp": 53.4,
     "outcomes": [
      {
       "n": 2,
       "p": 86
      },
      {
-      "n": 1,
+      "n": 3,
       "p": 14
      }
     ]
    },
    {
-    "date": "2027-06-09",
-    "rate": 4.431,
-    "stepBp": 8.6,
-    "cumBp": 55.1,
-    "outcomes": [
-     {
-      "n": 2,
-      "p": 80
-     },
-     {
-      "n": 3,
-      "p": 20
-     }
-    ]
-   },
-   {
     "date": "2027-07-28",
-    "rate": 4.45,
-    "stepBp": 1.9,
-    "cumBp": 57,
+    "rate": 4.435,
+    "stepBp": 2.1,
+    "cumBp": 55.5,
     "outcomes": [
      {
       "n": 2,
-      "p": 72
+      "p": 78
      },
      {
       "n": 3,
-      "p": 28
+      "p": 22
      }
     ]
    },
    {
     "date": "2027-09-15",
-    "rate": 4.49,
-    "stepBp": 4,
-    "cumBp": 61,
+    "rate": 4.455,
+    "stepBp": 2,
+    "cumBp": 57.5,
     "outcomes": [
      {
       "n": 2,
-      "p": 56
+      "p": 70
      },
      {
       "n": 3,
-      "p": 44
+      "p": 30
      }
     ]
    }
@@ -158,14 +155,14 @@ window.LIQUIDITY_AUTO = {
  "bok": {
   "asOf": "2026-11-02",
   "base": 3,
-  "call": 3.051,
-  "cd91": 3.32,
+  "call": 3.041,
+  "cd91": 3.34,
   "y1": 3.561,
-  "y2": 3.706,
-  "y3": 3.726,
+  "y2": 3.7,
+  "y3": 3.736,
   "exp3m": {
-   "rate": 3.14,
-   "chg": 0.14,
+   "rate": 3.16,
+   "chg": 0.16,
    "sd": 0.15,
    "label": "3개월 동결 우세 — 인상 쪽으로 기움"
   },
