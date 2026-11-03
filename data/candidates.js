@@ -28,7 +28,7 @@ window.CANDIDATES = {
      "note": "ROE 6%·3년 평균 ROIC 5.7%(우량 정체성 미달) — 검증 통과 대체 없음",
      "judged": "2026-10-18",
      "verdict": "실질",
-     "triedAt": "2026-11-02",
+     "triedAt": "2026-11-03",
      "since": "2026-10-18",
      "age": 16,
      "long": 1
@@ -47,7 +47,7 @@ window.CANDIDATES = {
      ],
      "note": "중복 편성 — 저평가 주제에 남기고 이 주제는 다른 종목으로 교체",
      "dup": "value",
-     "triedAt": "2026-11-02",
+     "triedAt": "2026-11-03",
      "since": "2026-10-21",
      "age": 13
     },
@@ -75,12 +75,20 @@ window.CANDIDATES = {
      "note": "실적 발표 전(10/30) — 직전 분기까지 매출 성장 유지, 추세 붕괴와 목표가 하향은 기존 판정 유지 · 새 신호: 3분기 영업이익 1,606억원(+67.1%)은 기대치를 11.5% 밑돌았으나 원화 강세·운송비 탓이다. 매출 7,731억원(+100.3%)으로 성장은 유지돼 메디큐브 인기 하락 우려 확인 전까지 감시한다.",
      "judged": "2026-11-03",
      "verdict": "실질",
-     "triedAt": "2026-11-02",
+     "triedAt": "2026-11-03",
      "since": "2026-10-30",
      "age": 4
     }
    ],
    "list": [
+    {
+     "ticker": "323410",
+     "name": "카카오뱅크",
+     "status": "보류",
+     "note": "금융 업종 상한(7)에 걸리고, 컨센서스 목표가를 신뢰 출처 2곳으로 최신 확인하지 못함 — 3분기 실적 발표 뒤 재검토.",
+     "asOf": "2026-11-03",
+     "url": "https://m.stock.naver.com/domestic/stock/323410/total"
+    },
     {
      "ticker": "042700",
      "name": "한미반도체",
@@ -89,14 +97,6 @@ window.CANDIDATES = {
      "asOf": "2026-10-26",
      "why": "3년 평균 ROIC 23.2% · 매출 성장 3.2% · 주식 수 연 -1.3%",
      "url": "https://m.stock.naver.com/domestic/stock/042700/total"
-    },
-    {
-     "ticker": "323410",
-     "name": "카카오뱅크",
-     "status": "검증 대기",
-     "note": "스크린 상위 — 아직 세션 검증 전",
-     "asOf": "2026-11-02",
-     "url": "https://m.stock.naver.com/domestic/stock/323410/total"
     }
    ]
   },
@@ -123,6 +123,11 @@ window.CANDIDATES = {
      "name": "HD현대중공업",
      "state": "감시",
      "flags": [
+      {
+       "k": "trend",
+       "msg": "추세 붕괴(단·중·장기 모두 매도 이하)",
+       "fresh": false
+      },
       {
        "k": "tpcut",
        "msg": "컨센서스 목표가 14일 새 -26.8% 하향 — 논거 확인",
@@ -484,7 +489,7 @@ window.CANDIDATES = {
      ],
      "note": "중복 편성 — 우량 주제에 남기고 이 주제는 다른 종목으로 교체",
      "dup": "core",
-     "triedAt": "2026-11-02",
+     "triedAt": "2026-11-03",
      "since": "2026-10-21",
      "age": 13
     },
@@ -1208,7 +1213,7 @@ window.CANDIDATES = {
   "review": 0,
   "defect": 4,
   "watch": 23,
-  "untried": 4,
+  "untried": 0,
   "dup": 2,
   "long": 1
  }
