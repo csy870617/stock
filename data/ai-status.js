@@ -2,88 +2,82 @@
 // 앱 'AI 연결' 창이 '매일 자동 분석' 칸에 보여 준다. 비용은 토큰 기준 추정(웹 검색은 횟수만 — 검색당 요금 별도).
 window.AI_STATUS = {
  "defects": {
-  "at": "2026-11-04T00:48:16.632Z",
+  "at": "2026-11-04T14:52:34.556Z",
   "model": "claude-sonnet-5-5",
   "ok": true,
-  "pending": 2,
-  "judged": 2,
+  "pending": 1,
+  "judged": 1,
   "items": [
    {
-    "g": "korea|core",
-    "t": "278470",
-    "name": "에이피알",
-    "verdict": "실질"
-   },
-   {
-    "g": "korea|value",
-    "t": "000270",
-    "name": "기아",
-    "verdict": "형식"
+    "g": "us|growth",
+    "t": "ANET",
+    "name": "Arista Networks",
+    "verdict": "없음"
    }
   ],
   "usage": {
-   "calls": 4,
-   "input": 89629,
-   "output": 3643,
+   "calls": 2,
+   "input": 26468,
+   "output": 1358,
    "cacheRead": 0,
-   "searches": 6,
-   "usd": 0.216
+   "searches": 3,
+   "usd": 0.067
   }
  },
  "news": {
-  "at": "2026-11-04T00:53:32.241Z",
+  "at": "2026-11-04T14:57:52.651Z",
   "model": "claude-haiku-5-5",
   "ok": true,
   "stocks": 99,
   "fetched": 99,
-  "called": 86,
-  "lines": 67,
+  "called": 85,
+  "lines": 75,
   "usage": {
-   "calls": 86,
-   "input": 132547,
-   "output": 5140,
+   "calls": 85,
+   "input": 133214,
+   "output": 5173,
    "cacheRead": 0,
    "searches": 0,
    "usd": 0.016
   }
  },
  "daily": {
-  "at": "2026-11-04T00:50:27.501Z",
-  "T": "2026-11-03",
+  "at": "2026-11-04T14:54:41.273Z",
+  "T": "2026-11-04",
   "basis": {
-   "kr": "2026-11-03",
+   "kr": "2026-11-04",
    "us": "2026-11-03"
   },
   "model": "claude-opus-5-5",
   "ok": true,
   "seen": {
-   "at": "2026-11-04T00:53:32.140Z",
+   "at": "2026-11-04T14:57:52.530Z",
    "items": {
     "market": {
-     "sig": "미국은 반도체 반등으로 나스닥이 올랐지만, 한국은 AI 빅테크 부담과 미#hwf298",
+     "sig": "미국 중간선거 개표가 양국 증시의 변동성을 키웠다. 11/03 미국은 반#c90fly",
      "basis": {
-      "kr": "2026-11-03",
+      "kr": "2026-11-04",
       "us": "2026-11-03"
      }
     },
     "liquidity": {
-     "sig": "미국은 돈이 들어오지만 연준 인상 기대가 누르는 신중 국면, 한국은 예탁#1vekho9",
+     "sig": "미국은 돈이 들어오지만 연준 인상 기대가 누르는 신중 국면이고, 한국은 #1x7btt7",
      "basis": {
-      "kr": "2026-11-03",
+      "kr": "2026-11-04",
       "us": "2026-11-03"
      }
     },
     "indexNotes": {
-     "sig": "하락세. 일목 구름 아래·전환선<기준선이고 RSI 40.1이며 MACD는#vnq0h8",
+     "sig": "하락세다. 일목 구름 아래에서 전환선이 기준선 밑에 있고 RSI는 41.#bhwosx",
      "basis": {
-      "kr": "2026-11-03",
+      "kr": "2026-11-04",
       "us": "2026-11-03"
      }
     },
     "topPicks": {
-     "sig": "300억원 규모 자사주 매입을 마쳐 밸류업 계획 이후 유통주식수가 약 7#1fcw392",
+     "sig": "300억원 규모 자사주 매입을 마쳐 밸류업 계획 이후 유통주식수가 약 7#1j0c3hg",
      "basis": {
-      "kr": "2026-11-03",
+      "kr": "2026-11-04",
       "us": "2026-11-03"
      }
     }
@@ -92,23 +86,22 @@ window.AI_STATUS = {
   "wrote": [
    "liquidity",
    "indexNotes",
-   "market",
-   "topPicks"
+   "market"
   ],
   "sig": {
-   "liquidity": "미국은 돈이 들어오지만 연준 인상 기대가 누르는 신중 국면, 한국은 예탁#1vekho9",
-   "indexNotes": "하락세. 일목 구름 아래·전환선<기준선이고 RSI 40.1이며 MACD는#vnq0h8",
-   "market": "미국은 반도체 반등으로 나스닥이 올랐지만, 한국은 AI 빅테크 부담과 미#hwf298",
+   "liquidity": "미국은 돈이 들어오지만 연준 인상 기대가 누르는 신중 국면이고, 한국은 #1x7btt7",
+   "indexNotes": "하락세다. 일목 구름 아래에서 전환선이 기준선 밑에 있고 RSI는 41.#bhwosx",
+   "market": "미국 중간선거 개표가 양국 증시의 변동성을 키웠다. 11/03 미국은 반#c90fly",
    "topPicks": "300억원 규모 자사주 매입을 마쳐 밸류업 계획 이후 유통주식수가 약 7#1fcw392"
   },
   "sources": 40,
   "usage": {
    "calls": 3,
-   "input": 292628,
-   "output": 19486,
+   "input": 312325,
+   "output": 19590,
    "cacheRead": 0,
    "searches": 6,
-   "usd": 1.56
+   "usd": 1.641
   }
  }
 };

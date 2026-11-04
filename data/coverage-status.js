@@ -23,9 +23,9 @@ window.COVERAGE_STATUS = {
   {
    "key": "indexNotes",
    "label": "지수 대응",
-   "done": 0,
+   "done": 8,
    "total": 8,
-   "ok": false
+   "ok": true
   },
   {
    "key": "topPicks",
