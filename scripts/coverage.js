@@ -382,6 +382,10 @@ if (process.argv.includes("--emit")) {
   status.daily.forEach((r) => (r.ok = r.done === r.total));
   status.rotation.forEach((r) => (r.ok = r.fresh === r.total));
   status.ok = status.daily.every((r) => r.ok) && status.rotation.every((r) => r.ok);
+  // 밀림(2026-11-04 사용자 '원인을 직접 막게') — 회전 항목이 주기+1일(8일) 넘게 밀리면 앱 상태 줄에 빨간 경고,
+  //   Action 이 backlog-alert.js 로 '업데이트 요청 — 밀린 회전' 이슈를 연다(CLAUDE.md §2·§3-5).
+  status.overdue = status.rotation.filter((r) => !r.ok && r.oldestDays != null && r.oldestDays > VERIF_CYCLE_DAYS + 1)
+    .map((r) => ({ key: r.key, label: r.label, days: r.oldestDays }));
   const out = path.join(ROOT, "data/coverage-status.js");
   fs.writeFileSync(out, "// 자동 생성 — scripts/coverage.js --emit (refresh-quotes Action, 토큰 0)\n" +
     "// 앱 상단 '데이터 신선도' 패널이 읽는다. 직접 수정하지 말 것.\n" +

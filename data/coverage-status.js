@@ -115,5 +115,17 @@ window.COVERAGE_STATUS = {
    "ok": true
   }
  ],
- "ok": false
+ "ok": false,
+ "overdue": [
+  {
+   "key": "discovery",
+   "label": "신규 후보 탐색",
+   "days": 9
+  },
+  {
+   "key": "deepDiscovery",
+   "label": "주간 심층 발굴",
+   "days": 9
+  }
+ ]
 };

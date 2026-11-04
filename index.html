@@ -335,7 +335,7 @@ svg { display: block; }
 .st-d::after { content: ""; width: 6px; height: 6px; margin: 0 2px 0 1px; border-right: 1.6px solid var(--mut); border-bottom: 1.6px solid var(--mut); transform: rotate(45deg) translateY(-2px); transition: transform .2s; }
 .fresh[open] .st-d::after { transform: rotate(-135deg) translateY(-1px); }
 .us-dot { display: inline-block; flex: none; width: 7px; height: 7px; border-radius: 50%; }
-.us-green { background: var(--acc); } .us-amber { background: #f59f00; } .us-yellow { background: #fcc419; } .us-gray { background: var(--mut); }
+.us-green { background: var(--acc); } .us-red { background: var(--warn); } .us-amber { background: #f59f00; } .us-yellow { background: #fcc419; } .us-gray { background: var(--mut); }
 .fresh-body { margin-top: 6px; margin-bottom: 4px; background: var(--sf); border-radius: 14px; padding: 12px 14px; }
 .fresh-gen { padding-bottom: 8px; margin-bottom: 8px; border-bottom: 1px solid var(--line2); color: var(--ink2); }
 .fresh-sec { font-size: 12px; font-weight: 700; color: var(--ink2); margin: 10px 0 4px; }
@@ -345,6 +345,7 @@ svg { display: block; }
 .fresh-row .fr-n { color: var(--ink); font-weight: 600; }
 .fresh-row .fr-d { min-width: 52px; text-align: right; }
 .fresh-row.bad .fr-n { color: var(--warn); }
+.fr-od { color: var(--warn); font-weight: 600; } .fresh-od { color: var(--warn); font-size: 12.5px; font-weight: 600; margin: 4px 0 6px; }
 .fresh-note { margin-top: 8px; font-size: 12px; line-height: 1.55; }
 
 /* ── 홈: 오늘의 시장 ── */
@@ -1708,7 +1709,8 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     var dailyOk = CS.daily.filter(function (r) { return r.ok; }).length;
     var rotOk = CS.rotation.filter(function (r) { return r.ok; }).length;
     // 가장 심각한 상태를 요약 점 색으로 — 매일 항목이 빠지면 그날 세션 실패, 회전만 빠지면 진행 중.
-    var dot = (dailyOk === CS.daily.length && rotOk === CS.rotation.length) ? "us-green"
+    var od = CS.overdue || [];   // 회전 항목이 8일 넘게 밀림 — 빨강으로 바로 보인다(2026-11-04)
+    var dot = od.length ? "us-red" : (dailyOk === CS.daily.length && rotOk === CS.rotation.length) ? "us-green"
             : (dailyOk < CS.daily.length ? "us-amber" : "us-yellow");
     function age(d) {
       if (d === null || d === undefined) return "기록 없음";
@@ -1721,9 +1723,10 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
         (oldest === undefined ? "" : '<span class="fr-d">' + esc(age(oldest)) + "</span>") +
         "</div>";
     }
-    sum.innerHTML = '<span class="us-dot ' + dot + '"></span>데이터 신선도';
+    sum.innerHTML = '<span class="us-dot ' + dot + '"></span>' + (od.length ? '<b class="fr-od">' + esc(od[0].label + " " + od[0].days + "일 밀림") + (od.length > 1 ? " 외 " + (od.length - 1) : "") + "</b>" : "데이터 신선도");
     sum.title = "매일 갱신 " + dailyOk + "/" + CS.daily.length + " · " + CS.cycleDays + "일 회전 " + rotOk + "/" + CS.rotation.length;
-    var h = genLine;
+    var h = genLine + (od.length ? '<div class="fresh-od">밀림 — ' + esc(od.map(function (r) { return r.label + " " + r.days + "일"; }).join(" · ")) +
+      ". 주기(" + CS.cycleDays + "일)를 넘겨 다음 정기 분석이 먼저 처리한다.</div>" : "");
     h += '<div class="fresh-sec">매일 갱신 ' + dailyOk + "/" + CS.daily.length + " (기준일 " + esc(CS.asOf) + ")</div>";
     CS.daily.forEach(function (r) { h += row(r.label, r.done, r.total, "", undefined, r.ok); });
     h += '<div class="fresh-sec">' + CS.cycleDays + "일 회전 " + rotOk + "/" + CS.rotation.length + " — 가장 오래된 항목 기준</div>";
