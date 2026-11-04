@@ -1083,10 +1083,14 @@
       },
       "TSM": {
         "verdict": "없음",
-        "note": "3분기 매출 +41%로 가이던스 상단 초과, 4분기 매출 가이던스 상향·마진 가이던스 유지",
-        "asOf": "2026-10-18",
+        "note": "하락은 10월 말 인텔 실적 충격 이후 반도체 업종 전반의 매도와 아시아 반도체 동반 약세에서 나왔다. 3분기 사상 최대 이익과 강한 AI 수요가 이어져 회사 고유의 논거 훼손은 없다.",
+        "asOf": "2026-11-04",
         "flags": [
-          "earn"
+          "drop"
+        ],
+        "sources": [
+          "https://finance.yahoo.com/markets/stocks/articles/tsmc-just-dropped-11-month-074208718.html",
+          "https://cnbc.com/2026/11/03/stock-market-today-live-updates.html"
         ]
       },
       "MU": {
@@ -1223,6 +1227,18 @@
           "https://www.sec.gov/Archives/edgar/data/0000040533/000004053326000036/gd-20261004exhibit991.htm",
           "https://www.gd.com/Articles/2026/10/30/general-dynamics-reports-third-quarter-2026-financial-results",
           "https://finimize.com/content/general-dynamics-raised-its-2026-outlook-after-a-strong-quarter"
+        ]
+      },
+      "DVN": {
+        "verdict": "없음",
+        "note": "11/2 유가가 하루 7% 넘게 급락하면서 동종 에너지주와 함께 내렸고 회사 고유 공시·악재는 없다. Coterra 합병은 5/7에 끝났고 3분기 실적은 11/5 장 마감 뒤 발표된다.",
+        "asOf": "2026-11-04",
+        "flags": [
+          "drop"
+        ],
+        "sources": [
+          "https://finance.yahoo.com/markets/stocks/articles/just-happened-devon-energy-stock-180915371.html",
+          "https://www.marketbeat.com/instant-alerts/price-devon-energy-nyse-dvn-shares-break-below-50-day-moving-average-heres-what-happened-2026-11-03/"
         ]
       }
     },
