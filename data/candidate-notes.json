@@ -656,7 +656,7 @@
           "https://www.mt.co.kr/living/2026/10/30/2026103009414075536",
           "https://www.wikitree.co.kr/articles/1170492"
         ],
-        "triedAt": "2026-11-03",
+        "triedAt": "2026-11-04",
         "since": "2026-10-30"
       },
       "028260": {
@@ -667,7 +667,7 @@
           "theme",
           "tpcut"
         ],
-        "triedAt": "2026-11-03"
+        "triedAt": "2026-11-04"
       },
       "005930": {
         "verdict": "보호",
@@ -691,7 +691,7 @@
         "verdict": "없음"
       },
       "086790": {
-        "triedAt": "2026-11-03",
+        "triedAt": "2026-11-04",
         "verdict": "실질",
         "note": "중복 편성(저평가 주제에 남김) — 이 자리의 대체 후보 검증 통과 없음",
         "flags": [
@@ -735,17 +735,16 @@
         ]
       },
       "298040": {
-        "verdict": "형식",
-        "note": "목표가 하향은 건설 부문 일회성 원가 상승과 중동 물량 이연에 따른 3분기 실적 눈높이 하향 때문이다. 수주 증가와 이익 성장은 그대로이며, 11월 4일 실적과 노조 파업 영향 확인 전까지 감시한다.",
-        "asOf": "2026-11-03",
+        "verdict": "없음",
+        "note": "3분기 매출 +7.2%·영업이익 +10.8%로 성장이 이어지고 신규 수주가 전년의 2.2배로 늘어 수주잔고가 역대 최대다. 목표가 하향은 일회성 원가와 눈높이 조정 때문이다.",
+        "asOf": "2026-11-04",
         "flags": [
-          "tpcut"
+          "tpcut",
+          "earn"
         ],
-        "by": "ai",
         "sources": [
-          "https://www.etoday.co.kr/news/view/2633630",
-          "https://www.newsway.co.kr/news/view?ud=2026110208085957745",
-          "https://www.hankyung.com/article/2026100897706"
+          "https://sateconomy.co.kr/news/view/1065616348539205",
+          "https://www.koreancenter.or.kr/news/articleView.html?idxno=1432518"
         ]
       },
       "329180": {
@@ -925,7 +924,7 @@
         "flags": [
           "dup"
         ],
-        "triedAt": "2026-11-03"
+        "triedAt": "2026-11-04"
       },
       "029780": {
         "verdict": "형식",
@@ -938,6 +937,15 @@
         "sources": [
           "https://www.ajunews.com/view/20261028081606840",
           "https://www.news2day.co.kr/article/20261028500037"
+        ]
+      },
+      "032640": {
+        "verdict": "없음",
+        "note": "11/04 3분기 실적 발표 당일이라 확정치가 검색에 아직 없고 직전 2분기는 역대 최대 영업이익이었다. 발표 후 다음 회차에 다시 본다.",
+        "asOf": "2026-11-04",
+        "flags": [
+          "earn",
+          "drop"
         ]
       }
     },
