@@ -642,6 +642,15 @@ window.CANDIDATES = {
    ],
    "list": [
     {
+     "ticker": "ETN",
+     "name": "Eaton",
+     "status": "검증 통과",
+     "note": "3분기 매출 28% 증가(유기적 19%, 가이던스 상단 초과)·부문 이익률 최고치, 연간 유기 성장 가이던스 상향. 데이터센터 수주 쏠림과 인수(Boyd Thermal·COL Group) 통합이 리스크다.",
+     "asOf": "2026-11-04",
+     "why": "매출 성장 10.3% · 주식 수 연 -2.1%",
+     "url": "https://m.stock.naver.com/worldstock/stock/ETN/total"
+    },
+    {
      "ticker": "ASML",
      "name": "ASML N.V.",
      "status": "보류",
@@ -684,13 +693,6 @@ window.CANDIDATES = {
      "status": "검증 대기",
      "why": "매출 성장 -5.4%",
      "url": "https://m.stock.naver.com/worldstock/stock/BBVA.K/total"
-    },
-    {
-     "ticker": "ETN",
-     "name": "Eaton",
-     "status": "검증 대기",
-     "why": "매출 성장 10.3% · 주식 수 연 -2.1%",
-     "url": "https://m.stock.naver.com/worldstock/stock/ETN/total"
     },
     {
      "ticker": "TD",
@@ -806,6 +808,24 @@ window.CANDIDATES = {
    ],
    "list": [
     {
+     "ticker": "VRT",
+     "name": "Vertiv",
+     "status": "검증 통과",
+     "note": "3분기 매출 61% 증가(유기적 55%)·유기 수주 두 배 이상, 연간 매출·EPS 가이던스 전 항목 상향. 4분기 높은 성장 목표 달성 여부와 AI 데이터센터 투자 의존이 리스크다.",
+     "asOf": "2026-11-04",
+     "why": "3년 매출 연평균 21.6% · FCF 마진 18.5% · 3년 평균 ROIC 23.3%",
+     "url": "https://m.stock.naver.com/worldstock/stock/VRT/total"
+    },
+    {
+     "ticker": "FAST",
+     "name": "Fastenal",
+     "status": "검증 통과",
+     "note": "3분기 일평균 매출 15.5% 증가(2분기 14.7%에서 가속)·영업이익 20% 증가·영업이익률 개선. 가격 인상 기여가 정점을 지났고 증권사 의견이 보유 중심인 점이 리스크다.",
+     "asOf": "2026-11-04",
+     "why": "3년 매출 연평균 5.5% · FCF 마진 12.8% · 3년 평균 ROIC 34.1%",
+     "url": "https://m.stock.naver.com/worldstock/stock/FAST.O/total"
+    },
+    {
      "ticker": "MNST",
      "name": "Monster Beverage",
      "status": "보류",
@@ -849,13 +869,6 @@ window.CANDIDATES = {
      "url": "https://finance.yahoo.com/quote/MCO"
     },
     {
-     "ticker": "VRT",
-     "name": "Vertiv",
-     "status": "검증 대기",
-     "why": "3년 매출 연평균 21.6% · FCF 마진 18.5% · 3년 평균 ROIC 23.3%",
-     "url": "https://m.stock.naver.com/worldstock/stock/VRT/total"
-    },
-    {
      "ticker": "ASX",
      "name": "ASE Technology",
      "status": "검증 대기",
@@ -873,13 +886,6 @@ window.CANDIDATES = {
      "name": "argenx",
      "status": "검증 대기",
      "url": "https://m.stock.naver.com/worldstock/stock/ARGX.O/total"
-    },
-    {
-     "ticker": "FAST",
-     "name": "Fastenal",
-     "status": "검증 대기",
-     "why": "3년 매출 연평균 5.5% · FCF 마진 12.8% · 3년 평균 ROIC 34.1%",
-     "url": "https://m.stock.naver.com/worldstock/stock/FAST.O/total"
     },
     {
      "ticker": "TT",
@@ -941,6 +947,15 @@ window.CANDIDATES = {
      "asOf": "2026-10-18",
      "why": "EBIT/EV 4.7% · FCF/시총 5.1% · 매출 성장 8.9%",
      "url": "https://m.stock.naver.com/worldstock/stock/TEL/total"
+    },
+    {
+     "ticker": "NTAP",
+     "name": "NetApp",
+     "status": "검증 통과",
+     "note": "1분기(FY27) 매출 30% 증가(추가 1주 제외 26%)·비GAAP EPS 66% 증가, 연간 매출·EPS 가이던스 상향. 하반기 성장 둔화 전망과 잉여현금흐름 감소·매출총이익률 하락이 리스크다.",
+     "asOf": "2026-11-04",
+     "why": "EBIT/EV 4.5% · FCF/시총 5% · 매출 성장 5.4%",
+     "url": "https://m.stock.naver.com/worldstock/stock/NTAP.O/total"
     },
     {
      "ticker": "COR",
@@ -1007,7 +1022,9 @@ window.CANDIDATES = {
     {
      "ticker": "KR",
      "name": "Kroger",
-     "status": "검증 대기",
+     "status": "보류",
+     "note": "2분기 조정 EPS 5% 증가·연간 EPS 가이던스 유지. 동일점 매출 증가가 거의 멈춰 연간 동일점 매출 가이던스를 낮췄다 — 다음 분기 동일점 매출 회복 확인 필요.",
+     "asOf": "2026-11-04",
      "why": "EBIT/EV 3.6% · FCF/시총 8.8% · 매출 성장 0.4%",
      "url": "https://m.stock.naver.com/worldstock/stock/KR/total"
     },
@@ -1024,13 +1041,6 @@ window.CANDIDATES = {
      "status": "검증 대기",
      "why": "매출 성장 2.8%",
      "url": "https://m.stock.naver.com/worldstock/stock/JPM/total"
-    },
-    {
-     "ticker": "CRM",
-     "name": "Salesforce",
-     "status": "검증 대기",
-     "why": "EBIT/EV 4.4% · FCF/시총 7.9% · 매출 성장 9.6%",
-     "url": "https://m.stock.naver.com/worldstock/stock/CRM/total"
     }
    ]
   },

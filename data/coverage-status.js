@@ -82,11 +82,11 @@ window.COVERAGE_STATUS = {
   {
    "key": "discovery",
    "label": "신규 후보 탐색",
-   "fresh": 4,
+   "fresh": 8,
    "total": 8,
    "unit": "그룹",
-   "oldestDays": 9,
-   "ok": false
+   "oldestDays": 0,
+   "ok": true
   },
   {
    "key": "deepDiscovery",
@@ -117,11 +117,6 @@ window.COVERAGE_STATUS = {
  ],
  "ok": false,
  "overdue": [
-  {
-   "key": "discovery",
-   "label": "신규 후보 탐색",
-   "days": 9
-  },
   {
    "key": "deepDiscovery",
    "label": "주간 심층 발굴",
