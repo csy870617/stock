@@ -82,7 +82,7 @@ window.COVERAGE_STATUS = {
   {
    "key": "discovery",
    "label": "신규 후보 탐색",
-   "fresh": 0,
+   "fresh": 4,
    "total": 8,
    "unit": "그룹",
    "oldestDays": 9,
@@ -100,10 +100,10 @@ window.COVERAGE_STATUS = {
   {
    "key": "aiTarget",
    "label": "AI 적정가 재시도",
-   "fresh": 103,
+   "fresh": 102,
    "total": 103,
-   "oldestDays": 10,
-   "ok": true
+   "oldestDays": null,
+   "ok": false
   },
   {
    "key": "tier",
@@ -111,7 +111,7 @@ window.COVERAGE_STATUS = {
    "fresh": 8,
    "total": 8,
    "unit": "그룹",
-   "oldestDays": 4,
+   "oldestDays": 3,
    "ok": true
   }
  ],

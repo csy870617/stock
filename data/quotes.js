@@ -147,13 +147,6 @@ window.STOCK_QUOTES = {
    "close": 653000,
    "closeDate": "2026-11-04"
   },
-  "028260": {
-   "price": 309000,
-   "date": "2026-11-04",
-   "changePct": -0.2,
-   "close": 309000,
-   "closeDate": "2026-11-04"
-  },
   "086790": {
    "price": 117100,
    "date": "2026-11-04",
@@ -348,6 +341,13 @@ window.STOCK_QUOTES = {
    "date": "2026-11-04",
    "changePct": -1.2,
    "close": 17090,
+   "closeDate": "2026-11-04"
+  },
+  "042700": {
+   "price": 186100,
+   "date": "2026-11-04",
+   "changePct": 3.4,
+   "close": 186100,
    "closeDate": "2026-11-04"
   },
   "MSFT": {
