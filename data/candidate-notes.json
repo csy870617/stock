@@ -775,14 +775,11 @@
       },
       "042700": {
         "verdict": "형식",
-        "note": "11/5 반도체 업종 동반 급락 — 3분기 매출 +8.9%·영업이익 +33.9%로 역성장이 아니고 추세 붕괴도 아니다.",
+        "note": "11/5 반도체 업종 동반 급락 — 3분기 매출 +8.9%·영업이익 +33.9%(영업이익률 50%대)로 역성장이 아니고 추세 붕괴도 아니다.",
         "asOf": "2026-11-05",
         "flags": [
-          "drop"
-        ],
-        "by": "ai",
-        "sources": [
-          "https://fnnews.com/news/202611050934410587"
+          "drop",
+          "earn"
         ]
       }
     },
@@ -1246,6 +1243,19 @@
           "https://www.bloomberg.com/news/articles/2026-10-21/meta-boosts-bet-on-ai-with-new-spending-outlook-stock-offering",
           "https://finance.yahoo.com/markets/stocks/articles/meta-stock-falls-despite-wall-195053217.html",
           "https://www.cnbc.com/2026/10/22/meta-stock-q3-earnings-free-cash-flow.html"
+        ]
+      },
+      "VRT": {
+        "verdict": "없음",
+        "note": "3분기 매출 +61%·조정 EPS +78%에 연간 가이던스 전 항목 상향. 11월 초 하락은 AI 관련주 동반 약세로 회사 고유 악재는 확인되지 않았다.",
+        "asOf": "2026-11-05",
+        "flags": [
+          "earn",
+          "drop"
+        ],
+        "sources": [
+          "https://www.sec.gov/Archives/edgar/data/0001674101/000162828026067707/q32026exhibit991vrt10282026.htm",
+          "https://stockanalysis.com/stocks/vrt/forecast/"
         ]
       }
     },

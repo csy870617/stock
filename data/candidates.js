@@ -40,23 +40,22 @@ window.CANDIDATES = {
     {
      "ticker": "042700",
      "name": "한미반도체",
-     "state": "점검 필요",
+     "state": "감시",
      "flags": [
       {
        "k": "earn",
        "msg": "실적 발표(11/05) — 가이던스·논거 확인",
-       "fresh": true
+       "fresh": false
       },
       {
        "k": "drop",
-       "msg": "5거래일 -14.1%(시장 중앙값 0.9%) 급락 — 원인 확인",
+       "msg": "5거래일 -14.1%(시장 중앙값 0.6%) 급락 — 원인 확인",
        "fresh": false
       }
      ],
-     "note": "11/5 반도체 업종 동반 급락 — 3분기 매출 +8.9%·영업이익 +33.9%로 역성장이 아니고 추세 붕괴도 아니다.",
+     "note": "11/5 반도체 업종 동반 급락 — 3분기 매출 +8.9%·영업이익 +33.9%(영업이익률 50%대)로 역성장이 아니고 추세 붕괴도 아니다.",
      "judged": "2026-11-05",
-     "verdict": "형식",
-     "by": "ai"
+     "verdict": "형식"
     }
    ],
    "list": [
@@ -177,7 +176,7 @@ window.CANDIDATES = {
       },
       {
        "k": "drop",
-       "msg": "5거래일 -12.5%(시장 중앙값 0.9%) 급락 — 원인 확인",
+       "msg": "5거래일 -12.5%(시장 중앙값 0.6%) 급락 — 원인 확인",
        "fresh": false
       }
      ],
@@ -803,23 +802,6 @@ window.CANDIDATES = {
    "eligible": 65,
    "defects": [
     {
-     "ticker": "VRT",
-     "name": "Vertiv",
-     "state": "점검 필요",
-     "flags": [
-      {
-       "k": "earn",
-       "msg": "실적 발표(10/28) · EPS 서프라이즈 21.4% — 가이던스·논거 확인",
-       "fresh": true
-      },
-      {
-       "k": "drop",
-       "msg": "5거래일 -15.4%(시장 중앙값 3.5%) 급락 — 원인 확인",
-       "fresh": true
-      }
-     ]
-    },
-    {
      "ticker": "META",
      "name": "Meta Platforms",
      "state": "감시",
@@ -1223,9 +1205,9 @@ window.CANDIDATES = {
   }
  },
  "summary": {
-  "review": 2,
+  "review": 0,
   "defect": 3,
-  "watch": 21,
+  "watch": 22,
   "untried": 0,
   "dup": 1,
   "long": 1

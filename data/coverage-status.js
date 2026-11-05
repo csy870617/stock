@@ -9,9 +9,9 @@ window.COVERAGE_STATUS = {
   {
    "key": "techNote",
    "label": "기술 대응",
-   "done": 103,
+   "done": 104,
    "total": 104,
-   "ok": false
+   "ok": true
   },
   {
    "key": "valueNote",
@@ -65,9 +65,9 @@ window.COVERAGE_STATUS = {
   {
    "key": "defects",
    "label": "결격 점검",
-   "done": 0,
+   "done": 1,
    "total": 1,
-   "ok": false
+   "ok": true
   }
  ],
  "rotation": [
@@ -85,25 +85,25 @@ window.COVERAGE_STATUS = {
    "fresh": 8,
    "total": 8,
    "unit": "그룹",
-   "oldestDays": 1,
+   "oldestDays": 0,
    "ok": true
   },
   {
    "key": "deepDiscovery",
    "label": "주간 심층 발굴",
-   "fresh": 0,
+   "fresh": 1,
    "total": 1,
    "unit": "회",
-   "oldestDays": 10,
-   "ok": false
+   "oldestDays": 0,
+   "ok": true
   },
   {
    "key": "aiTarget",
    "label": "AI 적정가 재시도",
-   "fresh": 100,
+   "fresh": 104,
    "total": 104,
-   "oldestDays": null,
-   "ok": false
+   "oldestDays": 11,
+   "ok": true
   },
   {
    "key": "tier",
@@ -111,16 +111,10 @@ window.COVERAGE_STATUS = {
    "fresh": 8,
    "total": 8,
    "unit": "그룹",
-   "oldestDays": 4,
+   "oldestDays": 2,
    "ok": true
   }
  ],
- "ok": false,
- "overdue": [
-  {
-   "key": "deepDiscovery",
-   "label": "주간 심층 발굴",
-   "days": 10
-  }
- ]
+ "ok": true,
+ "overdue": []
 };
