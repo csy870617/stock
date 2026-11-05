@@ -28,7 +28,6 @@ window.CANDIDATES = {
      ],
      "note": "중복 편성 — 저평가 주제에 남기고 이 주제는 다른 종목으로 교체",
      "dup": "value",
-     "triedAt": "2026-11-04",
      "since": "2026-10-21",
      "age": 15,
      "long": 1
@@ -49,22 +48,22 @@ window.CANDIDATES = {
        "fresh": false
       }
      ],
-     "note": "실적 발표 전(10/30) — 우량 스크린의 남은 적격 후보가 없다(한미반도체는 삼성물산 자리로 편입)",
-     "judged": "2026-11-04",
+     "note": "추세 붕괴(단·중·장기 모두 하락세) — 3분기 영업이익 1,606억원(+68.9%)이 컨센서스를 밑돌고 이익률이 20.8%로 낮아졌다. 대체 후보 삼양식품(검증 통과)은 시총 순위가 우량 스크린 범위 밖이라 14일 범위 확대 시점(11/13)에 다시 본다.",
+     "judged": "2026-11-05",
      "verdict": "실질",
-     "triedAt": "2026-11-04",
+     "triedAt": "2026-11-05",
      "since": "2026-10-30",
      "age": 6
     },
     {
      "ticker": "042700",
      "name": "한미반도체",
-     "state": "감시",
+     "state": "점검 필요",
      "flags": [
       {
        "k": "earn",
        "msg": "실적 발표(11/05) — 가이던스·논거 확인",
-       "fresh": false
+       "fresh": true
       },
       {
        "k": "drop",
@@ -72,7 +71,7 @@ window.CANDIDATES = {
        "fresh": false
       }
      ],
-     "note": "11/05 반도체 업종이 미국 데이터센터 규제 우려로 동반 약세였으나 -14.1% 낙폭은 업종만으로 설명되지 않는다. 11/05 가이던스와 개별 원인 확인 전까지 감시한다.",
+     "note": "11/5 반도체 업종 동반 급락 — 3분기 매출 +8.9%·영업이익 +33.9%로 역성장이 아니고 추세 붕괴도 아니다.",
      "judged": "2026-11-05",
      "verdict": "형식",
      "by": "ai"
@@ -80,18 +79,65 @@ window.CANDIDATES = {
    ],
    "list": [
     {
+     "ticker": "003230",
+     "name": "삼양식품",
+     "status": "검증 통과",
+     "note": "3년 평균 ROIC 19.5%·6분기 연속 영업이익률 20%대·희석 없음. 증설로 FCF 적자, β 낮음 — 에이피알 자리 14일 범위 확대 때 1순위.",
+     "asOf": "2026-11-05",
+     "url": "https://m.stock.naver.com/domestic/stock/003230/total"
+    },
+    {
+     "ticker": "259960",
+     "name": "크래프톤",
+     "status": "보류",
+     "note": "3년 평균 ROIC가 문턱 근처, 2025 영업이익 감소, 3분기 매출 감소 전망.",
+     "asOf": "2026-11-05",
+     "url": "https://m.stock.naver.com/domestic/stock/259960/total"
+    },
+    {
      "ticker": "323410",
      "name": "카카오뱅크",
      "status": "보류",
      "note": "금융 업종 상한(7)에 걸리고, 컨센서스 목표가를 신뢰 출처 2곳으로 최신 확인하지 못함 — 3분기 실적 발표 뒤 재검토.",
      "asOf": "2026-11-03",
      "url": "https://m.stock.naver.com/domestic/stock/323410/total"
+    },
+    {
+     "ticker": "062040",
+     "name": "산일전기",
+     "status": "보류",
+     "note": "우량 숫자는 충족(3년 평균 ROIC 22.8%·부채비율 16%)하지만 3분기 실적 발표 전이고 10월 하순 이후 급락 원인 미확인.",
+     "asOf": "2026-11-05",
+     "url": "https://m.stock.naver.com/domestic/stock/062040/total"
     }
    ]
   },
   "korea|growth": {
    "eligible": 45,
    "defects": [
+    {
+     "ticker": "329180",
+     "name": "HD현대중공업",
+     "state": "결격",
+     "flags": [
+      {
+       "k": "trend",
+       "msg": "추세 붕괴(단·중·장기 모두 매도 이하)",
+       "fresh": false
+      },
+      {
+       "k": "tpcut",
+       "msg": "컨센서스 목표가 14일 새 -24.8% 하향 — 논거 확인",
+       "fresh": false
+      }
+     ],
+     "note": "추세 붕괴(단·중기 강한 하락세·장기 하락세) — 3분기 영업이익 +61.3%로 실적은 견조하지만 모회사 교환사채 물량 부담이 남았다. 대체 후보 ISC는 3분기 수치를 신뢰 출처 2곳으로 확인하지 못했고 산일전기는 3분기 발표 전이라 보류.",
+     "judged": "2026-11-05",
+     "verdict": "실질",
+     "triedAt": "2026-11-05",
+     "since": "2026-10-30",
+     "age": 6
+    },
     {
      "ticker": "012450",
      "name": "한화에어로스페이스",
@@ -106,27 +152,6 @@ window.CANDIDATES = {
      "note": "3분기 지상방산 납품 일정 조정으로 영업이익이 기대에 못 미쳤고 회사는 4분기 납품 집중으로 만회를 예상한다. 증권사 목표가 하향은 시점 조정이라 논거 훼손은 아니다.",
      "judged": "2026-11-02",
      "verdict": "형식"
-    },
-    {
-     "ticker": "329180",
-     "name": "HD현대중공업",
-     "state": "감시",
-     "flags": [
-      {
-       "k": "trend",
-       "msg": "추세 붕괴(단·중·장기 모두 매도 이하)",
-       "fresh": false
-      },
-      {
-       "k": "tpcut",
-       "msg": "컨센서스 목표가 14일 새 -24.8% 하향 — 논거 확인",
-       "fresh": false
-      }
-     ],
-     "note": "조선 업종 목표가 하향은 3분기 조업일수 감소와 원화 강세 영향 — 수주 잔고 논거는 유지",
-     "judged": "2026-10-30",
-     "verdict": "형식",
-     "triedAt": "2026-10-30"
     },
     {
      "ticker": "267260",
@@ -182,16 +207,6 @@ window.CANDIDATES = {
    ],
    "list": [
     {
-     "ticker": "443060",
-     "name": "HD현대마린솔루션",
-     "status": "검증 통과",
-     "note": "3년 평균 ROIC 33%·FCF 마진 15.5% — HD현대그룹 상한으로 현재 불가, 계열 종목 결격 시 계열 내 교체용",
-     "asOf": "2026-10-23",
-     "why": "3년 매출 연평균 14.1% · FCF 마진 15.5% · 3년 평균 ROIC 33.3%",
-     "cap": "HD현대그룹 상한",
-     "url": "https://m.stock.naver.com/domestic/stock/443060/total"
-    },
-    {
      "ticker": "161890",
      "name": "한국콜마",
      "status": "보류",
@@ -199,6 +214,34 @@ window.CANDIDATES = {
      "asOf": "2026-10-18",
      "why": "3년 매출 연평균 13.4% · FCF 마진 4.7% · 3년 평균 ROIC 7.5%",
      "url": "https://m.stock.naver.com/domestic/stock/161890/total"
+    },
+    {
+     "ticker": "319660",
+     "name": "피에스케이",
+     "status": "보류",
+     "note": "3년 매출 연평균 음수로 성장 지속성 미달, 3분기 실적·컨센서스 2곳 미확인.",
+     "asOf": "2026-11-05",
+     "why": "3년 매출 연평균 -0.3% · FCF 마진 9.4% · 3년 평균 ROIC 11.9%",
+     "url": "https://m.stock.naver.com/domestic/stock/319660/total"
+    },
+    {
+     "ticker": "403870",
+     "name": "HPSP",
+     "status": "보류",
+     "note": "최근 연도·분기 매출 역성장 — 성장 재개 확인 뒤 재검토.",
+     "asOf": "2026-11-05",
+     "why": "3년 매출 연평균 2.8% · FCF 마진 56.6% · 3년 평균 ROIC 25.2%",
+     "url": "https://m.stock.naver.com/domestic/stock/403870/total"
+    },
+    {
+     "ticker": "443060",
+     "name": "HD현대마린솔루션",
+     "status": "보류",
+     "note": "3분기 영업이익 +2.2%로 컨센서스 하회, HD현대그룹 상한·β 낮음 — 계열 내 대체안.",
+     "asOf": "2026-11-05",
+     "why": "3년 매출 연평균 14.1% · FCF 마진 15.5% · 3년 평균 ROIC 33.3%",
+     "cap": "HD현대그룹 상한",
+     "url": "https://m.stock.naver.com/domestic/stock/443060/total"
     },
     {
      "ticker": "003230",
@@ -251,8 +294,8 @@ window.CANDIDATES = {
      "ticker": "062040",
      "name": "산일전기",
      "status": "보류",
-     "note": "데이터센터·신재생·ESS용 특수변압기 수요로 1·2분기 매출·영업이익이 두 자릿수 늘고 2분기 수주가 분기 최대다. 3분기 실적 발표 전이고 컨센서스 목표가를 서로 다른 집계 2곳으로 확인하지 못했다.",
-     "asOf": "2026-11-04",
+     "note": "성장 지표 최상위(3년 매출 연평균 67%·3년 평균 ROIC 22.8%)지만 3분기 실적 발표 전, 10월 하순 이후 급락 원인 미확인, 전력기기 편중.",
+     "asOf": "2026-11-05",
      "why": "3년 매출 연평균 67% · FCF 마진 20% · 3년 평균 ROIC 22.8%",
      "url": "https://m.stock.naver.com/domestic/stock/062040/total"
     },
@@ -260,31 +303,19 @@ window.CANDIDATES = {
      "ticker": "058470",
      "name": "리노공업",
      "status": "보류",
-     "note": "7월 62일 파업으로 3분기 매출·영업이익이 크게 줄어든 것으로 추정돼 3분기 실적과 4분기 정상화 확인 전까지 보류한다.",
-     "asOf": "2026-11-04",
+     "note": "파업 영향 3분기 감익 추정, 3분기 실적과 4분기 정상화 확인 전.",
+     "asOf": "2026-11-05",
      "why": "3년 매출 연평균 4.9% · FCF 마진 32.1% · 3년 평균 ROIC 16.8%",
      "url": "https://m.stock.naver.com/domestic/stock/058470/total"
     },
     {
-     "ticker": "403870",
-     "name": "HPSP",
-     "status": "검증 대기",
-     "why": "3년 매출 연평균 2.8% · FCF 마진 56.6% · 3년 평균 ROIC 25.2%",
-     "url": "https://m.stock.naver.com/domestic/stock/403870/total"
-    },
-    {
-     "ticker": "006260",
-     "name": "LS",
-     "status": "검증 대기",
-     "why": "3년 매출 연평균 22.1% · FCF 마진 -3% · 3년 평균 ROIC 5.9%",
-     "url": "https://m.stock.naver.com/domestic/stock/006260/total"
-    },
-    {
-     "ticker": "319660",
-     "name": "피에스케이",
-     "status": "검증 대기",
-     "why": "3년 매출 연평균 -0.3% · FCF 마진 9.4% · 3년 평균 ROIC 11.9%",
-     "url": "https://m.stock.naver.com/domestic/stock/319660/total"
+     "ticker": "095340",
+     "name": "ISC",
+     "status": "보류",
+     "note": "3분기 영업이익 +25.4%·β 1에 가까움, 컨센서스 2곳 확인. 3분기 매출 증가 둔화(+11%)와 3년 평균 ROIC가 낮고 3분기 수치의 신뢰 출처 확인 필요.",
+     "asOf": "2026-11-05",
+     "why": "3년 매출 연평균 7.2% · FCF 마진 16.3% · 3년 평균 ROIC 5.5%",
+     "url": "https://m.stock.naver.com/domestic/stock/095340/total"
     }
    ]
   },
@@ -503,7 +534,7 @@ window.CANDIDATES = {
      ],
      "note": "중복 편성 — 우량 주제에 남기고 이 주제는 다른 종목으로 교체",
      "dup": "core",
-     "triedAt": "2026-11-04",
+     "triedAt": "2026-11-05",
      "since": "2026-10-21",
      "age": 15,
      "long": 1
@@ -522,6 +553,15 @@ window.CANDIDATES = {
      "note": "3분기 순이익이 전년보다 13.5% 줄어 컨센서스를 밑돌았다. 조달·대손 비용 증가라는 업황 요인이고 증권사들은 목표가를 낮추면서도 매수 의견을 유지했으며 연간 배당은 전년과 같을 것으로 전망된다.",
      "judged": "2026-10-29",
      "verdict": "형식"
+    },
+    {
+     "ticker": "030200",
+     "name": "KT",
+     "state": "감시",
+     "flags": [],
+     "note": "1·2분기 영업이익이 전년보다 줄었지만 2025년 부동산 분양이익 기저와 해킹 보상 비용 영향이고 최저 배당 공시와 자사주 소각 계획은 유지된다.",
+     "judged": "2026-11-05",
+     "verdict": "형식"
     }
    ],
    "list": [
@@ -529,8 +569,8 @@ window.CANDIDATES = {
      "ticker": "383220",
      "name": "F&F",
      "status": "보류",
-     "note": "3분기 실적 발표 전(2분기는 컨센서스 하회, 중국 법인 성장 둔화). 테일러메이드 인수 여부 미정이고 2025 DPS를 신뢰 출처 2곳에서 확인하지 못해 보류. 비금융·비삼성 후보로 블로커 해소 시 1순위.",
-     "asOf": "2026-10-23",
+     "note": "3분기 실적 발표 전, 테일러메이드 인수 미정(자산 급증 필터 위험), 2025 DPS 신뢰 출처 2곳 미확인.",
+     "asOf": "2026-11-05",
      "why": "배당 비감소 4년 · 배당성향 25.4% · 배당 4.1%",
      "url": "https://m.stock.naver.com/domestic/stock/383220/total"
     },
@@ -538,8 +578,8 @@ window.CANDIDATES = {
      "ticker": "003690",
      "name": "코리안리",
      "status": "보류",
-     "note": "금융(편중 유지)이며 컨센서스 신뢰 출처가 한화투자증권 1곳(매수)과 미래에셋 중립으로 갈려 2곳 교차확인 불가. 2025 DPS도 미확인. 올해 1분기 대형 사고가 적어 순이익이 크게 늘었으나 사고 변동이 큰 업종.",
-     "asOf": "2026-10-23",
+     "note": "금융(편중 유지), 컨센서스 2곳 교차확인 실패.",
+     "asOf": "2026-11-05",
      "why": "배당 비감소 3년 · 배당성향 31.3% · 배당 4.1%",
      "cap": "금융 상한",
      "url": "https://m.stock.naver.com/domestic/stock/003690/total"
@@ -585,8 +625,8 @@ window.CANDIDATES = {
      "ticker": "018670",
      "name": "SK가스",
      "status": "보류",
-     "note": "배당 비감소 4년·성향 35%로 배당 조건은 충족하는 비금융 후보. 3분기 실적(10월 말~11월 초)과 컨센서스 목표가 2출처 확인 뒤 재검토, 분기 영업이익 급감의 원인 확인 필요.",
-     "asOf": "2026-10-26",
+     "note": "배당 비감소 4년이지만 LPG 트레이딩 이익 변동이 커 하방 경직성 의문, 3분기 실적 발표 전.",
+     "asOf": "2026-11-05",
      "why": "배당 비감소 4년 · 배당성향 34.5% · 배당 3.9%",
      "url": "https://m.stock.naver.com/domestic/stock/018670/total"
     },
@@ -600,21 +640,21 @@ window.CANDIDATES = {
      "url": "https://m.stock.naver.com/domestic/stock/047050/total"
     },
     {
+     "ticker": "001800",
+     "name": "오리온홀딩스",
+     "status": "보류",
+     "note": "2025 DPS 증액·중간배당·3년 800원 이상 배당 계획 확인. 지주사 연결 왜곡과 컨센서스 목표가 두 번째 출처 미확보.",
+     "asOf": "2026-11-05",
+     "why": "배당 비감소 4년 · 배당성향 54.7% · 배당 4.4%",
+     "url": "https://m.stock.naver.com/domestic/stock/001800/total"
+    },
+    {
      "ticker": "005380",
      "name": "현대자동차",
      "status": "보류",
      "note": "분기배당 유지와 연간 최소 배당 정책은 지켜지고 있지만 3분기에 연간 판매·영업이익률 목표를 낮췄고 1~3분기 누적 영업이익이 줄어 이익 안정성 확인이 더 필요하다.",
      "asOf": "2026-11-04",
      "url": "https://m.stock.naver.com/domestic/stock/005380/total"
-    },
-    {
-     "ticker": "001800",
-     "name": "오리온홀딩스",
-     "status": "검증 대기",
-     "note": "스크린 상위 — 아직 세션 검증 전",
-     "asOf": "2026-11-02",
-     "why": "배당 비감소 4년 · 배당성향 54.7% · 배당 4.4%",
-     "url": "https://m.stock.naver.com/domestic/stock/001800/total"
     },
     {
      "ticker": "024110",
@@ -791,27 +831,6 @@ window.CANDIDATES = {
      "by": "ai"
     },
     {
-     "ticker": "AMZN",
-     "name": "Amazon",
-     "state": "감시",
-     "flags": [
-      {
-       "k": "theme",
-       "msg": "주제 기준 미달 — 정체성 조건 미달",
-       "fresh": false
-      },
-      {
-       "k": "earn",
-       "msg": "실적 발표(10/29) · EPS 서프라이즈 -6% — 가이던스·논거 확인",
-       "fresh": false
-      }
-     ],
-     "note": "TTM 잉여현금흐름이 -424억달러로 3개월 전 -76억달러보다 악화됐고 장기부채는 656억에서 1,731억달러로 늘었다. 원인은 AI capex 선투자이며 AWS +39%·영업이익률 13.9%는 유지돼 FCF 추이 확인 전까지 감시한다.",
-     "judged": "2026-11-02",
-     "verdict": "형식",
-     "by": "ai"
-    },
-    {
      "ticker": "UBER",
      "name": "Uber Technologies",
      "state": "감시",
@@ -825,52 +844,9 @@ window.CANDIDATES = {
      "note": "인수 완료 시 자산 급증 가능",
      "judged": "2026-10-18",
      "verdict": "형식"
-    },
-    {
-     "ticker": "NOW",
-     "name": "ServiceNow",
-     "state": "감시",
-     "flags": [
-      {
-       "k": "trend",
-       "msg": "추세 붕괴(단·중·장기 모두 매도 이하)",
-       "fresh": false
-      },
-      {
-       "k": "earn",
-       "msg": "실적 발표(10/28) · EPS 서프라이즈 -8.9% · 전년 대비 EBIT -17.6% — 가이던스·논거 확인",
-       "fresh": false
-      },
-      {
-       "k": "drop",
-       "msg": "5거래일 -27.5%(시장 중앙값 4.4%) 급락 — 원인 확인",
-       "fresh": false
-      }
-     ],
-     "note": "10/28 실적은 구독매출 +21%로 자체 가이던스 상단을 넘고 연간 구독매출·FCF 마진 전망을 올렸으나 상향 폭이 작고 4분기 성장 둔화 전망에 주가가 크게 내렸다. 소프트웨어 AI 우려 속 급락이라 논거 훼손은 아니며 이후 실적에서 구독 성장 유지 여부를 확인한다.",
-     "judged": "2026-10-29",
-     "verdict": "형식"
     }
    ],
    "list": [
-    {
-     "ticker": "VRT",
-     "name": "Vertiv",
-     "status": "검증 통과",
-     "note": "3분기 매출 61% 증가(유기적 55%)·유기 수주 두 배 이상, 연간 매출·EPS 가이던스 전 항목 상향. 4분기 높은 성장 목표 달성 여부와 AI 데이터센터 투자 의존이 리스크다.",
-     "asOf": "2026-11-04",
-     "why": "3년 매출 연평균 21.6% · FCF 마진 18.5% · 3년 평균 ROIC 23.3%",
-     "url": "https://m.stock.naver.com/worldstock/stock/VRT/total"
-    },
-    {
-     "ticker": "FAST",
-     "name": "Fastenal",
-     "status": "검증 통과",
-     "note": "3분기 일평균 매출 15.5% 증가(2분기 14.7%에서 가속)·영업이익 20% 증가·영업이익률 개선. 가격 인상 기여가 정점을 지났고 증권사 의견이 보유 중심인 점이 리스크다.",
-     "asOf": "2026-11-04",
-     "why": "3년 매출 연평균 5.5% · FCF 마진 12.8% · 3년 평균 ROIC 34.1%",
-     "url": "https://m.stock.naver.com/worldstock/stock/FAST.O/total"
-    },
     {
      "ticker": "MNST",
      "name": "Monster Beverage",
@@ -945,6 +921,19 @@ window.CANDIDATES = {
      "status": "검증 대기",
      "why": "3년 매출 연평균 10.1% · FCF 마진 13.2% · 3년 평균 ROIC 24.6%",
      "url": "https://m.stock.naver.com/worldstock/stock/TT/total"
+    },
+    {
+     "ticker": "DELL",
+     "name": "Dell Technologies",
+     "status": "검증 대기",
+     "why": "3년 매출 연평균 3.5% · FCF 마진 7.5% · 3년 평균 ROIC 29%",
+     "url": "https://m.stock.naver.com/worldstock/stock/DELL.K/total"
+    },
+    {
+     "ticker": "RIO",
+     "name": "Rio Tinto",
+     "status": "검증 대기",
+     "url": "https://m.stock.naver.com/worldstock/stock/RIO/total"
     }
    ]
   },
@@ -1235,10 +1224,10 @@ window.CANDIDATES = {
   }
  },
  "summary": {
-  "review": 0,
-  "defect": 3,
-  "watch": 24,
-  "untried": 3,
+  "review": 1,
+  "defect": 4,
+  "watch": 21,
+  "untried": 1,
   "dup": 2,
   "long": 2
  }
