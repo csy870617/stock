@@ -3,11 +3,11 @@
 // 세션 판정은 data/candidate-notes.json(CLAUDE.md §3-7) — 이 파일을 직접 고치지 않는다.
 window.CANDIDATES = {
  "asOf": "2026-11-05",
- "T": "2026-11-04",
+ "T": "2026-11-05",
  "screenAsOf": "2026-11-05",
  "screenFresh": true,
  "beta": {
-  "korea": 0.69,
+  "korea": 0.68,
   "us": 0.96
  },
  "groups": {
@@ -30,7 +30,7 @@ window.CANDIDATES = {
      "dup": "value",
      "triedAt": "2026-11-04",
      "since": "2026-10-21",
-     "age": 14,
+     "age": 15,
      "long": 1
     },
     {
@@ -54,7 +54,28 @@ window.CANDIDATES = {
      "verdict": "실질",
      "triedAt": "2026-11-04",
      "since": "2026-10-30",
-     "age": 5
+     "age": 6
+    },
+    {
+     "ticker": "042700",
+     "name": "한미반도체",
+     "state": "감시",
+     "flags": [
+      {
+       "k": "earn",
+       "msg": "실적 발표(11/05) — 가이던스·논거 확인",
+       "fresh": false
+      },
+      {
+       "k": "drop",
+       "msg": "5거래일 -14.1%(시장 중앙값 0.4%) 급락 — 원인 확인",
+       "fresh": false
+      }
+     ],
+     "note": "11/05 반도체 업종이 미국 데이터센터 규제 우려로 동반 약세였으나 -14.1% 낙폭은 업종만으로 설명되지 않는다. 11/05 가이던스와 개별 원인 확인 전까지 감시한다.",
+     "judged": "2026-11-05",
+     "verdict": "형식",
+     "by": "ai"
     }
    ],
    "list": [
@@ -91,6 +112,11 @@ window.CANDIDATES = {
      "name": "HD현대중공업",
      "state": "감시",
      "flags": [
+      {
+       "k": "trend",
+       "msg": "추세 붕괴(단·중·장기 모두 매도 이하)",
+       "fresh": false
+      },
       {
        "k": "tpcut",
        "msg": "컨센서스 목표가 14일 새 -24.8% 하향 — 논거 확인",
@@ -141,9 +167,14 @@ window.CANDIDATES = {
        "k": "theme",
        "msg": "주제 기준 미달 — 정체성 조건 미달",
        "fresh": false
+      },
+      {
+       "k": "drop",
+       "msg": "5거래일 -12.5%(시장 중앙값 0.4%) 급락 — 원인 확인",
+       "fresh": false
       }
      ],
-     "note": "2026.06 분기 매출 +21.9%, 영업이익 +91.5%, 순이익 +90.5%로 성장 실체는 유지된다. 미달 항목이 확인되지 않아 FCF 등 정량 기준 경계값 확인 전까지 감시한다.",
+     "note": "5거래일 -12.5%로 시장 중앙값 +0.4%와 달리 급락했고, 11월 5일 효성중공업 10%대 급락 등 전력기기주가 일제히 약세였다. 일진전기 고유 악재는 확인되지 않아 원인 확인 전까지 감시한다.",
      "judged": "2026-11-05",
      "verdict": "형식",
      "by": "ai"
@@ -291,11 +322,17 @@ window.CANDIDATES = {
        "k": "theme",
        "msg": "주제 기준 미달 — 정체성 조건 미달",
        "fresh": false
+      },
+      {
+       "k": "earn",
+       "msg": "실적 발표(11/05) — 가이던스·논거 확인",
+       "fresh": false
       }
      ],
-     "note": "시총 순위 경계",
-     "judged": "2026-10-18",
-     "verdict": "형식"
+     "note": "3분기 잠정 영업이익 1,431억원(전년 대비 +120.8%), 누적 3,698억원으로 자원·물류 호조가 이어졌다. 가이던스와 컨센서스 대비 결과 확인 전까지 감시한다.",
+     "judged": "2026-11-05",
+     "verdict": "형식",
+     "by": "ai"
     },
     {
      "ticker": "267270",
@@ -468,7 +505,7 @@ window.CANDIDATES = {
      "dup": "core",
      "triedAt": "2026-11-04",
      "since": "2026-10-21",
-     "age": 14,
+     "age": 15,
      "long": 1
     },
     {
@@ -1200,8 +1237,8 @@ window.CANDIDATES = {
  "summary": {
   "review": 0,
   "defect": 3,
-  "watch": 23,
-  "untried": 0,
+  "watch": 24,
+  "untried": 3,
   "dup": 2,
   "long": 2
  }
