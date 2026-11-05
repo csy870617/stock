@@ -8,7 +8,7 @@ window.CANDIDATES = {
  "screenFresh": true,
  "beta": {
   "korea": 0.68,
-  "us": 0.96
+  "us": 0.89
  },
  "groups": {
   "korea|core": {
@@ -42,11 +42,6 @@ window.CANDIDATES = {
      "name": "한미반도체",
      "state": "감시",
      "flags": [
-      {
-       "k": "earn",
-       "msg": "실적 발표(11/05) — 가이던스·논거 확인",
-       "fresh": false
-      },
       {
        "k": "drop",
        "msg": "5거래일 -14.1%(시장 중앙값 0.6%) 급락 — 원인 확인",
@@ -333,11 +328,6 @@ window.CANDIDATES = {
       {
        "k": "theme",
        "msg": "주제 기준 미달 — 정체성 조건 미달",
-       "fresh": false
-      },
-      {
-       "k": "earn",
-       "msg": "실적 발표(11/05) — 가이던스·논거 확인",
        "fresh": false
       }
      ],
@@ -680,11 +670,6 @@ window.CANDIDATES = {
        "k": "earn",
        "msg": "실적 발표(10/28) · EPS 서프라이즈 -27.9% — 가이던스·논거 확인",
        "fresh": false
-      },
-      {
-       "k": "drop",
-       "msg": "5거래일 -11.1%(시장 중앙값 3.5%) 급락 — 원인 확인",
-       "fresh": false
       }
      ],
      "note": "10/28 실적 뒤 급락은 투자 평가손과 AI 설비투자 대비 잉여현금흐름 적자 우려 때문이다. 매출 +25%·클라우드 매출 두 배 성장·연간 capex 가이던스 유지로 사업 논거는 그대로라 형식 판정, 현금흐름 추이를 감시한다.",
@@ -820,10 +805,15 @@ window.CANDIDATES = {
        "k": "theme",
        "msg": "주제 기준 미달 — 이익 변동 큼(주제 안 상위 10%)",
        "fresh": false
+      },
+      {
+       "k": "earn",
+       "msg": "실적 발표(11/04) · EPS 서프라이즈 -73.4% — 가이던스·논거 확인",
+       "fresh": false
       }
      ],
-     "note": "인수 완료 시 자산 급증 가능",
-     "judged": "2026-10-18",
+     "note": "3분기(11/4) 총거래액 +20%(고정환율)·조정 EPS +35%로 가이던스 상단. GAAP EPS 하회는 지분 투자 평가손실 때문 — 논거 훼손 아님. 인수 완료 시 자산 급증 가능.",
+     "judged": "2026-11-05",
      "verdict": "형식"
     }
    ],
