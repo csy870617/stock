@@ -2,13 +2,13 @@
 // groups["<country>|<theme>"] = {defects 편성 결격(state 결격|점검 필요|감시), list 후보(status 검증 통과|보류|검증 대기)}
 // 세션 판정은 data/candidate-notes.json(CLAUDE.md §3-7) — 이 파일을 직접 고치지 않는다.
 window.CANDIDATES = {
- "asOf": "2026-11-04",
+ "asOf": "2026-11-05",
  "T": "2026-11-04",
- "screenAsOf": "2026-11-04",
+ "screenAsOf": "2026-11-05",
  "screenFresh": true,
  "beta": {
   "korea": 0.69,
-  "us": 0.98
+  "us": 0.96
  },
  "groups": {
   "korea|core": {
@@ -44,11 +44,6 @@ window.CANDIDATES = {
        "fresh": false
       },
       {
-       "k": "theme",
-       "msg": "주제 기준 미달 — 정체성 조건 미달",
-       "fresh": false
-      },
-      {
        "k": "tpcut",
        "msg": "컨센서스 목표가 14일 새 -10.7% 하향 — 논거 확인",
        "fresh": false
@@ -74,7 +69,7 @@ window.CANDIDATES = {
    ]
   },
   "korea|growth": {
-   "eligible": 46,
+   "eligible": 45,
    "defects": [
     {
      "ticker": "012450",
@@ -136,6 +131,22 @@ window.CANDIDATES = {
      "note": "3분기 영업이익이 컨센서스를 밑돌았으나 조선 부문이 실적을 이끌었고 감소분은 정유 계열 영향이 컸다. 증권사 목표가 하향은 실적 하회 조정이라 논거 훼손은 아니다.",
      "judged": "2026-11-02",
      "verdict": "형식"
+    },
+    {
+     "ticker": "103590",
+     "name": "일진전기",
+     "state": "감시",
+     "flags": [
+      {
+       "k": "theme",
+       "msg": "주제 기준 미달 — 정체성 조건 미달",
+       "fresh": false
+      }
+     ],
+     "note": "2026.06 분기 매출 +21.9%, 영업이익 +91.5%, 순이익 +90.5%로 성장 실체는 유지된다. 미달 항목이 확인되지 않아 FCF 등 정량 기준 경계값 확인 전까지 감시한다.",
+     "judged": "2026-11-05",
+     "verdict": "형식",
+     "by": "ai"
     }
    ],
    "list": [
@@ -224,14 +235,6 @@ window.CANDIDATES = {
      "url": "https://m.stock.naver.com/domestic/stock/058470/total"
     },
     {
-     "ticker": "042700",
-     "name": "한미반도체",
-     "status": "검증 대기",
-     "why": "3년 매출 연평균 20.7% · FCF 마진 26.7% · 3년 평균 ROIC 23.2%",
-     "alsoIn": "core",
-     "url": "https://m.stock.naver.com/domestic/stock/042700/total"
-    },
-    {
      "ticker": "403870",
      "name": "HPSP",
      "status": "검증 대기",
@@ -244,6 +247,13 @@ window.CANDIDATES = {
      "status": "검증 대기",
      "why": "3년 매출 연평균 22.1% · FCF 마진 -3% · 3년 평균 ROIC 5.9%",
      "url": "https://m.stock.naver.com/domestic/stock/006260/total"
+    },
+    {
+     "ticker": "319660",
+     "name": "피에스케이",
+     "status": "검증 대기",
+     "why": "3년 매출 연평균 -0.3% · FCF 마진 9.4% · 3년 평균 ROIC 11.9%",
+     "url": "https://m.stock.naver.com/domestic/stock/319660/total"
     }
    ]
   },
@@ -340,7 +350,7 @@ window.CANDIDATES = {
      "status": "검증 통과",
      "note": "저평가 정체성·이익 안정성·컨센 2출처 통과 — 저평가 주제에 결격이 생기면 대체 후보",
      "asOf": "2026-10-18",
-     "why": "EBIT/EV 11.9% · FCF/시총 8.9% · 매출 성장 7.3%",
+     "why": "EBIT/EV 11.6% · FCF/시총 8.7% · 매출 성장 7.3%",
      "url": "https://m.stock.naver.com/domestic/stock/271560/total"
     },
     {
@@ -349,7 +359,7 @@ window.CANDIDATES = {
      "status": "검증 통과",
      "note": "검증 통과 — 저평가 주제에 결격이 생기면 대체 후보",
      "asOf": "2026-10-18",
-     "why": "EBIT/EV 7.5% · FCF/시총 21% · 매출 성장 4.2%",
+     "why": "EBIT/EV 7.3% · FCF/시총 20.1% · 매출 성장 4.2%",
      "url": "https://m.stock.naver.com/domestic/stock/282330/total"
     },
     {
@@ -358,7 +368,7 @@ window.CANDIDATES = {
      "status": "검증 통과",
      "note": "검증 통과(관심 편성 중) — 저평가 주제에 결격이 생기면 대체 후보",
      "asOf": "2026-10-18",
-     "why": "EBIT/EV 7% · FCF/시총 8.3% · 매출 성장 2.2%",
+     "why": "EBIT/EV 6.8% · FCF/시총 7.9% · 매출 성장 2.2%",
      "url": "https://m.stock.naver.com/domestic/stock/004370/total"
     },
     {
@@ -367,7 +377,7 @@ window.CANDIDATES = {
      "status": "보류",
      "note": "기업가치의 약 70%가 삼성전자 지분(우량 편성과 노출 중복)·3분기 일회성",
      "asOf": "2026-10-18",
-     "why": "EBIT/EV 3.4% · 매출 성장 9.9%",
+     "why": "EBIT/EV 3.5% · 매출 성장 9.9%",
      "cap": "삼성그룹 상한·금융 상한",
      "url": "https://m.stock.naver.com/domestic/stock/032830/total"
     },
@@ -377,7 +387,7 @@ window.CANDIDATES = {
      "status": "보류",
      "note": "3분기 증익 유지·추정 하향 멈춤 확인 필요",
      "asOf": "2026-10-18",
-     "why": "EBIT/EV 6.2% · FCF/시총 20.8% · 매출 성장 5.5%",
+     "why": "EBIT/EV 6.2% · FCF/시총 20.2% · 매출 성장 5.5%",
      "url": "https://m.stock.naver.com/domestic/stock/004170/total"
     },
     {
@@ -386,7 +396,7 @@ window.CANDIDATES = {
      "status": "보류",
      "note": "3분기 증익 유지·컨센 2출처 확인 필요",
      "asOf": "2026-10-18",
-     "why": "EBIT/EV 7.2% · FCF/시총 17% · 매출 성장 8.2%",
+     "why": "EBIT/EV 7.2% · FCF/시총 17.7% · 매출 성장 8.2%",
      "url": "https://m.stock.naver.com/domestic/stock/018670/total"
     },
     {
@@ -404,7 +414,7 @@ window.CANDIDATES = {
      "status": "보류",
      "note": "3분기 연결 매출·영업이익이 늘었지만 지주사를 다루는 증권사가 적어 컨센서스 목표가를 두 곳에서 확인하지 못했다.",
      "asOf": "2026-11-04",
-     "why": "EBIT/EV 15.9% · FCF/시총 28.1% · 매출 성장 8.5%",
+     "why": "EBIT/EV 15.1% · FCF/시총 26.5% · 매출 성장 8.5%",
      "url": "https://m.stock.naver.com/domestic/stock/002790/total"
     },
     {
@@ -420,27 +430,27 @@ window.CANDIDATES = {
      "ticker": "012330",
      "name": "현대모비스",
      "status": "검증 대기",
-     "why": "EBIT/EV 9.6% · FCF/시총 10% · 매출 성장 6.8%",
+     "why": "EBIT/EV 9.3% · FCF/시총 9.7% · 매출 성장 6.8%",
      "url": "https://m.stock.naver.com/domestic/stock/012330/total"
+    },
+    {
+     "ticker": "081660",
+     "name": "미스토홀딩스",
+     "status": "검증 대기",
+     "why": "EBIT/EV 11.8% · FCF/시총 15.8% · 매출 성장 4.7%",
+     "url": "https://m.stock.naver.com/domestic/stock/081660/total"
     },
     {
      "ticker": "047050",
      "name": "포스코인터내셔널",
      "status": "검증 대기",
-     "why": "EBIT/EV 7.4% · FCF/시총 14.3% · 매출 성장 0.3%",
+     "why": "EBIT/EV 7.2% · FCF/시총 13.9% · 매출 성장 0.3%",
      "url": "https://m.stock.naver.com/domestic/stock/047050/total"
-    },
-    {
-     "ticker": "021240",
-     "name": "코웨이",
-     "status": "검증 대기",
-     "why": "EBIT/EV 9.3% · FCF/시총 -2.6% · 매출 성장 15.2%",
-     "url": "https://m.stock.naver.com/domestic/stock/021240/total"
     }
    ]
   },
   "korea|dividend": {
-   "eligible": 33,
+   "eligible": 31,
    "defects": [
     {
      "ticker": "000810",
@@ -484,7 +494,7 @@ window.CANDIDATES = {
      "status": "보류",
      "note": "3분기 실적 발표 전(2분기는 컨센서스 하회, 중국 법인 성장 둔화). 테일러메이드 인수 여부 미정이고 2025 DPS를 신뢰 출처 2곳에서 확인하지 못해 보류. 비금융·비삼성 후보로 블로커 해소 시 1순위.",
      "asOf": "2026-10-23",
-     "why": "배당 비감소 4년 · 배당성향 25.4% · 배당 4.3%",
+     "why": "배당 비감소 4년 · 배당성향 25.4% · 배당 4.1%",
      "url": "https://m.stock.naver.com/domestic/stock/383220/total"
     },
     {
@@ -522,7 +532,7 @@ window.CANDIDATES = {
      "status": "보류",
      "note": "8월 밸류업(배당성향 30%·자사주 매입) 확인, 지주사 연결 왜곡과 컨센서스 부재가 블로커.",
      "asOf": "2026-10-26",
-     "why": "배당 비감소 4년 · 배당성향 20.8% · 배당 3.8%",
+     "why": "배당 비감소 4년 · 배당성향 20.8% · 배당 3.6%",
      "url": "https://m.stock.naver.com/domestic/stock/009970/total"
     },
     {
@@ -531,7 +541,7 @@ window.CANDIDATES = {
      "status": "보류",
      "note": "배당 지속성은 양호하나 경영권 분쟁 소송과 실적·컨센서스 미확인.",
      "asOf": "2026-10-26",
-     "why": "배당 비감소 4년 · 배당성향 30% · 배당 4.8%",
+     "why": "배당 비감소 4년 · 배당성향 30% · 배당 4.6%",
      "url": "https://m.stock.naver.com/domestic/stock/000240/total"
     },
     {
@@ -540,7 +550,7 @@ window.CANDIDATES = {
      "status": "보류",
      "note": "배당 비감소 4년·성향 35%로 배당 조건은 충족하는 비금융 후보. 3분기 실적(10월 말~11월 초)과 컨센서스 목표가 2출처 확인 뒤 재검토, 분기 영업이익 급감의 원인 확인 필요.",
      "asOf": "2026-10-26",
-     "why": "배당 비감소 4년 · 배당성향 34.5% · 배당 3.8%",
+     "why": "배당 비감소 4년 · 배당성향 34.5% · 배당 3.9%",
      "url": "https://m.stock.naver.com/domestic/stock/018670/total"
     },
     {
@@ -549,16 +559,15 @@ window.CANDIDATES = {
      "status": "보류",
      "note": "배당 조건은 통과하나 3년 매출 역성장과 모기업 지분 매각 오버행, 컨센서스 미확인.",
      "asOf": "2026-10-26",
-     "why": "배당 비감소 4년 · 배당성향 51.4% · 배당 3.7%",
+     "why": "배당 비감소 4년 · 배당성향 51.4% · 배당 3.6%",
      "url": "https://m.stock.naver.com/domestic/stock/047050/total"
     },
     {
      "ticker": "005380",
-     "name": "현대차",
+     "name": "현대자동차",
      "status": "보류",
      "note": "분기배당 유지와 연간 최소 배당 정책은 지켜지고 있지만 3분기에 연간 판매·영업이익률 목표를 낮췄고 1~3분기 누적 영업이익이 줄어 이익 안정성 확인이 더 필요하다.",
      "asOf": "2026-11-04",
-     "why": "배당 비감소 0년 · 배당성향 27.7% · 배당 3.6%",
      "url": "https://m.stock.naver.com/domestic/stock/005380/total"
     },
     {
@@ -567,14 +576,14 @@ window.CANDIDATES = {
      "status": "검증 대기",
      "note": "스크린 상위 — 아직 세션 검증 전",
      "asOf": "2026-11-02",
-     "why": "배당 비감소 4년 · 배당성향 54.7% · 배당 4.6%",
+     "why": "배당 비감소 4년 · 배당성향 54.7% · 배당 4.4%",
      "url": "https://m.stock.naver.com/domestic/stock/001800/total"
     },
     {
      "ticker": "024110",
      "name": "기업은행",
      "status": "검증 대기",
-     "why": "배당 비감소 0년 · 배당성향 30.8% · 배당 5.5%",
+     "why": "배당 비감소 0년 · 배당성향 30.8% · 배당 5.3%",
      "cap": "금융 상한",
      "url": "https://m.stock.naver.com/domestic/stock/024110/total"
     }
@@ -689,17 +698,17 @@ window.CANDIDATES = {
     },
     {
      "ticker": "BBVA",
-     "name": "Banco Bilbao Vizcaya Argentaria S.a",
+     "name": "Banco Bilbao Vizcaya Argentaria S.A.",
      "status": "검증 대기",
      "why": "매출 성장 -5.4%",
      "url": "https://m.stock.naver.com/worldstock/stock/BBVA.K/total"
     },
     {
-     "ticker": "TD",
-     "name": "The Toronto-Dominion Bank",
+     "ticker": "XOM",
+     "name": "Exxonmobil",
      "status": "검증 대기",
-     "why": "매출 성장 -6.2%",
-     "url": "https://m.stock.naver.com/worldstock/stock/TD/total"
+     "why": "매출 성장 -5% · 주식 수 연 0.2%",
+     "url": "https://m.stock.naver.com/worldstock/stock/XOM/total"
     },
     {
      "ticker": "RY",
@@ -707,6 +716,13 @@ window.CANDIDATES = {
      "status": "검증 대기",
      "why": "매출 성장 -1.1%",
      "url": "https://m.stock.naver.com/worldstock/stock/RY/total"
+    },
+    {
+     "ticker": "TD",
+     "name": "The Toronto-Dominion Bank",
+     "status": "검증 대기",
+     "why": "매출 성장 -6.2%",
+     "url": "https://m.stock.naver.com/worldstock/stock/TD/total"
     },
     {
      "ticker": "CSCO",
@@ -721,18 +737,11 @@ window.CANDIDATES = {
      "status": "검증 대기",
      "why": "매출 성장 1.3% · 주식 수 연 -1.3%",
      "url": "https://m.stock.naver.com/worldstock/stock/MRK/total"
-    },
-    {
-     "ticker": "XOM",
-     "name": "Exxonmobil",
-     "status": "검증 대기",
-     "why": "매출 성장 -5% · 주식 수 연 0.2%",
-     "url": "https://m.stock.naver.com/worldstock/stock/XOM/total"
     }
    ]
   },
   "us|growth": {
-   "eligible": 63,
+   "eligible": 65,
    "defects": [
     {
      "ticker": "META",
@@ -869,17 +878,17 @@ window.CANDIDATES = {
      "url": "https://finance.yahoo.com/quote/MCO"
     },
     {
+     "ticker": "ADSK",
+     "name": "Autodesk",
+     "status": "검증 대기",
+     "why": "3년 매출 연평균 12.9% · FCF 마진 33.4% · 3년 평균 ROIC 40.9%",
+     "url": "https://m.stock.naver.com/worldstock/stock/ADSK.O/total"
+    },
+    {
      "ticker": "ASX",
      "name": "ASE Technology",
      "status": "검증 대기",
      "url": "https://m.stock.naver.com/worldstock/stock/ASX/total"
-    },
-    {
-     "ticker": "SCCO",
-     "name": "Southern Copper",
-     "status": "검증 대기",
-     "why": "3년 매출 연평균 10.1% · FCF 마진 25.5% · 3년 평균 ROIC 35.4%",
-     "url": "https://m.stock.naver.com/worldstock/stock/SCCO.K/total"
     },
     {
      "ticker": "ARGX",
@@ -888,22 +897,22 @@ window.CANDIDATES = {
      "url": "https://m.stock.naver.com/worldstock/stock/ARGX.O/total"
     },
     {
+     "ticker": "PBR",
+     "name": "Petroleo Brasileiro Reptg 2",
+     "status": "검증 대기",
+     "url": "https://m.stock.naver.com/worldstock/stock/PBR/total"
+    },
+    {
      "ticker": "TT",
      "name": "Trane Technologies",
      "status": "검증 대기",
      "why": "3년 매출 연평균 10.1% · FCF 마진 13.2% · 3년 평균 ROIC 24.6%",
      "url": "https://m.stock.naver.com/worldstock/stock/TT/total"
-    },
-    {
-     "ticker": "SNY",
-     "name": "Sanofi SA",
-     "status": "검증 대기",
-     "url": "https://m.stock.naver.com/worldstock/stock/SNY.O/total"
     }
    ]
   },
   "us|value": {
-   "eligible": 74,
+   "eligible": 69,
    "defects": [
     {
      "ticker": "GM",
@@ -954,8 +963,7 @@ window.CANDIDATES = {
      "status": "검증 통과",
      "note": "1분기(FY27) 매출 30% 증가(추가 1주 제외 26%)·비GAAP EPS 66% 증가, 연간 매출·EPS 가이던스 상향. 하반기 성장 둔화 전망과 잉여현금흐름 감소·매출총이익률 하락이 리스크다.",
      "asOf": "2026-11-04",
-     "why": "EBIT/EV 4.5% · FCF/시총 5% · 매출 성장 5.4%",
-     "url": "https://m.stock.naver.com/worldstock/stock/NTAP.O/total"
+     "url": "https://finance.yahoo.com/quote/NTAP"
     },
     {
      "ticker": "COR",
@@ -963,7 +971,7 @@ window.CANDIDATES = {
      "status": "보류",
      "note": "EBIT/EV 문턱 미달(FCF 로만 통과)·오피오이드 소송",
      "asOf": "2026-10-18",
-     "why": "EBIT/EV 3.7% · FCF/시총 4.9% · 매출 성장 9.3%",
+     "why": "EBIT/EV 3.6% · FCF/시총 4.7% · 매출 성장 9.3%",
      "url": "https://m.stock.naver.com/worldstock/stock/COR/total"
     },
     {
@@ -972,7 +980,7 @@ window.CANDIDATES = {
      "status": "보류",
      "note": "방산 중복(GD)·3년 ROIC 낮음·3분기 10/29",
      "asOf": "2026-10-18",
-     "why": "EBIT/EV 3.4% · FCF/시총 5.2% · 매출 성장 2.5%",
+     "why": "EBIT/EV 3.6% · FCF/시총 5.5% · 매출 성장 2.5%",
      "url": "https://m.stock.naver.com/worldstock/stock/LHX/total"
     },
     {
@@ -999,7 +1007,7 @@ window.CANDIDATES = {
      "status": "보류",
      "note": "분사로 재무 왜곡",
      "asOf": "2026-10-18",
-     "why": "EBIT/EV 6.1% · FCF/시총 6.9% · 매출 성장 7.7%",
+     "why": "EBIT/EV 6% · FCF/시총 6.6% · 매출 성장 7.7%",
      "url": "https://m.stock.naver.com/worldstock/stock/FDX/total"
     },
     {
@@ -1025,7 +1033,7 @@ window.CANDIDATES = {
      "status": "보류",
      "note": "2분기 조정 EPS 5% 증가·연간 EPS 가이던스 유지. 동일점 매출 증가가 거의 멈춰 연간 동일점 매출 가이던스를 낮췄다 — 다음 분기 동일점 매출 회복 확인 필요.",
      "asOf": "2026-11-04",
-     "why": "EBIT/EV 3.6% · FCF/시총 8.8% · 매출 성장 0.4%",
+     "why": "EBIT/EV 3.5% · FCF/시총 8.5% · 매출 성장 0.4%",
      "url": "https://m.stock.naver.com/worldstock/stock/KR/total"
     },
     {
@@ -1045,7 +1053,7 @@ window.CANDIDATES = {
    ]
   },
   "us|dividend": {
-   "eligible": 62,
+   "eligible": 65,
    "defects": [
     {
      "ticker": "KO",
@@ -1124,18 +1132,25 @@ window.CANDIDATES = {
      "url": "https://m.stock.naver.com/worldstock/stock/BAC/total"
     },
     {
-     "ticker": "SAN",
-     "name": "Banco Santander S.A.",
+     "ticker": "PBR A",
+     "name": "Petroleo Brasileiro Reptg 2 Pref Shs",
      "status": "검증 대기",
-     "why": "배당성향 25.7% · 배당 2.5%",
-     "url": "https://m.stock.naver.com/worldstock/stock/SAN/total"
+     "why": "배당성향 4.5% · 배당 5.5%",
+     "url": "https://m.stock.naver.com/worldstock/stock/PBRa/total"
     },
     {
      "ticker": "ITUB",
      "name": "Itau Unibanco SA",
      "status": "검증 대기",
-     "why": "배당성향 11.8% · 배당 7%",
+     "why": "배당성향 11.8% · 배당 7.1%",
      "url": "https://m.stock.naver.com/worldstock/stock/ITUB.K/total"
+    },
+    {
+     "ticker": "SAN",
+     "name": "Banco Santander S.A.",
+     "status": "검증 대기",
+     "why": "배당성향 25.7% · 배당 2.5%",
+     "url": "https://m.stock.naver.com/worldstock/stock/SAN/total"
     },
     {
      "ticker": "LYG",
@@ -1145,11 +1160,11 @@ window.CANDIDATES = {
      "url": "https://m.stock.naver.com/worldstock/stock/LYG/total"
     },
     {
-     "ticker": "PBR A",
-     "name": "Petroleo Brasileiro Reptg 2 Pref Shs",
+     "ticker": "MUFG",
+     "name": "Mitsubishi UFJ Financial",
      "status": "검증 대기",
-     "why": "배당성향 4.5% · 배당 5.4%",
-     "url": "https://m.stock.naver.com/worldstock/stock/PBRa/total"
+     "why": "배당성향 0.2% · 배당 2.5%",
+     "url": "https://m.stock.naver.com/worldstock/stock/MUFG.K/total"
     },
     {
      "ticker": "ING",
@@ -1159,11 +1174,18 @@ window.CANDIDATES = {
      "url": "https://m.stock.naver.com/worldstock/stock/ING/total"
     },
     {
-     "ticker": "MUFG",
-     "name": "Mitsubishi UFJ Financial",
+     "ticker": "RIO",
+     "name": "Rio Tinto",
      "status": "검증 대기",
-     "why": "배당성향 0.2% · 배당 2.5%",
-     "url": "https://m.stock.naver.com/worldstock/stock/MUFG.K/total"
+     "why": "배당성향 58.8% · 배당 5.7%",
+     "url": "https://m.stock.naver.com/worldstock/stock/RIO/total"
+    },
+    {
+     "ticker": "UL",
+     "name": "Unilever",
+     "status": "검증 대기",
+     "why": "배당성향 77.1% · 배당 3.3%",
+     "url": "https://m.stock.naver.com/worldstock/stock/UL/total"
     },
     {
      "ticker": "SNY",
@@ -1171,20 +1193,6 @@ window.CANDIDATES = {
      "status": "검증 대기",
      "why": "배당성향 73.3% · 배당 5.3%",
      "url": "https://m.stock.naver.com/worldstock/stock/SNY.O/total"
-    },
-    {
-     "ticker": "RIO",
-     "name": "Rio Tinto",
-     "status": "검증 대기",
-     "why": "배당성향 58.8% · 배당 5.6%",
-     "url": "https://m.stock.naver.com/worldstock/stock/RIO/total"
-    },
-    {
-     "ticker": "HSBC",
-     "name": "HSBC",
-     "status": "검증 대기",
-     "why": "배당성향 43.6% · 배당 4.4%",
-     "url": "https://m.stock.naver.com/worldstock/stock/HSBC.K/total"
     }
    ]
   }
@@ -1192,7 +1200,7 @@ window.CANDIDATES = {
  "summary": {
   "review": 0,
   "defect": 3,
-  "watch": 22,
+  "watch": 23,
   "untried": 0,
   "dup": 2,
   "long": 2
