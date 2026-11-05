@@ -15,24 +15,6 @@ window.CANDIDATES = {
    "eligible": 17,
    "defects": [
     {
-     "ticker": "086790",
-     "name": "하나금융지주",
-     "state": "결격",
-     "verdict": "실질",
-     "flags": [
-      {
-       "k": "dup",
-       "msg": "중복 편성 — 저평가 주제에도 있어 분산이 줄어든다",
-       "fresh": false
-      }
-     ],
-     "note": "중복 편성 — 저평가 주제에 남기고 이 주제는 다른 종목으로 교체",
-     "dup": "value",
-     "since": "2026-10-21",
-     "age": 15,
-     "long": 1
-    },
-    {
      "ticker": "278470",
      "name": "에이피알",
      "state": "결격",
@@ -67,7 +49,7 @@ window.CANDIDATES = {
       },
       {
        "k": "drop",
-       "msg": "5거래일 -14.1%(시장 중앙값 0.4%) 급락 — 원인 확인",
+       "msg": "5거래일 -14.1%(시장 중앙값 0.9%) 급락 — 원인 확인",
        "fresh": false
       }
      ],
@@ -195,7 +177,7 @@ window.CANDIDATES = {
       },
       {
        "k": "drop",
-       "msg": "5거래일 -12.5%(시장 중앙값 0.4%) 급락 — 원인 확인",
+       "msg": "5거래일 -12.5%(시장 중앙값 0.9%) 급락 — 원인 확인",
        "fresh": false
       }
      ],
@@ -702,7 +684,7 @@ window.CANDIDATES = {
       },
       {
        "k": "drop",
-       "msg": "5거래일 -11.1%(시장 중앙값 4.4%) 급락 — 원인 확인",
+       "msg": "5거래일 -11.1%(시장 중앙값 3.5%) 급락 — 원인 확인",
        "fresh": false
       }
      ],
@@ -820,6 +802,23 @@ window.CANDIDATES = {
   "us|growth": {
    "eligible": 65,
    "defects": [
+    {
+     "ticker": "VRT",
+     "name": "Vertiv",
+     "state": "점검 필요",
+     "flags": [
+      {
+       "k": "earn",
+       "msg": "실적 발표(10/28) · EPS 서프라이즈 21.4% — 가이던스·논거 확인",
+       "fresh": true
+      },
+      {
+       "k": "drop",
+       "msg": "5거래일 -15.4%(시장 중앙값 3.5%) 급락 — 원인 확인",
+       "fresh": true
+      }
+     ]
+    },
     {
      "ticker": "META",
      "name": "Meta Platforms",
@@ -1224,11 +1223,11 @@ window.CANDIDATES = {
   }
  },
  "summary": {
-  "review": 1,
-  "defect": 4,
+  "review": 2,
+  "defect": 3,
   "watch": 21,
-  "untried": 1,
-  "dup": 2,
-  "long": 2
+  "untried": 0,
+  "dup": 1,
+  "long": 1
  }
 };

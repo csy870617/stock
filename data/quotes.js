@@ -154,13 +154,6 @@ window.STOCK_QUOTES = {
    "close": 652000,
    "closeDate": "2026-11-05"
   },
-  "086790": {
-   "price": 120800,
-   "date": "2026-11-05",
-   "changePct": 3.2,
-   "close": 120800,
-   "closeDate": "2026-11-05"
-  },
   "012450": {
    "price": 680000,
    "date": "2026-11-05",
@@ -243,6 +236,13 @@ window.STOCK_QUOTES = {
    "date": "2026-11-05",
    "changePct": -9.5,
    "close": 1264000,
+   "closeDate": "2026-11-05"
+  },
+  "086790": {
+   "price": 120800,
+   "date": "2026-11-05",
+   "changePct": 3.2,
+   "close": 120800,
    "closeDate": "2026-11-05"
   },
   "001120": {
@@ -355,6 +355,13 @@ window.STOCK_QUOTES = {
    "date": "2026-11-05",
    "changePct": -9.1,
    "close": 169100,
+   "closeDate": "2026-11-05"
+  },
+  "064400": {
+   "price": 72600,
+   "date": "2026-11-05",
+   "changePct": -1,
+   "close": 72600,
    "closeDate": "2026-11-05"
   },
   "MSFT": {

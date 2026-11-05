@@ -9,7 +9,7 @@ window.COVERAGE_STATUS = {
   {
    "key": "techNote",
    "label": "기술 대응",
-   "done": 101,
+   "done": 103,
    "total": 104,
    "ok": false
   },
@@ -100,7 +100,7 @@ window.COVERAGE_STATUS = {
   {
    "key": "aiTarget",
    "label": "AI 적정가 재시도",
-   "fresh": 101,
+   "fresh": 100,
    "total": 104,
    "oldestDays": null,
    "ok": false
