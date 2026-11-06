@@ -228,6 +228,16 @@ function macroFacts(rows) {
     vol60: rnd(v60 != null ? v60 * Math.sqrt(252) * 100 : null, 1), volPct: volPct, volYrs: Math.round(lr.length / 252)
   };
 }
+// 다음 장 기준가 — 앱이 장중 시세로 1주·1개월·3개월·1년·올해 등락을 다시 잴 때 쓴다(다음 장 기준 k거래일 전 종가 = 마지막 장 기준 k−1거래일 전).
+//   c = 마지막 종가(오늘 등락, 해가 바뀐 첫 장의 올해 기준), ytd = 지난해 마지막 종가. 2026-11-06 사용자 '섹터 칸도 실시간으로'.
+function nextBases(rows) {
+  const off = rows.offMs || 0, c = rows.map((r) => r.close), n = c.length;
+  const at = (k) => (n - k >= 0 && c[n - k] > 0 ? rnd(c[n - k], 2) : null);
+  const yr = isoDay(rows[n - 1].t, off).slice(0, 4);
+  let ytd = null;
+  for (let i = n - 1; i >= 0; i--) if (isoDay(rows[i].t, off) < yr + "-01-01") { ytd = c[i]; break; }
+  return { c: at(1), w1: at(5), m1: at(21), m3: at(63), y1: at(252), ytd: rnd(ytd, 2) };
+}
 // 주간 종가(월요일 시작 주 → 그 주 마지막 종가) — 시간대가 다른 시장(서울·런던·뉴욕)끼리 비교할 때 하루 어긋남을 줄인다
 const weekOf = (ymd) => { const d = new Date(ymd + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7)); return d.toISOString().slice(0, 10); };
 function weeklyFromRows(rows) {
@@ -380,7 +390,7 @@ async function buildSectors(fetchedIdx) {
   for (const c of ["korea", "us"]) {
     const bRows = c === "korea" && fetchedIdx.kospi ? fetchedIdx.kospi : await fetchSeries(SECTOR_BENCH[c].symbol);
     const bF = bRows ? macroFacts(bRows) : null;
-    bench[c] = { name: SECTOR_BENCH[c].name, symbol: SECTOR_BENCH[c].symbol, asOf: bF ? bF.asOf : null, chg: bF ? bF.chg : null };
+    bench[c] = { name: SECTOR_BENCH[c].name, symbol: SECTOR_BENCH[c].symbol, asOf: bF ? bF.asOf : null, chg: bF ? bF.chg : null, nb: bRows ? nextBases(bRows) : null };
     const weekly = stockWeekly(D, c), dp = c === "korea" ? 0 : 2;
     const rowsBy = await poolMap(SECTORS[c], 4, (cfg) => fetchSeries(cfg.symbol));
     SECTORS[c].forEach((cfg, i) => {
@@ -401,7 +411,7 @@ async function buildSectors(fetchedIdx) {
       const sig = (x) => ({ trend: x.trend, signal: x.signal });   // 화면은 신호만 쓴다(지표 설명은 싣지 않아 파일을 가볍게)
       out[c].push({ key: cfg.key, name: cfg.name, etf: cfg.etf, symbol: cfg.symbol, naver: cfg.naver || cfg.symbol.replace(/\.K[SQ]$/, ""),
         level: a.level, change: a.change, changeDir: a.changeDir, short: sig(a.short), mid: sig(a.mid), long: sig(a.long), asOf: rows.lastDate,
-        facts: Object.assign(f, { rs: rs }, rel ? { rel: rel } : {}) });
+        facts: Object.assign(f, { rs: rs, nb: nextBases(rows) }, rel ? { rel: rel } : {}) });
       if (writeChart("idx-sec-" + cfg.key, rows, dp)) charts++;
       ok++;
       if (!asOf[c] || rows.lastDate > asOf[c]) asOf[c] = rows.lastDate;
@@ -410,7 +420,7 @@ async function buildSectors(fetchedIdx) {
   if (!ok && !fell) { console.warn("  ⚠ 섹터: 전부 조회 실패 — data/sectors.js 그대로 둠"); return; }
   const S = {
     asOf: asOf, builtAt: new Date().toISOString().slice(0, 19) + "Z",
-    note: "업종 ETF 일봉으로 지수와 같은 엔진(단기=일봉·중기=주봉·장기=월봉)을 매일 자동 계산(LLM 토큰 0). rs = 같은 기간 시장(코스피·S&P 500) 등락과의 차이(%p), rel = 최근 약 2년 주간 수익률로 본 시장 상관과 같이 움직인 편성·관심·보유 종목 — 사실 숫자이지 예측이 아니다.",
+    note: "업종 ETF 일봉으로 지수와 같은 엔진(단기=일봉·중기=주봉·장기=월봉)을 매일 자동 계산(LLM 토큰 0). rs = 같은 기간 시장(코스피·S&P 500) 등락과의 차이(%p), rel = 최근 약 2년 주간 수익률로 본 시장 상관과 같이 움직인 편성·관심·보유 종목, nb = 다음 장 기준가(앱이 장중 시세로 기간 등락을 다시 잴 때) — 사실 숫자이지 예측이 아니다.",
     bench: bench, korea: out.korea, us: out.us
   };
   fs.writeFileSync(SECTOR_OUT,

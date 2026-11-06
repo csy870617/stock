@@ -6106,7 +6106,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     MK.t = setTimeout(function () {
       var w = mkPg.clientWidth; if (!w) return;
       var i = Math.round(mkPg.scrollLeft / w) ? 1 : 0;
-      if (i !== MK.cur) { MK.cur = i; ssSet("ui.mkp", String(i)); if (i === 1) ensureSectors(); }
+      if (i !== MK.cur) { MK.cur = i; ssSet("ui.mkp", String(i)); if (i === 1) { ensureSectors(); ensureSectorLive(state.country); } }   // 밀어 넘겨도 바로 시세를 받는다
       mkSync();
     }, 80);
   }, { passive: true });
@@ -6211,37 +6211,43 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   function sxBenchLive(c) { return c === "korea" ? MACRO_LIVE.kospi || null : SECTOR_LIVE["^GSPC"] || null; }
   function sectorOf(c, key) { return sectorList(c).filter(function (x) { return x.key === key; })[0] || null; }
   function sxBench(c) { var S = window.SECTOR_TA; return (S && S.bench && S.bench[c]) || { name: c === "korea" ? "코스피" : "S&P 500", chg: {} }; }
-  function sxChg(x, p) {   // 고른 기간 등락(%) — 오늘은 전일 대비(시세 서버 값이 있으면 실시간), 나머지 기간은 마지막 마감 기준
-    var ch = (x.facts && x.facts.chg) || {};
-    if (p !== "d1") return ch[p];
-    var L = sxLive(x);
-    if (L && L.chg != null) return L.chg;
-    return ch.d1 != null ? ch.d1 : chgNum(x.change);
+  // 지금 값으로 다시 잰 기간 등락(%) — nb = 마지막 마감 때 남긴 다음 장 기준가(update-indices.js nextBases). 해가 바뀐 첫 장의 '올해'는 마지막 종가 기준.
+  function liveRet(L, nb, asOf, p) {
+    if (!L || !nb || L.price == null) return null;
+    var k = p === "d1" || (p === "ytd" && String(L.date).slice(0, 4) > String(asOf).slice(0, 4)) ? "c" : p, base = nb[k];
+    return base > 0 ? (L.price / base - 1) * 100 : null;
   }
-  function sxBenchD1(x, c) {   // 오늘 시장 등락 — 섹터가 실시간이면 시장도 실시간(같은 날짜일 때만)
-    var L = sxLive(x);
-    if (L) { var bl = sxBenchLive(c); return bl && bl.chg != null && bl.date === L.date ? bl.chg : null; }
-    var b = sxBench(c);
-    return b.chg && b.chg.d1 != null && b.asOf === x.asOf ? b.chg.d1 : null;
-  }
-  function sxRs(x, c, p) {   // 같은 기간 시장(한국 코스피·미국 S&P 500) 대비 %p
-    if (p !== "d1") return x.facts && x.facts.rs ? x.facts.rs[p] : null;
-    var v = sxChg(x, "d1"), bv = sxBenchD1(x, c);
-    return v != null && bv != null ? Math.round((v - bv) * 10) / 10 : null;
+  // 고른 기간의 섹터·시장 등락 {v, bv, rs(%p), live} — 마지막 마감 뒤 새 장의 시세가 있으면 모든 기간을 지금 값으로(시장도 같은 날짜 시세일 때만 —
+  //   한국 코스피는 지수 실시간 값, 미국 S&P 500 은 섹터와 함께 받는다), 마감 계산과 같은 장이면 오늘 등락만 시세 서버 값, 그 밖엔 마감 계산값.
+  //   2026-11-06 사용자 '섹터 칸도 실시간으로'(전엔 오늘만 실시간이고 1주~1년은 마감 기준이었다).
+  function sxPer(x, c, p) {
+    var f = x.facts || {}, ch = f.chg || {}, b = sxBench(c), bc = b.chg || {}, L = sxLive(x), bl = sxBenchLive(c), v = null, bv = null;
+    var bOk = !!(L && bl && bl.price != null && bl.date === L.date);
+    if (L && L.date > x.asOf) v = p === "d1" && L.chg != null ? L.chg : liveRet(L, f.nb, x.asOf, p);
+    if (v != null) {
+      if (bOk) bv = p === "d1" && bl.chg != null ? bl.chg : bl.date > b.asOf ? liveRet(bl, b.nb, b.asOf, p) : bl.date === b.asOf ? numOr(bc[p]) : null;
+    } else if (p === "d1" && L && L.chg != null) {   // 마감 계산과 같은 장 — 오늘 등락은 시세 서버 값
+      v = L.chg; bv = bOk && bl.chg != null ? bl.chg : null;
+    } else {
+      if (p !== "d1") return { v: ch[p], bv: numOr(bc[p]), rs: f.rs ? numOr(f.rs[p]) : null, live: null };
+      v = ch.d1 != null ? ch.d1 : chgNum(x.change); bv = b.asOf === x.asOf ? numOr(bc.d1) : null; L = null;
+    }
+    return { v: v, bv: bv, rs: v != null && bv != null ? Math.round((v - bv) * 10) / 10 : null, live: L };
   }
   function pct1(v) { return v == null || !isFinite(v) ? "–" : (v > 0 ? "+" : "") + Number(v).toFixed(1) + "%"; }
   function sxTip(c) {
-    return "업종 ETF 가격으로 본 섹터 — " + (c === "korea" ? "KODEX·TIGER 업종 ETF" : "SPDR 섹터 ETF(S&P 500 11개 섹터)와 반도체 ETF(SOXX)") + ", 매일 장 마감 뒤 자동 계산.\n\n" +
+    return "업종 ETF 가격으로 본 섹터 — " + (c === "korea" ? "KODEX·TIGER 업종 ETF" : "SPDR 섹터 ETF(S&P 500 11개 섹터)와 반도체 ETF(SOXX)") + ". 신호는 매일 장 마감 뒤 자동 계산, " +
+      "등락은 장중이면 지금 값(점 표시, 최대 20분가량 늦을 수 있음)으로 모든 기간을 다시 잰다.\n\n" +
       "칸 색 = 고른 기간 등락(빨강 상승·파랑 하락, 진할수록 큼). 작은 숫자(%p) = 같은 기간 " + sxBench(c).name + " 등락과의 차이. " +
       "앞 세 칸은 단기(일봉)·중기(주봉)·장기(월봉) 추세 상태 — 지금까지 움직임의 요약이지 예측이 아니다. 칸을 누르면 차트·기간별 시장 대비·관련 종목.";
   }
   function sxTile(x, c, p) {
-    var v = sxChg(x, p), rs = sxRs(x, c, p), cut = SX_CUT[p] || SX_CUT.d1, a = v == null ? 0 : Math.abs(v);
+    var r = sxPer(x, c, p), v = r.v, rs = r.rs, cut = SX_CUT[p] || SX_CUT.d1, a = v == null ? 0 : Math.abs(v);
     var lv = a >= cut[2] ? 3 : a >= cut[1] ? 2 : a >= cut[0] ? 1 : 0, dir = v == null || v === 0 ? "flat" : v > 0 ? "up" : "down";
     return '<div class="sx' + (lv && dir !== "flat" ? (dir === "up" ? " hu" : " hd") + lv : "") + '" role="button" tabindex="0" data-open="1" data-sx="' + esc(x.key) +
       '" data-c="' + esc(c) + '" data-t="idx-sec-' + esc(x.key) + '" data-th="sec" data-n="' + esc(x.name) + '" title="' + esc(x.name + " · " + x.etf + " — 차트 보기") + '">' +
       '<div class="sx-r1"><span class="sx-nm">' + esc(x.name) + "</span>" + sigStrip({ sigShort: x.short && x.short.signal, sigMid: x.mid && x.mid.signal, sigLong: x.long && x.long.signal }) + "</div>" +
-      '<div class="sx-r2"><span class="sx-ch ' + dir + '">' + esc(pct1(v)) + (p === "d1" && sxLive(x) && inSession(c === "korea", sxLive(x).date) ? '<i class="live-dot" title="장중 실시간(최대 20분가량 늦을 수 있음)"></i>' : "") + "</span>" + (rs != null ? '<span class="sx-rs" title="' + esc("같은 기간 " + sxBench(c).name + " 대비") + '">' + esc(fmtPp(rs)) + "</span>" : "") + "</div></div>";
+      '<div class="sx-r2"><span class="sx-ch ' + dir + '">' + esc(pct1(v)) + (r.live && inSession(c === "korea", r.live.date) ? '<i class="live-dot" title="장중 실시간(최대 20분가량 늦을 수 있음)"></i>' : "") + "</span>" + (rs != null ? '<span class="sx-rs" title="' + esc("같은 기간 " + sxBench(c).name + " 대비") + '">' + esc(fmtPp(rs)) + "</span>" : "") + "</div></div>";
   }
   function renderSectors() {
     var host = document.getElementById("secBody");
@@ -6282,20 +6288,20 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   }
   // 섹터 상세 — 업종 ETF 캔들 차트 + 단·중·장 신호 + 기간별 섹터·시장 등락 + 52주 범위 + 시장 상관 + 이 업종(같이 움직인) 종목 + AI 질문
   function sectorDetailHtml(x, c) {
-    var f = x.facts || {}, ch = f.chg || {}, rs = f.rs || {}, b = sxBench(c), bc = b.chg || {}, v = sxChg(x, "d1"), L = sxLive(x);
+    var f = x.facts || {}, b = sxBench(c), v = sxPer(x, c, "d1").v, L = sxLive(x), lvP = L && L.date > x.asOf && f.nb ? L : null;
     var lvTxt = L ? (c === "korea" ? Math.round(L.price).toLocaleString("ko-KR") : num2(L.price)) : x.level;
     var when = L ? (inSession(c === "korea", L.date) ? '<span class="live-tx" title="장중 실시간 — 최대 20분가량 늦을 수 있음"><i class="live-dot"></i>장중</span>' : esc(mdOf(L.date)) + " 종가") : esc(mdOf(x.asOf)) + " 종가";
     var top = '<div class="dt-top"><div class="dt-pxl"><span class="dt-pv">' + esc(lvTxt) + '<small class="dt-u">' + (c === "korea" ? "원" : "달러") + "</small></span>" + chgHtml(v, "dt-ch") + "</div>" +
-      '<div class="dt-meta">' + when + " · 전일 대비 · " + esc(x.etf) + " ETF" + (L && L.date > x.asOf ? ' · <span title="차트는 장중 값까지, 신호·기간 등락은 ' + esc(mdOf(x.asOf)) + ' 마감까지">신호 ' + esc(mdOf(x.asOf)) + " 마감</span>" : "") + "</div></div>";
+      '<div class="dt-meta">' + when + " · 전일 대비 · " + esc(x.etf) + " ETF" + (L && L.date > x.asOf ? ' · <span title="' + (lvP ? "차트·기간 등락" : "차트") + "는 지금 값까지, 신호" + (lvP ? "" : "·기간 등락") + "는 " + esc(mdOf(x.asOf)) + ' 마감까지">신호 ' + esc(mdOf(x.asOf)) + " 마감</span>" : "") + "</div></div>";
     var sig = '<div class="dt-sum"><div class="dt-sig">' + [["단기", x.short, "일봉"], ["중기", x.mid, "주봉"], ["장기", x.long, "월봉"]].map(function (p) {
       var g = p[1] && p[1].signal;
       return '<div class="ds"><span class="ds-k">' + p[0] + " <i>" + p[2] + '</i></span><b class="ds-v t-' + (SIG_CLS[g] || "x") + '">' + esc(sigWord(g)) + "</b></div>";
     }).join("") + '</div><p class="kv-note">업종 ETF 가격 흐름 요약 — 지금까지의 움직임이지 예측이 아니다.</p></div>';
     var cell = function (val, pp) { return val == null ? "–" : signedSpan(val, (val > 0 ? "+" : "") + Number(val).toFixed(1) + (pp ? "%p" : "%")); };
     var tbl = '<div class="sxt"><span class="sxt-h">기간</span><span class="sxt-h">섹터</span><span class="sxt-h">' + esc(b.name) + '</span><span class="sxt-h">차이</span>' +
-      [["오늘", "d1"], ["1주", "w1"], ["1개월", "m1"], ["3개월", "m3"], ["올해", "ytd"], ["1년", "y1"]].map(function (r) {
-        var sv = r[1] === "d1" ? v : ch[r[1]], dv = r[1] === "d1" ? sxRs(x, c, "d1") : rs[r[1]];
-        return "<span>" + r[0] + "</span><span>" + cell(sv) + "</span><span>" + cell(r[1] === "d1" ? sxBenchD1(x, c) : bc[r[1]]) + "</span><span>" + cell(dv, true) + "</span>";
+      [["오늘", "d1"], ["1주", "w1"], ["1개월", "m1"], ["3개월", "m3"], ["올해", "ytd"], ["1년", "y1"]].map(function (q) {
+        var r = sxPer(x, c, q[1]);
+        return "<span>" + q[0] + "</span><span>" + cell(r.v) + "</span><span>" + cell(r.bv) + "</span><span>" + cell(r.rs, true) + "</span>";
       }).join("") + "</div>";
     var fmtLv = function (n) { return c === "korea" ? Math.round(n).toLocaleString("ko-KR") : num2(n); };
     var rel = f.rel || {}, mk = rel.bench, byInd = rel.by === "ind";
@@ -6313,7 +6319,8 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
         : '<p class="mc-txt">' + (byInd ? "편성·관심·보유 종목 중 이 업종 종목 없음." : "편성·관심·보유 종목 중 뚜렷하게(상관 0.3 이상) 같이 움직인 종목 없음.") + "</p>") +
       '<p class="kv-note">숫자 = 최근 ' + (rel.weeks || 104) + "주 주간 수익률 상관(−1~+1)" + (byInd ? "" : " — 시장(" + esc(b.name) + ")과 함께 움직인 몫을 뺀 뒤") +
       ". 과거에 같이 움직인 정도일 뿐 앞으로도 그렇다는 보장은 없다. 누르면 종목 상세.</p>";
-    var facts = '<section class="dt-sec"><h3>시장 대비 <span class="md-as">' + esc(mdOf(x.asOf)) + " 종가 · 매일 자동 계산</span></h3>" + tbl +
+    var asTxt = lvP ? "등락 " + (inSession(c === "korea", lvP.date) ? "장중 실시간" : mdOf(lvP.date) + " 종가") + " · 변동성·52주 " + mdOf(x.asOf) + " 종가" : mdOf(x.asOf) + " 종가 · 매일 자동 계산";
+    var facts = '<section class="dt-sec"><h3>시장 대비 <span class="md-as">' + esc(asTxt) + "</span></h3>" + tbl +
       '<div class="kv" style="margin-top:10px">' + volKv(f) + '<div class="kv-c"></div></div>' + rangeBarHtml(f, fmtLv) + "</section>" +
       '<section class="dt-sec"><h3>관련 종목</h3>' + mkLine + members + "</section>";
     var url = c === "korea" ? "https://m.stock.naver.com/domestic/stock/" + encodeURIComponent(x.naver) + "/total" : "https://m.stock.naver.com/worldstock/etf/" + encodeURIComponent(x.naver) + "/total";
@@ -6363,7 +6370,11 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
         });
         macroLiveAt = Date.now();
         // 값이 바뀌었을 때만 다시 그린다(열린 지수·환율 상세 포함) — 1분마다 같은 값으로 상세를 다시 그리지 않게
-        if (changed) { renderIndexTA(); var cur = SH.open && SH.ctx[SH.idx]; if (cur && cur.idx && MACRO_LIVE[cur.idx]) renderSheet(true); }
+        if (changed) {
+          renderIndexTA(); var cur = SH.open && SH.ctx[SH.idx];
+          if (state.country === "korea" && MK.cur === 1 && window.SECTOR_TA) renderSectors();   // 한국 섹터의 '코스피 대비'는 코스피 실시간 값을 쓴다
+          if (cur && ((cur.idx && MACRO_LIVE[cur.idx]) || (cur.sx && cur.c === "korea"))) renderSheet(true);
+        }
       })
       .catch(function () { macroLiveAt = Date.now() - every + 60000; })
       .then(function () { clearTimeout(to); macroLiveBusy = false; });
@@ -6567,7 +6578,13 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       rel.bench ? "시장(" + b.name + ") 주간 상관 " + rel.bench.corr + " · β " + rel.bench.beta : "",
       (rel.pos || []).length ? (rel.by === "ind" ? "이 업종(WICS)의 편성·관심·보유 종목: " : "같이 움직인 편성·관심·보유 종목(시장 몫을 뺀 주간 상관): ") +
         rel.pos.map(function (y) { return y.name + "(" + y.th + ", 상관 " + (rel.by === "ind" ? y.raw : y.corr) + ")"; }).join(", ") : "",
-      (function () { var L = sxLive(x); return L ? "지금 시세(" + (inSession(c === "korea", L.date) ? "장중 실시간" : L.date + " 종가") + "): " + (c === "korea" ? Math.round(L.price) : L.price) + " " + pct2(L.chg) : ""; })(),
+      (function () {
+        var L = sxLive(x); if (!L) return "";
+        var s = "지금 시세(" + (inSession(c === "korea", L.date) ? "장중 실시간" : L.date + " 종가") + "): " + (c === "korea" ? Math.round(L.price) : L.price) + " " + pct2(sxPer(x, c, "d1").v);
+        if (L.date > x.asOf && f.nb) s += " · 지금 값 기준 기간 등락(괄호 = " + b.name + " 대비): " + [["1주", "w1"], ["1개월", "m1"], ["3개월", "m3"], ["올해", "ytd"], ["1년", "y1"]].map(function (p) {
+          var r = sxPer(x, c, p[1]); return p[0] + " " + pctTxt(r.v) + (r.rs != null ? "(" + fmtPp(r.rs) + ")" : ""); }).join(" · ");
+        return s;
+      })(),
       "숫자로 본 흐름: " + sxFlowSummary(x, c),
       (function () { var n = sectorNote(key); return n ? "앱의 흐름 분석(" + String(n.at || "").slice(0, 10) + " 작성, 기사 확인): " + n.headline + " — " + n.flow + (n.watch ? " | 확인할 일정: " + n.watch : "") : ""; })()
     ].filter(Boolean).join("\n");
