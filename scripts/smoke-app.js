@@ -54,6 +54,23 @@ async function run(browser, base) {
 
   await page.goto(base + "/index.html", { waitUntil: "load", timeout: 60000 });
   await step("홈(지수·Top Pick)", () => page.waitForFunction(() => document.querySelectorAll("#idxGrid > *").length > 0 || document.querySelectorAll("#picksList > *").length > 0, null, T));
+  await step("제외 종목 상세(종목 업데이트 제외 칩)", async () => {
+    const ok = await page.evaluate(() => {
+      const sel = document.getElementById("rosterDate");
+      if (!sel) return false;
+      if (!document.querySelector(".roster-line.out [data-open]")) {
+        const o = [].find.call(sel.options, (x) => /제외/.test(x.textContent));
+        if (!o) return false;
+        sel.value = o.value; sel.dispatchEvent(new Event("change"));
+      }
+      return !!document.querySelector(".roster-line.out [data-open]");
+    });
+    if (!ok) return;   // 제외 기록이 없으면 건너뛴다
+    await page.click(".roster-line.out [data-open]");
+    await page.waitForFunction(() => { const s = document.getElementById("sheet"), o = document.getElementById("dt-out"); return s && !s.hidden && o && !/불러오는 중/.test(o.textContent); }, null, T);
+    await page.click("#shBack");
+    await page.waitForFunction(() => document.getElementById("sheet").hidden, null, T);
+  });
   await step("추천 종목 목록", async () => { await tab("reco"); await page.waitForFunction(() => document.querySelectorAll("#recoList .row").length > 0, null, T); });
   await step("종목 상세 열기·닫기", async () => {
     await page.click("#recoList [data-open]");

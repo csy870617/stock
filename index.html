@@ -521,6 +521,18 @@ svg { display: block; }
 @media (hover: hover) { .rs-link:hover { background: var(--line); } }
 .rs-from { font-size: 11.5px; color: var(--mut); }
 .roster-empty { font-size: 13px; color: var(--mut); }
+/* 편성에서 빠진 종목 상세 — 제외 사유·편성 이력 */
+.gn-at { margin-top: 4px; font-size: 12px; color: var(--mut); }
+.gn-hist { list-style: none; margin: 12px 0 0; padding: 0 0 0 14px; border-left: 2px solid var(--line); }
+.gn-hist li { position: relative; padding: 3px 0; font-size: 13.5px; color: var(--ink2); }
+.gn-hist li::before { content: ""; position: absolute; left: -19px; top: 10px; width: 8px; height: 8px; border-radius: 50%; background: var(--mut); }
+.gn-hist li.gh-in::before { background: var(--up); }
+.gn-hist li.gh-out::before { background: var(--down); }
+.gn-hist b { font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; margin-right: 4px; }
+.gn-kv { margin: 0 20px 14px; }
+.pf-sw-o { cursor: pointer; }
+@media (hover: hover) { .pf-sw-o:hover { text-decoration: underline; } .past-tbl tr[data-open]:hover td { background: var(--sf2); } }
+.past-tbl tr[data-open] { cursor: pointer; }
 
 /* ── 내 종목 ── */
 .blk-mine-top { padding: 12px 16px 14px; }
@@ -770,6 +782,7 @@ svg { display: block; }
 .bd[data-basis] { cursor: help; }
 .bd-new { background: var(--acc-soft); color: var(--acc); }
 .bd-warn { background: var(--warn-soft); color: var(--warn); }
+.bd-gone { background: var(--down-soft); color: var(--down); }
 .bd-ev { background: var(--ev-soft); color: var(--ev); }
 .bd-t { background: var(--sf3); color: var(--ink); }
 .bd-t b { margin-right: 4px; font-weight: 800; }
@@ -1582,9 +1595,9 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       // 편성 — 메인 화면과 같은 구조(국가 → 주제별 → tier 순). themes 에 없는 주제(구 스냅샷)는 뒤에 붙인다.
       var order = (D.themes || []).map(function (t) { return t.key; });
       function themeRank(k) { var i = order.indexOf(k); return i < 0 ? 99 : i; }
-      function stockRow(s) {
-        var sig = [s.ss, s.sm, s.sl].filter(Boolean).map(sigWord).join(" · ");
-        return '<tr data-pt="' + esc(s.t) + '">' +
+      function stockRow(s) {   // 누르면 상세 — 지금 편성에 있으면 지금 카드, 빠졌으면 제외 당시 분석
+        var sig = [s.ss, s.sm, s.sl].filter(Boolean).map(sigWord).join(" · "), now = findStock(s.c, s.t, s.th);
+        return '<tr data-pt="' + esc(s.t) + '"' + openAttrs(s.c, s.t, now ? now.theme : s.th, ' data-n="' + esc(s.n || "") + '"') + ">" +
           "<td>" + esc(s.n) +
             (s.tier ? ' <span class="tb t' + esc(s.tier) + ' pv-tier">T' + esc(s.tier) + "</span>" : "") +
             (sig ? '<div class="pv-sig">' + esc(sig) + "</div>" : "") + "</td>" +
@@ -1610,7 +1623,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
                 "<tbody>" + rows + "</tbody></table>" +
             "</div>";
         }).join("");
-        return '<section class="past-country" data-c="' + cc + '"' + (cc === pastCountry ? "" : " hidden") + ">" + body + "</section>";
+        return '<section class="past-country" data-ctx="past" data-c="' + cc + '"' + (cc === pastCountry ? "" : " hidden") + ">" + body + "</section>";
       }
       var note = h.note || h.noteKR || h.noteUS;
       return '<section class="blk">' +
@@ -2554,7 +2567,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     var box = el.querySelector(".ch-box");
     if (window.ResizeObserver) { CH.ro = new ResizeObserver(function () { if (CH.cur === st && st.src) drawChart(st); }); CH.ro.observe(box); }
     bindChart(st);
-    if (it.light) {
+    if (it.light || it.gone) {   // 시세만 있는 종목·편성에서 빠진 종목 — 시세 서버 2년 종가 선(빠진 종목의 data/chart/ 파일은 지워진다)
       var d = wlCache[it.c + ":" + it.t];
       if (d && d !== "loading" && d.closes) setChartSrc(st, barsFromCloses(d.closes, d.dates), true, d.dates && d.dates.length ? d.dates[d.dates.length - 1] : null);
       else if (d === null) chartMsg(st, "차트 불러오기 실패");
@@ -3636,6 +3649,111 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       '<div class="dt-act">' + acts + "</div>";
   }
 
+  // ── 편성에서 빠진 종목 상세 — data/removed.json(scripts/lib-removed.js: update-reco.js 가 remove 할 때 남긴 마지막 카드, 400일 보관)은 열 때만 받는다 ──
+  //   2026-11-06 사용자 '제외된 종목도 상세 화면 볼 수 있게'. 지금 시세·2년 종가 선은 시세 서버(fetchWatchOne), 분석은 빠질 때의 카드 그대로(그 뒤 갱신 안 함).
+  var GONE = { data: null, req: null };
+  function loadGone(cb) {
+    if (GONE.data) { cb(); return; }
+    if (!GONE.req) GONE.req = (typeof fetch === "function" ? fetch("data/removed.json", { cache: "no-cache" }).then(function (r) { return r.ok ? r.json() : null; }) : Promise.resolve(null))
+      .catch(function () { return null; })
+      .then(function (j) { GONE.data = j && j.items ? j : { items: {}, fail: true }; });
+    GONE.req.then(cb);
+  }
+  function goneOf(c, t) { return GONE.data && GONE.data.items ? GONE.data.items[c + "|" + t] || null : null; }
+  // 종목 업데이트 기록(history-index.js roster)에서 이 종목의 편입·제외·주제 이동 — 과거→최신
+  function rosterEvents(c, t) {
+    var out = [];
+    ROSTER_HIST.forEach(function (e) {
+      [["added", "in"], ["removed", "out"], ["moved", "mv"]].forEach(function (p) {
+        (e[p[0]] || []).forEach(function (x) { if (x.c === c && x.t === t) out.push({ d: e.date, k: p[1], th: x.th, from: x.from }); });
+      });
+    });
+    return out;
+  }
+  // 빠질 때의 자리 — '저평가 · T1' · '관심 · 턴어라운드' · '히든(종료) · T2'
+  function goneSlot(th, tier, tag) {
+    return themeMeta(th).label + (tag ? " · " + tag : "") + (tier && (isFormal(th) || RETIRED_THEMES[th]) ? " · T" + tier : "");
+  }
+  // 제외 사유 — 결격 판정 메모(candidate-notes.json·candidates.js)가 있으면 그것, 10/30 히든 폐지는 그 사실
+  function goneReason(g) {
+    if (g.reason && g.reason.note) return g.reason;
+    if (g.th === "rising" && g.removedAt >= "2026-10-30") return { note: "히든 주제 폐지 — 과거 성적이 약해 주제를 없앴다.", asOf: "2026-10-30" };
+    return null;
+  }
+  function goneVerdict(v) { return v === "실질" || v === "형식" ? v + " 결격" : v || ""; }
+  function gonePerf(c, t) {   // 성과 탭(perf.json)을 받아 둔 경우만 — 최근 90일 편출의 편성 중·편출 뒤 성적
+    var C = PERF && PERF[c], r = C && (C.removed || []).filter(function (x) { return x.t === t; });
+    return r && r.length ? r[r.length - 1] : null;
+  }
+  function goneDetailHtml(it) {
+    var c = it.c, t = it.t, g = goneOf(c, t), cd = (g && g.card) || {}, d = wlCache[c + ":" + t], ok = d && d !== "loading";
+    var ev = rosterEvents(c, t), lastOut = null;
+    ev.forEach(function (x) { if (x.k === "out") lastOut = x; });
+    var outD = g ? g.removedAt : lastOut ? lastOut.d : "", th = g ? g.th : lastOut ? lastOut.th : it.th;
+    var nm = (g && g.n) || it.n || t, asTag = outD ? ' <span class="md-as">' + esc(mdOf(outD)) + " 제외 당시</span>" : "";
+    var bds = '<span class="bd bd-gone">편성 제외</span>' + (outD ? '<span class="bd">' + esc(mdOf(outD)) + " 제외 · " + esc(goneSlot(th, g ? g.tier : null, cd.watchTag)) + "</span>" : "");
+    var px = ok ? '<div class="dt-pxl"><span class="dt-pv">' + esc(fmtPrice(d.price, c)) + "</span>" + chgHtml(d.chg != null ? d.chg : chgNum(d.ta && d.ta.change), "dt-ch") + "</div>" : "";
+    var meta = ok ? (inSession(c === "korea", d.date) ? '<span class="live-tx" title="장중 시세 — 최대 20분가량 늦을 수 있음"><i class="live-dot"></i>장중</span>' : esc(d.date || "최근") + " 종가") + " · 전일 대비"
+      : d === null ? "지금 시세 불러오기 실패" : "시세 불러오는 중…";
+    var top = '<div class="dt-top">' + px + '<div class="dt-meta">' + meta + '</div><div class="dt-bd">' + bds + "</div></div>";
+    // 요약 — 제외 뒤 등락(빠질 때 카드의 가격 → 지금), 성과 탭을 받아 뒀으면 편성 중 성적
+    var cells = [], pr = gonePerf(c, t);
+    if (ok && cd.price > 0) {
+      var since = (d.price / cd.price - 1) * 100;
+      cells.push(kv("제외 뒤", '<span class="' + sgnCls(since).trim() + '">' + esc(fmtPct(since)) + "</span>", esc(mdOf(cd.priceDate || outD)) + " " + esc(fmtPrice(cd.price, c)) + " → 지금",
+        "빠질 때 카드에 남은 가격(그날 종가 또는 갱신 시점 가격)부터 지금 시세까지의 등락 — 배당 제외"));
+    }
+    if (pr) cells.push(kv("편성 중", '<span class="' + sgnCls(pr.ret).trim() + '">' + esc(fmtPct(pr.ret)) + "</span>", esc(mdOf(pr.d0) + "~" + mdOf(pr.d1)) + " · 지수 대비 " + esc(fmtPp(pr.ex)),
+      "편성에 있던 동안의 종가 수익률과 같은 기간 " + benchName(c) + " 대비(성과 탭과 같은 계산)" + (pr.postEx != null ? " · 편출 뒤 지수 대비 " + fmtPp(pr.postEx) : "")));
+    if (cells.length % 2) cells.push('<div class="kv-c"></div>');
+    var sum = cells.length ? '<div class="kv gn-kv">' + cells.join("") + "</div>" : "";
+    // 제외 사유·이력
+    var r = g && goneReason(g);
+    var why = r ? '<p class="dt-txt">' + (r.verdict ? "<b>" + esc(goneVerdict(r.verdict)) + "</b> — " : "") + esc(r.note) + "</p>" + (r.asOf ? '<p class="gn-at">판정 ' + esc(mdOf(r.asOf)) + "</p>" : "")
+      : '<p class="dt-txt dt-mut">기록된 사유 없음.</p>';
+    var first = ROSTER_HIST.length ? ROSTER_HIST[0].prevDate || ROSTER_HIST[0].date : null;
+    var KW = { "in": "편입", out: "제외", mv: "주제 이동" };
+    var hist = ev.map(function (x) {
+      return '<li class="gh-' + x.k + '"><b>' + esc(mdOf(x.d)) + "</b> " + KW[x.k] + " · " + esc(x.from ? themeMeta(x.from).label + " → " + themeMeta(x.th).label : themeMeta(x.th).label) + "</li>";
+    });
+    if (ev.length && ev[0].k !== "in" && first) hist.unshift("<li><b>~" + esc(mdOf(first)) + "</b> 기록 시작 전부터 편성</li>");
+    var secs = [["out", "제외 사유·이력", why + (hist.length ? '<ul class="gn-hist">' + hist.join("") + "</ul>" : "")]];
+    if (g) {
+      if (cd.thesis) secs.push(["thesis", "투자 포인트" + asTag, '<p class="dt-txt">' + esc(cd.thesis) + "</p>"]);
+      var vc = [kv("목표가", esc(fmtPrice(cd.targetPrice, c)), cd.tpAsOf ? "컨센서스 " + esc(mdOf(cd.tpAsOf)) : "", "빠질 때 카드의 증권사 컨센서스 목표가 — 그 뒤 갱신 안 함.\n\n" + TP_REALITY),
+        cd.aiTarget != null ? kv("AI 적정가", esc(fmtPrice(cd.aiTarget, c)), cd.aiAsOf ? esc(mdOf(cd.aiAsOf)) : "", cd.aiBasis || "") : kv("AI 적정가", "–", "", "", true)];
+      if (cd.dividendYield != null) vc.push(kv("배당수익률", esc(fmtDiv(cd.dividendYield)), "", "빠질 때 카드 값"), '<div class="kv-c"></div>');
+      var fin = (cd.earnings ? '<div class="earn">' + esc(cd.earnings) + "</div>" : "") +
+        (cd.valueNote ? '<div class="sig-box"><span class="sig-k">밸류</span><div class="sig-txt">' + esc(cd.valueNote) + "</div></div>" : "") + '<div class="kv">' + vc.join("") + "</div>";
+      secs.push(["fin", "실적·밸류" + asTag, fin]);
+      var n = cd.techNote || {};
+      if (n.short || n.mid || n.long) {
+        var line = function (k, v, gr) { return v ? '<div class="tn-line"><span class="tn-k">' + k + '</span><span class="tn-v">' + sigBadge(gr) + esc(v) + "</span></div>" : ""; };
+        secs.push(["tech", "기술 대응" + asTag, '<div class="tech-note">' + (n.asOf ? '<div class="sec-note">' + esc(n.asOf) + " 종가 기준</div>" : "") +
+          line("단기", n.short, n.sigShort) + line("중기", n.mid, n.sigMid) + line("장기", n.long, n.sigLong) + "</div>"]);
+      }
+      if ((cd.risks || []).length) secs.push(["risk", "리스크" + asTag, '<ul class="risk-list">' + cd.risks.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>"]);
+    } else {
+      secs[0][2] += '<p class="dt-txt dt-mut">' + (!GONE.data ? "제외 당시 분석 불러오는 중…" : GONE.data.fail ? "제외 당시 분석 불러오기 실패." : "제외 당시 분석 기록 없음(보관 400일 밖이거나 기록 전).") + "</p>";
+    }
+    secs.push(["ai", "AI에게 묻기", aiSectionHtml("g:" + c + ":" + t, { kind: "gone", c: c, t: t, n: nm })]);
+    var NAV = { out: "제외", thesis: "포인트", fin: "실적", tech: "기술", risk: "리스크", ai: "AI" };
+    var nav = '<nav class="dt-nav" aria-label="상세 항목">' + secs.map(function (x, i) {
+      return '<a href="#dt-' + x[0] + '" data-sec="dt-' + x[0] + '"' + (i === 0 ? ' class="on"' : "") + ">" + NAV[x[0]] + "</a>";
+    }).join("") + "</nav>";
+    var body = secs.map(function (x) { return '<section class="dt-sec" id="dt-' + x[0] + '"><h3>' + x[1] + "</h3>" + x[2] + "</section>"; }).join("");
+    var srcs = (cd.sources || []).slice(0, 3).map(function (u, i) { return '<a href="' + esc(safeUrl(u)) + '" target="_blank" rel="noopener">출처' + (i + 1) + "</a>"; }).join("");
+    var stub = { ticker: t, name: nm };
+    var acts = '<a class="btn" href="' + esc(safeUrl(cd.chartUrl || naverChartUrl(t, c))) + '" target="_blank" rel="noopener" title="네이버 증권에서 보기">' + ICON.ext + " 네이버</a>" +
+      favAct(stub, c, "watch") + favAct(stub, c, "hold");
+    return top + (ok ? chartHtml(t) : "") + newsHtml(t) + sum + nav + body +
+      (srcs ? '<div class="dt-src">' + srcs + "</div>" : "") + '<div class="dt-act">' + acts + "</div>";
+  }
+  function goneRepaint(c, t) {
+    var cur = SH.open && SH.ctx[SH.idx];
+    if (cur && cur.gone && cur.c === c && cur.t === t) renderSheet(true);
+  }
+
   // 주제 순서 — 사용자가 드래그로 바꾼 순서를 이 기기에 저장
   var THEME_ORDER_KEY = "themeOrder.v1";
   function loadThemeOrder() {
@@ -3764,7 +3882,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     }
     renderRosterBody(sel.value || def.date);
   }
-  // 선택된 날짜의 편입/제외 — 주제별로 묶은 이름 칩. 지금 편성에 있는 종목은 눌러서 상세를 연다.
+  // 선택된 날짜의 편입/제외 — 주제별로 묶은 이름 칩. 누르면 상세(지금 편성에 없는 종목은 제외 당시 분석)를 연다.
   function renderRosterBody(date) {
     var entry = null;
     for (var i = 0; i < ROSTER_HIST.length; i++) { if (ROSTER_HIST[i].date === date) { entry = ROSTER_HIST[i]; break; } }
@@ -3772,9 +3890,10 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     var cc = state.country, mine = function (l) { return (l || []).filter(function (x) { return x.c === cc; }); };
     var moved = mine(entry.moved);
     function thLabel(key) { return themeMeta(key).label || key; }
+    //   빠진 종목(제외 칩·그 뒤 빠진 편입 칩)도 눌러서 연다 — 보관 카드(data/removed.json)와 지금 시세(2026-11-06 사용자 요청)
     function item(s, cls) {
-      var hit = cls !== "out" ? findStock(s.c, s.t, s.th) : null;
-      return '<span class="rs-i ' + cls + (hit ? " rs-link" : "") + '"' + (hit ? openAttrs(s.c, s.t, hit.theme) : "") + ">" +
+      var hit = findStock(s.c, s.t, s.th);
+      return '<span class="rs-i ' + cls + ' rs-link"' + openAttrs(s.c, s.t, hit ? hit.theme : s.th, ' data-n="' + esc(s.n || "") + '"') + ">" +
         esc(s.n) +
         (s.from ? '<span class="rs-from">' + esc(thLabel(s.from)) + " →</span>" : "") + "</span>";
     }
@@ -4430,13 +4549,13 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
         '<div class="r-r"><div class="r-px' + sgnCls(r.ret) + '">' + fmtPct(r.ret) + "</div></div></div>";
     }).join("");
     var gone = (C.removed || []).filter(function (r) { return LPinGroup(key, r.th, r.tier); });
-    var goneHtml = gone.length ? pfDetails("pf-gone-" + c + "-" + key, "pf-gone") + "<summary>최근 90일 편출 " + gone.length + '종목</summary><div class="list">' + gone.map(function (r) {
+    var goneHtml = gone.length ? pfDetails("pf-gone-" + c + "-" + key, "pf-gone") + "<summary>최근 90일 편출 " + gone.length + '종목</summary><div class="list" data-ctx="perf-gone">' + gone.map(function (r) {
       var post = r.postEx == null ? '<div class="r-px flat">–</div>' : '<div class="r-px' + sgnCls(r.postEx) + '">' + fmtPp(r.postEx) + "</div>";
-      return '<div class="row pr no-open" data-basis="' + esc(r.n + " — " + mdOf(r.d0) + "~" + mdOf(r.d1) + " 보유 중 " + fmtPct(r.ret) + "(같은 기간 지수 대비 " + fmtPp(r.ex) + ")" +
-          (r.post != null ? ", 편출 뒤 " + fmtPct(r.post) + "(지수 대비 " + fmtPp(r.postEx) + ")" : "")) + '"><div class="r-l"><div class="r-nm"><span class="r-name">' + esc(r.n) + "</span></div>" +
+      var back = findStock(c, r.t, r.th);   // 다시 편입된 종목이면 지금 카드, 아니면 제외 당시 분석
+      return '<div class="row pr"' + openAttrs(c, r.t, back ? back.theme : r.th, ' data-n="' + esc(r.n) + '"') + '><div class="r-l"><div class="r-nm"><span class="r-name">' + esc(r.n) + "</span></div>" +
         '<div class="r-sub"><span>' + (isTierKey(key) ? esc(themeMeta(r.th).label) + " · " : "") + esc(mdOf(r.d1)) + " 편출 · 보유 중 " + fmtPct(r.ret) + "</span></div></div>" +
         '<div class="r-r">' + post + '<div class="r-ch flat">편출 후</div></div></div>';
-    }).join("") + '</div><p class="pf-note">편출 후 = 뺀 날 종가부터 지금까지 지수 대비. 양수면 뺀 뒤에 지수보다 더 올랐다는 뜻(누르면 자세히).</p></details>' : "";
+    }).join("") + '</div><p class="pf-note">편출 후 = 뺀 날 종가부터 지금까지 지수 대비. 양수면 뺀 뒤에 지수보다 더 올랐다는 뜻. 누르면 제외 사유와 그때 분석.</p></details>' : "";
     return '<div class="pf-det">' + (facts.length ? '<div class="pf-facts">' + facts.join("") + "</div>" : "") +
       (list ? '<div class="list" data-ctx="perf">' + list + "</div>" : '<div class="empty">지금 편성된 종목 없음.</div>') + goneHtml + "</div>";
   }
@@ -4454,14 +4573,16 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       (live ? " · 진행 중 " + live + "회" : "") + ". 표본이 작아 방향만 참고.";
     else verdict = "아직 20거래일이 지난 교체 없음(진행 중 " + live + "회). 교체일부터 지금까지의 차이는 아래.";
     var rowOf = function (x) {
-      var nm = function (a) { return a.map(function (y) { return y.n; }).join(", "); };
+      var nm = function (a) {   // 이름을 누르면 상세(빠진 종목은 제외 당시 분석)
+        return a.map(function (y) { var h = findStock(c, y.t, x.th); return '<span class="pf-sw-o"' + openAttrs(c, y.t, h ? h.theme : x.th, ' data-n="' + esc(y.n) + '"') + ">" + esc(y.n) + "</span>"; }).join(", ");
+      };
       // 20거래일이 지나면 그 시점 값으로 판정, 그 전은 '진행 중'(며칠짜리 차이는 승패를 매기지 않는다)
       var done = x.add20 != null && x.rem20 != null, a = done ? x.add20 : x.addNow, r = done ? x.rem20 : x.remNow;
       var state2 = done ? "20거래일 뒤 · " + (a > r ? "편입이 나음" : "편출이 나음") : "진행 중" + (x.days != null ? " · " + x.days + "거래일째" : "");
       return '<div class="pf-sw' + (done ? "" : " pf-sw-live") + '"><div class="pf-sw-h"><span>' + esc(mdOf(x.d)) + "</span><span>" + esc(themeMeta(x.th).label) + "</span>" +
         '<span class="pf-sw-w">' + esc(state2) + "</span></div>" +
-        '<div class="pf-sw-b"><span class="pf-sw-k">편입</span><span class="pf-sw-n">' + esc(nm(x.add)) + '</span><b class="' + sgnCls(a).trim() + '">' + fmtPp(a) + "</b></div>" +
-        '<div class="pf-sw-b"><span class="pf-sw-k">편출</span><span class="pf-sw-n">' + esc(nm(x.rem)) + '</span><b class="' + sgnCls(r).trim() + '">' + fmtPp(r) + "</b></div></div>";
+        '<div class="pf-sw-b"><span class="pf-sw-k">편입</span><span class="pf-sw-n">' + nm(x.add) + '</span><b class="' + sgnCls(a).trim() + '">' + fmtPp(a) + "</b></div>" +
+        '<div class="pf-sw-b"><span class="pf-sw-k">편출</span><span class="pf-sw-n">' + nm(x.rem) + '</span><b class="' + sgnCls(r).trim() + '">' + fmtPp(r) + "</b></div></div>";
     };
     var head = W.list.slice(0, 4).map(rowOf).join(""), rest = W.list.slice(4);
     return pBlk("교체 성과", "편입 vs 편출 · " + esc(benchName(c)) + " 대비",
@@ -4952,7 +5073,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     var el = document.getElementById("wlr-" + w.c + "-" + w.t);
     if (el) el.outerHTML = lightRowHtml(w, { edit: state.mineEdit });
     var cur = SH.open && SH.ctx[SH.idx];
-    if (cur && cur.light && cur.c === w.c && cur.t === w.t) renderSheet(true);
+    if (cur && (cur.light || cur.gone) && cur.c === w.c && cur.t === w.t) renderSheet(true);
     markActiveRow();
   }
 
@@ -5084,13 +5205,15 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       return;
     }
     var s = it.light ? null : findStock(it.c, it.t, it.th);
-    document.getElementById("shName").textContent = it.light ? (it.n || it.t) : (s ? s.name : it.t);
-    document.getElementById("shCode").textContent = it.t + " · " + (s && s.market ? s.market : (it.c === "us" ? "US" : "KR"));
+    it.gone = !it.light && !s;   // 편성에서 빠진 종목 — 보관 카드(data/removed.json) + 지금 시세
+    var g = it.gone ? goneOf(it.c, it.t) : null;
+    document.getElementById("shName").textContent = it.light ? (it.n || it.t) : s ? s.name : (g && g.n) || it.n || it.t;
+    document.getElementById("shCode").textContent = it.t + " · " + (s && s.market ? s.market : g && g.card && g.card.market ? g.card.market : (it.c === "us" ? "US" : "KR"));
     document.getElementById("shPos").textContent = SH.ctx.length > 1 ? (SH.idx + 1) + "/" + SH.ctx.length : "";
     document.getElementById("shPrev").disabled = SH.idx <= 0;
     document.getElementById("shNext").disabled = SH.idx >= SH.ctx.length - 1;
     shBody.innerHTML = it.light ? lightDetailHtml({ c: it.c, t: it.t, n: it.n, k: it.k })
-      : (s ? detailHtml(s, it.c, it) : '<div class="empty">종목 정보 없음(편성에서 빠졌을 수 있음).</div>');
+      : s ? detailHtml(s, it.c, it) : goneDetailHtml(it);
     mountChart(it);
     if (s) mountTrend(it);
     shBody.scrollTop = top;
@@ -5099,6 +5222,11 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     markActiveRow();
     if (s) ensureLive([s], refreshLive);
     else if (it.light) fetchWatchOne({ c: it.c, t: it.t, n: it.n, k: it.k }, function () { lightRepaint({ c: it.c, t: it.t, n: it.n, k: it.k }); });
+    else {
+      var gc = it.c, gt = it.t, again = function () { goneRepaint(gc, gt); };
+      if (!GONE.data) loadGone(again);
+      fetchWatchOne({ c: gc, t: gt, n: it.n }, again);
+    }
   }
   // 홈 '최근 추세 전환'처럼 특정 섹션을 보려고 연 종목 — 그 섹션으로 내려 둔다(추세 내용이 뒤늦게 채워지면 한 번 더 맞춘다)
   function jumpToSec(id) {
@@ -6013,6 +6141,25 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     out.push(newsTxt(t));
     return out.filter(Boolean).join("\n");
   }
+  // 편성에서 빠진 종목 — 지금 시세(ctxLight 둘째 줄부터) + 빠질 때의 카드·사유·편성 이력
+  function ctxGone(c, t, nm) {
+    var g = goneOf(c, t), cd = (g && g.card) || {}, r = g && goneReason(g), n = cd.techNote || {};
+    var ev = rosterEvents(c, t).map(function (x) { return x.d + " " + ({ "in": "편입", out: "제외", mv: "주제 이동" })[x.k] + "(" + themeMeta(x.th).label + ")"; });
+    return [
+      "종목: " + ((g && g.n) || nm || t) + " (" + t + ", " + (c === "us" ? "미국" : "한국") + ") · 앱 편성에서 빠진 종목" +
+        (g ? " — " + g.removedAt + " " + goneSlot(g.th, g.tier, cd.watchTag) + " 자리에서 제외" : "") + ". 아래 분석은 빠질 때의 카드라 그 뒤 소식은 검색으로 확인",
+      ctxLight(c, t, nm).split("\n").slice(1).join("\n"),
+      r ? "제외 사유: " + (r.verdict ? goneVerdict(r.verdict) + " — " : "") + r.note : "",
+      ev.length ? "편성 이력: " + ev.join(" → ") : "",
+      cd.price ? "제외 당시 가격: " + fmtPrice(cd.price, c) + " (" + (cd.priceDate || "") + ")" : "",
+      cd.thesis ? "제외 당시 투자 포인트: " + cd.thesis : "",
+      cd.earnings ? "제외 당시 실적: " + cd.earnings : "",
+      cd.valueNote ? "제외 당시 밸류: " + cd.valueNote : "",
+      (cd.risks || []).length ? "제외 당시 리스크: " + cd.risks.join(" / ") : "",
+      n.short || n.mid || n.long ? "제외 당시 기술 대응(" + (n.asOf || "") + "): 단기 " + (n.short || "–") + " | 중기 " + (n.mid || "–") + " | 장기 " + (n.long || "–") : "",
+      cd.targetPrice ? "제외 당시 컨센서스 목표가: " + fmtPrice(cd.targetPrice, c) + (cd.tpAsOf ? " (" + cd.tpAsOf + ")" : "") : ""
+    ].filter(Boolean).join("\n");
+  }
   function idxLine(x) {
     if (!x) return "";
     return x.name + " " + x.level + " " + x.change + " — " + ["short", "mid", "long"].map(function (k) {
@@ -6079,6 +6226,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     var i = AI.info[ctx] || {};
     if (i.kind === "stock") return ctxStock(i.c, i.t, i.th);
     if (i.kind === "light") return ctxLight(i.c, i.t, i.n);
+    if (i.kind === "gone") return ctxGone(i.c, i.t, i.n);
     if (i.kind === "index") return ctxIndex(i.key);
     if (i.kind === "macro") return ctxMacro(i.key);
     return ctxMarket(i.c || state.country);
@@ -6086,6 +6234,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   var AI_CHIPS = {
     stock: ["추천 근거를 쉽게 설명해줘", "지금 가장 큰 리스크는 뭐야?", "최근 뉴스와 실적을 정리해줘", "신호와 변동 범위는 어떻게 읽어?"],
     light: ["이 종목을 간단히 분석해줘", "최근 실적과 뉴스는?", "어떤 리스크를 봐야 해?"],
+    gone: ["왜 편성에서 빠졌어?", "빠진 뒤 실적과 뉴스는?", "지금 어떤 리스크를 봐야 해?"],
     index: ["지금 이 지수 흐름을 설명해줘", "이번 주 주목할 일정은?", "유동성 판단과 어떻게 연결돼?"],
     macro: ["최근 움직임의 원인을 설명해줘", "내 편성 종목에 어떤 영향이 있어?", "앞으로 확인할 일정·변수는?"],
     market: ["오늘 시장을 3줄로 요약해줘", "금리 전망이 주식에 주는 영향은?", "유동성 판단 근거를 설명해줘", "Top Pick 은 왜 골랐어?"]

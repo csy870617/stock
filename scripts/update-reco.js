@@ -98,6 +98,7 @@ D.us = D.us || [];
 
 const warnings = [];
 let merged = 0, added = 0, removed = 0;
+const removedCards = [];   // 이번 패치로 빠진 카드 — 저장 뒤 data/removed.json 에 남긴다
 
 // ── 상단 필드 ──
 ["generatedAt", "generatedAtTs", "marketNote", "marketNoteUS", "marketNoteKR", "marketNoteAsOf", "disclaimer", "topPicks", "deepDiscovery"].forEach((k) => {
@@ -241,6 +242,8 @@ const origTp = {};
     const base = (ok in origTp) ? origTp[ok] : s.targetPrice;
     if (typeof base === "number" && base > 0 && !(ok in ledgerTp) && !(ok in tpChanged)) tpChanged[ok] = base;
   });
+  // 지우기 직전 카드를 보관 — 앱이 편성에서 빠진 종목도 '제외 당시 분석'으로 열 수 있게(data/removed.json, lib-removed.js)
+  D[r.country].forEach((s) => { if (s.ticker === r.ticker && (r.theme == null || s.theme === r.theme)) removedCards.push({ c: r.country, card: JSON.parse(JSON.stringify(s)) }); });
   D[r.country] = D[r.country].filter((s) => !(s.ticker === r.ticker && (r.theme == null || s.theme === r.theme)));
   removed += before - D[r.country].length;
 });
@@ -441,6 +444,21 @@ const realOps = added + removed;
 if (IS_REAL_SAVE && (realOps > 0 || Object.keys(tpChanged).length)) {
   const tp = Object.assign({}, ledgerTp, tpChanged);
   fs.writeFileSync(LEDGER, JSON.stringify({ date: todayUTC, ops: ledgerOps + realOps, tp: tp }) + "\n");
+}
+
+// 편출 카드 보관(data/removed.json) — 실제 저장이고 편입·편출이 있을 때만(시세·컨센서스만 바꾸는 Action 실행은 이 파일을 건드리지 않는다).
+//   사유 = 지금 candidate-notes.json 의 결격 판정 메모(없으면 candidates.js 의 결격 신호). 다시 편입된 종목은 보관에서 뺀다.
+if (IS_REAL_SAVE && (removedCards.length || added > 0)) {
+  try {
+    const LR = require("./lib-removed");
+    let notes = null, cands = null;
+    try { notes = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "data", "candidate-notes.json"), "utf8")); } catch (_e) { notes = null; }
+    try { const cw = {}; new Function("window", fs.readFileSync(path.join(__dirname, "..", "data", "candidates.js"), "utf8"))(cw); cands = cw.CANDIDATES || null; } catch (_e) { cands = null; }
+    const recs = removedCards.map((x) => ({ c: x.c, card: x.card, removedAt: todayUTC,
+      reason: LR.defectNote(notes, x.c, x.card.theme, x.card.ticker) || LR.defectFlags(cands, x.c, x.card.theme, x.card.ticker) }));
+    const n = LR.upsertRemoved(recs, todayUTC, LR.presentSet(D));
+    if (n != null) console.log("  data/removed.json 갱신 — 편출 카드 " + recs.length + "건 보관 · 전체 " + n + "종목(함께 커밋)");
+  } catch (e) { console.log("  ⚠ 편출 카드 보관 실패(본 작업은 저장됨): " + e.message); }
 }
 
 console.log("recommendations.js 갱신 → " + OUT);
