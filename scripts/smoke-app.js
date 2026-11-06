@@ -81,6 +81,13 @@ async function run(browser, base) {
     await page.waitForFunction(() => document.getElementById("sheet").hidden, null, T);
     await page.click('#mkTabs [data-mkp="0"]');
   });
+  await step("시장 심리 카드·상세", async () => {
+    if (!(await page.$("[data-se]"))) return;   // 심리 자료가 없으면 건너뛴다
+    await page.click("[data-se]");
+    await page.waitForFunction(() => { const s = document.getElementById("sheet"); return s && !s.hidden && document.querySelector("#se-sc svg"); }, null, T);
+    await page.click("#shBack");
+    await page.waitForFunction(() => document.getElementById("sheet").hidden, null, T);
+  });
   await step("추천 종목 목록", async () => { await tab("reco"); await page.waitForFunction(() => document.querySelectorAll("#recoList .row").length > 0, null, T); });
   await step("종목 상세 열기·닫기", async () => {
     await page.click("#recoList [data-open]");

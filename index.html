@@ -67,6 +67,7 @@
   --rng-core:  #8b95a1;
   --tgt:       #f59f00;
   --lq0: #d9480f; --lq1: #f08c00; --lq2: #868e96; --lq3: #37b24d; --lq4: #2b8a3e;
+  --se0: #1b64da; --se1: #5b95ec; --se2: #868e96; --se3: #ef6b77; --se4: #d6283b;   /* 시장 심리: 극도의 공포(파랑) ~ 극도의 환호(빨강) — 국내 하락·상승 색과 같은 쪽 */
   --shadow:    0 10px 30px rgba(0,0,0,0.12);
   --hdr: 52px;
   --tab: 58px;
@@ -106,6 +107,7 @@
   --rng-core:  #8b95a1;
   --tgt:       #fcc419;
   --lq0: #ff6b2c; --lq1: #ffa94d; --lq2: #9aa1a9; --lq3: #51cf66; --lq4: #40c057;
+  --se0: #5b9dff; --se1: #8fb8ef; --se2: #9aa1a9; --se3: #f29aa1; --se4: #ff5c68;
   --shadow:    0 10px 30px rgba(0,0,0,0.55);
 }
 @media (prefers-color-scheme: dark) {
@@ -142,6 +144,7 @@
     --rng-core:  #8b95a1;
     --tgt:       #fcc419;
     --lq0: #ff6b2c; --lq1: #ffa94d; --lq2: #9aa1a9; --lq3: #51cf66; --lq4: #40c057;
+    --se0: #5b9dff; --se1: #8fb8ef; --se2: #9aa1a9; --se3: #f29aa1; --se4: #ff5c68;
     --shadow:    0 10px 30px rgba(0,0,0,0.55);
   }
 }
@@ -484,6 +487,39 @@ svg { display: block; }
 .fw-evk { display: inline-block; margin-right: 6px; padding: 0 6px; border-radius: 4px; font-size: 11.5px; font-weight: 700; line-height: 19px; color: var(--ink2); background: var(--sf3); vertical-align: 1px; }
 .fw-foot { margin: 14px 0 4px; font-size: 11.5px; line-height: 1.6; color: var(--mut); }
 @media (max-width: 379px) { .fw-cs { grid-template-columns: minmax(0, 1fr); } .fw-bar.big i { width: 16px; } }
+/* 시장 심리 온도계 — 홈 카드와 상세(data/sentiment.js, 2026-11-06). 0 극도의 공포(파랑) ~ 100 극도의 환호(빨강), 가운데 회색 */
+.fw-wrap.two { display: grid; gap: 10px; }
+@media (min-width: 700px) { .fw-wrap.two { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; } }
+.se-z0 { color: var(--se0); } .se-z1 { color: var(--se1); } .se-z2 { color: var(--se2); } .se-z3 { color: var(--se3); } .se-z4 { color: var(--se4); }
+.se-bar { position: relative; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 3px; width: 100%; max-width: 260px; padding: 5px 0; }
+.se-bar i { height: 8px; border-radius: 3px; opacity: 0.25; }
+.se-bar i.on { opacity: 1; }
+.se-bar i.z0 { background: var(--se0); } .se-bar i.z1 { background: var(--se1); } .se-bar i.z2 { background: var(--se2); } .se-bar i.z3 { background: var(--se3); } .se-bar i.z4 { background: var(--se4); }
+.se-bar.big { max-width: 340px; padding: 6px 0; } .se-bar.big i { height: 11px; border-radius: 4px; }
+.se-bar.sm { max-width: none; padding: 3px 0; gap: 2px; } .se-bar.sm i { height: 5px; border-radius: 2px; opacity: 0.3; }
+.se-mk { position: absolute; top: 1px; bottom: 1px; width: 4px; margin-left: -2px; border-radius: 2px; background: var(--ink); box-shadow: 0 0 0 2px var(--sf2); }
+.se-bar.sm .se-mk { width: 3px; margin-left: -1.5px; top: 0; bottom: 0; }
+.se-main { display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 10px; margin-top: 4px; }
+.se-sc { font-size: 26px; font-weight: 800; line-height: 1.15; font-variant-numeric: tabular-nums; letter-spacing: -0.5px; }
+.se-lv { font-size: 17px; font-weight: 800; letter-spacing: -0.3px; }
+.se-chg { font-size: 12.5px; color: var(--mut); font-variant-numeric: tabular-nums; }
+.se-warn { margin-top: 8px; padding: 6px 10px; border-radius: 8px; font-size: 12.5px; font-weight: 700; line-height: 1.5; background: var(--warn-soft); color: var(--warn); }
+.se-d { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--track); }
+.se-d.z0 { background: var(--se0); } .se-d.z1 { background: var(--se1); } .se-d.z2 { background: var(--se2); } .se-d.z3 { background: var(--se3); } .se-d.z4 { background: var(--se4); }
+.se-c { display: flex; align-items: center; gap: 6px; min-width: 0; font-size: 13px; }
+.se-hero { padding: 18px 20px 16px; }
+.se-hero .se-sc { font-size: 34px; }
+.se-hero .se-lv { font-size: 22px; }
+.se-scale { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 3px; max-width: 340px; font-size: 10.5px; line-height: 1.3; color: var(--mut); text-align: center; }
+.se-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-top: 1px solid var(--line2); }
+.se-row:first-of-type { border-top: 0; }
+.se-rl { flex: 1; min-width: 0; }
+.se-rn { display: flex; align-items: center; gap: 6px; font-size: 14.5px; font-weight: 700; }
+.se-rs { margin-top: 2px; font-size: 12px; line-height: 1.45; color: var(--mut); }
+.se-rr { flex: none; width: 132px; text-align: right; }
+.se-rv { font-size: 14px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.se-rp { font-size: 11.5px; color: var(--mut); font-variant-numeric: tabular-nums; }
+@media (max-width: 379px) { .se-rr { width: 112px; } .se-hero .se-sc { font-size: 30px; } }
 .liq-row { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 16px; margin-top: 14px; font-size: 13px; }
 .liq-row:empty { display: none; }
 .lq-k { font-weight: 700; color: var(--ink); }
@@ -1322,6 +1358,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
 <script src="data/liquidity.js"></script>
 <script src="data/liquidity-auto.js"></script>
 <script src="data/liquidity-flow.js"></script>
+<script src="data/sentiment.js"></script>
 <script src="data/indices.js"></script>
 <script src="data/index-notes.js"></script>
 <script src="data/stock-ta.js"></script>
@@ -4799,7 +4836,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     // 섹터 쪽이 보이거나 섹터 상세가 열려 있으면 섹터 시세도
     if ((state.tab === "home" && MK.cur === 1 && !window.__pastActive) || (cur && cur.sx)) ensureSectorLive(cur && cur.sx ? cur.c : state.country);
     // 열린 종목 상세는 그 시장 정규장 동안 1분마다(차트 장중 봉까지 — 2026-11-06 '차트도 실시간'), 나머지 종목은 5분마다
-    if (cur && !cur.light && !cur.gone && !cur.idx && !cur.sx && !cur.liq && !cur.ai) {
+    if (cur && !cur.light && !cur.gone && !cur.idx && !cur.sx && !cur.liq && !cur.se && !cur.ai) {
       var s = findStock(cur.c, cur.t, cur.th);
       if (s && mktOpen(isKrStock(s)) && Date.now() - (liveAt[s.ticker] || 0) >= 55000 && !liveInflight[s.ticker]) { liveAt[s.ticker] = 0; ensureLive([s], refreshLive); }
     }
@@ -5283,6 +5320,18 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       spySync();
       return;
     }
+    if (it.se) {   // 시장 심리 상세 — 오늘의 시장 '시장 심리' 카드
+      document.getElementById("shName").textContent = "시장 심리";
+      document.getElementById("shCode").textContent = (it.se === "us" ? "미국" : "한국") + " · 공포 ↔ 환호";
+      document.getElementById("shPos").textContent = "";
+      document.getElementById("shPrev").disabled = true;
+      document.getElementById("shNext").disabled = true;
+      shBody.innerHTML = sentiDetailHtml(it.se);
+      mountSentiChart(it.se);
+      shBody.scrollTop = top;
+      spySync();
+      return;
+    }
     if (it.sx) {   // 섹터 상세 — 오늘의 시장 섹터 칸(업종 ETF)
       var sxi = sectorOf(it.c, it.sx);
       document.getElementById("shName").textContent = sxi ? sxi.name : (it.n || it.sx);
@@ -5676,6 +5725,8 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       return;
     }
     if (t.closest("#mineEdit")) { state.mineEdit = !state.mineEdit; renderMine(); return; }
+    var seEl = t.closest("[data-se]");
+    if (seEl && !t.closest(".ic-tip")) { openSheet([{ se: seEl.getAttribute("data-se"), c: seEl.getAttribute("data-se"), t: "se", th: "se", n: "", why: "", idx: "", light: false, k: "" }], 0, seEl); return; }
     var fw = t.closest("[data-liq]");
     if (fw && !t.closest(".ic-tip")) { openSheet([{ liq: fw.getAttribute("data-liq"), c: fw.getAttribute("data-liq"), t: "liq", th: "liq", n: "", why: "", idx: "", light: false, k: "" }], 0, fw); return; }
     var op = t.closest("[data-open]");
@@ -5687,7 +5738,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   // role=button 행·칩은 네이티브 버튼과 달리 Enter/Space 가 click 을 만들지 않는다 — 위임으로 보완
   document.addEventListener("keydown", function (e) {
     if (e.key !== "Enter" && e.key !== " ") return;
-    var fwk = e.target.closest && e.target.closest('[data-liq][role="button"]');
+    var fwk = e.target.closest && e.target.closest('[data-liq][role="button"], [data-se][role="button"]');
     if (fwk && e.target === fwk) { e.preventDefault(); fwk.click(); return; }
     var el = e.target.closest && e.target.closest('[data-open][role="button"]');
     if (!el || e.target !== el) return;
@@ -5988,6 +6039,159 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   }
   window.addEventListener("resize", function () { var st = FWC.cur; if (st && st.sec.isConnected) { clearTimeout(st.t); st.t = setTimeout(function () { fwPaint(st); }, 150); } });
 
+  // ══ 시장 심리 온도계 — data/sentiment.js(scripts/update-sentiment.js, 매일 자동·토큰 0) ══
+  //   2026-11-06 사용자 '공포와 환호 등 대중의 심리까지 함께 분석되면 좋겠다' → 사전 등록 시험(scripts/research/sentiment/README.md).
+  //   지금 분위기(사실)로만 보인다 — 역발상(공포에 사라)은 두 나라 모두 근거가 없었고, 검증을 통과한 미국 '극도의 공포 뒤 3개월 추가 급락'만 경고 문장으로.
+  //   홈 '오늘의 시장' 돈의 흐름 옆 카드(0~100 점수·다섯 구간 띠·구성 지표) → 누르면 상세(점수·지수 5년 주간 그래프·지표별 위치·검증 사실·AI).
+  var SE_NAMES = ["극도의 공포", "공포", "중립", "환호", "극도의 환호"];
+  var SE_SHORT = { vix: "VIX", safe: "안전자산", cred: "신용 스프레드", for: "외국인", brd: "업종 폭", lev: "신용융자", vol: "변동성", mom: "모멘텀", fx: "원/달러" };   // 홈 카드 칸 이름
+  function seOf(c) { var S = window.MARKET_SENTIMENT, k = c === "us" ? "us" : "korea"; return S && S[k] && S[k].score != null ? S[k] : null; }
+  function seZone(v) { return v == null || !isFinite(v) ? 2 : v < 20 ? 0 : v < 40 ? 1 : v < 60 ? 2 : v < 80 ? 3 : 4; }
+  function seRound(v) { return v == null || !isFinite(v) ? "–" : String(Math.round(v)); }
+  function seBar(score, size) {   // 다섯 구간 띠(지금 구간만 진하게) + 지금 위치 표시
+    var z = seZone(score);
+    return '<span class="se-bar' + (size ? " " + size : "") + '" aria-hidden="true">' + [0, 1, 2, 3, 4].map(function (k) { return '<i class="z' + k + (k === z ? " on" : "") + '"></i>'; }).join("") +
+      (score != null && isFinite(score) ? '<b class="se-mk" style="left:' + Math.max(0, Math.min(100, score)).toFixed(1) + '%"></b>' : "") + "</span>";
+  }
+  function seWarn(o) { var e = o && o.evidence && o.evidence.fearCrash; return e && e.pass && o.score < 20 ? e : null; }
+  function seVal(x) {   // 지표 값 — 외국인 순매수는 1조원이 넘으면 조원으로
+    var v = x.value; if (v == null || !isFinite(v)) return "–";
+    if (x.key === "for") return Math.abs(v) >= 10000 ? fwSign(v / 10000, 1) + "조원" : fwSign(v, 0) + "억원";
+    if (x.key === "vix") return Number(v).toFixed(1);
+    if (x.key === "cred") return Number(v).toFixed(2) + "%p";
+    if (x.key === "brd") return Math.round(v) + "%";
+    if (x.key === "vol") return Number(v).toFixed(1) + "%";
+    return fwSign(v, 1) + (x.unit || "");
+  }
+  function seWhere(s) { return s == null ? "" : s < 50 ? "지난 5년 중 이보다 공포가 컸던 날 " + seRound(s) + "%" : "지난 5년 중 이보다 환호가 컸던 날 " + seRound(100 - s) + "%"; }
+  function seTip(c) {
+    var o = seOf(c), E = (o && o.evidence) || {}, us = c === "us";
+    return "시장 심리 — 지금 시장에 공포와 환호 중 어느 쪽이 큰지 0~100 으로 본 것(0 극도의 공포 · 100 극도의 환호).\n\n" +
+      "만드는 법: 지표마다 지금 값이 지난 5년 가운데 어디쯤인지를 공포·환호 방향으로 맞춰 평균하고, 그 평균을 다시 지난 5년 안 위치로 바꿨다. " +
+      (us ? "미국 = VIX(변동성)·S&P 500 모멘텀·업종 폭·주식 대 국채(안전자산 선호)·신용 스프레드." : "한국 = 코스피 변동성·모멘텀·업종 폭·원/달러·외국인 순매수·신용융자.") + "\n\n" +
+      "검증(결과를 보기 전에 기준을 정한 시험, " + (E.sample || "") + "): " + (E.verdict || "") +
+      (E.fearCrash && E.fearCrash.pass ? " " + E.fearCrash.line : "") + " 지금 분위기를 보는 용도이지 매매 신호가 아니다. 누르면 자세히.";
+  }
+  function seEvShort(o) {
+    var e = o && o.evidence && o.evidence.fearCrash;
+    return e && e.pass ? "극도의 공포 구간에선 3개월 안 추가 급락이 잦았다(검증) · 공포에 사는 역발상은 근거 없음" : "지금 분위기 참고 — 과거 검증에서 앞날 수익·급락을 가르지 못했다";
+  }
+  function sentiCardHtml(c) {
+    var o = seOf(c); if (!o) return "";
+    var z = seZone(o.score), w = seWarn(o), p = o.prev || {};
+    var chips = (o.comps || []).map(function (x) {
+      return '<span class="se-c" title="' + esc(x.name + " " + seVal(x) + " — 지난 5년 안 위치 " + seRound(x.pct) + "(0 공포 · 100 환호)") + '"><span class="se-d z' + seZone(x.pct) + '"></span>' +
+        '<span class="fw-cn">' + esc(SE_SHORT[x.key] || x.name) + '</span><span class="fw-cv">' + esc(seVal(x)) + "</span></span>";
+    }).join("");
+    return '<div class="fw-card se-card" role="button" tabindex="0" data-se="' + esc(c) + '" aria-label="시장 심리 자세히 보기">' +
+      '<div class="fw-h"><span class="fw-k">시장 심리</span><button class="ic-tip" type="button" data-basis="' + esc(seTip(c)) + '" aria-label="시장 심리 설명">' + ICON.info + "</button>" +
+      '<span class="fw-as">' + esc(mdOf(o.asOf)) + ' 기준</span><span class="fw-go" aria-hidden="true">' + ICON.chev + "</span></div>" +
+      '<div class="se-main"><b class="se-sc se-z' + z + '">' + seRound(o.score) + '</b><b class="se-lv se-z' + z + '">' + esc(o.level) + "</b>" +
+      '<span class="se-chg">1주 전 ' + seRound(p.w1) + " · 1개월 전 " + seRound(p.m1) + "</span></div>" + seBar(o.score) +
+      (w ? '<div class="se-warn">⚠ 이 구간 뒤 3개월 안 10% 넘게 더 빠진 경우 ' + Math.round(w.inZone) + "%(그 밖 " + Math.round(w.rest) + "%) — 과거 검증</div>" : '<div class="fw-ev">' + esc(seEvShort(o)) + "</div>") +
+      '<div class="fw-cs">' + chips + "</div></div>";
+  }
+  function sentiDetailHtml(c) {
+    var o = seOf(c);
+    if (!o) return '<div class="empty">시장 심리 자료 없음.</div>';
+    var z = seZone(o.score), w = seWarn(o), p = o.prev || {}, E = o.evidence || {}, us = c === "us", idxName = us ? "S&P 500" : "코스피";
+    var hero = '<div class="se-hero"><div class="se-main"><b class="se-sc se-z' + z + '">' + seRound(o.score) + '</b><b class="se-lv se-z' + z + '">' + esc(o.level) + "</b></div>" +
+      seBar(o.score, "big") + '<div class="se-scale" aria-hidden="true">' + SE_NAMES.map(function (n) { return "<span>" + esc(n) + "</span>"; }).join("") + "</div>" +
+      '<div class="fw-meta">' + esc(seWhere(o.score)) + " · 1주 전 " + seRound(p.w1) + " · 1개월 전 " + seRound(p.m1) + " · 3개월 전 " + seRound(p.m3) +
+      " · 지표 " + o.used + "/" + o.total + " · " + esc(mdOf(o.asOf)) + " 기준</div>" +
+      (w ? '<div class="se-warn">⚠ ' + esc(w.line) + "</div>" : "") + "</div>";
+    var chart = '<section class="dt-sec" id="se-sc"><h3>심리 점수와 ' + esc(idxName) + ' <span class="md-as">주간 · 5년</span></h3>' +
+      '<div class="fw-read" id="seRead">그래프를 누르면 그 주 값</div>' +
+      '<div class="fw-chart" data-sech="score"></div><div class="fw-ct">' + esc(idxName) + '</div><div class="fw-chart sm" data-sech="idx"></div>' +
+      '<p class="fw-note">바탕 색 = 다섯 구간(아래 파랑 극도의 공포 ~ 위 빨강 극도의 환호). 두 그래프는 같은 주끼리 세로로 맞췄다.</p></section>';
+    var rows = (o.comps || []).map(function (x) {
+      var dz = seZone(x.pct);
+      return '<div class="se-row"><div class="se-rl"><div class="se-rn"><span class="se-d z' + dz + '"></span>' + esc(x.name) + '<span class="se-rp se-z' + dz + '">' + esc(SE_NAMES[dz]) + "</span></div>" +
+        '<div class="se-rs">' + esc(x.desc || "") + "</div></div>" +
+        '<div class="se-rr"><div class="se-rv">' + esc(seVal(x)) + "</div>" + seBar(x.pct, "sm") +
+        '<div class="se-rp">위치 ' + seRound(x.pct) + (x.pctM1 != null ? " · 1개월 전 " + seRound(x.pctM1) : "") + "</div></div></div>";
+    }).join("");
+    var comps = '<section class="dt-sec" id="se-cp"><h3>지금 지표 <span class="md-as">지난 5년 안 위치 · 0 공포 · 100 환호</span></h3>' + rows + "</section>";
+    var ev = '<section class="dt-sec" id="se-ev"><h3>무엇이 검증됐나</h3>' +
+      (E.fearCrash && E.fearCrash.pass ? '<p class="fw-evp"><span class="fw-evk">통과</span>' + esc(E.fearCrash.line) + "</p>" : "") +
+      '<p class="fw-evp"><span class="fw-evk">근거 없음</span>' + esc(E.verdict || "") + "</p>" +
+      '<p class="fw-note">결과를 보기 전에 기준을 정한 시험(' + esc(E.sample || "") + "). 점수는 지금 분위기의 사실이고 매매 신호가 아니다.</p></section>";
+    var nav = '<nav class="dt-nav" aria-label="시장 심리 항목">' + [["se-sc", "추이"], ["se-cp", "지표"], ["se-ev", "검증"], ["se-ai", "AI"]]
+      .map(function (q) { return '<a href="#' + q[0] + '" data-sec="' + q[0] + '">' + q[1] + "</a>"; }).join("") + "</nav>";
+    return hero + nav + chart + comps + ev +
+      '<section class="dt-sec" id="se-ai"><h3>AI에게 묻기</h3>' + aiSectionHtml("m:" + c, { kind: "market", c: c }) + "</section>" +
+      '<p class="fw-foot">' + (us ? "자료: 야후(VIX·S&P 500·SPY·IEF·SPDR 업종 ETF)·FRED(무디스 Baa−10년 국채)" : "자료: 야후(코스피·원/달러·업종 ETF)·한국거래소(외국인 순매수)·금융투자협회(신용융자)") +
+      " — 매일 장 마감 뒤 자동 계산, 지연 공개 자료는 공개된 마지막 값.</p>";
+  }
+  // 심리 점수(다섯 구간 바탕)·지수 그래프 — 같은 주 축의 작은 두 그래프, 누르거나 올리면 그 주 값
+  var SEC = { cur: null };
+  function mountSentiChart(c) {
+    var o = seOf(c), sec = shBody.querySelector("#se-sc");
+    SEC.cur = null;
+    if (!o || !sec) return;
+    SEC.cur = { c: c, o: o, sec: sec };
+    sePaint(SEC.cur);
+  }
+  function sePaint(st) {
+    var o = st.o, h = (o.hist || []).filter(function (q) { return q[1] != null; }), els = st.sec.querySelectorAll("[data-sech]");
+    if (h.length < 3 || els.length < 2) return;
+    var W = Math.max(240, els[0].clientWidth || 320), n = h.length, pl = 6, pr = 40;
+    var X = function (i) { return pl + (i / Math.max(1, n - 1)) * (W - pl - pr); };
+    var dstr = function (q) { var s = String(q[0]); return s.slice(0, 4) + "-" + s.slice(4, 6) + "-" + s.slice(6, 8); };
+    var idxName = st.c === "us" ? "S&P 500" : "코스피";
+    function svg(el, H, body, label, pt, pb) {
+      el.innerHTML = '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="' + esc(label) + '">' + body +
+        '<line class="fw-x" x1="0" x2="0" y1="' + pt + '" y2="' + (H - pb) + '" stroke="var(--ink2)" stroke-width="1" visibility="hidden"/>' +
+        '<circle class="fw-dot" r="3.5" fill="var(--ink)" stroke="var(--sf)" stroke-width="2" visibility="hidden"/></svg>';
+    }
+    function line(vals, Y) { var d = "", on = false; vals.forEach(function (v, i) { if (v == null) { on = false; return; } d += (on ? "L" : "M") + X(i).toFixed(1) + " " + Y(v).toFixed(1); on = true; }); return d; }
+    // ① 점수 — 0~100, 다섯 구간 바탕
+    var H1 = 150, pt1 = 8, pb1 = 6, Y1 = function (v) { return pt1 + (1 - v / 100) * (H1 - pt1 - pb1); }, sv = h.map(function (q) { return q[1]; });
+    var b1 = [0, 1, 2, 3, 4].map(function (k) { var ya = Y1((k + 1) * 20), yb = Y1(k * 20); return '<rect x="' + pl + '" y="' + ya.toFixed(1) + '" width="' + (W - pl - pr) + '" height="' + (yb - ya).toFixed(1) + '" fill="var(--se' + k + ')" opacity="0.13"/>'; }).join("") +
+      [0, 20, 40, 60, 80, 100].map(function (t) { return '<text x="' + (W - pr + 6) + '" y="' + (Y1(t) + 4).toFixed(1) + '" class="fw-tk">' + t + "</text>"; }).join("") +
+      '<path d="' + line(sv, Y1) + '" fill="none" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+    svg(els[0], H1, b1, "심리 점수 주간 추이", pt1, pb1);
+    els[0]._fw = { X: X, Y: Y1, vals: sv, W: W, pl: pl, pr: pr };
+    // ② 지수 — 해가 바뀌는 주에 연도
+    var iv = h.map(function (q) { return q[2]; }), v2 = iv.filter(function (v) { return v != null; });
+    var H2 = 110, pt2 = 8, pb2 = 18, mn = Math.min.apply(null, v2), mx = Math.max.apply(null, v2), pad = (mx - mn) * 0.08 || 1; mn -= pad; mx += pad;
+    var Y2 = function (v) { return pt2 + (1 - (v - mn) / (mx - mn)) * (H2 - pt2 - pb2); };
+    var step = Math.pow(10, Math.floor(Math.log10((mx - mn) / 2))), r = (mx - mn) / 2 / step; step *= r > 5 ? 10 : r > 2 ? 5 : r > 1 ? 2 : 1;
+    var b2 = "";
+    for (var tv = Math.ceil(mn / step) * step; tv <= mx; tv += step) b2 += '<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + Y2(tv).toFixed(1) + '" y2="' + Y2(tv).toFixed(1) + '" stroke="var(--line)" stroke-width="1"/>' +
+      '<text x="' + (W - pr + 6) + '" y="' + (Y2(tv) + 4).toFixed(1) + '" class="fw-tk">' + Math.round(tv).toLocaleString("en-US") + "</text>";
+    h.forEach(function (q, i) { if (i && String(q[0]).slice(0, 4) !== String(h[i - 1][0]).slice(0, 4)) b2 += '<text x="' + X(i).toFixed(1) + '" y="' + (H2 - 4) + '" class="fw-tk" text-anchor="middle">' + String(q[0]).slice(0, 4) + "</text>"; });
+    b2 += '<path d="' + line(iv, Y2) + '" fill="none" stroke="var(--ink2)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+    svg(els[1], H2, b2, idxName + " 주간 추이", pt2, pb2);
+    els[1]._fw = { X: X, Y: Y2, vals: iv, W: W, pl: pl, pr: pr };
+    var read = st.sec.querySelector("#seRead");
+    function show(i) {
+      Array.prototype.forEach.call(els, function (el) {
+        var g = el._fw; if (!g) return; var s = el.querySelector("svg"), ln = s.querySelector(".fw-x"), dot = s.querySelector(".fw-dot"), y = g.vals[i], x = g.X(i);
+        ln.setAttribute("x1", x); ln.setAttribute("x2", x); ln.setAttribute("visibility", "visible");
+        if (y != null) { dot.setAttribute("cx", x); dot.setAttribute("cy", g.Y(y)); dot.setAttribute("visibility", "visible"); } else dot.setAttribute("visibility", "hidden");
+      });
+      var q = h[i], zz = seZone(q[1]);
+      read.innerHTML = "<b>" + esc(dstr(q).slice(0, 4) + "년 " + mdOf(dstr(q))) + "</b> · 점수 <b class=\"se-z" + zz + "\">" + seRound(q[1]) + " " + esc(SE_NAMES[zz]) + "</b>" +
+        (q[2] != null ? " · " + esc(idxName) + " <b>" + esc(Number(q[2]).toLocaleString("en-US", { maximumFractionDigits: 2 })) + "</b>" : "");
+    }
+    function onMove(e) {
+      var el = e.currentTarget, g = el._fw; if (!g) return;
+      var rc = el.getBoundingClientRect(), px = (e.touches ? e.touches[0].clientX : e.clientX) - rc.left;
+      show(Math.max(0, Math.min(n - 1, Math.round((px - g.pl) / (g.W - g.pl - g.pr) * (n - 1)))));
+    }
+    Array.prototype.forEach.call(els, function (el) { el.onpointermove = onMove; el.onpointerdown = onMove; });
+    show(n - 1);
+  }
+  window.addEventListener("resize", function () { var st = SEC.cur; if (st && st.sec.isConnected) { clearTimeout(st.t); st.t = setTimeout(function () { sePaint(st); }, 150); } });
+  function seTxt(reg) {   // AI 질문 맥락 한 줄
+    var o = seOf(reg); if (!o) return "";
+    var E = o.evidence || {};
+    return "시장 심리(" + (reg === "us" ? "미국" : "한국") + ", " + o.asOf + "): " + seRound(o.score) + " " + o.level + "(0 극도의 공포~100 극도의 환호, 지난 5년 안 위치) · 1주 전 " + seRound((o.prev || {}).w1) + " · 1개월 전 " + seRound((o.prev || {}).m1) +
+      " · 지표 " + (o.comps || []).map(function (x) { return x.name + " " + seVal(x) + "(위치 " + seRound(x.pct) + ")"; }).join(" · ") +
+      " · 검증: " + (E.verdict || "") + (E.fearCrash && E.fearCrash.pass ? " " + E.fearCrash.line : "");
+  }
+
   function renderLiquidity() {
     var A = window.LIQUIDITY_AUTO;   // 시장지표 기반 자동 baseline (매일 갱신, 무토큰)
     function hasTerm(c) { return c && (c.shortTerm != null || c.midTerm != null); }
@@ -6010,7 +6214,8 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     var c = hasL ? (lqCC === "us" ? L.us : L.korea) : null, a = A ? (lqCC === "us" ? A.us : A.korea) : null;
     var s0 = c || a;
     // 돈의 흐름 카드(검증된 흐름 점수 — 2026-10-30~)가 있으면 그것만 보이고, 판단·근거·금리 경로는 카드를 누르면 여는 상세로 옮겼다
-    if (flowOf(lqCC)) { grid.className = "fw-wrap"; grid.innerHTML = flowCardHtml(lqCC); det.innerHTML = ""; syncMktBox(); return; }
+    // 시장 심리 카드(2026-11-06~)는 돈의 흐름 옆에(넓은 화면은 두 칸, 휴대폰은 위아래)
+    if (flowOf(lqCC) || seOf(lqCC)) { var two = !!(flowOf(lqCC) && seOf(lqCC)); grid.className = "fw-wrap" + (two ? " two" : ""); grid.innerHTML = flowCardHtml(lqCC) + sentiCardHtml(lqCC); det.innerHTML = ""; syncMktBox(); return; }
     grid.className = "liq-row";
     grid.innerHTML = s0 ? '<span class="lq-k" title="거시 유동성(지금 상태 — 과거 검증상 앞날을 가르지 못했다) — 근거는 아래 「시황 · 거시 유동성」을 펼치면">유동성</span>' +
       term("단기", s0.shortTerm) + term("중기", s0.midTerm) : "";
@@ -6425,6 +6630,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     "- 숫자는 데이터나 검색 결과에 있는 것만 쓴다. 모르면 모른다고 말한다. 날짜가 중요한 사실은 날짜를 붙인다.",
     "- 사실과 해석을 구분한다. '사라·팔아라' 같은 매매 지시나 '오를 것' 같은 확정적 전망을 하지 않고, 근거·리스크·확인할 점을 정리해 판단을 돕는다.",
     "- 이 앱의 단·중·장 추세 상태는 데이터 값이 적극매수~적극매도지만 화면에서는 강한 상승세·상승세·횡보·하락세·강한 하락세로 부른다 — 너도 이 이름으로 부르고 매수·매도 권유로 쓰지 않는다. 이미 일어난 움직임의 요약이며 2019~2026 한·미 995종목에서 다섯 상태의 이후 1·3개월 수익과 낙폭이 같았다(52주 고점 근처의 강한 상승세도 마찬가지). 증권사 목표가는 체계적으로 낙관적이다(한국 리포트 1.8만 건: 12개월 뒤 목표가 이상 36%, 실현 수익 중앙 +13%). 필요할 때 이 점을 짚는다.",
+    "- [앱 데이터]의 '시장 심리'(공포 ↔ 환호 0~100)는 지금 분위기의 사실이다. '공포에 사라·과열이라 곧 꺾인다' 같은 역발상 판단을 하지 않는다 — 결과를 보기 전에 기준을 정한 과거 시험에서 한·미 모두 근거가 없었다(방향은 오히려 반대). 미국은 극도의 공포 구간 뒤 3개월 안 추가 급락이 잦았던 것(31% vs 8%)만 검증됐다.",
     "- 투자 권유가 아닌 참고 정보라는 전제를 지키되, 매 답변마다 면책 문구를 반복하지는 않는다."
   ].join("\n");
 
@@ -6650,7 +6856,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       T && T.indices ? "지수: " + T.indices.map(idxLine).join("\n") : "",
       T && T.indices && T.indices.some(function (x) { return idxQuote(x).fresh; }) ? "지수 지금 시세: " + T.indices.map(function (x) { var q = idxQuote(x); return x.name + " " + q.lv + " " + q.chTxt + (q.live ? "(장중)" : q.fresh ? "(" + q.date + " 종가)" : "(마감값)"); }).join(" · ") : "",
       macroList().length ? "환율·원자재: " + macroList().map(function (m) { var q = macroQuote(m); return m.name + "(" + m.sub + ") " + q.lv + m.unit + " " + q.chTxt; }).join(" · ") : "",
-      liqTxt("us"), liqTxt("korea"),
+      liqTxt("us"), liqTxt("korea"), seTxt("us"), seTxt("korea"),
       sectorList(reg).length ? "섹터(업종 ETF, " + ((window.SECTOR_TA.asOf || {})[reg] || "") + " 종가 — 오늘 등락 · 괄호는 1개월 " + sxBench(reg).name + " 대비): " +
         sectorList(reg).map(function (x) { return x.name + " " + x.change + "(" + fmtPp((x.facts && x.facts.rs || {}).m1) + ")"; }).join(" · ") : "",
       tp.length ? "오늘의 Top Pick(" + (c === "us" ? "미국" : "한국") + "): " + tp.map(function (x) { return x.name + " — " + x.reason; }).join(" / ") : ""
@@ -6673,7 +6879,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     sector: ["최근 이 섹터 흐름을 설명해줘", "이 섹터에 영향을 준 뉴스는?", "내 종목에는 어떤 영향이 있어?"],
     index: ["지금 이 지수 흐름을 설명해줘", "이번 주 주목할 일정은?", "유동성 판단과 어떻게 연결돼?"],
     macro: ["최근 움직임의 원인을 설명해줘", "내 편성 종목에 어떤 영향이 있어?", "앞으로 확인할 일정·변수는?"],
-    market: ["오늘 시장을 3줄로 요약해줘", "금리 전망이 주식에 주는 영향은?", "유동성 판단 근거를 설명해줘", "Top Pick 은 왜 골랐어?"]
+    market: ["오늘 시장을 3줄로 요약해줘", "지금 시장 심리는 어떻게 읽어?", "금리 전망이 주식에 주는 영향은?", "유동성 판단 근거를 설명해줘", "Top Pick 은 왜 골랐어?"]
   };
 
   // ── 질문 영역(상세 화면 섹션) — 대화는 메모리에 두고 화면을 다시 그려도 그대로 보인다 ──

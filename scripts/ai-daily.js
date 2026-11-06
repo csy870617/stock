@@ -44,6 +44,7 @@ function loadAll() {
     EV: (L.loadWin("events.js", "STOCK_EVENTS") || {}).items || {}, FU: (L.loadWin("fundamentals.js", "STOCK_FUND") || {}).items || {},
     Q: L.loadWin("quotes.js", "STOCK_QUOTES") || {}, CA: L.loadWin("candidates.js", "CANDIDATES") || { groups: {} },
     DC: L.loadWin("discovery-candidates.js", "DISCOVERY_CANDIDATES"), RV: (L.loadWin("revisions.js", "STOCK_REVISIONS") || {}).items || {},
+    SE: L.loadWin("sentiment.js", "MARKET_SENTIMENT"),
   };
 }
 // 마지막으로 끝난 정규장 날짜(한국·미국) — 저녁 실행이 '새 종가가 생겼나'를 본다
@@ -148,12 +149,24 @@ function flowBlock(FW) {
   return [one("us", "미국"), one("korea", "한국"),
     "검증(사전 등록): 미국 — " + ((E.us || {}).flow || "") + " " + ((E.us || {}).risk || "") + " / 한국 — " + ((E.korea || {}).flow || "") + " " + ((E.korea || {}).risk || "") + " / " + (E.gauge || "")].filter(Boolean).join("\n");
 }
-function liquidityBlock(A, LQ, FW) {
-  if (!A) return flowBlock(FW) || "(baseline 없음)";
+// 시장 심리 온도계(update-sentiment.js — 공포 ↔ 환호 0~100, 2026-11-06~). 지금 분위기(사실)이고, 검증은 미국 '극도의 공포 뒤 3개월 추가 급락'만 통과
+function sentimentBlock(SE) {
+  if (!SE) return "";
+  const one = (c, nm) => {
+    const o = SE[c]; if (!o) return "";
+    const comps = (o.comps || []).map((x) => x.name + " " + (x.value == null ? "–" : x.value + (x.unit ? x.unit : "")) + "(환호 쪽 " + (x.pct == null ? "–" : x.pct) + ")").join(" · ");
+    return "시장 심리 " + nm + "(" + o.asOf + "): " + o.score + " " + o.level + "(0 극도의 공포~100 극도의 환호, 직전 5년 안 위치) · 1주 전 " + (o.prev || {}).w1 + " · 1개월 전 " + (o.prev || {}).m1 + " · " + comps +
+      " · 검증: " + ((o.evidence || {}).verdict || "") + (o.evidence && o.evidence.fearCrash && o.evidence.fearCrash.pass ? " " + o.evidence.fearCrash.line : "");
+  };
+  return [one("us", "미국"), one("korea", "한국")].filter(Boolean).join("\n");
+}
+function liquidityBlock(A, LQ, FW, SE) {
+  if (!A) return [flowBlock(FW), sentimentBlock(SE)].filter(Boolean).join("\n") || "(baseline 없음)";
   const g = (x) => x ? "단기 " + x.shortTerm + "(" + sgn(x.shortScore) + ") · 중기 " + x.midTerm + "(" + sgn(x.midScore) + ") · 근거 " + (x.drivers || []).join(", ") : "–";
   const inp = A.inputs || {};
   const out = [
     flowBlock(FW),
+    sentimentBlock(SE),
     "시장 여건 baseline(" + A.asOf + ", 과거 검증 미달 — 참고) 미국: " + g(A.us),
     "시장 여건 baseline 한국: " + g(A.korea),
     "지표: 미 10년물 " + inp.us10y + "% · 장단기 금리차 " + inp.curve + "%p · VIX " + inp.vix + " · HY 채권 20일 " + inp.hyg20 + "% · 달러지수 " + inp.dxy + " · 원/달러 " + inp.usdkrw,
@@ -261,6 +274,7 @@ const COMPOSE_SYSTEM = [
   "- 매매 지시를 쓰지 않는다('매수하라·비중 확대·추격 매수·손절' 금지). 무엇이 일어났고 어떻게 읽히는지만 쓴다.",
   "- 기술 신호 등급은 이미 일어난 움직임의 요약이지 예측이 아니다. 하락 추세면 반등은 '반등 시도'로만 쓴다.",
   "- 지지·저항은 '그 아래로 내려가면 단기 근거가 약해진다'처럼 조건으로만 쓴다. 매물대는 '거래가 몰린 가격'이라는 사실로만 쓴다.",
+  "- [데이터]의 '시장 심리'(공포 ↔ 환호 점수)는 지금 분위기의 사실이다. '공포에 사라·반등 기회·과열이라 곧 꺾인다' 같은 역발상 표현을 쓰지 않는다 — 과거 시험에서 두 나라 모두 근거가 없었다. 미국 극도의 공포 구간에서 3개월 안 추가 급락이 잦았다는 것만 검증됐다.",
   "- sources 배열은 [출처 목록]의 번호만 넣는다(없으면 빈 배열).",
   "",
   "항목별",
@@ -300,7 +314,7 @@ function composePrompt(S, ctx, memo, urls, picks) {
     indexBlock(S.IX),
     "",
     "[데이터 — 거시 유동성·금리]",
-    liquidityBlock(S.A, S.LQ, S.FW),
+    liquidityBlock(S.A, S.LQ, S.FW, S.SE),
     "",
     "[조사 메모]",
     memo || "(조사 실패 — 데이터만으로 쓰고, 뉴스 사실은 쓰지 않는다)",
