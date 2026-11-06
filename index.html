@@ -4135,7 +4135,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   }
   // ── 홈: 최근 추세 전환 ──
   //   최근 10거래일(약 2주) 안에 '현재 추세' 판정이 바뀐(규칙상 확인된) 편성·관심·보유 종목 — data/trend-summary.js 의 conf.n(확인 뒤 거래일 수).
-  //   2026-10-25 사용자 '홈에 최근 추세 바뀐 종목 목록'. 누르면 종목 상세의 '추세' 섹션으로 연다.
+  //   2026-10-25 사용자 '홈에 최근 추세 바뀐 종목 목록'. 누르면 종목 상세를 맨 위부터 연다(2026-11-06 사용자 요청 — 전엔 '추세' 섹션으로 내려 열었다).
   //   2026-10-27 사용자 '상승과 하락으로 분리해서' — 상승 전환·하락 전환 두 묶음, 묶음마다 최신순 5개(더 보기로 전부).
   //   한쪽이 몰리는 장(10/27 한국 21건 중 하락 20)에서 반대쪽 몇 건이 섞인 목록 아래로 묻히지 않게
   var TC_DAYS = 10, TC_SHOW = 5, tcAll = { up: false, down: false };
@@ -4159,7 +4159,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   function trendChangeRow(r, cc) {
     var s = r.s, m = r.m, e = effective(s);
     var th = slotLabel(s);
-    return '<div class="row tc"' + openAttrs(cc, s.ticker, s.theme, ' data-sec="dt-trend"') + ">" +
+    return '<div class="row tc"' + openAttrs(cc, s.ticker, s.theme) + ">" +   // 상세는 맨 위부터 연다(2026-11-06 사용자 요청 — 전엔 '추세' 섹션으로 내려 열었다)
       '<div class="r-l"><div class="r-nm"><span class="r-name">' + esc(s.name) + '</span><span class="pk-th">' + esc(th) + "</span></div>" +
         '<div class="r-sub"><span>' + esc(mdOf(m.conf.d)) + " 확인" + (m.conf.n > 0 ? " · 그 뒤 " + signedSpan(m.conf.ret, fmtPct(m.conf.ret * 100)) : " · 마지막 거래일") + "</span></div></div>" +
       sigStrip(s.techNote || {}, s.ticker) +
