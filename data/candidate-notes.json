@@ -1361,14 +1361,27 @@
       },
       "DVN": {
         "verdict": "없음",
-        "note": "11/2 유가가 하루 7% 넘게 급락하면서 동종 에너지주와 함께 내렸고 회사 고유 공시·악재는 없다. Coterra 합병은 5/7에 끝났고 3분기 실적은 11/5 장 마감 뒤 발표된다.",
-        "asOf": "2026-11-04",
+        "note": "3분기 생산량 하루 166.8만 Boe로 가이던스 범위 안, 순이익 10억달러·조정 FCF 20억달러. 이글포드 원유만 완결 시점 탓에 예상을 밑돌았다.",
+        "asOf": "2026-11-06",
         "flags": [
-          "drop"
+          "drop",
+          "earn"
         ],
         "sources": [
-          "https://finance.yahoo.com/markets/stocks/articles/just-happened-devon-energy-stock-180915371.html",
-          "https://www.marketbeat.com/instant-alerts/price-devon-energy-nyse-dvn-shares-break-below-50-day-moving-average-heres-what-happened-2026-11-03/"
+          "https://www.sec.gov/Archives/edgar/data/0001090012/000119312526449884/d120646dex991.htm",
+          "https://rbnenergy.com/daily-posts/analyst-insight/devon-hold-production-steady-after-surprising-q3"
+        ]
+      },
+      "CI": {
+        "verdict": "없음",
+        "note": "3분기 조정 EPS 7.98달러(+6%)로 예상을 웃돌고 연간 조정 EPS 가이던스를 최소 30.60달러로 올렸다. Evernorth 연간 세전 조정이익 최소 69억달러 전망 유지.",
+        "asOf": "2026-11-06",
+        "flags": [
+          "earn"
+        ],
+        "sources": [
+          "https://www.sec.gov/Archives/edgar/data/1739940/000114036126003768/ef20064751_ex99-1.htm",
+          "https://www.healthcarefinancenews.com/news/cigna-raises-financial-outlook-aca-exit-nears"
         ]
       }
     },
@@ -1436,6 +1449,30 @@
           "https://www.prnewswire.com/news-releases/wec-energy-group-reports-third-quarter-results-302922792.html",
           "https://kalkinemedia.com/us/news/announcements/wec-energy-group-reports-q3-2026-eps-of-118-raises-full-year-earnings-forecast",
           "https://www.indexbox.io/blog/wec-energy-group-q3-2026-earnings-net-income-rises-to-3893-million-guidance-raised/"
+        ]
+      },
+      "DUK": {
+        "verdict": "없음",
+        "note": "3분기 조정 EPS 1.99달러(전년 1.81달러), 2026 조정 EPS 가이던스를 6.70~6.80달러로 좁히고 상단 근처를 예상. 2030년까지 연 5~7% 성장 목표 재확인.",
+        "asOf": "2026-11-06",
+        "flags": [
+          "earn"
+        ],
+        "sources": [
+          "https://www.sec.gov/Archives/edgar/data/0001326160/000132616026000048/er-20260930xearningsreleas.htm",
+          "https://www.rttnews.com/3592870/duke-energy-corp-q3-profit-increases-beats-estimates.aspx"
+        ]
+      },
+      "SO": {
+        "verdict": "없음",
+        "note": "3분기 일부 항목 제외 EPS 1.94달러(전년 1.60달러), 날씨·사용량·고객 증가와 대형 상업·산업 고객 매출이 이끌었다.",
+        "asOf": "2026-11-06",
+        "flags": [
+          "earn"
+        ],
+        "sources": [
+          "https://www.sec.gov/Archives/edgar/data/0000092122/000009212226000071/ex99-pressreleaseq32026.htm",
+          "https://www.sec.gov/Archives/edgar/data/0000092122/000009212226000069/so-20260930.htm"
         ]
       }
     }
