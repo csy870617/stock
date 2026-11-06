@@ -30,10 +30,10 @@ window.CANDIDATES = {
        "fresh": false
       }
      ],
-     "note": "추세 붕괴(단·중·장기 모두 하락세) — 3분기 영업이익 1,606억원(+68.9%)이 컨센서스를 밑돌고 이익률이 20.8%로 낮아졌다. 대체 후보 삼양식품(검증 통과)은 시총 순위가 우량 스크린 범위 밖이라 14일 범위 확대 시점(11/13)에 다시 본다.",
+     "note": "추세 붕괴(단·중·장기 모두 하락세) — 3분기 영업이익 1,606억원(+68.9%)이 컨센서스를 밑돌고 이익률이 20.8%로 낮아졌다. 우량 스크린 후보 3곳은 모두 기각 상태이고, 범위 밖 후보 삼양식품·산일전기는 14일 범위 확대(11/13) 때 다시 본다(한국 β 가 밴드 아래라 β 를 낮추는 삼양식품은 그때도 후순위).",
      "judged": "2026-11-05",
      "verdict": "실질",
-     "triedAt": "2026-11-05",
+     "triedAt": "2026-11-06",
      "since": "2026-10-30",
      "age": 7
     },
@@ -102,29 +102,6 @@ window.CANDIDATES = {
    "eligible": 44,
    "defects": [
     {
-     "ticker": "329180",
-     "name": "HD현대중공업",
-     "state": "결격",
-     "flags": [
-      {
-       "k": "trend",
-       "msg": "추세 붕괴(단·중·장기 모두 매도 이하)",
-       "fresh": false
-      },
-      {
-       "k": "tpcut",
-       "msg": "컨센서스 목표가 14일 새 -24.8% 하향 — 논거 확인",
-       "fresh": false
-      }
-     ],
-     "note": "추세 붕괴(단·중기 강한 하락세·장기 하락세) — 3분기 영업이익 +61.3%로 실적은 견조하지만 모회사 교환사채 물량 부담이 남았다. 대체 후보 ISC는 3분기 수치를 신뢰 출처 2곳으로 확인하지 못했고 산일전기는 3분기 발표 전이라 보류.",
-     "judged": "2026-11-05",
-     "verdict": "실질",
-     "triedAt": "2026-11-05",
-     "since": "2026-10-30",
-     "age": 7
-    },
-    {
      "ticker": "012450",
      "name": "한화에어로스페이스",
      "state": "감시",
@@ -146,7 +123,7 @@ window.CANDIDATES = {
      "flags": [
       {
        "k": "drop",
-       "msg": "5거래일 -14%(시장 중앙값 -0.9%) 급락 — 원인 확인",
+       "msg": "5거래일 -13.7%(시장 중앙값 -0.9%) 급락 — 원인 확인",
        "fresh": false
       },
       {
@@ -180,11 +157,6 @@ window.CANDIDATES = {
      "state": "감시",
      "flags": [
       {
-       "k": "drop",
-       "msg": "5거래일 -13.6%(시장 중앙값 -0.9%) 급락 — 원인 확인",
-       "fresh": false
-      },
-      {
        "k": "tpcut",
        "msg": "컨센서스 목표가 14일 새 -14.9% 하향 — 논거 확인",
        "fresh": false
@@ -207,7 +179,7 @@ window.CANDIDATES = {
       },
       {
        "k": "drop",
-       "msg": "5거래일 -18.3%(시장 중앙값 -0.9%) 급락 — 원인 확인",
+       "msg": "5거래일 -17.9%(시장 중앙값 -0.9%) 급락 — 원인 확인",
        "fresh": false
       }
      ],
@@ -215,6 +187,21 @@ window.CANDIDATES = {
      "judged": "2026-11-05",
      "verdict": "형식",
      "by": "ai"
+    },
+    {
+     "ticker": "095340",
+     "name": "ISC",
+     "state": "감시",
+     "flags": [
+      {
+       "k": "drop",
+       "msg": "5거래일 -22.3%(시장 중앙값 -0.9%) 급락 — 원인 확인",
+       "fresh": false
+      }
+     ],
+     "note": "11월 초 미국 AI 반도체주 급락으로 반도체 업종이 동반 하락했고, 3분기 매출이 납품 지연으로 기대를 밑돌았지만 영업이익은 25% 늘고 연간 목표(매출 3,000억원·영업이익 1,000억원)는 유지했다. 회사 고유 논거 훼손은 확인되지 않았다.",
+     "judged": "2026-11-06",
+     "verdict": "형식"
     }
    ],
    "list": [
@@ -251,7 +238,6 @@ window.CANDIDATES = {
      "note": "3분기 영업이익 +2.2%로 컨센서스 하회, HD현대그룹 상한·β 낮음 — 계열 내 대체안.",
      "asOf": "2026-11-05",
      "why": "3년 매출 연평균 14.1% · FCF 마진 15.5% · 3년 평균 ROIC 33.3%",
-     "cap": "HD현대그룹 상한",
      "url": "https://m.stock.naver.com/domestic/stock/443060/total"
     },
     {
@@ -320,13 +306,11 @@ window.CANDIDATES = {
      "url": "https://m.stock.naver.com/domestic/stock/058470/total"
     },
     {
-     "ticker": "095340",
-     "name": "ISC",
-     "status": "보류",
-     "note": "3분기 영업이익 +25.4%·β 1에 가까움, 컨센서스 2곳 확인. 3분기 매출 증가 둔화(+11%)와 3년 평균 ROIC가 낮고 3분기 수치의 신뢰 출처 확인 필요.",
-     "asOf": "2026-11-05",
-     "why": "3년 매출 연평균 7.2% · FCF 마진 16.3% · 3년 평균 ROIC 5.5%",
-     "url": "https://m.stock.naver.com/domestic/stock/095340/total"
+     "ticker": "006260",
+     "name": "LS",
+     "status": "검증 대기",
+     "why": "3년 매출 연평균 22.1% · FCF 마진 -3% · 3년 평균 ROIC 5.9%",
+     "url": "https://m.stock.naver.com/domestic/stock/006260/total"
     }
    ]
   },
@@ -367,7 +351,7 @@ window.CANDIDATES = {
       },
       {
        "k": "drop",
-       "msg": "5거래일 -14.3%(시장 중앙값 -0.9%) 급락 — 원인 확인",
+       "msg": "5거래일 -14.5%(시장 중앙값 -0.9%) 급락 — 원인 확인",
        "fresh": false
       }
      ],
@@ -561,7 +545,7 @@ window.CANDIDATES = {
      ],
      "note": "중복 편성 — 우량 주제에 남기고 이 주제는 다른 종목으로 교체",
      "dup": "core",
-     "triedAt": "2026-11-05",
+     "triedAt": "2026-11-06",
      "since": "2026-10-21",
      "age": 16,
      "long": 1
@@ -685,19 +669,21 @@ window.CANDIDATES = {
      "url": "https://m.stock.naver.com/domestic/stock/005380/total"
     },
     {
+     "ticker": "003550",
+     "name": "LG",
+     "status": "보류",
+     "note": "배당성향 65% 안팎·자사주 전량 소각은 확인했지만 배당 비감소 연수가 없고 3분기 실적 미확인.",
+     "asOf": "2026-11-06",
+     "why": "배당 비감소 0년 · 배당성향 64.9% · 배당 3.6%",
+     "url": "https://m.stock.naver.com/domestic/stock/003550/total"
+    },
+    {
      "ticker": "024110",
      "name": "기업은행",
      "status": "검증 대기",
      "why": "배당 비감소 0년 · 배당성향 30.8% · 배당 5.5%",
      "cap": "금융 상한",
      "url": "https://m.stock.naver.com/domestic/stock/024110/total"
-    },
-    {
-     "ticker": "003550",
-     "name": "LG",
-     "status": "검증 대기",
-     "why": "배당 비감소 0년 · 배당성향 64.9% · 배당 3.6%",
-     "url": "https://m.stock.naver.com/domestic/stock/003550/total"
     }
    ]
   },
@@ -1260,9 +1246,9 @@ window.CANDIDATES = {
  },
  "summary": {
   "review": 0,
-  "defect": 3,
-  "watch": 25,
-  "untried": 3,
+  "defect": 2,
+  "watch": 26,
+  "untried": 0,
   "dup": 1,
   "long": 1
  }
