@@ -3555,10 +3555,11 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       " | 연속: " + FL_WHO.map(function (w) { return w[1] + " " + (sk[w[0]] > 0 ? "순매수 " : "순매도 ") + Math.abs(sk[w[0]] || 0) + "일"; }).join("·");
   }
   function indexDetailHtml(x) {
-    var chNA = !x.change || x.change === "–", dir = chNA ? "flat" : (x.changeDir === "up" ? "up" : "down");
+    var q = idxQuote(x), dir = q.ch == null ? "flat" : (q.ch > 0 ? "up" : q.ch < 0 ? "down" : "flat");
     var asOf = window.INDEX_TA && window.INDEX_TA.asOf;
-    var top = '<div class="dt-top"><div class="dt-pxl"><span class="dt-pv">' + esc(x.level) + '</span><div class="dt-ch ' + dir + '">' + esc(x.change || "–") + "</div></div>" +
-      '<div class="dt-meta">' + (asOf ? esc(mdOf(asOf)) + " 종가" : "") + " · 전일 대비</div></div>";
+    var top = '<div class="dt-top"><div class="dt-pxl"><span class="dt-pv">' + esc(q.lv) + '</span><div class="dt-ch ' + dir + '">' + esc(q.chTxt) + "</div></div>" +
+      '<div class="dt-meta">' + (q.live ? '<span class="live-tx" title="장중 실시간 — 최대 20분가량 늦을 수 있음"><i class="live-dot"></i>장중</span>' : q.date ? esc(mdOf(q.date)) + " 종가" : "") +
+      " · 전일 대비" + (q.fresh && idxBarDate(x) && q.date > idxBarDate(x) ? ' · <span title="아래 차트·신호는 ' + esc(mdOf(idxBarDate(x))) + ' 마감까지(매일 장 마감 뒤 자동 갱신)">차트·신호 ' + esc(mdOf(idxBarDate(x))) + " 마감</span>" : "") + "</div></div>";
     var sig = '<div class="dt-sum"><div class="dt-sig">' + [["단기", x.short, "일봉"], ["중기", x.mid, "주봉"], ["장기", x.long, "월봉"]].map(function (p) {
       var g = p[1] && p[1].signal;
       return '<div class="ds"><span class="ds-k">' + p[0] + " <i>" + p[2] + '</i></span><b class="ds-v t-' + (SIG_CLS[g] || "x") + '">' + esc(sigWord(g)) + "</b></div>";
@@ -5249,7 +5250,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       document.getElementById("shPrev").disabled = SH.idx <= 0;
       document.getElementById("shNext").disabled = SH.idx >= SH.ctx.length - 1;
       shBody.innerHTML = ix ? (ix.facts ? macroDetailHtml(ix) : indexDetailHtml(ix)) : '<div class="empty">지수 정보 없음.</div>';
-      if (ix && ix.facts) ensureMacroLive();
+      if (ix) ensureMacroLive();
       mountChart(it);
       if (ix && !ix.facts) mountFlowGraph(ix);
       shBody.scrollTop = top;
@@ -5985,14 +5986,14 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     var T = window.INDEX_TA, grid = document.getElementById("idxGrid");
     if (!T || !Array.isArray(T.indices) || !T.indices.length) { grid.innerHTML = ""; syncMktBox(); return; }
     function tile(x) {
-      var chNA = !x.change || x.change === "–";
-      var chDir = chNA ? "flat" : (x.changeDir === "up" ? "up" : "down");
+      // 시세 서버 값이 있으면 실시간(장중이면 점 표시 — 2026-11-06 사용자 '지수도 실시간으로'), 없으면 마지막 마감값
+      var q = idxQuote(x), chDir = q.ch == null ? "flat" : (q.ch > 0 ? "up" : q.ch < 0 ? "down" : "flat");
       var inner = '<div class="ix-top"><span class="ix-nm">' + esc(x.name) + "</span>" +
         sigStrip({ sigShort: x.short && x.short.signal, sigMid: x.mid && x.mid.signal, sigLong: x.long && x.long.signal }) + "</div>" +
-        '<div class="ix-lv">' + esc(x.level) + '</div><div class="ix-ch ' + chDir + '">' + esc(x.change) + "</div>";
+        '<div class="ix-lv">' + esc(q.lv) + '</div><div class="ix-ch ' + chDir + '">' + esc(q.chTxt) + (q.live ? '<i class="live-dot" title="장중 실시간(최대 20분가량 늦을 수 있음)"></i>' : "") + "</div>";
       // 누르면 지수 상세(캔들 차트·신호·지수 대응)가 종목 상세와 같은 화면으로 열린다 — 네이버 링크는 상세 아래 버튼
       return '<div class="ix" role="button" tabindex="0" data-open="1" data-idx="' + esc(x.key) + '" data-c="' + esc(IDX_REGION[x.key] || "us") +
-        '" data-t="idx-' + esc(x.key) + '" data-th="idx" title="' + esc(x.name) + ' 차트 보기">' + inner + "</div>";
+        '" data-t="idx-' + esc(x.key) + '" data-th="idx" title="' + esc(x.name + (q.live ? " · 장중 실시간" : q.date ? " · " + mdOf(q.date) + " 종가" : "")) + ' — 차트 보기">' + inner + "</div>";
     }
     // 환율·원자재 칸 — 두 나라 화면 모두에(지수 칸 뒤). 거의 24시간 거래라 시세 서버 값이 있으면 그것을(점 표시), 없으면 마지막 마감값
     function macroTile(m) {
@@ -6018,7 +6019,11 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   var mkPg = document.getElementById("mkPager");
   function mkAsText() {
     if (MK.cur === 1) { var S = window.SECTOR_TA, a = S && S.asOf && S.asOf[state.country]; return a ? mdOf(a) + " 종가 기준" : ""; }
-    var T = window.INDEX_TA; return T && T.asOf ? mdOf(T.asOf) + " 종가 기준" : "";
+    var T = window.INDEX_TA; if (!T) return "";
+    var qs = (T.indices || []).filter(function (x) { return IDX_REGION[x.key] === state.country; }).map(idxQuote);
+    if (qs.some(function (q) { return q.live; })) return "장중 실시간 · 지연 가능";
+    var d = qs.reduce(function (m, q) { return q.date && q.date > m ? q.date : m; }, "");
+    return d ? mdOf(d) + " 종가 기준" : T.asOf ? mdOf(T.asOf) + " 종가 기준" : "";
   }
   function mkSync() {
     var pages = mkPg.querySelectorAll(".mk-page"), p = pages[MK.cur];
@@ -6217,29 +6222,45 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   function macroList() { var T = window.INDEX_TA; return T && Array.isArray(T.macro) ? T.macro : []; }
   function num2(v) { return Number(v).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
   function pct2(v) { return v == null || !isFinite(v) ? "–" : (v > 0 ? "+" : "") + Number(v).toFixed(2) + "%"; }
-  // 시세 서버(quotesApi)의 실시간 값 — 5분마다 다시 받는다(실패하면 1분 뒤 재시도). 없으면 indices.js 의 마지막 마감값
-  var MACRO_LIVE = {}, macroLiveAt = 0, macroLiveBusy = false;
+  // 시세 서버(quotesApi)의 실시간 값 — 환율·원자재와 지수(2026-11-06 사용자 '지수도 실시간으로')를 한 번에 받는다.
+  //   한국·미국 정규장이 열려 있으면 1분마다, 아니면 5분마다(실패하면 1분 뒤 재시도). 없으면 indices.js 의 마지막 마감값.
+  var IDX_SYM = { kospi: "^KS11", kosdaq: "^KQ11", nasdaq: "^IXIC", dow: "^DJI" };
+  var MACRO_LIVE = {}, macroLiveAt = 0, macroLiveBusy = false;   // 키(usdkrw·kospi …) → {price, date, chg}
+  function mktOpen(kr) {   // 지금 그 나라 정규장 시간인가(평일·시각만 — 휴장일은 시세 날짜로 inSession 이 거른다)
+    try {
+      var p = {};
+      new Intl.DateTimeFormat("en-US", { timeZone: kr ? "Asia/Seoul" : "America/New_York", weekday: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23" })
+        .formatToParts(new Date()).forEach(function (x) { p[x.type] = x.value; });
+      if (p.weekday === "Sat" || p.weekday === "Sun") return false;
+      var m = +p.hour * 60 + +p.minute;
+      return kr ? (m >= 540 && m < 935) : (m >= 570 && m < 965);
+    } catch (_e) { return false; }
+  }
   function ensureMacroLive() {
-    var ms = macroList();
-    if (!liveSupported || !ms.length || macroLiveBusy || Date.now() - macroLiveAt < 300000) return;
+    var T = window.INDEX_TA, ms = macroList().map(function (m) { return { key: m.key, sym: m.symbol }; });
+    ((T && T.indices) || []).forEach(function (x) { if (IDX_SYM[x.key]) ms.push({ key: x.key, sym: IDX_SYM[x.key] }); });
+    var every = mktOpen(true) || mktOpen(false) ? 55000 : 300000;
+    if (!liveSupported || !ms.length || macroLiveBusy || Date.now() - macroLiveAt < every) return;
     macroLiveBusy = true;
-    var url = QUOTES_API + (QUOTES_API.indexOf("?") >= 0 ? "&" : "?") + "symbols=" + encodeURIComponent(ms.map(function (m) { return m.symbol; }).join(","));
+    var url = QUOTES_API + (QUOTES_API.indexOf("?") >= 0 ? "&" : "?") + "symbols=" + encodeURIComponent(ms.map(function (m) { return m.sym; }).join(","));
     var ctrl = new AbortController(), to = setTimeout(function () { ctrl.abort(); }, 9000);
     fetch(url, { signal: ctrl.signal, cache: "no-store" })
       .then(function (r) { if (!r.ok) throw new Error("http " + r.status); return r.json(); })
       .then(function (map) {
-        var any = false;
+        var changed = false;
         ms.forEach(function (m) {
-          var v = map && map[m.symbol];
+          var v = map && map[m.sym];
           if (v && typeof v.price === "number" && isFinite(v.price) && liveFresh(v.date)) {
-            MACRO_LIVE[m.key] = { price: v.price, date: v.date, chg: typeof v.changePct === "number" && isFinite(v.changePct) ? v.changePct : null };
-            any = true;
+            var o = MACRO_LIVE[m.key], n = { price: v.price, date: v.date, chg: typeof v.changePct === "number" && isFinite(v.changePct) ? v.changePct : null };
+            if (!o || o.price !== n.price || o.chg !== n.chg || o.date !== n.date) changed = true;
+            MACRO_LIVE[m.key] = n;
           }
         });
         macroLiveAt = Date.now();
-        if (any) { renderIndexTA(); var cur = SH.open && SH.ctx[SH.idx]; if (cur && cur.idx && MACRO_LIVE[cur.idx]) renderSheet(true); }
+        // 값이 바뀌었을 때만 다시 그린다(열린 지수·환율 상세 포함) — 1분마다 같은 값으로 상세를 다시 그리지 않게
+        if (changed) { renderIndexTA(); var cur = SH.open && SH.ctx[SH.idx]; if (cur && cur.idx && MACRO_LIVE[cur.idx]) renderSheet(true); }
       })
-      .catch(function () { macroLiveAt = Date.now() - 240000; })
+      .catch(function () { macroLiveAt = Date.now() - every + 60000; })
       .then(function () { clearTimeout(to); macroLiveBusy = false; });
   }
   function macroQuote(m) {
@@ -6247,6 +6268,22 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     if (L) return { lv: num2(L.price), ch: L.chg, chTxt: pct2(L.chg), live: true, date: L.date };
     var ch = chgNum(m.change);
     return { lv: m.level, ch: ch, chTxt: ch == null ? "–" : pct2(ch), live: false, date: m.asOf };
+  }
+  // 지수의 마지막 마감일 — indices.js 의 period('11/06 종가')에 asOf 의 해를 붙인다
+  function idxBarDate(x) {
+    var T = window.INDEX_TA, a = T && T.asOf, m = /(\d{1,2})\/(\d{1,2})/.exec(x.period || "");
+    if (!m || !a) return a || null;
+    var y = +a.slice(0, 4), mo = +m[1];
+    if (mo > +a.slice(5, 7) + 1) y--;   // 1월에 본 12월 봉
+    return y + "-" + ("0" + mo).slice(-2) + "-" + ("0" + m[2]).slice(-2);
+  }
+  // 지수 표시값 — 시세 서버 값이 마지막 마감 이후(또는 같은 날)면 그것(장중이면 live), 아니면 indices.js 마감값
+  function idxQuote(x) {
+    var L = MACRO_LIVE[x.key], bar = idxBarDate(x), kr = IDX_REGION[x.key] === "korea";
+    if (L && L.price != null && (!bar || !L.date || L.date >= bar))
+      return { lv: num2(L.price), ch: L.chg, chTxt: pct2(L.chg), live: inSession(kr, L.date), fresh: true, date: L.date || bar };
+    var ch = chgNum(x.change);
+    return { lv: x.level, ch: ch, chTxt: !x.change || x.change === "–" ? "–" : x.change, live: false, fresh: false, date: bar };
   }
 
   // ══ AI(Claude API) — 이 기기 키로 묻기 · 서버 자동 분석 상태 · 뉴스 한 줄 · AI 작성 표시 ══
@@ -6456,7 +6493,9 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
   }
   function ctxIndex(key) {
     var x = indexOf(key), n = ((window.INDEX_NOTES || {}).items || {})[key], reg = IDX_REGION[key] || "us";
+    var lq = x ? idxQuote(x) : null;
     return [x ? "지수: " + idxLine(x) + " (" + ((window.INDEX_TA || {}).asOf || "") + " 종가 기준)" : "",
+      lq && lq.fresh ? "지금 시세(" + (lq.live ? "장중 실시간" : lq.date + " 종가") + "): " + lq.lv + " " + lq.chTxt : "",
       idxFlowCtx(x),
       n ? "앱의 지수 대응(" + (window.INDEX_NOTES.asOf || "") + "): 밸류 — " + n.value + " | 단기 — " + n.short + " | 중기 — " + n.mid + " | 장기 — " + n.long : "",
       liqTxt(reg)].filter(Boolean).join("\n");
@@ -6486,6 +6525,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       "기준: " + (T && T.asOf ? T.asOf + " 종가" : "") + " · 보고 있는 나라 " + (c === "us" ? "미국" : "한국"),
       "시황(통합): " + (D.marketNote || "–"), "시황(미국): " + (D.marketNoteUS || "–"), "시황(한국): " + (D.marketNoteKR || "–"),
       T && T.indices ? "지수: " + T.indices.map(idxLine).join("\n") : "",
+      T && T.indices && T.indices.some(function (x) { return idxQuote(x).fresh; }) ? "지수 지금 시세: " + T.indices.map(function (x) { var q = idxQuote(x); return x.name + " " + q.lv + " " + q.chTxt + (q.live ? "(장중)" : q.fresh ? "(" + q.date + " 종가)" : "(마감값)"); }).join(" · ") : "",
       macroList().length ? "환율·원자재: " + macroList().map(function (m) { var q = macroQuote(m); return m.name + "(" + m.sub + ") " + q.lv + m.unit + " " + q.chTxt; }).join(" · ") : "",
       liqTxt("us"), liqTxt("korea"),
       sectorList(reg).length ? "섹터(업종 ETF, " + ((window.SECTOR_TA.asOf || {})[reg] || "") + " 종가 — 오늘 등락 · 괄호는 1개월 " + sxBench(reg).name + " 대비): " +
