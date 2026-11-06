@@ -1,46 +1,47 @@
 // 유동성 판단(온디맨드) — 시장지표 baseline(data/liquidity-auto.js, 매일 자동)을 거시 이벤트·내러티브로 보정/덮어쓰기.
 // 앱은 이 파일이 있으면 우선 표시하고 baseline 을 병기, 없으면 baseline 을 게이지로 쓴다.
 window.LIQUIDITY_DATA = {
- "asOf": "2026-11-05",
- "headline": "미국은 돈이 소폭 들어오지만 연준 추가 인상 기대가 누르는 신중 국면, 한국은 예탁금 급감과 외국인 이탈이 이어지는 부정 국면이다.",
- "headlineUS": "흐름 점수는 최근 5년 중 중간대(68% 위치)이고 실질 M2가 늘고 있다. 다만 금융여건지수가 3개월 새 나빠져 신용 경고 1개가 켜졌고, 12월 인상 확률이 82%다.",
- "headlineKR": "투자자예탁금이 3개월 새 13.5% 줄었고 외국인 순매수가 -55.3조원으로 빠지는 흐름이다. 원화 강세와 안정된 회사채 스프레드가 일부를 상쇄한다.",
+ "asOf": "2026-11-06",
+ "headline": "미국은 돈이 소폭 들어오지만 연준 인상 기대와 AI주 급락이 누르는 신중 국면, 한국은 예탁금 감소와 외국인 이탈이 이어지는 부정 국면이다.",
+ "headlineUS": "흐름 점수 0.01(최근 5년 하위부터 68%)로 돈은 소폭 들어오는 중이고 신용 스프레드도 안정적이다. 다만 12월 FOMC 인상 확률 68%와 VIX 28.2가 부담이라 신중 국면이다.",
+ "headlineKR": "투자자예탁금이 3개월 새 13.5% 줄고 외국인 순매도가 쌓여 부정 국면이다. 신용융자·회사채 스프레드는 안정적이라 신용 경색으로 번진 상태는 아니다.",
  "us": {
   "shortTerm": "신중",
   "midTerm": "신중",
   "drivers": [
-   "흐름 점수 0으로 최근 5년 중 하위부터 68% 위치이고, 실질 M2가 2% 늘어 돈이 들어오는 쪽이다.",
-   "금융여건지수가 -0.459로 3개월 새 +0.079 나빠져 신용 경고 4개 중 1개가 켜졌다 — baseline 단기 우호보다 한 단계 낮게 보는 근거다.",
-   "연준 순유동성 5.75조 달러(3개월 -1.4%), 신용 스프레드 1.54%p(3개월 -10bp)로 둘 다 보통 수준이다.",
-   "연방기금금리 선물은 12/09 인상 확률 82%, 2027년 4월 기대 금리 4.33%로 추가 인상 경로를 반영한다 — 흐름 점수가 중간대여서 baseline 중기 부정까지는 낮추지 않았다."
+   "흐름 점수 0.01로 최근 5년 중 하위부터 68% 위치이고, 이 점수는 과거 다음 12개월 S&P500 초과수익과 같은 방향이었지만 3개월 앞은 뚜렷하지 않았다.",
+   "신용 스프레드 1.52%p(3개월 -10bp)로 안정적이고 신용 경고는 4개 중 1개(금융여건 3개월 변화)만 켜져 급락 경고 조건(2개 이상)에는 못 미친다.",
+   "연준 순유동성 5.79조 달러(3개월 -0.8%)와 실질 M2 +2%로 돈의 양은 보통 수준이다.",
+   "연방기금금리 선물은 12/9 인상 68%, 1/27까지 누적 인상 84%를 반영해 baseline 중기 부정과 흐름 점수 사이에서 신중으로 본다."
   ]
  },
  "korea": {
   "shortTerm": "부정",
   "midTerm": "부정",
   "drivers": [
-   "투자자예탁금 89.2조원으로 3개월 새 13.5% 줄어 빠지는 흐름이다 — 과거 예탁금 감소 하위 3분의 1 구간은 다음 3개월 코스피 초과수익이 평균 -1.9%였다.",
-   "외국인 순매수 -55.3조원으로 빠지는 흐름이고, 코스피에서 최근 20일 22조119억원을 순매도했다.",
-   "신용융자 28.6조원(3개월 +0.8%)·회사채 스프레드 0.69%p(3개월 -1bp)가 보통이고 원/달러가 3개월 -5.8%로 들어오는 쪽이라, baseline 단기 매우 부정보다 한 단계 높게 본다.",
-   "흐름 점수 -0.15(최근 5년 중 43% 위치)에 한은 1년 기대 금리가 인상 약 2회분 높아 중기도 부정이다."
+   "투자자예탁금 89.2조원으로 3개월 -13.5% 줄었고, 예탁금 감소 하위 3분의 1 구간은 과거 다음 3개월 코스피 초과수익 평균이 -1.9%였다.",
+   "외국인 순매수 누적 -55.3조원, 코스피 60일 외국인 순매도 53조776억원으로 이탈이 이어진다.",
+   "baseline 단기는 코스피 20일 -18% 급락으로 매우 부정이지만, 신용융자 28.6조원(3개월 +0.8%)·회사채 스프레드 0.69%p(3개월 -1bp)가 보통이라 부정으로 둔다.",
+   "흐름 점수 -0.17(하위부터 43%)이고 한은 1년 기대금리가 인상 약 2회분 높아 중기도 부정이다."
   ]
  },
- "nextCheck": "코스피 5,306·코스닥 673 지지 유지 여부, 예탁금·외국인 수급 변화, 11/26 금통위와 12/09 FOMC 결과를 확인한다.",
+ "nextCheck": "코스피 5,306·나스닥 24,262 지지 여부, 12/9 FOMC 인상 확률(현재 68%)과 11/26 금통위 결과를 확인한다.",
  "sources": [
-  "https://finance.yahoo.com/markets/stocks/articles/stock-market-today-dow-futures-135650348.html",
-  "https://www.thestreet.com/stock-market-today/stock-market-today-dow-jones-sp-500-nasdaq-updates-nov-04-2026",
-  "https://www.fool.com/coverage/stock-market-today/2026/11/04/stock-market-today-nov-4-dow-surges-3-in-biggest-post-midterm-rally-in-44-years/"
+  "https://www.bloomberg.com/news/articles/2026-11-05/treasuries-extend-advance-as-technology-shares-resume-slide",
+  "https://fortune.com/2026/11/05/wall-street-drop-off-tech-ai-plunge-2-trillion/",
+  "https://biz.heraldcorp.com/article/10927440",
+  "https://cnbc.com/2026/10/30/musalem-fed-monetary-policy-tightening.html"
  ],
  "policyNews": {
-  "asOf": "2026-11-05",
+  "asOf": "2026-11-06",
   "us": {
    "stance": "매파",
-   "note": "연준은 10/28 FOMC에서 금리를 3.75~4.00%로 동결했고 쿡 이사와 해맥 총재가 인상을 주장하며 반대했다. 10/30 로건 총재는 최소 두 차례 더 25bp 인상이 필요하다고, 무살렘 총재는 곧 추가 인상이 필요하다고 말했고, 선거 뒤 CME 기준 12월 인상 확률은 76.9%로 올랐다.",
+   "note": "10월 FOMC는 금리를 동결했으나 쿡 이사와 해맥 총재가 인상을 주장하며 반대했고, 로건 총재는 0.25%p 인상이 적어도 두 번 더 필요하다고 말했다. 11/05 해맥 총재는 점진적 인상을 선호한다고, 바킨 총재는 광범위한 인플레이션이 여전히 너무 높다고 말했다.",
    "sources": [
-    "https://www.cnn.com/2026/10/28/business/live-news/federal-reserve-interest-rate-october",
-    "https://www.bloomberg.com/news/articles/2026-10-28/fed-holds-rates-says-more-data-will-help-next-decision",
-    "https://www.cnbc.com/2026/10/30/musalem-fed-monetary-policy-tightening.html",
-    "https://www.tokenpost.com/news/investing/48784"
+    "https://cnbc.com/2026/10/30/musalem-fed-monetary-policy-tightening.html",
+    "https://247wallst.com/investing/2026/10/31/two-fed-officials-just-called-for-more-rate-hikes-starting-soon",
+    "https://www.cnbc.com/2026/11/05/barkin-sees-interest-rate-hikes-ahead-but-at-a-gradual-pace.html",
+    "https://cryptobriefing.com/feds-hammack-supports-gradual-rate-hikes-to-manage-inflation/"
    ]
   },
   "korea": {

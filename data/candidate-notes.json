@@ -781,6 +781,19 @@
           "drop",
           "earn"
         ]
+      },
+      "064400": {
+        "verdict": "형식",
+        "note": "2026.06 분기 영업이익은 -9.2%였지만 3분기 영업이익은 1,382억원으로 전년 대비 15.0% 늘었다. 어느 정체성 조건이 미달인지와 자사주 소각 이행 여부 확인 전까지 감시한다.",
+        "asOf": "2026-11-06",
+        "flags": [
+          "theme"
+        ],
+        "by": "ai",
+        "sources": [
+          "https://www.cbci.co.kr/news/articleView.html?idxno=621254",
+          "https://www.chickstockfi.com/disclosures/20261030800194"
+        ]
       }
     },
     "korea|growth": {
@@ -986,11 +999,16 @@
         ]
       },
       "066570": {
-        "verdict": "없음",
-        "note": "3분기 잠정 영업이익이 컨센서스를 밑돌았으나 원인이 자회사 부진과 희망퇴직 일회성 비용으로 보도됐고 가이던스 하향·지배구조 문제는 없다.",
-        "asOf": "2026-10-28",
+        "verdict": "형식",
+        "note": "3분기 영업이익 7,819억원(전년比 13.5%↑)에 전장 역대 3분기 최대 실적으로 이익 훼손은 없다. 수익률 순위 하락 원인은 주가 요인일 가능성이 커 순위 확인 전까지 감시한다.",
+        "asOf": "2026-11-06",
         "flags": [
-          "earn"
+          "theme"
+        ],
+        "by": "ai",
+        "sources": [
+          "https://www.thelec.kr/news/articleView.html?idxno=64461",
+          "https://www.lge.co.kr/story/newsroom/236203"
         ]
       }
     },
