@@ -9,7 +9,7 @@
 //   5) 그 주소를 data/config.js 의 quotesApi 에 넣고 커밋·푸시
 //
 // 사용 예: GET https://<사용자명>-quotes.web.val.run/?symbols=005930.KS,AAPL,^KS11
-// 응답 예: {"005930.KS":{"price":71900,"date":"2026-07-04","prevClose":70500,"changePct":1.99},"AAPL":{"price":250.1,"date":"2026-07-03",…}}
+// 응답 예: {"005930.KS":{"price":71900,"date":"2026-07-04","prevClose":70500,"changePct":1.99,"open":70800,"high":72100,"low":70600,"volume":15230000},…}
 //
 // ── 과거 시계열(기술적 분석용) ──
 // GET …/?symbols=005930.KS,AAPL&history=1&range=6mo
@@ -52,7 +52,7 @@ async function oneQuote(sym: string) {
   const r = await fetch(url, { headers: { "User-Agent": "Mozilla/5.0", "Accept": "application/json" } });
   if (!r.ok) return null;
   const j = await r.json();
-  const m = j?.chart?.result?.[0]?.meta;
+  const res0 = j?.chart?.result?.[0], m = res0?.meta;
   if (!m || typeof m.regularMarketPrice !== "number" || !isFinite(m.regularMarketPrice)) return null;
   let date: string | null = null;
   if (m.regularMarketTime) {
@@ -64,7 +64,13 @@ async function oneQuote(sym: string) {
   let changePct = typeof m.regularMarketChangePercent === "number" && isFinite(m.regularMarketChangePercent) ? m.regularMarketChangePercent
     : prev ? (m.regularMarketPrice / prev - 1) * 100 : null;
   if (changePct != null) changePct = Math.round(changePct * 100) / 100;
-  return { price: m.regularMarketPrice, date, prevClose: prev, changePct };
+  // 그날 시가·고가·저가·거래량 — 앱 상세 차트의 장중 봉(2026-11-06 '차트도 실시간'). 없으면 앱이 전일 종가로 근사한다
+  const q = res0?.indicators?.quote?.[0] || {};
+  const lastNum = (a: unknown) => { if (!Array.isArray(a)) return null; for (let i = a.length - 1; i >= 0; i--) { const v = a[i]; if (typeof v === "number" && isFinite(v)) return v; } return null; };
+  const num = (v: unknown) => (typeof v === "number" && isFinite(v) ? v : null);
+  return { price: m.regularMarketPrice, date, prevClose: prev, changePct,
+    open: lastNum(q.open), high: num(m.regularMarketDayHigh) ?? lastNum(q.high), low: num(m.regularMarketDayLow) ?? lastNum(q.low),
+    volume: num(m.regularMarketVolume) ?? lastNum(q.volume) };
 }
 
 export default async function (req: Request): Promise<Response> {
@@ -96,7 +102,7 @@ export default async function (req: Request): Promise<Response> {
     });
   }
 
-  const out: Record<string, { price: number; date: string | null; prevClose: number | null; changePct: number | null }> = {};
+  const out: Record<string, Record<string, number | string | null>> = {};
   await Promise.all(symbols.map(async (sym) => {
     try {
       const q = await oneQuote(sym);

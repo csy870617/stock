@@ -41,7 +41,7 @@ async function oneQuote(sym) {
   });
   if (!r.ok) return null;
   const j = await r.json();
-  const m = j && j.chart && j.chart.result && j.chart.result[0] && j.chart.result[0].meta;
+  const res0 = j && j.chart && j.chart.result && j.chart.result[0], m = res0 && res0.meta;
   if (!m || typeof m.regularMarketPrice !== "number" || !isFinite(m.regularMarketPrice)) return null;
   let date = null;
   if (m.regularMarketTime) {
@@ -53,7 +53,14 @@ async function oneQuote(sym) {
   let changePct = typeof m.regularMarketChangePercent === "number" && isFinite(m.regularMarketChangePercent) ? m.regularMarketChangePercent
     : prev ? (m.regularMarketPrice / prev - 1) * 100 : null;
   if (changePct != null) changePct = Math.round(changePct * 100) / 100;
-  return { price: m.regularMarketPrice, date, prevClose: prev, changePct };
+  // 그날 시가·고가·저가·거래량 — 앱 상세 차트의 장중 봉(2026-11-06 '차트도 실시간'). 없으면 앱이 전일 종가로 근사한다
+  const q = (res0 && res0.indicators && res0.indicators.quote && res0.indicators.quote[0]) || {};
+  const lastNum = (a) => { if (!Array.isArray(a)) return null; for (let i = a.length - 1; i >= 0; i--) { const v = a[i]; if (typeof v === "number" && isFinite(v)) return v; } return null; };
+  const num = (v) => (typeof v === "number" && isFinite(v) ? v : null);
+  return { price: m.regularMarketPrice, date, prevClose: prev, changePct,
+    open: lastNum(q.open), high: num(m.regularMarketDayHigh) != null ? num(m.regularMarketDayHigh) : lastNum(q.high),
+    low: num(m.regularMarketDayLow) != null ? num(m.regularMarketDayLow) : lastNum(q.low),
+    volume: num(m.regularMarketVolume) != null ? num(m.regularMarketVolume) : lastNum(q.volume) };
 }
 
 async function oneHistory(sym, range) {
