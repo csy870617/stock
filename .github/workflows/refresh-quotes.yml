@@ -4,6 +4,7 @@ name: Refresh quotes (daily, token-free)
 #   1) update-quotes.js  → data/quotes.js (실제 Yahoo 시세)
 #   1-2) update-consensus.js → data/consensus.js + recommendations.js targetPrice (네이버 컨센서스)
 #   2) update-indices.js → data/indices.js (지수 단기/장기 이동평균·RSI·추세·지지/저항·신호) + 코스피·코스닥 투자자별 순매수(data/market-flows.json — 다음 금융, 지수 상세 '수급')
+#      + 섹터(업종 ETF — data/sectors.js·data/chart/idx-sec-*.json, 홈 '오늘의 시장' 섹터 쪽)
 #   3) update-stock-ta.js → data/stock-ta.js (개별 종목 단기/장기 기술적 분석) + data/chart/<ticker>.json (종목 상세 캔들 차트 — 일·주·월봉)
 #   3-2) update-trend.js → data/trend/<ticker>.json (종목 상세 '현재 추세' — 상승·하락·보합 판정과 시작점, 시장 몫·핵심 날짜·단계·수급·공시)
 #   4) update-liquidity-gauge.js → data/liquidity-auto.js (시장 여건 게이지 — 과거 검증 미달, 참고·금리 경로)
@@ -271,14 +272,14 @@ jobs:
       - name: Commit & push if changed
         id: commit
         run: |
-          if git diff --quiet -- data/quotes.js data/recommendations.js data/history.js data/history-index.js data/tp-history.json data/indices.js data/stock-ta.js data/events.js data/fundamentals.js data/liquidity-auto.js data/liquidity-flow.js data/liquidity-hist.json data/watch-candidates.js data/discovery-candidates.js data/screen-universe.json data/candidates.js data/pick-scores.js data/coverage-status.js data/tickers.js data/consensus.js data/reco-ops.json data/chart data/trend data/trend-summary.js data/liquidity.js data/index-notes.js data/candidate-notes.json data/news.js data/ai-status.js data/shadow.json data/perf.json data/close-runs.json data/market-flows.json data/revisions.js data/analyst-kr.json data/earn-risk.js; then
+          if git diff --quiet -- data/quotes.js data/recommendations.js data/history.js data/history-index.js data/tp-history.json data/indices.js data/sectors.js data/stock-ta.js data/events.js data/fundamentals.js data/liquidity-auto.js data/liquidity-flow.js data/liquidity-hist.json data/watch-candidates.js data/discovery-candidates.js data/screen-universe.json data/candidates.js data/pick-scores.js data/coverage-status.js data/tickers.js data/consensus.js data/reco-ops.json data/chart data/trend data/trend-summary.js data/liquidity.js data/index-notes.js data/candidate-notes.json data/news.js data/ai-status.js data/shadow.json data/perf.json data/close-runs.json data/market-flows.json data/revisions.js data/analyst-kr.json data/earn-risk.js; then
             echo "변화 없음 — 커밋 생략"
             echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/quotes.js data/recommendations.js data/history.js data/history-index.js data/tp-history.json data/indices.js data/stock-ta.js data/events.js data/fundamentals.js data/liquidity-auto.js data/liquidity-flow.js data/liquidity-hist.json data/watch-candidates.js data/discovery-candidates.js data/screen-universe.json data/candidates.js data/pick-scores.js data/coverage-status.js data/tickers.js data/consensus.js data/reco-ops.json data/chart data/trend data/trend-summary.js data/liquidity.js data/index-notes.js data/candidate-notes.json data/news.js data/ai-status.js data/shadow.json data/perf.json data/close-runs.json data/market-flows.json data/revisions.js data/analyst-kr.json data/earn-risk.js
+          git add data/quotes.js data/recommendations.js data/history.js data/history-index.js data/tp-history.json data/indices.js data/sectors.js data/stock-ta.js data/events.js data/fundamentals.js data/liquidity-auto.js data/liquidity-flow.js data/liquidity-hist.json data/watch-candidates.js data/discovery-candidates.js data/screen-universe.json data/candidates.js data/pick-scores.js data/coverage-status.js data/tickers.js data/consensus.js data/reco-ops.json data/chart data/trend data/trend-summary.js data/liquidity.js data/index-notes.js data/candidate-notes.json data/news.js data/ai-status.js data/shadow.json data/perf.json data/close-runs.json data/market-flows.json data/revisions.js data/analyst-kr.json data/earn-risk.js
           git commit -m "매일 데이터 갱신 (자동) — 시세·기준일·스냅샷 (update-quotes + daily-maintenance)"
           # 다른 자동 커밋(LLM 재평가 Routine 등)과 경합해 push 가 거부될 수 있으므로,
           # 거부되면 원격 변경을 rebase 로 얹어 1회 재시도한다(그날 갱신이 조용히 유실되지 않도록).
@@ -292,7 +293,7 @@ jobs:
               git rebase --abort
               echo "::warning::rebase 충돌 — 원격 최신 위에 이번 실행 산출물을 다시 얹습니다"
               GEN="$RUNNER_TEMP/gen"; mkdir -p "$GEN"
-              cp data/quotes.js data/indices.js data/stock-ta.js data/events.js data/fundamentals.js data/liquidity-auto.js data/liquidity-flow.js data/liquidity-hist.json data/watch-candidates.js data/discovery-candidates.js data/screen-universe.json data/tickers.js data/news.js data/ai-status.js data/shadow.json data/perf.json data/close-runs.json data/market-flows.json data/revisions.js data/analyst-kr.json data/earn-risk.js "$GEN/"
+              cp data/quotes.js data/indices.js data/sectors.js data/stock-ta.js data/events.js data/fundamentals.js data/liquidity-auto.js data/liquidity-flow.js data/liquidity-hist.json data/watch-candidates.js data/discovery-candidates.js data/screen-universe.json data/tickers.js data/news.js data/ai-status.js data/shadow.json data/perf.json data/close-runs.json data/market-flows.json data/revisions.js data/analyst-kr.json data/earn-risk.js "$GEN/"
               cp -r data/chart "$RUNNER_TEMP/gen-chart" 2>/dev/null || true
               git reset --hard FETCH_HEAD
               cp "$GEN"/* data/
@@ -310,7 +311,7 @@ jobs:
               node scripts/check-defects.js || true
               node scripts/pick-score.js --emit || true
               node scripts/coverage.js --emit || true
-              git add data/quotes.js data/recommendations.js data/history.js data/history-index.js data/tp-history.json data/indices.js data/stock-ta.js data/events.js data/fundamentals.js data/liquidity-auto.js data/liquidity-flow.js data/liquidity-hist.json data/watch-candidates.js data/discovery-candidates.js data/screen-universe.json data/candidates.js data/pick-scores.js data/coverage-status.js data/tickers.js data/consensus.js data/reco-ops.json data/chart data/trend data/trend-summary.js data/liquidity.js data/index-notes.js data/candidate-notes.json data/news.js data/ai-status.js data/shadow.json data/perf.json data/close-runs.json data/market-flows.json data/revisions.js data/analyst-kr.json data/earn-risk.js
+              git add data/quotes.js data/recommendations.js data/history.js data/history-index.js data/tp-history.json data/indices.js data/sectors.js data/stock-ta.js data/events.js data/fundamentals.js data/liquidity-auto.js data/liquidity-flow.js data/liquidity-hist.json data/watch-candidates.js data/discovery-candidates.js data/screen-universe.json data/candidates.js data/pick-scores.js data/coverage-status.js data/tickers.js data/consensus.js data/reco-ops.json data/chart data/trend data/trend-summary.js data/liquidity.js data/index-notes.js data/candidate-notes.json data/news.js data/ai-status.js data/shadow.json data/perf.json data/close-runs.json data/market-flows.json data/revisions.js data/analyst-kr.json data/earn-risk.js
               git diff --cached --quiet || git commit -m "매일 데이터 갱신 (자동) — 시세·기준일·스냅샷 (update-quotes + daily-maintenance)"
             fi
             # 원격 변경과 합쳐진 결과도 커밋 전과 같은 게이트를 통과해야 push 한다

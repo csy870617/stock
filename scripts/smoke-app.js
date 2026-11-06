@@ -71,6 +71,16 @@ async function run(browser, base) {
     await page.click("#shBack");
     await page.waitForFunction(() => document.getElementById("sheet").hidden, null, T);
   });
+  await step("오늘의 시장 섹터 쪽·섹터 상세", async () => {
+    await page.click('#mkTabs [data-mkp="1"]');
+    await page.waitForFunction(() => document.querySelectorAll("#secBody .sx").length > 0, null, T);
+    await page.click("#secBody .sx");
+    await page.waitForFunction(() => { const s = document.getElementById("sheet"); return s && !s.hidden && document.querySelector("#shBody .sxt"); }, null, T);
+    await page.waitForTimeout(800);   // 섹터 차트(data/chart/idx-sec-*)를 받아 그릴 시간
+    await page.click("#shBack");
+    await page.waitForFunction(() => document.getElementById("sheet").hidden, null, T);
+    await page.click('#mkTabs [data-mkp="0"]');
+  });
   await step("추천 종목 목록", async () => { await tab("reco"); await page.waitForFunction(() => document.querySelectorAll("#recoList .row").length > 0, null, T); });
   await step("종목 상세 열기·닫기", async () => {
     await page.click("#recoList [data-open]");
