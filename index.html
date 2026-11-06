@@ -394,6 +394,14 @@ svg { display: block; }
 .sxt > span { padding: 7px 0; border-top: 1px solid var(--line2); text-align: right; }
 .sxt > span:nth-child(4n+1) { text-align: left; color: var(--ink2); }
 .sxt > .sxt-h { border-top: 0; padding-top: 0; font-size: 12px; font-weight: 600; color: var(--mut); }
+/* 섹터 흐름 분석 — 숫자로 본 흐름(자동) · 기사로 확인한 원인(루틴) */
+.sxa-num { font-size: 14.5px; line-height: 1.7; color: var(--ink2); }
+.sxa-h { margin-top: 14px; font-size: 15.5px; font-weight: 700; line-height: 1.5; color: var(--ink); }
+.sxa-h + .dt-txt { margin-top: 6px; }
+.sxa-w { margin-top: 10px; font-size: 13.5px; line-height: 1.6; color: var(--ink2); }
+.sxa-w b { margin-right: 6px; font-weight: 700; color: var(--ink); }
+.sxa-src { display: flex; flex-wrap: wrap; gap: 6px 12px; margin-top: 10px; font-size: 12.5px; }
+.sxa-src a { color: var(--mut); text-decoration: underline; text-underline-offset: 2px; }
 .mc-row[data-open] { cursor: pointer; }
 @media (hover: hover) { .mc-row[data-open]:hover .mc-nm { text-decoration: underline; } }
 /* 환율·원자재 상세 — 관련 정보(기간 등락·52주 위치·금리 차·같이 움직인 종목) */
@@ -6055,8 +6063,53 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     if (window.SECTOR_TA || SX.req) return;
     SX.req = true; SX.fail = false;
     var T = window.INDEX_TA, v = (T && (T.builtAt || T.asOf)) || "";
-    loadScriptOnce("data/sectors.js" + (v ? "?v=" + encodeURIComponent(v) : "")).then(function () { SX.req = false; renderSectors(); },
+    // 흐름 분석(data/sector-notes.js — 루틴 세션이 기사로 확인해 쓴다)은 없거나 못 받아도 섹터는 그린다
+    var notes = loadScriptOnce("data/sector-notes.js?h=" + Math.floor(Date.now() / 36e5)).catch(function () {});
+    loadScriptOnce("data/sectors.js" + (v ? "?v=" + encodeURIComponent(v) : "")).then(function () { return notes; }).then(function () { SX.req = false; renderSectors(); },
       function () { SX.req = false; SX.fail = true; renderSectors(); });
+  }
+  function sectorNote(key) { var N = window.SECTOR_NOTES; return N && N.items ? N.items[key] || null : null; }
+  // 흐름 지문 — scripts/sector-notes.js fpOf 와 같은 규칙(중기·장기 신호, 1개월 시장 대비 ±5%p). 분석을 쓴 뒤 바뀌었으면 '갱신 대기'
+  function sxFp(x) {
+    var rs = (x.facts && x.facts.rs && x.facts.rs.m1) || 0;
+    return [(x.mid || {}).signal || "-", (x.long || {}).signal || "-", rs >= 5 ? "강" : rs <= -5 ? "약" : "비슷"].join("|");
+  }
+  // 숫자로 본 흐름 — 같은 기간 시장 대비(1개월·3개월·올해)와 단·중·장 추세 상태를 짧은 문장으로(매일 자동, 예측 아님)
+  function sxFlowSummary(x, c) {
+    var f = x.facts || {}, rs = f.rs || {}, bn = sxBench(c).name, wa = bn === "코스피" ? "와" : "과", out = [];
+    var phr = function (v, end, first) {   // end: 0 '~했고' · 1 '~했다' · 2 지금까지 쌓인 차이('앞서 있다'·'뒤처져 있다')
+      var a = Math.abs(v), E = ["했고", "했다", "하다"][end];
+      if (a < 1.5) return (first ? bn + wa + " " : "시장과 ") + "비슷" + E;
+      return (first ? bn + "보다 " : "") + a.toFixed(1) + "%p " + (end === 2 ? (v > 0 ? "앞서 있다" : "뒤처져 있다") : (v > 0 ? "강" : "약") + E);
+    };
+    var dir = function (v) { return v == null ? 0 : v >= 1.5 ? 1 : v <= -1.5 ? -1 : 0; };
+    if (rs.m1 != null) {
+      var s1 = "최근 1개월 " + phr(rs.m1, rs.m3 != null ? 0 : 1, true);
+      if (rs.m3 != null) s1 += ", 3개월로" + (dir(rs.m1) && dir(rs.m1) === dir(rs.m3) ? "도 " : "는 ") + phr(rs.m3, 1, false);
+      out.push(s1 + ".");
+    }
+    if (rs.ytd != null) out.push("올해 전체로는 " + phr(rs.ytd, 2, rs.m1 == null) + ".");
+    var d = function (p) { var g = p && p.signal; return g === "적극매수" || g === "매수" ? 1 : g === "적극매도" || g === "매도" ? -1 : 0; };
+    var s = d(x.short), m = d(x.mid), l = d(x.long);
+    out.push(s === 1 && m === 1 && l === 1 ? "단·중·장기 모두 상승세 — 오름세가 이어지는 흐름."
+      : s === -1 && m === -1 && l === -1 ? "단·중·장기 모두 하락세 — 내림세가 이어지는 흐름."
+      : l === 1 && s === -1 ? "장기 상승세 안에서 단기 하락세 — 상승 추세 속 조정 구간."
+      : l === -1 && s === 1 ? "장기 하락세 안에서 단기 상승세 — 하락 추세 속 반등 구간."
+      : "단기 " + sigWord((x.short || {}).signal) + " · 중기 " + sigWord((x.mid || {}).signal) + " · 장기 " + sigWord((x.long || {}).signal) + ".");
+    return out.join(" ");
+  }
+  function sxFlowHtml(x, c) {
+    var nt = sectorNote(x.key), at = nt && nt.at ? String(nt.at).slice(0, 10) : "", age = at ? Math.floor((Date.now() - Date.parse(at + "T00:00:00Z")) / 864e5) : null;
+    var chip = !nt ? "" : nt.fp && nt.fp !== sxFp(x) ? ' <span class="tn-stale" title="분석을 쓴 뒤 추세 상태나 시장 대비 방향이 바뀌었다 — 다음 정기 분석 때 다시 쓴다.">흐름 바뀜 · 갱신 대기</span>'
+      : age > 7 ? ' <span class="tn-stale" title="작성한 지 ' + age + '일 — 다음 정기 분석 때 다시 쓴다.">오래됨</span>' : "";
+    var src = nt && (nt.sources || []).length ? '<div class="sxa-src">' + nt.sources.slice(0, 4).map(function (u, i) {
+      return '<a href="' + esc(safeUrl(u)) + '" target="_blank" rel="noopener">' + esc(hostOf(u) || "출처" + (i + 1)) + "</a>"; }).join("") + "</div>" : "";
+    return '<section class="dt-sec" id="dt-sxflow"><h3>흐름 분석' + (at ? ' <span class="md-as">' + esc(mdOf(at)) + " 작성</span>" : "") + chip + "</h3>" +
+      '<p class="sxa-num">' + esc(sxFlowSummary(x, c)) + "</p>" +
+      (nt ? (nt.headline ? '<p class="sxa-h">' + esc(nt.headline) + "</p>" : "") + (nt.flow ? '<p class="dt-txt">' + esc(nt.flow) + "</p>" : "") +
+        (nt.watch ? '<p class="sxa-w"><b>확인할 일정</b>' + esc(nt.watch) + "</p>" : "") + src
+        : '<p class="dt-txt dt-mut">기사로 확인한 원인 분석은 다음 정기 분석이 채운다.</p>') +
+      '<p class="kv-note">첫 문단은 매일 숫자로 자동 작성, 원인은 정기 분석이 기사로 확인해 쓴다.</p></section>';
   }
   function sectorList(c) { var S = window.SECTOR_TA; return S && Array.isArray(S[c]) ? S[c] : []; }
   function sectorOf(c, key) { return sectorList(c).filter(function (x) { return x.key === key; })[0] || null; }
@@ -6155,7 +6208,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       '<div class="kv" style="margin-top:10px">' + volKv(f) + '<div class="kv-c"></div></div>' + rangeBarHtml(f, fmtLv) + "</section>" +
       '<section class="dt-sec"><h3>관련 종목</h3>' + mkLine + members + "</section>";
     var url = c === "korea" ? "https://m.stock.naver.com/domestic/stock/" + encodeURIComponent(x.naver) + "/total" : "https://m.stock.naver.com/worldstock/etf/" + encodeURIComponent(x.naver) + "/total";
-    return top + chartHtml("idx-sec-" + x.key) + sig + facts +
+    return top + chartHtml("idx-sec-" + x.key) + sig + sxFlowHtml(x, c) + facts +
       '<section class="dt-sec"><h3>AI에게 묻기</h3>' + aiSectionHtml("x:" + c + ":" + x.key, { kind: "sector", c: c, key: x.key }) + "</section>" +
       '<div class="dt-act"><a class="btn" href="' + esc(safeUrl(url)) + '" target="_blank" rel="noopener" title="네이버 증권에서 ETF 보기">' + ICON.ext + " 네이버</a></div>";
   }
@@ -6371,7 +6424,9 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
       "52주 범위 중 " + f.pos52 + "% 위치 · 50일선 대비 " + pctTxt(f.ma50) + " · 200일선 대비 " + pctTxt(f.ma200) + " · 60일 변동성 " + f.vol60 + "%",
       rel.bench ? "시장(" + b.name + ") 주간 상관 " + rel.bench.corr + " · β " + rel.bench.beta : "",
       (rel.pos || []).length ? (rel.by === "ind" ? "이 업종(WICS)의 편성·관심·보유 종목: " : "같이 움직인 편성·관심·보유 종목(시장 몫을 뺀 주간 상관): ") +
-        rel.pos.map(function (y) { return y.name + "(" + y.th + ", 상관 " + (rel.by === "ind" ? y.raw : y.corr) + ")"; }).join(", ") : ""
+        rel.pos.map(function (y) { return y.name + "(" + y.th + ", 상관 " + (rel.by === "ind" ? y.raw : y.corr) + ")"; }).join(", ") : "",
+      "숫자로 본 흐름: " + sxFlowSummary(x, c),
+      (function () { var n = sectorNote(key); return n ? "앱의 흐름 분석(" + String(n.at || "").slice(0, 10) + " 작성, 기사 확인): " + n.headline + " — " + n.flow + (n.watch ? " | 확인할 일정: " + n.watch : "") : ""; })()
     ].filter(Boolean).join("\n");
   }
   function idxLine(x) {
