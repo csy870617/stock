@@ -54,7 +54,10 @@ if (has("coverage")) {
 }
 
 // ── 결과 변수(유동성 연구와 같은 정의) ──
-const DTB3 = F.DTB3 || {}, CD = E.cd91 || {};
+// 한국 무위험 = ECOS CD 91일(월평균). ECOS 를 받지 못하면 FRED 의 OECD 한국 3개월 금리(IR3TIB01KRM156N — CD 91일)로 대신한다(README 에 적음)
+const DTB3 = F.DTB3 || {};
+const CD = (E.cd91 && Object.keys(E.cd91).length) ? E.cd91 : (() => { const o = {}; Object.keys(F.IR3TIB01KRM156N || {}).forEach((d) => { o[d.slice(0, 7)] = F.IR3TIB01KRM156N[d]; }); return o; })();
+const CD_SRC = (E.cd91 && Object.keys(E.cd91).length) ? "ECOS CD91" : "FRED IR3TIB01KRM156N";
 function lastVal(map, iso, maxDays) {   // iso 이하 마지막 값
   const ks = (lastVal.cache[map === DTB3 ? "d" : "x"] = lastVal.cache[map === DTB3 ? "d" : "x"] || Object.keys(map).sort());
   let lo = 0, hi = ks.length - 1, idx = -1;

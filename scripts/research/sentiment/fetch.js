@@ -80,7 +80,8 @@ async function ecos(stat, item, from) {   // 견본 키는 한 번에 10줄 — 
   }
   fs.writeFileSync(path.join(OUT, "yahoo.json"), JSON.stringify(Y));
   const F = {};
-  for (const id of ["BAA10Y", "DTB3"]) { F[id] = await fred(id); console.log("FRED " + id + " " + (F[id] ? Object.keys(F[id]).length : "실패")); }
+  // IR3TIB01KRM156N = OECD 한국 3개월 금리(CD 91일) 월별 — ECOS 가 막혔을 때 한국 무위험 수익 대체(2026-11-06 이 환경에서 ECOS 접속 실패)
+  for (const id of ["BAA10Y", "DTB3", "IR3TIB01KRM156N"]) { F[id] = await fred(id); console.log("FRED " + id + " " + (F[id] ? Object.keys(F[id]).length : "실패")); }
   fs.writeFileSync(path.join(OUT, "fred.json"), JSON.stringify(F));
   const K = { margin: await kofia("STATSCU0100000070BO", "TMPV2", 2002) };
   const mk = Object.keys(K.margin).sort();
