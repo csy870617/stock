@@ -349,7 +349,9 @@ if (queue.swap.length) {
       const blk = capBlock(x.g.split("|")[0], x.g.split("|")[1], y, x.d.ticker);
       return y.name + "(" + y.ticker + (blk.length ? " — " + blk.join("·") + "으로 불가" : "") + ")";
     });
-    const esc = x.d.long === 2 ? " ★" + x.d.age + "일째 — 스크린 적격 후보로 교체(§3-7 28일 규칙)" : x.d.long === 1 ? " ☆" + x.d.age + "일째 — 후보 범위 확대(스크린 26~50위·근접·인접 주제)" : "";
+    // 28일 규칙보다 β 허용 범위가 먼저(2026-11-07 사용자 결정) — 밴드 밖이면 β 를 1 쪽으로 되돌리는 후보만, 없으면 유지(배당 자리는 예외)
+    const xc = x.g.split("|")[0], xb = BETA[xc], bOut = xb != null && (xb < 0.7 || xb > 1.3) && x.g.split("|")[1] !== "dividend";
+    const esc = x.d.long === 2 ? " ★" + x.d.age + "일째 — 스크린 적격 후보로 교체(§3-7 28일 규칙)" + (bOut ? " · 단 β " + xb.toFixed(2) + " 밴드 밖이라 β 를 " + (xb < 0.7 ? "높이는" : "낮추는") + " 후보만 — 없으면 결격 유지(β 우선)" : "") : x.d.long === 1 ? " ☆" + x.d.age + "일째 — 후보 범위 확대(스크린 26~50위·근접·인접 주제)" : "";
     console.log("  " + x.g + " " + x.d.ticker + " " + x.d.name + (x.d.triedAt >= T ? " [교체 시도 " + x.d.triedAt + "]" : " [오늘 교체 시도 필요]") + esc + " — " + (x.d.note || "") + " · 대체 " + (ready.length ? ready.join(", ") : "검증 통과 후보 없음 → 스크린 상위 검증"));
   });
 }
