@@ -63,6 +63,13 @@ window.COVERAGE_STATUS = {
    "ok": true
   },
   {
+   "key": "trend",
+   "label": "현재 추세",
+   "done": 101,
+   "total": 101,
+   "ok": true
+  },
+  {
    "key": "defects",
    "label": "결격 점검",
    "done": 1,

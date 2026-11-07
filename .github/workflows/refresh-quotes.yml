@@ -137,8 +137,9 @@ jobs:
         run: node scripts/gen-technote.js
         continue-on-error: true
 
-      # 종목 상세 '현재 추세' — 야후 5년 일봉·지수로 지금 추세(상승·하락·보합)와 시작점(되돌림 기준 전환점 + 3개월 정체)을 정하고,
-      # 그 추세 구간의 시장 몫(β) vs 종목 고유·단계·핵심 날짜를 계산해 한국 투자자별 매매·공시(네이버)·미국 8-K(SEC)·실적 발표 반응을 붙인다(토큰 0, 약 1분).
+      # 종목 상세 '현재 추세' — 야후 일봉(2016-11-07부터 고정)으로 앞으로만 굴리는 지그재그(Z10F — 확정된 전환점·확인일은 다시 그리지 않는다)로
+      # 지금 추세와 시작점·확인일을 정하고, 그 추세 구간의 시장 몫(β) vs 종목 고유·단계·핵심 날짜를 계산해 한국 투자자별 매매·공시(네이버)·
+      # 미국 8-K(SEC)·실적 발표 반응을 붙인다(토큰 0, 약 1분). 야후 조회에 실패한 종목은 이전 파일을 그대로 둔다.
       # 이전 파일의 기사 설명(루틴 세션이 trend-notes.js 로 쓴 ai)은 이어 붙인다. update-stock-ta·update-events 다음에 돌린다.
       - name: Update current-trend analysis (Yahoo·Naver·SEC → data/trend/<ticker>.json, token-free)
         run: node scripts/update-trend.js

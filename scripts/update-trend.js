@@ -7,8 +7,8 @@
 //   node scripts/update-trend.js            → data/trend/<ticker>.json (편성·관심·보유 전 종목) + data/trend-summary.js(전 종목 요약)
 //   node scripts/update-trend.js 005930 NVDA  → 그 종목만
 //
-// 계산(scripts/lib-trend.js): 추세 판정·시작점(되돌림 기준 지그재그의 마지막 다리) → 그 추세 구간의 시장 몫 vs 종목 고유(β)·
-//   핵심 날짜(초과수익이 큰 날)·단계(꺾은선 1~4개)·직전 추세.
+// 계산(scripts/lib-trend.js): 추세 판정·시작점·확인일(앞으로만 굴리는 지그재그 Z10F — 확정된 전환점·확인일은 다시 그리지 않는다)
+//   → 그 추세 구간의 시장 몫 vs 종목 고유(β)·핵심 날짜(초과수익이 큰 날)·단계(꺾은선 1~4개)·직전 추세.
 // 여기서 덧붙이는 사실:
 //   - 한국: 네이버 증권 투자자별 매매동향(추세 구간의 외국인·기관·개인 순매수 — 수량 × 그날 종가, 단계별 합·보유율)과
 //           공시(실적·수주·증자·자사주·배당·M&A·해명 등 — 핵심 날짜 전 거래일~그날 사이 공시를 붙인다)
@@ -16,14 +16,19 @@
 //           나스닥 최근 실적 발표일(data/events.js)
 //   - 공통: 실적 발표일 반응, 증권사 목표가 평균의 변화(data/tp-history.json 기록 구간), 숫자로 쓴 설명 문장(sum)
 // 설명 문장(기사로 확인한 이유, ai 필드)은 루틴 세션이 scripts/trend-notes.js 로 쓴다 — 이 스크립트는 그대로 이어 붙인다.
-// 일봉: 야후 5년 일봉(최근 약 3년을 쓴다) — 실패하면 data/chart 일봉(1년)으로 대신한다. 지수: 코스피·코스닥·S&P 500(야후).
-// 조회가 실패한 종목은 이전 파일을 그대로 둔다(날짜가 지난 파일은 앱이 기준일을 보여 준다).
+// 일봉: 야후 일봉을 고정 시작일(DATA_START 2016-11-07)부터 전부 받는다 — Z10F 는 시작이 고정돼야 소급 변경이 없다(이 날짜를 옮기면 한 번 다시 그려진다).
+//   끝난 장 기준 정리(settleDailyBars)와 한국 전 장 빈 종가 채우기(fillPrevSessionClose) — 하루치 봉이 빠졌다 돌아오면 판정 경로가 달라진다.
+//   지수: 코스피·코스닥·S&P 500(야후). 조회가 실패한 종목은 이전 파일을 그대로 둔다(예전엔 1년 일봉으로 다시 계산해 판정이 바뀌었다 —
+//   101종목 중 46종목). 날짜가 지난 파일은 앱이 기준일을 보여 준다.
+// 소급 변경 감시: 이전 파일과 견줘 확정된 날짜가 바뀌면 '::warning::현재 추세 소급 변경' 을 남긴다(사전 등록 채택 기준 4를 운영에서 지킨다).
 
 const fs = require("fs");
 const path = require("path");
 const { execFile } = require("child_process");
 const TR = require("./lib-trend");
-const { settleDailyBars } = require("./lib-quote");
+const { settleDailyBars, fillPrevSessionClose } = require("./lib-quote");
+// 일봉 고정 시작일 — 절대 옮기지 않는다(옮기면 모든 종목의 확인일·시작점이 한 번 다시 그려진다). 연구 비교(scripts/research/trend-repaint)와 같은 시작.
+const DATA_START = "2016-11-07";
 
 const ROOT = path.join(__dirname, "..");
 const DIR = path.join(ROOT, "data", "trend");
@@ -83,13 +88,15 @@ async function mapLimit(items, limit, fn) {
 const num = (s) => { const v = parseFloat(String(s == null ? "" : s).replace(/[,+%]/g, "")); return isFinite(v) ? v : null; };
 const dstr = (s) => { const m = String(s || "").match(/(\d{4})-?(\d{2})-?(\d{2})/); return m ? m[1] + "-" + m[2] + "-" + m[3] : null; };
 
-// ── 야후 일봉(5년) — 끝난 장 기준으로 정리(lib-quote) ──
+// ── 야후 일봉(고정 시작일부터) — 끝난 장 기준으로 정리(lib-quote) ──
 async function yahooBars(sym) {
+  const p1 = Math.floor(Date.parse(DATA_START + "T00:00:00Z") / 1000), p2 = Math.floor(Date.now() / 1000) + 86400;
   for (let i = 0; i < 3; i++) {
-    const j = await getJson("https://query1.finance.yahoo.com/v8/finance/chart/" + encodeURIComponent(sym) + "?interval=1d&range=5y");
+    const j = await getJson("https://query1.finance.yahoo.com/v8/finance/chart/" + encodeURIComponent(sym) + "?interval=1d&period1=" + p1 + "&period2=" + p2);
     const res = j && j.chart && j.chart.result && j.chart.result[0];
     if (res && res.indicators && res.indicators.quote && res.timestamp) {
       settleDailyBars(res);
+      await fillPrevSessionClose(res, sym);   // 한국 다음 장이 열린 뒤 전 장 종가가 비면 채운다(update-stock-ta 와 같다)
       const off = ((res.meta && res.meta.gmtoffset) || 0) * 1000, q = res.indicators.quote[0], out = [];
       res.timestamp.forEach((ts, k) => {
         if (q.close[k] == null) return;
@@ -377,8 +384,15 @@ function build(stock, a, extra) {
     if (pull != null && Math.abs(pull) >= 0.05 && (up ? a.hi.d : a.lo.d) !== a.to)
       sum.push(up ? "추세 중 고점(" + mdy(a.hi.d, y0) + ")보다 " + abs(pull) + " 낮다 — 상승 추세 속 조정이다(이 종목의 추세 전환 기준인 고점 대비 -" + abs(a.flip ? a.flip.dn : a.h) + "에는 못 미침)."
         : "추세 중 저점(" + mdy(a.lo.d, y0) + ")보다 " + abs(pull) + " 높다 — 하락 추세 속 반등이다(이 종목의 추세 전환 기준인 저점 대비 +" + abs(a.h) + "에는 못 미침).");
-    if (a.conf) sum.push("추세 확인: " + mdy(a.conf.d, y0) + "(" + (up ? "저점보다 " + pct(a.h) + " 넘게 오른 날" : "고점보다 -" + abs(a.flip ? a.flip.dn : a.h) + " 넘게 내린 날") + ") 이후 " + pct(a.conf.ret) + ".");
-    if (a.flip) sum.push("전환 기준: 종가가 " + a.flip.px + (up ? " 아래로 마감하면 하락 추세" : " 위로 마감하면 상승 추세") + "로 바뀐다(지금보다 " + pct(a.flip.pct) + ").");
+    // 확인 = 판정이 실제로 바뀐 날(Z10F — 한 번 정해지면 바뀌지 않는다). 그날의 기준폭(conf.h)과 전환점 대비 실제 움직임(conf.mv)
+    if (a.conf) {
+      const how = a.conf.mv != null && a.conf.h != null
+        ? mdy(a.from, y0) + (up ? " 저점보다 " + abs(a.conf.mv) + " 올라 그날 기준 " + abs(a.conf.h) : " 고점보다 " + abs(a.conf.mv) + " 내려 그날 기준 " + abs(1 - 1 / (1 + a.conf.h))) + "를 넘은 날"
+        : (up ? "저점보다 " + pct(a.h) + " 넘게 오른 날" : "고점보다 -" + abs(a.flip ? a.flip.dn : a.h) + " 넘게 내린 날");
+      sum.push("추세 확인: " + mdy(a.conf.d, y0) + "(" + how + ") 이후 " + pct(a.conf.ret) + ".");
+    }
+    if (a.flip) sum.push("전환 기준: 다음 거래일 종가가 " + a.flip.px + (up ? " 아래로 마감하면 하락 추세" : " 위로 마감하면 상승 추세") + "로 바뀐다(지금보다 " + pct(a.flip.pct) + " — 기준은 매일 다시 잰다).");
+    if (a.young) sum.push((a.young.why === "short" ? "기록이 500거래일 미만이라" : "아직 확정된 전환점이 없어") + " 이전 방식으로 판정했다 — 검증 범위 밖이고 날짜가 소급해 바뀔 수 있다.");
     if (a.quiet) sum.push("추세 중 " + (up ? "고점" : "저점") + "(" + mdy(a.quiet.d, y0) + ") 이후 " + durTxt(a.quiet.d, a.to) + "째 새 " + (up ? "고점" : "저점") + "이 없다(" + a.quiet.n + "거래일).");
   }
   sum.push("같은 기간 " + bn + " " + pct(a.mret) + " · 시장 민감도 β " + a.beta.toFixed(2) + " → 시장만 따랐다면 " + pct(a.mkt) + ". 실제 " + pct(a.ret) +
@@ -408,7 +422,7 @@ function build(stock, a, extra) {
   else if (a.volTrend != null && a.volTrend >= 1.6) sum.push("최근 20일 거래량이 추세 구간 평균의 " + a.volTrend.toFixed(1) + "배로 늘었다.");
   if (tp && Math.abs(tp.chg) >= 0.03) sum.push("증권사 목표가 평균은 " + mdy(tp.from, y0) + " 이후 " + pct(tp.chg) + (tp.chg > 0 ? " 올라갔다." : " 내려갔다."));
 
-  const out = Object.assign({ v: 1, t: stock.ticker, c: stock.c, name: stock.name, mk: stock.market, asOf: a.to,
+  const out = Object.assign({ v: 2, t: stock.ticker, c: stock.c, name: stock.name, mk: stock.market, asOf: a.to,
     builtAt: new Date().toISOString().slice(0, 19) + "Z", bench: { k: extra.benchKey, name: bn }, src: extra.src }, a,
     { keys, mktDays, earn: earn.map((e) => ({ d: e.d, rd: e.rd, ret: +e.ret.toFixed(4), ar: +e.ar.toFixed(4) })), flow, tp, sum, fp: TR.fingerprint(a) });
   delete out._days;
@@ -439,17 +453,24 @@ function build(stock, a, extra) {
     bench[k] = b ? b.map((x) => ({ t: x.t, c: x.c })) : k !== "sp500" ? chartBars("idx-" + k).map((x) => ({ t: x.t, c: x.c })) : null;
   }
 
-  let wrote = 0, kept = 0, skipped = 0, aiKept = 0, short = 0;
-  const fails = [];
+  let wrote = 0, kept = 0, skipped = 0, aiKept = 0;
+  const fails = [], repaint = [];
   await mapLimit(list, 4, async (s) => {
     const kr = s.c === "korea";
     const bk = kr ? (s.market === "KOSDAQ" ? "kosdaq" : "kospi") : "sp500";
     const prev = (() => { try { return JSON.parse(fs.readFileSync(fileOf(s.ticker), "utf8")); } catch (_e) { return null; } })();
-    let bars = await yahooBars(yahooSym(s)), src = "yahoo5y";
-    if (!bars) { bars = chartBars(s.ticker); src = "chart1y"; short++; }
+    const bars = await yahooBars(yahooSym(s)), src = "yahoo";
+    // 야후 실패면 이전 파일을 그대로 둔다 — 1년 일봉으로 다시 계산하면 판정·날짜가 달라진다(Z10F 는 고정 시작일부터의 전체 일봉이 필요)
+    if (!bars) { if (prev) kept++; else skipped++; fails.push(s.ticker + "(야후 실패 — 이전 파일 유지)"); return; }
     if (!bench[bk] || bench[bk].length < 60 || bars.length < 60) { if (prev) kept++; else skipped++; fails.push(s.ticker + "(자료 부족)"); return; }
     const a = TR.analyze(bars, bench[bk]);
     if (!a) { if (prev) kept++; else skipped++; fails.push(s.ticker + "(판정 불가)"); return; }
+    // 소급 변경 감시 — 앞으로만 굴리는 판정은 이미 지난 날짜의 확인일·시작점이 바뀌면 안 된다(바뀌면 일봉 자료가 달라진 것)
+    if (prev && prev.rule === "Z10F" && a.rule === "Z10F") {
+      if (prev.roll !== a.roll) repaint.push(s.ticker + "(굴리기 시작일 " + prev.roll + "→" + a.roll + ")");
+      else if ((prev.cls !== a.cls || prev.from !== a.from || (prev.conf && a.conf && prev.conf.d !== a.conf.d)) && a.conf && a.conf.d <= prev.asOf)
+        repaint.push(s.ticker + "(" + prev.cls + " " + prev.from + "·확인 " + (prev.conf ? prev.conf.d : "–") + " → " + a.cls + " " + a.from + "·확인 " + a.conf.d + ")");
+    }
     const extra = { kr, benchKey: bk, benchName: BN[bk], tpHist, src };
     if (kr) {
       const fromInt = +a.from.replace(/-/g, "");
@@ -486,11 +507,14 @@ function build(stock, a, extra) {
     if (j.asOf > sumAsOf) sumAsOf = j.asOf;
     SUM[j.t] = { c: j.c, cls: j.cls, from: j.from, kind: j.kind, ret: j.ret, conf: j.conf ? { d: j.conf.d, ret: j.conf.ret, n: j.conf.n } : null,
       flip: j.flip ? { px: j.flip.px, pct: j.flip.pct } : null, quiet: j.quiet || null, asOf: j.asOf };
+    if (j.young) SUM[j.t].young = true;   // 이전 방식(검증 범위 밖) — 앱 홈 목록에서 뺀다
   });
   fs.writeFileSync(path.join(ROOT, "data", "trend-summary.js"), "// update-trend.js 가 쓴다 — 종목별 현재 추세 요약(목록·AI 질문용). 손으로 고치지 않는다.\n" +
-    "window.TREND_SUMMARY = " + JSON.stringify({ asOf: sumAsOf, builtAt: new Date().toISOString().slice(0, 19) + "Z", items: SUM }) + ";\n");
+    "window.TREND_SUMMARY = " + JSON.stringify({ asOf: sumAsOf, builtAt: new Date().toISOString().slice(0, 19) + "Z", rule: "Z10F", items: SUM }) + ";\n");
   const miss = [...need].filter((k) => !bench[k]).map((k) => BN[k]);
   console.log("data/trend 갱신: " + wrote + "/" + list.length + "종목 (이전 유지 " + kept + " · 판정 불가 " + skipped + " · 설명 이어붙임 " + aiKept +
-    (short ? " · 1년 일봉으로 대신 " + short : "") + (removed ? " · 정리 " + removed : "") + ")" + (miss.length ? " · 지수 조회 실패: " + miss.join("·") : "") +
+    (removed ? " · 정리 " + removed : "") + ")" + (miss.length ? " · 지수 조회 실패: " + miss.join("·") : "") +
     (fails.length ? "\n  일부 실패: " + fails.slice(0, 20).join(", ") + (fails.length > 20 ? " 외 " + (fails.length - 20) : "") : ""));
+  if (repaint.length) console.log("::warning::현재 추세 소급 변경 " + repaint.length + "건 — " + repaint.slice(0, 12).join(", ") + (repaint.length > 12 ? " 외 " + (repaint.length - 12) : "") +
+    " (야후 일봉이 달라졌는지 확인)");
 })();

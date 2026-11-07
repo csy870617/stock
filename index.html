@@ -614,7 +614,7 @@ body:not(.ready) #foot, body:not(.ready) #mktFold { visibility: hidden; }   /* �
 .pk-rec-c svg { width: 14px; height: 14px; }
 .row.pk { align-items: flex-start; }
 .pk-n { flex: none; width: 20px; font-size: 17px; font-weight: 800; line-height: 1.45; text-align: center; color: var(--ink); }
-.pk-th { flex: 0 1000 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-left: 2px; font-size: 11.5px; font-weight: 600; color: var(--mut); }   /* 좁으면 이 표시가 먼저 줄어든다 — 종목 이름 우선 */
+.pk-th { flex: 0 1000 auto; min-width: 2.6em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-left: 2px; font-size: 11.5px; font-weight: 600; color: var(--mut); }   /* 좁으면 이 표시가 먼저 줄어든다 — 종목 이름 우선 */
 .pk-why { margin-top: 3px; font-size: 13px; line-height: 1.5; color: var(--ink2); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .mini-sel { margin-left: auto; min-width: 0; max-width: 190px; height: 30px; padding: 0 26px 0 10px; font-size: 13px; font-weight: 600; color: var(--ink2); background: var(--sf3) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5' fill='none' stroke='%238b95a1' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 9px center / 11px; border: 0; border-radius: 8px; -webkit-appearance: none; appearance: none; cursor: pointer; }
 .roster-line + .roster-line { margin-top: 14px; }
@@ -1208,6 +1208,9 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
 }
+/* 현재 추세 차트 — 확인일(판정이 바뀐 날) 속이 빈 점과 범례(2026-11-07) */
+.mv-cf { fill: var(--sf); stroke: var(--ink2); stroke-width: 2; }
+.mv-cfk { display: inline-block; width: 8px; height: 8px; margin-right: 5px; border: 2px solid var(--ink2); border-radius: 50%; background: var(--sf); vertical-align: -1px; }
 </style>
 </head>
 <body>
@@ -1524,6 +1527,11 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
   document.addEventListener("pointerdown", function (ev) {
     TAP_AWAY.forEach(function (x) { if (x.el.isConnected && !x.el.contains(ev.target)) x.hide(); });
   }, true);
+  // 겹쳐 뜨는 창(긴 ⓘ 설명 창·AI 연결 창)도 뒤로가기로 닫힌다 — 열 때 기록을 하나 쌓고 화면 단추로 닫으면 거둔다(2026-11-07 점검:
+  //   설명 창을 띄운 채 뒤로를 누르면 아래 상세가 닫히고 설명 창이 남았고, AI 연결 창에선 앱이 닫혔다). popOwn·skipPop 은 아래 상세 시트 쪽에 있다.
+  var OVERLAYS = [];
+  function overlayOpened() { try { history.pushState({ ov: 1 }, ""); } catch (_e) {} }
+  function overlayClosed() { if (history.state && history.state.ov) popOwn(); }
   // 움직임 줄이기(휴대폰 설정)를 켠 사람에겐 부드러운 스크롤 대신 바로 이동
   var REDUCE_MOTION = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   function SMOOTH() { return REDUCE_MOTION ? "auto" : "smooth"; }
@@ -1989,9 +1997,10 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
       '<div class="tip-sheet-body"></div><button type="button" class="tip-sheet-x">닫기</button></div>';
     document.body.appendChild(tsh);
     var tshFrom = null;
-    function closeTsh() {
+    function closeTsh(fromPop) {
       if (tsh.hidden) return;
       tsh.hidden = true;
+      if (!fromPop) overlayClosed();
       if (tshFrom && tshFrom.isConnected) { try { tshFrom.focus({ preventScroll: true }); } catch (_e) {} }
       tshFrom = null;
     }
@@ -2001,6 +2010,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
       return t && t.length <= 40 ? t.replace(/ (보기|설명)$/, "") : "설명";
     }
     document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !tsh.hidden) { e.stopImmediatePropagation(); closeTsh(); } }, true);
+    OVERLAYS.push({ open: function () { return !tsh.hidden; }, close: function () { closeTsh(true); } });
     function hide() { if (!pop.hidden) { pop.hidden = true; pop._src = null; } }
     document.addEventListener("click", function (ev) {
       if (!tsh.hidden) {
@@ -2015,7 +2025,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
           tsh.querySelector(".tip-sheet-t").textContent = titleOf(el);
           tsh.querySelector(".tip-sheet-body").textContent = text;
           tsh.querySelector(".tip-sheet-body").scrollTop = 0;
-          tsh.hidden = false; tshFrom = el;
+          tsh.hidden = false; tshFrom = el; overlayOpened();
           tsh.querySelector(".tip-sheet-x").focus({ preventScroll: true });
           return;
         }
@@ -3164,9 +3174,12 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
   }
   function mvTip(m) {
     var up = Math.round((m.h || 0) * 1000) / 10, dn = Math.round((m.flip ? m.flip.dn : (m.h || 0) / (1 + (m.h || 0))) * 1000) / 10;
-    return "추세는 되돌림으로 나눈다 — 상승 추세는 추세 중 고점보다 종가가 " + dn + "% 넘게 내려가면, 하락 추세는 추세 중 저점보다 " + up + "% 넘게 올라가면 바뀐다" +
-      "(이 종목 기준 — 일간 변동성 × 10 = 약 100거래일 움직임의 1표준편차, 10~35%로 묶음. 내릴 때가 조금 작은 것은 같은 비율의 되돌림을 로그로 재기 때문). " +
-      "그 가격이 '전환 기준', 전환점에서 그만큼 움직여 추세가 확정된 날이 '확인'. 그보다 작은 되돌림은 추세 속 조정·반등 — 몇 달째 새 고점이 없어도 그만큼 밀리지 않았으면 상승 추세다" +
+    return (m.young ? (m.young.why === "short" ? "기록이 500거래일 미만이라" : "아직 확정된 전환점이 없어") + " 이전 방식으로 판정했다 — 날짜가 소급해 바뀔 수 있고 검증 범위 밖이다.\n\n" : "") +
+      "추세는 되돌림으로 나눈다 — 상승 추세는 추세 중 고점보다 종가가 " + dn + "% 넘게 내려가면, 하락 추세는 추세 중 저점보다 " + up + "% 넘게 올라가면 바뀐다" +
+      "(이 종목 기준폭 — 일간 변동성 × 10 = 약 100거래일 움직임의 1표준편차, 10~35%로 묶음. 내릴 때가 조금 작은 것은 같은 비율의 되돌림을 로그로 재기 때문). " +
+      "'확인' = 판정이 실제로 바뀐 날 — 한 번 정해지면 바뀌지 않는다(2026-11-06까지는 기준폭을 매일 다시 재며 지난 날짜까지 다시 그려 확인일이 소급해 바뀌곤 했다). " +
+      "추세 시작(전환점)은 확인된 날에야 정해지고, 그 전까지는 직전 추세로 보였다. 기준폭은 매일 최근 500거래일 변동성으로 다시 재서 전환 기준가는 새 고점·저점 없이도 조금씩 바뀐다 — 화면 값은 다음 거래일 종가 기준. " +
+      "그보다 작은 되돌림은 추세 속 조정·반등 — 몇 달째 새 고점이 없어도 그만큼 밀리지 않았으면 상승 추세다" +
       "(2019~2026 한·미 955종목 비교에서 '3개월 정체 = 보합' 규칙보다 판정이 덜 뒤집혔다). 추세 시작 = 그 전환점이라 기간은 종목마다 다르다. " +
       "추세 중 고점(하락 추세면 저점) 뒤 60거래일(약 3개월) 넘게 새 고점이 없으면 'N개월째 새 고점 없음'을 함께 보인다 — 사실 표시일 뿐 추세가 끝났다는 판정이 아니다" +
       "(같은 비교에서 이런 정체 뒤에도 원래 방향으로 움직인 경우가 약 54%로 조금 더 많았다). '시장보다'는 같은 기간 지수와 ±5% 넘게 차이 났는지로 본다. " +
@@ -3175,16 +3188,21 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
   function mvChip(m) { return m.cls === "보합" ? "보합(박스권)" : m.cls + " 추세"; }
   // 추세추종에 쓰는 규칙의 사실(2026-10-25 사용자 '추세추종으로 투자가 가능하도록') — 확인: 전환점에서 기준만큼 움직여 추세가 확정된 날과 그 뒤 수익,
   //   전환 기준: 종가가 그 아래(상승)·위(하락)로 마감하면 판정이 바뀌는 가격. 매매 권유가 아니라 판정 규칙을 그대로 보인다
+  //   확인(2026-11-07~ Z10F): 판정이 실제로 바뀐 날 — 전환점 대비 실제 움직임(conf.mv)과 그날의 기준폭(conf.h). 예전 파일(v1)은 오늘 기준폭으로 적는다
+  var mvAbs = function (v) { return mvPct(Math.abs(v)).replace(/^[+−-]/, ""); };
   function mvConfText(m) {
-    var c = m.conf, f = m.flip; if (!c || !f) return "";
-    var up = m.cls === "상승";
-    return "<b>" + esc(mvDate(c.d, m.to)) + "</b> " + (up ? "저점보다 " + esc(mvPct(f.up)) + " 넘게 오른 날" : "고점보다 " + esc(mvPct(-f.dn)) + " 넘게 내린 날") +
-      (c.n > 0 ? ' <span class="mv-pm">· 그 뒤 ' + mvSg(c.ret) + "</span>" : ' <span class="mv-pm">· 마지막 거래일</span>');
+    var c = m.conf, f = m.flip; if (!c) return "";
+    var up = m.cls === "상승", how;
+    if (c.h != null && c.mv != null) how = esc(mvDate(m.from, m.to)) + (up ? " 저점보다 " + esc(mvAbs(c.mv)) + " 올라 그날 기준 " + esc(mvAbs(c.h)) : " 고점보다 " + esc(mvAbs(c.mv)) + " 내려 그날 기준 " + esc(mvAbs(1 - 1 / (1 + c.h)))) + "를 넘은 날";
+    else if (f) how = up ? "저점보다 " + esc(mvPct(f.up)) + " 넘게 오른 날" : "고점보다 " + esc(mvPct(-f.dn)) + " 넘게 내린 날";
+    else return "";
+    return "<b>" + esc(mvDate(c.d, m.to)) + "</b> " + how +
+      (c.n > 0 ? ' <span class="mv-pm">· 그 뒤 ' + mvSg(c.ret) + "</span>" : ' <span class="mv-pm">· 최근 종가로 확인</span>');
   }
   function mvFlipText(m) {
     var f = m.flip; if (!f) return "";
     var up = m.cls === "상승";
-    return "종가 <b>" + esc(fmtPrice(f.px, m.c)) + "</b> " + (up ? "아래로 마감하면 하락 추세" : "위로 마감하면 상승 추세") + ' <span class="mv-pm">· 지금보다 ' + mvSg(f.pct) + "</span>";
+    return "다음 거래일 종가가 <b>" + esc(fmtPrice(f.px, m.c)) + "</b> " + (up ? "아래로 마감하면 하락 추세" : "위로 마감하면 상승 추세") + ' <span class="mv-pm">· 지금보다 ' + mvSg(f.pct) + "</span>";
   }
   // 추세추종 검증 요약(scripts/research/trend-follow — 사전 등록 기준 통과, 2019~2026 956종목; 전액 투자 종목 선택은 trend-select — 통과 없음)
   var TS_NOTE = "현금 없이 매달 상승 추세 종목만 골라 계속 투자하면 처음 산 종목을 그냥 들고 있을 때보다 연수익이 한국 1.8%p·미국 1.7%p 낮았다(2018~2026, 그때 시총 상위 한국 300·미국 500).";
@@ -3242,10 +3260,12 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     var q = mvQuiet(m);
     var head = '<div class="mv-hd"><span class="mv-v mv-' + cls + '">' + esc(mvChip(m)) + '</span><b class="mv-r ' + cls + '">' + esc(mvPct(m.ret)) + "</b>" +
       (q ? '<span class="mv-v mv-q">' + esc(q) + "</span>" : "") +
-      '<span class="mv-p">' + esc(mvDate(m.from, to) + " " + (MV_KIND[m.kind] || "") + " · " + mvDur(m.from, to)) +
+      (m.young ? '<span class="mv-v mv-q">검증 범위 밖</span>' : "") +
+      '<span class="mv-p">' + esc(mvDate(m.from, to) + " " + (MV_KIND[m.kind] || "") + " · " + mvDur(m.from, to) + (m.conf ? " · " + mvDate(m.conf.d, to) + " 확인" : "")) +
       '<i class="kv-i mv-i" data-basis="' + esc(mvTip(m)) + '" role="button" tabindex="0" aria-label="추세 판정 방법">' + ICON.info + "</i></span></div>";
     // 원인 — 루틴이 기사로 확인한 한 문장(없으면 요약 첫 문장이 짧을 때만). 설명이 아직 없으면 그 줄을 두지 않는다
     var hl = ai ? ai.headline || (mvFirst(ai.summary).length <= 90 ? mvFirst(ai.summary) : "") : "";
+    if (/확인되지\s*않/.test(hl)) hl = "";   // '원인 확인 안 됨'류는 화면에 쓰지 않는다(§4-2) — 시장과 비슷했다는 사실은 '시장 대비' 줄이 보인다
     var rows = [];
     if (hl) rows.push(["원인", esc(hl) + " " + MV_AI_TAG, "mv-why1"]);
     rows.push(["시장 대비", mvVsText(m)]);
@@ -3262,7 +3282,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     var kv = '<dl class="mv-kv">' + rows.map(function (r) { return "<dt>" + r[0] + '</dt><dd' + (r[2] ? ' class="' + r[2] + '"' : "") + ">" + r[1] + "</dd>"; }).join("") + "</dl>";
     var chart = '<div class="pf-chart mv-chart" tabindex="0" role="group" aria-label="' + esc("추세 시작 전후 주가와 " + m.bench.name + " — 추세 시작일을 0%로 맞춤(좌우 화살표로 날짜 이동)") + '"></div>' +
       '<div class="pf-lg mv-lg"><span><i class="lk"></i>' + esc(m.name || "종목") + '</span><span><i class="lk lk-i"></i>' + esc(m.bench.name) + "</span>" +
-      '<span><i class="mv-sl"></i>추세 시작</span>' + (pts.length ? '<span><i class="mv-kd"></i>주요 날짜</span>' : "") + "</div>";
+      '<span><i class="mv-sl"></i>추세 시작</span>' + (mvConfIdx(m) > 0 ? '<span><i class="mv-cfk"></i>확인</span>' : "") + (pts.length ? '<span><i class="mv-kd"></i>주요 날짜</span>' : "") + "</div>";
     // 원인 문장의 근거 — 단계 설명의 출처(날짜별 출처는 그 줄에 붙어 있다)
     var src = [];
     if (ai) (ai.legs || []).forEach(function (x) { if (mvOk(x)) x.src.forEach(function (u) { if (src.indexOf(u) < 0) src.push(u); }); });
@@ -3283,6 +3303,12 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
   function mvRel(m, bold) {
     var w = bold ? "<b>" + esc(m.rel) + "</b>" : esc(m.rel);
     return (m.rel === "비슷" ? "시장과 " : "시장보다 ") + w;
+  }
+  // 차트에서 확인일의 자리(추세 시작 뒤일 때만) — 추세 시작보다 늦게 판정이 바뀐 것을 보이게
+  function mvConfIdx(m) {
+    var S = m.series; if (!m.conf || !S || !S.t) return -1;
+    var i = S.t.indexOf(+String(m.conf.d).replace(/-/g, ""));
+    return i > (S.lead || 0) ? i : -1;
   }
   function mvDraw(el, m) {
     var S = m.series, n = S.t.length, L0 = Math.max(0, Math.min(n - 1, S.lead || 0));
@@ -3329,6 +3355,9 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
       svg += '<line class="mv-st" x1="' + sx.toFixed(1) + '" x2="' + sx.toFixed(1) + '" y1="' + (T - 2) + '" y2="' + (H - B) + '"/>' +
         '<text class="mv-stl" x="' + (sx + (sx > W - 70 ? -4 : 4)).toFixed(1) + '" y="' + (T - 5) + '" text-anchor="' + (sx > W - 70 ? "end" : "start") + '">추세 시작</text>';
     }
+    // 확인일 — 속이 빈 점(판정이 바뀐 날)
+    var ci = mvConfIdx(m);
+    if (ci > 0 && ci < n) svg += '<circle class="mv-cf" cx="' + X(ci).toFixed(1) + '" cy="' + Y(ys[ci]).toFixed(1) + '" r="5"/>';
     // 주요 날짜 번호 점(위 요약과 같은 번호, 묶인 날은 마지막 날에)
     pts.forEach(function (p) {
       var i = p.k.ei;
@@ -4044,7 +4073,8 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
   var SIG_HELP = "목록 앞 세 칸 = 단기(일봉)·중기(주봉)·장기(월봉) 추세 상태. 빨강 계열 상승세, 파랑 계열 하락세, 회색 횡보, 바탕이 진하면 '강한'.\n\n" +
     "지금 차트 모양(이동평균선·일목균형표·매물대)의 요약이지 매수·매도 시점이 아니다 — 2019~2026년 한·미 995종목(30만 건)에서 다섯 상태의 이후 1개월 시장 대비 수익 차이는 0.3%p 안, 3개월 안 −10% 이상 하락 비율은 42~44%로 같았다. " +
     "52주 고점 근처 강한 상승세도 이후 수익·낙폭이 다른 때와 같았다(고점이라 더 위험하지도, 더 좋지도 않았다).\n\n" +
-    "넷째 칸 '추' = 종목 상세 '현재 추세' 판정(빨강 상승 추세·파랑 하락 추세) — 그 종목 변동성 기준으로 의미 있게 되돌릴 때만 바뀌어 단·중·장보다 느리고 덜 뒤집힌다. " +
+    "넷째 칸 '추' = 종목 상세 '현재 추세' 판정(빨강 상승 추세·파랑 하락 추세). 그 종목 기준폭(10~35%)만큼 되돌릴 때만 바뀌어 단·중·장보다 드물게 바뀌지만, 횡보 칸이 없어 바뀔 때는 곧바로 빨강↔파랑이다. " +
+    "큰 하락 뒤엔 장기(월봉)가 아직 빨강일 때 먼저 파랑이 되기도 한다 — 단·중·장은 이동평균·구름 같은 차트 모양, '추'는 고점·저점에서 되돌린 폭이라 서로 다를 수 있다. " +
     "2019~2026년 한·미 956종목에서 이 판정대로 상승일 때만 들고 여러 종목에 나눠 적용했다면 최대 낙폭 한국 −40%→−15%·미국 −38%→−16%, 연수익도 29%→19%·22%→13%로 줄었다. " +
     TS_NOTE + " 전환 기준가·확인일은 종목 상세 '추세'에.";
   (function () {
@@ -4160,18 +4190,30 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     }).join("") + (tc ? tc.html : "") + "</span>";
   }
   function trendOf(t) { var T = window.TREND_SUMMARY; return T && T.items ? T.items[t] || null : null; }
+  // 나라별 최신 기준일 — 그보다 앞선 항목은 갱신이 밀린 것(야후 실패 시 이전 파일 유지)이라 홈 목록에서 빼고 '추' 칸에 기준일을 붙인다
+  var TREND_ASOF = null;
+  function trendAsOfBy(cc) {
+    if (!TREND_ASOF) {
+      TREND_ASOF = {};
+      var T = window.TREND_SUMMARY;
+      Object.keys((T && T.items) || {}).forEach(function (t) { var m = T.items[t]; if (m && m.asOf && (!TREND_ASOF[m.c] || m.asOf > TREND_ASOF[m.c])) TREND_ASOF[m.c] = m.asOf; });
+    }
+    return TREND_ASOF[cc] || "";
+  }
+  function trendStale(m) { return !!(m && m.asOf && m.asOf < trendAsOfBy(m.c)); }
   // AI 질문 맥락용 한 줄
   function trendLine(t, c) {
     var m = trendOf(t); if (!m) return "";
     var q = m.quiet && (m.cls === "상승" || m.cls === "하락") ? ", " + mvDur(m.quiet.d, m.asOf) + "째 새 " + (m.cls === "상승" ? "고점" : "저점") + " 없음(" + m.quiet.d + " 이후)" : "";
-    return "현재 추세(되돌림 기준 판정 — 이미 일어난 움직임, 예측 아님): " + m.cls + " 추세 — " + m.from + (m.kind === "low" ? " 저점" : m.kind === "high" ? " 고점" : "") + "부터 " + pctTxt(m.ret * 100) +
-      (m.conf ? ", " + m.conf.d + " 확인 뒤 " + pctTxt(m.conf.ret * 100) : "") +
-      (m.flip ? ", 전환 기준가 " + fmtPrice(m.flip.px, c) + "(지금보다 " + pctTxt(m.flip.pct * 100) + " — 종가가 그 " + (m.cls === "상승" ? "아래로 마감하면 하락" : "위로 마감하면 상승") + " 추세로 바뀜)" : "") + q;
+    return "현재 추세(되돌림 기준 판정 — 이미 일어난 움직임, 예측 아님" + (m.young ? ", 기록이 짧아 이전 방식·검증 범위 밖" : "") + "): " + m.cls + " 추세 — " + m.from + (m.kind === "low" ? " 저점" : m.kind === "high" ? " 고점" : "") + "부터 " + pctTxt(m.ret * 100) +
+      (m.conf ? ", " + m.conf.d + "에 판정이 바뀌었고(확인) 그 뒤 " + pctTxt(m.conf.ret * 100) : "") +
+      (m.flip ? ", 전환 기준가 " + fmtPrice(m.flip.px, c) + "(지금보다 " + pctTxt(m.flip.pct * 100) + " — 다음 거래일 종가가 그 " + (m.cls === "상승" ? "아래로 마감하면 하락" : "위로 마감하면 상승") + " 추세로 바뀜)" : "") + q;
   }
   function trendCell(t) {
     var m = trendOf(t);
     if (!m || (m.cls !== "상승" && m.cls !== "하락")) return { label: "현재 추세 없음", html: '<i class="g-x g-tr" title="현재 추세 없음">추</i>' };
-    var lb = "현재 추세 " + m.cls + (m.conf ? " · " + m.conf.d + " 확인" : "") + (m.flip ? " · 전환 기준까지 " + fmtPct(m.flip.pct * 100) : "");
+    var lb = "현재 추세 " + m.cls + (m.conf ? " · " + mdOf(m.conf.d) + " 판정 바뀜" : "") + (m.flip ? " · 전환 기준까지 " + fmtPct(m.flip.pct * 100) + "(다음 거래일 종가 기준)" : "") +
+      (trendStale(m) ? " · " + mdOf(m.asOf) + " 기준" : "") + (m.young ? " · 검증 범위 밖" : "");
     return { label: lb, html: '<i class="' + (m.cls === "상승" ? "g-b" : "g-s") + ' g-tr" title="' + esc(lb) + '">추</i>' };
   }
   // 추천·편성 종목 한 줄 — o = {c, k(개인 목록 키), pkey(순서 저장 키), edit(편집 모드), noTag(티어 소제목 아래라 티어 표시 생략)}
@@ -4285,13 +4327,18 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     "</div>";
   }
   // ── 홈: 최근 추세 전환 ──
-  //   최근 10거래일(약 2주) 안에 '현재 추세' 판정이 바뀐(규칙상 확인된) 편성·관심·보유 종목 — data/trend-summary.js 의 conf.n(확인 뒤 거래일 수).
+  //   최근 10거래일(약 2주 — 확인 뒤 거래일 수 conf.n 0~9) 안에 '현재 추세' 판정이 바뀐 편성·관심·보유 종목 — data/trend-summary.js.
+  //   2026-11-07~ 확인일 = 판정이 실제로 바뀐 날(Z10F — 다시 그려지지 않는다). 그 전엔 기준폭을 매일 다시 재며 지난 확인일이 소급해 바뀌어
+  //   바뀌지 않은 종목이 '새 전환'으로 뜨거나(삼성바이오로직스 10/23 → 10/30) 실제 전환이 빠졌다(1년 재현: 가짜 줄 3.9%, 날짜 틀린 줄 121).
+  //   기록이 짧아 이전 방식인 종목(young)·갱신이 밀린 종목은 뺀다.
   //   2026-10-25 사용자 '홈에 최근 추세 바뀐 종목 목록'. 누르면 종목 상세를 맨 위부터 연다(2026-11-06 사용자 요청 — 전엔 '추세' 섹션으로 내려 열었다).
   //   2026-10-27 사용자 '상승과 하락으로 분리해서' — 상승 전환·하락 전환 두 묶음, 묶음마다 최신순 5개(더 보기로 전부).
   //   한쪽이 몰리는 장(10/27 한국 21건 중 하락 20)에서 반대쪽 몇 건이 섞인 목록 아래로 묻히지 않게
   var TC_DAYS = 10, TC_SHOW = 5, tcAll = { up: false, down: false };
-  var TC_TIP = "최근 10거래일(약 2주) 안에 '현재 추세' 판정이 바뀐 종목(추천 편성·관심·보유). '확인' = 추세 고점(하락 추세면 저점)에서 그 종목 기준 전환폭을 넘겨 " +
-    "판정이 바뀐 날, '그 뒤' = 그날 종가 대비 지금. 판정을 다시 바꾸는 가격(전환 기준가)은 종목 상세 '추세'에.\n\n" +
+  var TC_TIP = "최근 10거래일(약 2주) 안에 '현재 추세'(목록 '추' 칸) 판정이 바뀐 종목(추천 편성·관심·보유). '확인' = 판정이 바뀐 날 — 상승 전환은 직전 저점보다, 하락 전환은 직전 고점보다 " +
+    "그 종목 기준폭(일간 변동성 × 10, 10~35%)을 넘겨 마감한 날이고, 한 번 정해지면 바뀌지 않는다. '그 뒤' = 그날 종가 대비 마지막 종가. 판정을 다시 바꾸는 가격(전환 기준가)은 종목 상세 '추세'에.\n\n" +
+    "추세 시작(전환점)은 확인보다 몇 주~몇 달 앞이다 — 2018~2026년 지금 종목들의 전환 1,779건에서 중앙 한국 29거래일·미국 25거래일, 확인 때 이미 시작점 대비 한국 23%·미국 17% 움직인 뒤였다. " +
+    "확인일 종가는 대개 새 추세에서 가장 높은(하락 전환이면 가장 낮은) 종가라 며칠 되돌림이 흔하다 — 확인 뒤 10거래일 수익이 판정과 반대인 경우 한국 54%·미국 47%.\n\n" +
     "2019~2026년 한·미 956종목에서 이 판정대로 상승 추세일 때만 들고 여러 종목에 나눠 적용했다면 최대 낙폭 한국 −40%→−15%·미국 −38%→−16%, 연수익도 29%→19%·22%→13%로 줄었다. " +
     "거래의 절반 넘게는 작게 지고(평균 −12%) 소수의 긴 추세가 크게 벌었다(평균 +50%). " + TS_NOTE + " 판정 규칙의 사실이지 매매 권유가 아니다.";
   function trendChangeRows(cc) {
@@ -4299,8 +4346,8 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     if (!T || !T.items) return out;
     Object.keys(T.items).forEach(function (t) {
       var m = T.items[t];
-      if (!m || m.c !== cc || !m.conf || m.conf.n == null || m.conf.n > TC_DAYS || (m.cls !== "상승" && m.cls !== "하락")) return;
-      var s = best[t] || (D[cc] || []).filter(function (x) { return x.ticker === t; })[0];
+      if (!m || m.c !== cc || !m.conf || m.conf.n == null || m.conf.n >= TC_DAYS || (m.cls !== "상승" && m.cls !== "하락") || m.young || trendStale(m)) return;
+      var s = best[t] || (D[cc] || []).filter(function (x) { return x.ticker === t && !(isPersonal(x.theme) && isHidden(x.theme, cc, t)); })[0];
       if (s) out.push({ s: s, m: m });
     });
     out.sort(function (a, b) { return (a.m.conf.n - b.m.conf.n) || byName(a.s, b.s); });
@@ -4312,7 +4359,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     var th = slotLabel(s);
     return '<div class="row tc"' + openAttrs(cc, s.ticker, s.theme) + ">" +   // 상세는 맨 위부터 연다(2026-11-06 사용자 요청 — 전엔 '추세' 섹션으로 내려 열었다)
       '<div class="r-l"><div class="r-nm"><span class="r-name">' + esc(s.name) + '</span><span class="pk-th">' + esc(th) + "</span></div>" +
-        '<div class="r-sub"><span>' + esc(mdOf(m.conf.d)) + " 확인" + (m.conf.n > 0 ? " · 그 뒤 " + signedSpan(m.conf.ret, fmtPct(m.conf.ret * 100)) : " · 마지막 거래일") + "</span></div></div>" +
+        '<div class="r-sub"><span>' + esc(mdOf(m.conf.d)) + " 확인" + (m.conf.n > 0 ? " · 그 뒤 " + signedSpan(m.conf.ret, fmtPct(m.conf.ret * 100)) : " · 최근 종가로 확인") + "</span></div></div>" +
       sigStrip(s.techNote || {}, s.ticker) +
       '<div class="r-r"><div class="r-px">' + pxText(e.price, cc) + (e.live ? '<i class="live-dot" title="장중 시세(지연 가능)"></i>' : "") + "</div>" + chgHtml(e.chg, "r-ch") + "</div>" +
     "</div>";
@@ -4359,8 +4406,9 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     var best = bestByTicker(cc), seen = {}, out = [];
     var take = function (s) {
       if (!s || seen[s.ticker]) return;
+      if (isPersonal(s.theme) && isHidden(s.theme, cc, s.ticker)) return;   // 이 기기에서 목록에서 뺀 관심·보유 종목
       var n = s.techNote || {}, m = trendOf(s.ticker);
-      if (!QC_UP[n.sigShort] || !QC_UP[n.sigMid] || !QC_UP[n.sigLong] || !m || m.c !== cc || m.cls !== "상승") return;
+      if (!QC_UP[n.sigShort] || !QC_UP[n.sigMid] || !QC_UP[n.sigLong] || !m || m.c !== cc || m.cls !== "상승" || m.young || trendStale(m)) return;
       seen[s.ticker] = 1; out.push({ s: s, m: m });
     };
     Object.keys(best).map(function (t) { return best[t]; })
@@ -4374,7 +4422,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     var th = slotLabel(s);
     return '<div class="row qc"' + openAttrs(cc, s.ticker, s.theme) + ">" +
       '<div class="r-l"><div class="r-nm"><span class="r-name">' + esc(s.name) + '</span><span class="pk-th">' + esc(th) + "</span></div>" +
-        '<div class="r-sub"><span>' + esc(s.ticker) + " · 추세 " + signedSpan(m.ret, fmtPct(m.ret * 100)) + " · " + esc(mdOf(m.from)) + "부터</span></div></div>" +   // 좁아 잘려도 수익이 먼저 보이게
+        '<div class="r-sub"><span>추세 ' + signedSpan(m.ret, fmtPct(m.ret * 100)) + " · " + esc(mvDur(m.from, m.asOf)) + "째</span></div></div>" +   // 연도 없는 날짜 대신 기간(예전엔 2025년 시작도 '4/8부터'로 보였다), 좁아도 잘리지 않게 짧게
       sigStrip(s.techNote || {}, s.ticker) +
       '<div class="r-r"><div class="r-px">' + pxText(e.price, cc) + (e.live ? '<i class="live-dot" title="장중 시세(지연 가능)"></i>' : "") + "</div>" + chgHtml(e.chg, "r-ch") + "</div>" +
     "</div>";
@@ -4383,7 +4431,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     var box = document.getElementById("quadBox");
     if (!box || window.__pastActive) return;
     if (!window.TREND_SUMMARY) { box.style.display = "none"; return; }
-    var cc = state.country, rows = quadRows(cc), asOf = window.STOCK_TA && window.STOCK_TA.asOf;
+    var cc = state.country, rows = quadRows(cc), asOf = trendAsOfBy(cc) || (window.STOCK_TA && window.STOCK_TA.asOf);
     box.style.display = "";
     var tip = document.getElementById("quadTip");
     tip.innerHTML = ICON.info; tip.setAttribute("data-basis", QC_TIP);
@@ -5375,6 +5423,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     state.country = c; lsSet("ui.country", c);
     document.querySelectorAll("#countrySeg button").forEach(function (x) { x.classList.toggle("on", x.dataset.c === c); });
     if (window.__pastActive) pastApi.country(c);   // 과거 보기도 머리의 한국·미국 전환을 따른다
+    if (SH.open) closeSheet();   // 띄워 둔 상세(1200px~ 고정 패널)에 이전 나라 종목이 남지 않게
     renderMarketNote();
     renderLiquidity();
     renderIndexTA();
@@ -5439,7 +5488,8 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     if (op && op.isConnected && !docked()) { try { op.focus({ preventScroll: true }); } catch (_e) {} }
   }
   window.addEventListener("popstate", function () {
-    if (skipPop > 0) { skipPop--; return; }
+    if (skipPop > 0) { skipPop--; if (!skipPop) syncGuard(); return; }   // 우리가 거둔 기록 — 그 뒤 지킴이를 다시 맞춘다(넓은 화면에서 상세를 띄운 채 탭을 바꾼 경우)
+    for (var oi = 0; oi < OVERLAYS.length; oi++) if (OVERLAYS[oi].open()) { OVERLAYS[oi].close(); return; }
     if (SH.open) { closeSheet(true); return; }
     if (!guardOn) return;
     guardOn = false;                                   // 지킴이 기록이 빠졌다 — 과거 보기를 닫거나 홈으로
@@ -7272,16 +7322,20 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
   function openAiModal() {
     AI.test = AI.test && AI.test.state === "busy" ? AI.test : null;
     renderAiModal();
+    if (document.getElementById("aiModal").hidden) overlayOpened();
     document.getElementById("aiModal").hidden = false;
     var inp = document.getElementById("aiKeyIn");
     if (inp && !docked()) setTimeout(function () { try { inp.focus({ preventScroll: true }); } catch (_e) {} }, 80);
   }
-  function closeAiModal() {
+  function closeAiModal(fromPop) {
+    if (document.getElementById("aiModal").hidden) return;
     document.getElementById("aiModal").hidden = true;
+    if (fromPop !== true) overlayClosed();
     if (SH.open) renderSheet(true);   // 연결 상태가 바뀌었으면 열린 상세의 질문 영역을 다시 그린다
   }
   document.getElementById("aiBtn").addEventListener("click", openAiModal);
-  document.getElementById("aiClose").addEventListener("click", closeAiModal);
+  document.getElementById("aiClose").addEventListener("click", function () { closeAiModal(); });
+  OVERLAYS.push({ open: function () { return !document.getElementById("aiModal").hidden; }, close: function () { closeAiModal(true); } });
   document.getElementById("aiModal").addEventListener("click", function (e) {
     if (e.target.id === "aiModal") { closeAiModal(); return; }
     if (e.target.closest("#aiSave")) {
@@ -7391,6 +7445,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
   renderTrendChanges();
   updateMineCounts();
   setTab(state.tab, true);
+  guardOn = !!(history.state && history.state.guard); syncGuard();   // 새로고침·탭 복원으로 홈이 아닌 탭에서 시작해도 뒤로가기가 홈으로
   setTimeout(ensureSectors, 1500);   // 섹터 쪽은 첫 화면을 그린 뒤 미리 받아 둔다(넘겼을 때 바로 보이게)
 
   // PWA 서비스워커 등록 (http/https에서만 — file:// 로 열면 건너뜀)

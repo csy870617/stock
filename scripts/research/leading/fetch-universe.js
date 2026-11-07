@@ -5,7 +5,7 @@
 // 출력: px/<symbol>.json = {s, c, d:[...], o,h,l,cl,v}  (분할 수정 종가 — 기존 백테스트와 같은 기준)
 const fs = require('fs'), path = require('path'), { execFile } = require('child_process');
 const DIR = path.resolve(process.argv[2] || 'research-cache'); require('fs').mkdirSync(DIR, { recursive: true });
-const OUT = path.join(DIR, 'px');
+const OUT = path.join(DIR, 'px'); fs.mkdirSync(OUT, { recursive: true });
 const UA = 'Mozilla/5.0';
 const curlJson = (url) => new Promise((res) => execFile('curl', ['-s', '--max-time', '20', '-A', UA, url], { maxBuffer: 64 << 20 }, (e, out) => { try { res(JSON.parse(out)); } catch (_e) { res(null); } }));
 async function naver(url) { for (let i = 0; i < 3; i++) { const j = await curlJson(url); if (j) return j; } return null; }
@@ -49,12 +49,18 @@ async function mapLimit(items, limit, fn) { let i = 0; const out = []; await Pro
   U.push({ c: 'korea', sym: '^KS11', bench: true }, { c: 'us', sym: '^GSPC', bench: true });
   console.log('유니버스', U.length, '— 한국', U.filter((u) => u.c === 'korea').length, '미국', U.filter((u) => u.c === 'us').length, '편성 이력', roster.size);
   let ok = 0, fail = 0, t0 = Date.now();
+  // .KS 로 못 찾아 .KQ 로 찾은 종목은 찾은 이름으로 저장하고, 같은 종목이 이미 있으면 두 번 세지 않는다
+  // (2026-11-07 전엔 .KS 이름으로 저장해 코스닥 9종목이 두 번 들어갔다 — 예전 캐시에 그런 파일이 있으면 지우고 다시 받는다)
+  const fileOf = (s) => path.join(OUT, s.replace(/[^A-Za-z0-9.^-]/g, '_') + '.json'), done = new Set();
   await mapLimit(U, 8, async (u) => {
-    const f = path.join(OUT, u.sym.replace(/[^A-Za-z0-9.^-]/g, '_') + '.json');
-    if (fs.existsSync(f)) { ok++; return; }
+    const alt = u.c === 'korea' && /\.KS$/.test(u.sym) ? u.sym.replace('.KS', '.KQ') : null;
+    if (fs.existsSync(fileOf(u.sym)) || (alt && fs.existsSync(fileOf(alt)))) { ok++; return; }
     let o = await yahoo(u.sym);
-    if (!o && u.c === 'korea' && /\.KS$/.test(u.sym)) { o = await yahoo(u.sym.replace('.KS', '.KQ')); if (o) u.sym = u.sym.replace('.KS', '.KQ'); }
+    if (!o && alt) { o = await yahoo(alt); if (o) u.sym = alt; }
     if (!o || o.cl.length < 300) { fail++; return; }
+    const f = fileOf(u.sym);
+    if (done.has(u.sym) || fs.existsSync(f)) { u.dup = true; ok++; return; }
+    done.add(u.sym);
     fs.writeFileSync(f, JSON.stringify(Object.assign({ s: u.sym, c: u.c, name: u.name, market: u.market, roster: !!u.roster, bench: !!u.bench }, o)));
     ok++; if ((ok + fail) % 100 === 0) console.log('  …', ok + fail, '/', U.length, (Date.now() - t0) / 1000 | 0, 's');
   });

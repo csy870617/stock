@@ -174,6 +174,8 @@ function apply() {
     if (headline) {
       const hp = textProblems("headline", headline, LIMIT.headline);
       if (hp.length) { headline = ""; dropped++; notes.push(t + ": " + hp.join(" · ")); }
+      // '원인 확인 안 됨'류 한 줄은 쓰지 않는다(CLAUDE.md §4-2 — 기사로 확인 못 한 이유는 화면에 쓰지 않는다; 시장과 비슷했다는 사실은 앱 '시장 대비' 줄이 보인다)
+      else if (/확인되지\s*않/.test(headline)) { headline = ""; dropped++; notes.push(t + ": headline 이 '원인 확인 안 됨'류라 비움"); }
     } else notes.push(t + ": headline 없음 — 앱은 요약 첫 문장을 대신 보인다");
     const legs = [], days = [];
     (Array.isArray(r.legs) ? r.legs : []).forEach((x) => {

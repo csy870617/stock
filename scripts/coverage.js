@@ -29,6 +29,8 @@
 //                어제자 T 로 techNote 를 써 놓고 100% 로 오판하게 된다(2026-08-05 실측).
 //   flows      : indices.js 코스피·코스닥 flows.asOf(투자자별 순매수 마지막 날)가 지수 차트
 //                (data/chart/idx-<key>.json) asOf 와 같음 — 수급 받기 실패를 잡는다(2026-10-27).
+//   trend      : 편성 종목마다 data/trend-summary.js 항목이 있고 그 나라 최신 기준일까지 왔음 — update-trend.js 는 야후 실패 시
+//                이전 파일을 그대로 둬서(다시 계산하면 판정이 달라진다) 밀린 항목을 따로 본다(2026-11-07).
 //
 // 매일 전량인 항목(techNote·valueNote·tier·indexNotes·topPicks·liquidity·시황)과
 // 7일 회전 항목(verified·discovery·aiTarget)이 합쳐져, 앱 데이터 전체가 최소 주 1회 갱신된다.
@@ -260,11 +262,12 @@ const builtDay = (v) => (v && typeof v === "string" ? v.slice(0, 10) : null);
   // 오늘 재생성했거나, T 의 양국 장 마감 뒤(T 21:00Z — 평일 21:00 Action 이후)에 재생성했으면 통과.
   // 후자는 주말·휴장일에 금요일 밤 데이터가 그대로 최신인 경우다(그날 다시 돌려도 바뀌는 게 없다).
   else if (b !== today && !(obj.builtAt >= T + "T21:00:00Z")) missBackbone.push(name + " 마지막 생성 " + obj.builtAt + " — 오늘 재실행 필요");
-  // '오늘 생성'이어도 오늘 한국장 마감(06:30Z) 전에 만든 것이면 그 뒤 마감분이 빠져 T 가 하루 늦다 — 평일 06:40Z 이후엔 그 뒤 생성본만 인정한다.
+  // '오늘 생성'이어도 오늘 한국장 마감(06:30Z) 전에 만든 것이면 그 뒤 마감분이 빠져 T 가 하루 늦다 — 평일 07:30Z(16:30 KST) 이후엔 그 뒤 생성본만 인정한다
+  //   (16:30 전 생성본의 한국 종가는 잠정일 수 있다 — close-gate.js 가 16:30 뒤 첫 슬롯에서 다시 돈다, 2026-11-07).
   // (2026-10-20 실측: A 루틴이 00:08Z 생성본을 '오늘 재실행됨'으로 보고 backbone 을 건너뛰어 T=10-19 로 매 거래일 항목을 통과 처리 →
   //  12:25Z 에 늦게 돈 Action 이 T 를 10-20 으로 올리자 시황·유동성·지수·Top Pick 이 한꺼번에 미갱신이 됐다.)
   else {
-    const now = new Date(), wd = now.getUTCDay(), krClose = today + "T06:40:00Z";
+    const now = new Date(), wd = now.getUTCDay(), krClose = today + "T07:30:00Z";
     if (wd >= 1 && wd <= 5 && now.toISOString() >= krClose && obj.builtAt < krClose)
       missBackbone.push(name + " 마지막 생성 " + obj.builtAt + " — 오늘 한국장 마감(06:30Z) 전 생성본이라 재실행 필요");
   }
@@ -284,6 +287,22 @@ FLOW_KEYS.forEach((k) => {
   if (!f) missFlows.push(k + " 수급 없음(update-indices.js 재실행)");
   else if (last && f < last) missFlows.push(k + " 수급 " + f + " — 지수 마지막 거래일 " + last + "보다 늦음(update-indices.js 재실행)");
 });
+
+// ── 현재 추세(2026-11-07) — 편성 종목마다 항목이 있고 그 나라 최신 기준일까지 왔는가(밀렸으면 update-trend.js 재실행) ──
+const missTrend = [];
+let trendTotal = 0;
+try {
+  global.window = {}; const tp = path.join(ROOT, "data/trend-summary.js"); delete require.cache[require.resolve(tp)]; require(tp);
+  const TS = (global.window.TREND_SUMMARY || {}).items || {}, maxBy = {}, tk = {};
+  Object.keys(TS).forEach((t) => { const m = TS[t]; if (m && m.asOf && (!maxBy[m.c] || m.asOf > maxBy[m.c])) maxBy[m.c] = m.asOf; });
+  ["korea", "us"].forEach((c) => (D[c] || []).forEach((s) => { if (s && s.ticker) tk[s.ticker] = c; }));
+  trendTotal = Object.keys(tk).length;
+  Object.keys(tk).forEach((t) => {
+    const m = TS[t];
+    if (!m) missTrend.push(t + " 현재 추세 없음(update-trend.js 재실행)");
+    else if (m.asOf && maxBy[m.c] && m.asOf < maxBy[m.c]) missTrend.push(t + " 현재 추세 " + m.asOf + " — " + maxBy[m.c] + "보다 늦음(update-trend.js 재실행)");
+  });
+} catch (_e) { missTrend.push("data/trend-summary.js 읽기 실패(update-trend.js 재실행)"); }
 
 // ── 매일 결격 점검(2026-10-18 사용자 지시 — '매일 결격 검사, 발생 시 바로 교체', CLAUDE.md §3-7) ──
 // check-defects.js 를 다시 돌려 candidate-notes.json 의 최신 판정을 반영한 뒤 판정한다:
@@ -362,6 +381,7 @@ if (process.argv.includes("--emit")) {
       // backbone(오늘 재실행)이 빠지면 CLI 게이트는 빨강인데 패널만 초록인 불일치가 났다(감사).
       { key: "backbone",  label: "지표 재생성",  done: missBackbone.length ? 0 : 2, total: 2 },
       { key: "flows",     label: "수급(코스피·코스닥)", done: FLOW_KEYS.length - missFlows.length, total: FLOW_KEYS.length },
+      { key: "trend",     label: "현재 추세",   done: Math.max(0, trendTotal - missTrend.length), total: trendTotal },
       { key: "defects",   label: "결격 점검",   done: missDefect.length ? 0 : 1, total: 1 },
     ],
     rotation: [
@@ -414,6 +434,7 @@ rows.forEach(([name, done, total, miss]) => {
 [["index-notes", missIdx], ["topPicks", missTop], ["liquidity", missLiq],
  ["backbone 최신화 (오늘 재실행)", missBackbone],
  ["수급 (코스피·코스닥 — 지수 마지막 거래일까지)", missFlows],
+ ["현재 추세 (편성 종목 — 그 나라 최신 기준일까지)", missTrend],
  ["결격 점검 (자동 신호 판정 + 결격 교체 시도)", missDefect],
  ["신규 후보 탐색 (전 " + DISC_GROUPS.length + "그룹 " + VERIF_CYCLE_DAYS + "일 이내)", missDisc],
  ["주간 심층 발굴 (C 모드 " + VERIF_CYCLE_DAYS + "일 이내)", missDeep],
@@ -448,7 +469,7 @@ console.log("  ℹ️  tier 회전(참고): " + Object.keys(tierGroups).length +
 
 const blockers = missTech.length + missValue.length + missVerif.length + missTier.length +
   missIdx.length + missTop.length + missLiq.length + missDisc.length + missDeep.length + staleAi.length +
-  missBackbone.length + missFlows.length + missMarket.length + missDefect.length;
+  missBackbone.length + missFlows.length + missTrend.length + missMarket.length + missDefect.length;
 
 console.log("");
 if (blockers === 0) {

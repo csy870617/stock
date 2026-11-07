@@ -1,24 +1,27 @@
-// 현재 추세 분석 — 지금 이 종목이 상승·하락 중 어느 추세에 있는지, 그 추세가 언제 시작됐는지를 정하고
-// 그 추세 구간을 숫자로 쪼갠다(토큰 0). update-trend.js 가 종목마다 일봉(최근 약 3년)과 지수 일봉으로 계산해
-// data/trend/<ticker>.json 에 쓰고, 앱 종목 상세 '현재 추세'가 그린다.
+// 현재 추세 분석 — 지금 이 종목이 상승·하락 중 어느 추세에 있는지, 그 추세가 언제 시작되고 언제 확인됐는지를 정하고
+// 그 추세 구간을 숫자로 쪼갠다(토큰 0). update-trend.js 가 종목마다 일봉(2016-11-07 부터 고정)과 지수 일봉으로 계산해
+// data/trend/<ticker>.json 에 쓰고, 앱 종목 상세 '현재 추세'·목록 '추' 칸·홈 '최근 추세 전환'이 그린다.
 //
 // 고정 기간(예: 6개월)으로 자르지 않는 이유(2026-10-24 사용자 요청 '6개월이라는 시간에 갇히지 않고 가장 적절한 추세 판단'):
-//   6개월 창은 '+61% 뒤 -40%'인 종목을 '보합 -4%'로 뭉개고, 3주 전 시작된 급락이나 2년째 이어진 상승을 같은 잣대로 자른다.
 //   추세는 '의미 있는 되돌림이 나올 때까지 이어진다'로 정의하면 시작점이 종목마다 데이터로 정해진다.
 //
-//   1) 전환 — 지그재그: 마지막 고점(저점)에서 h 넘게 되돌리면 그 고점(저점)을 전환점으로 확정한다.
-//      h = 그 종목 일간 변동성 × 10(약 100거래일 무작위 움직임의 1표준편차 — 몇 달짜리 추세를 가르는 크기), 10~35% 로 묶는다.
-//      되돌림이 h 안이면 추세는 이어진 것으로 본다(상승 추세 속 조정·하락 추세 속 반등). 지금 추세 = 마지막 전환점 이후의 다리.
-//      2026-10-25 까지는 '60거래일 새 고점(저점)이 없으면 멈춤 → 보합 또는 반대 추세'와 박스권 이후 재시작 규칙이 더 있었다.
-//      한·미 955종목 7년 비교(scripts/research/trend-method, 사전 등록)에서 그 규칙을 뺀 쪽이 판정이 덜 뒤집혔고(헛신호 23→15%)
-//      이후 움직임과도 조금 더 맞아(멈춘 듯한 다리도 이후엔 원래 방향으로 움직인 경우가 조금 더 많았다 — 약 53~54%) 뺐다.
-//      대신 추세 방향으로 60거래일 넘게 새 고점(저점)이 없으면 그 사실만 quiet 로 남긴다 — 앱 'N개월째 새 고점 없음'(판정은 그대로).
+//   1) 전환 — 앞으로만 굴리는 지그재그(Z10F, 2026-11-07~): 지금 다리의 극점(상승이면 고점)에서 h 넘게 되돌려 마감한 날 판정이 바뀌고,
+//      그 극점이 새 추세의 시작점(전환점), 그날이 확인일이다. h = 그날의 일간 변동성(직전 500거래일 로그수익 표준편차) × 10, 10~35%.
+//      상태(방향·극점)를 날마다 앞으로 굴리며 그날의 되돌림 판정에 그날의 h 만 쓴다 — 한 번 확정된 전환점·확인일은 다시 보지 않는다.
+//      2026-11-06 까지는 매일 그날 h 로 최근 750거래일 창 전체를 다시 그렸다(regime) — h 가 조금만 변해도 지난 확인일·시작점이 소급해 바뀌었고
+//      (2주 기록에서 판정은 같은데 확인일이 바뀐 경우 13건, 1년 재현 355건 모두 h 변화 때문), 가격 움직임 없이 판정이 뒤집히기도 했다.
+//      사전 등록 비교(scripts/research/trend-repaint)에서 Z10F 는 성과가 같고(샤프 차 ±0.01 안) 10거래일 안 되돌림이 절반 아래, 소급 변경 0 이라 채택.
+//      고정 시작일부터 전체 일봉으로 굴려야 소급 변경 0 이 성립한다(최근 N년만 받거나 창으로 자르면 시작이 날마다 밀려 다시 그려진다).
+//      기록이 500거래일 미만이거나 아직 전환점이 없는 종목은 이전 방식(regime)으로 보이고 young 표시(검증 범위 밖 — 홈 목록에서 뺀다).
+//      되돌림이 h 안이면 추세는 이어진 것으로 본다(상승 추세 속 조정·하락 추세 속 반등). 추세 방향으로 60거래일 넘게 새 고점(저점)이 없으면
+//      그 사실만 quiet 로 남긴다 — 앱 'N개월째 새 고점 없음'(판정은 그대로).
 //   2) 추세 구간 분해 — 시장 몫(1년 일간 β × 지수) vs 종목 고유(로그로 정확히 더해짐), 핵심 날짜(초과수익이 큰 날),
 //      구간 안의 단계(로그 가격 꺾은선 1~4개 — 상승·하락·보합), 직전 추세(그 앞 다리).
 // 예측이 아니다 — 지금까지 일어난 움직임의 정리다(어느 판정 방식도 이후 방향을 믿을 만하게 맞히지 못했다).
 "use strict";
 
-const LOOKBACK = 750;       // 약 3년 일봉
+const LOOKBACK = 750;       // 약 3년 일봉 — 상장 500거래일 미만 종목(이전 방식)의 창, 연구 하네스 호환
+const SIG_N = 500;          // σ = 직전 500거래일 일간 로그수익 표준편차. 앞으로 굴리는 지그재그(Z10F)는 이 날(인덱스 500)부터 시작
 const H_K = 10, H_MIN = 0.10, H_MAX = 0.35;   // 전환 되돌림 = 일간 σ × 10, 10~35%
 const KEY_MAX = 5;          // 핵심 날짜 최대 개수
 const MKT_DAY_MAX = 2;      // 시장 급변일 최대 개수
@@ -96,6 +99,82 @@ function regime(y, H) {
   return { cls: WORD(z.dir), s: P.i, kind: z.dir > 0 ? "low" : "high", conf: P.c, prev };
 }
 
+// ── 2-1) 앞으로만 굴리는 지그재그(Z10F, 2026-11-07~ — scripts/research/trend-repaint 사전 등록 비교 통과) ──
+//   그날 σ 로 창 전체를 매일 다시 그리면(regime) σ 가 조금만 변해도 지난 전환점·확인일이 소급해 바뀌고 판정이 가격 움직임 없이 뒤집혔다.
+//   상태(방향·극점)를 날마다 앞으로 굴리고 그날의 되돌림 판정에 그날의 h 를 쓴다 — 확정된 전환점·확인일은 다시 보지 않는다.
+//   새 다리의 극점 = 전환점 이후 가장 높은(낮은) 종가(h 가 날마다 달라 확인일 종가가 극점이 아닐 수 있다 — 측정 2 의 Z10F 정의).
+//   y: 로그 종가(고정 시작일부터 전부 — 시작이 날마다 밀리면 다시 그려진다), S0: 굴리기 시작하는 인덱스(σ 를 잴 수 있는 첫날)
+function hSeries(y, S0) {
+  const n = y.length, h = new Float64Array(n);
+  for (let t = S0; t < n; t++) {   // sd() 와 같은 순서의 두 번 합(같은 값) — 배열을 만들지 않는다
+    let m = 0, v = 0;
+    for (let i = t - SIG_N + 1; i <= t; i++) m += y[i] - y[i - 1];
+    m /= SIG_N;
+    for (let i = t - SIG_N + 1; i <= t; i++) { const d = y[i] - y[i - 1] - m; v += d * d; }
+    h[t] = clamp(H_K * Math.sqrt(v / (SIG_N - 1)), H_MIN, H_MAX);
+  }
+  return h;
+}
+function forwardZigzag(y, S0, h) {
+  const n = y.length, piv = [];
+  let dir = 0, hiI = S0, loI = S0, ext = -1, cx = -1;   // cx = 지금 다리 극점 이후의 반대쪽 극점(다음 다리의 극점 후보)
+  const counter = (a, b, d) => { let c = -1; for (let k = a; k <= b; k++) if (c < 0 || (d > 0 ? y[k] < y[c] : y[k] > y[c])) c = k; return c; };
+  for (let t = S0 + 1; t < n; t++) {
+    const H = Math.log(1 + h[t]);
+    if (!dir) {
+      if (y[t] > y[hiI]) hiI = t;
+      if (y[t] < y[loI]) loI = t;
+      if (y[hiI] - y[loI] >= H) {
+        if (hiI < loI) { piv.push({ i: hiI, k: "H", c: t }); dir = -1; ext = loI; }
+        else { piv.push({ i: loI, k: "L", c: t }); dir = 1; ext = hiI; }
+        cx = counter(ext + 1, t, dir);
+      }
+    } else if (dir > 0) {
+      if (y[t] > y[ext]) { ext = t; cx = -1; }
+      else {
+        if (cx < 0 || y[t] < y[cx]) cx = t;
+        if (y[ext] - y[t] >= H) { piv.push({ i: ext, k: "H", c: t }); dir = -1; ext = cx; cx = counter(ext + 1, t, dir); }
+      }
+    } else {
+      if (y[t] < y[ext]) { ext = t; cx = -1; }
+      else {
+        if (cx < 0 || y[t] > y[cx]) cx = t;
+        if (y[t] - y[ext] >= H) { piv.push({ i: ext, k: "L", c: t }); dir = 1; ext = cx; cx = counter(ext + 1, t, dir); }
+      }
+    }
+  }
+  return { piv, dir, ext };
+}
+function forwardRegime(y, S0) {
+  const h = hSeries(y, S0), z = forwardZigzag(y, S0, h);
+  if (!z.dir) return { cls: "보합", s: S0, kind: "window", prev: null, h, ext: -1 };
+  const P = z.piv[z.piv.length - 1];
+  const prev = z.piv.length >= 2 ? { cls: WORD(-z.dir), s: z.piv[z.piv.length - 2].i, e: P.i, kind: z.dir > 0 ? "high" : "low" }
+    : { cls: WORD(-z.dir), s: S0, e: P.i, kind: "window" };
+  return { cls: WORD(z.dir), s: P.i, kind: z.dir > 0 ? "low" : "high", conf: P.c, prev, h, ext: z.ext, dir: z.dir };
+}
+// 다음 거래일 종가 기준 전환 기준가 — 그날 수익이 σ 에 더해지고 가장 오래된 하루가 빠지는 것까지 반영한 정확한 값(이분법).
+//   상승 추세: 종가 ≤ px 면 하락으로, 하락 추세: 종가 ≥ px 면 상승으로 바뀐다(다음 거래일 하루에만 성립 — 그 뒤엔 σ·극점이 바뀐다)
+function flipNext(y, last, dir, ext) {
+  if (!dir || ext < 0 || last < SIG_N) return null;
+  const base = [];
+  for (let i = last - SIG_N + 2; i <= last; i++) base.push(y[i] - y[i - 1]);
+  const hOf = (lp) => clamp(H_K * sd(base.concat([lp - y[last]])), H_MIN, H_MAX);
+  const E = y[ext], W = Math.log(1 + H_MAX) + 0.01;
+  const flips = (lp) => (dir > 0 ? lp <= E && E - lp >= Math.log(1 + hOf(lp)) : lp >= E && lp - E >= Math.log(1 + hOf(lp)));
+  let a, b;
+  if (dir > 0) {
+    a = E - W; b = E;
+    if (!flips(a) || flips(b)) return null;
+    for (let k = 0; k < 60; k++) { const m = (a + b) / 2; if (flips(m)) a = m; else b = m; }
+    return { lp: a, h: hOf(a) };
+  }
+  a = E; b = E + W;
+  if (flips(a) || !flips(b)) return null;
+  for (let k = 0; k < 60; k++) { const m = (a + b) / 2; if (flips(m)) b = m; else a = m; }
+  return { lp: b, h: hOf(b) };
+}
+
 // ── 3) 로그 가격 꺾은선 근사 — 구간 끝점은 실제 종가, 오차 제곱합 최소. → 끝점 인덱스 배열 ──
 function breakpoints(y) {
   const N = y.length;
@@ -166,7 +245,13 @@ function phases(yw, sigD) {
 function analyze(bars, bench, opts) {
   opts = opts || {};
   bars = (bars || []).filter((b) => b && b.c > 0);
-  if (bars.length > LOOKBACK + 1) bars = bars.slice(bars.length - LOOKBACK - 1);
+  // 앞으로 굴리는 판정(Z10F)은 고정 시작일부터의 전체 일봉으로 계산한다(751봉으로 자르면 시작이 날마다 밀려 다시 그려진다).
+  // 기록이 500거래일 미만이거나(σ 를 못 잼) 굴리기 시작 뒤 전환점이 아직 없으면 이전 방식(최근 약 3년 창 전체를 그날 σ 로 다시 그림)으로 보이고
+  // young 표시 — 날짜가 소급해 바뀔 수 있고 검증 범위 밖이라 앱 홈 '최근 추세 전환'에서 뺀다.
+  const nAll = bars.length;
+  let young = nAll < SIG_N + 1, fw = null;
+  if (!young) { fw = forwardRegime(bars.map((b) => Math.log(b.c)), SIG_N); if (fw.conf == null) young = true; }
+  if (young && bars.length > LOOKBACK + 1) bars = bars.slice(bars.length - LOOKBACK - 1);
   const bs = (bench || []).filter((b) => b && b.c > 0);
   if (bars.length < 60 || bs.length < 60) return null;
   const n = bars.length, last = n - 1;
@@ -180,9 +265,9 @@ function analyze(bars, bench, opts) {
   const y = bars.map((b) => Math.log(b.c));
   const lrAll = [];
   for (let i = 1; i < n; i++) lrAll.push(y[i] - y[i - 1]);
-  const sigD = sd(lrAll.slice(-500));
+  const sigD = sd(lrAll.slice(-SIG_N));
   const h = clamp(H_K * sigD, H_MIN, H_MAX), H = Math.log(1 + h);
-  const rg = regime(y, H);
+  const rg = young ? regime(y, H) : fw;
   const s = rg.s, len = last - s;
   if (len < 1) return null;
 
@@ -233,9 +318,13 @@ function analyze(bars, bench, opts) {
   //   전환 기준 = 종가가 그 아래(상승)·위(하락)로 마감하면 판정이 바뀌는 가격. 지그재그는 로그 H = ln(1+h) 로 되돌림을 재므로
   //   상승 추세는 고점 ÷ (1+h) 아래(고점 대비 −h/(1+h)), 하락 추세는 저점 × (1+h) 위에서 바뀐다.
   const sig6 = (v) => (v == null || !isFinite(v) ? null : +v.toPrecision(6));
-  const conf = rg.conf != null && rg.conf <= last ? { d: ymd(bars[rg.conf].t), c: bars[rg.conf].c, ret: r4(now.c / bars[rg.conf].c - 1), n: last - rg.conf } : null;
-  const flipPx = rg.cls === "상승" ? bars[hi].c / (1 + h) : rg.cls === "하락" ? bars[lo].c * (1 + h) : null;
-  const flip = flipPx ? { px: sig6(flipPx), pct: r4(flipPx / now.c - 1), dn: r4(1 - 1 / (1 + h)), up: r4(h) } : null;
+  //   확인(Z10F): 판정이 실제로 바뀐 날 — 그날의 h(conf.h)와 전환점 대비 실제 움직임(conf.mv)을 함께 둔다(한 번 정해지면 바뀌지 않는다).
+  //   전환 기준(Z10F): 다음 거래일 종가 기준 정확한 값(flipNext). young(이전 방식)은 날짜·기준가가 소급해 바뀔 수 있어 기준가를 두지 않는다.
+  const hc = rg.h && rg.conf != null ? rg.h[rg.conf] : h;
+  const conf = rg.conf != null && rg.conf <= last ? { d: ymd(bars[rg.conf].t), c: bars[rg.conf].c, ret: r4(now.c / bars[rg.conf].c - 1), n: last - rg.conf,
+    h: r4(hc), mv: r4(bars[rg.conf].c / base.c - 1) } : null;
+  const fx = !young && (rg.cls === "상승" || rg.cls === "하락") ? flipNext(y, last, rg.cls === "상승" ? 1 : -1, rg.cls === "상승" ? hi : lo) : null;
+  const flip = fx ? { px: sig6(Math.exp(fx.lp)), pct: r4(Math.exp(fx.lp) / now.c - 1), h: r4(fx.h), dn: r4(1 - 1 / (1 + h)), up: r4(h) } : null;
 
   // 핵심 날짜(종목 고유) — 초과수익이 큰 날, 같은 방향으로 이어진 날은 최대 3일로 묶는다
   const volMed = median(days.map((d) => d.v));
@@ -293,7 +382,7 @@ function analyze(bars, bench, opts) {
 
   // 직전 추세(맥락)
   const pv = rg.prev && rg.prev.e > rg.prev.s ? { cls: rg.prev.cls, from: ymd(bars[rg.prev.s].t), to: ymd(bars[rg.prev.e].t), n: rg.prev.e - rg.prev.s,
-    ret: r4(bars[rg.prev.e].c / bars[rg.prev.s].c - 1), kind: rg.prev.kind, cut: rg.prev.s === 0 } : null;
+    ret: r4(bars[rg.prev.e].c / bars[rg.prev.s].c - 1), kind: rg.prev.kind, cut: rg.prev.kind === "window" } : null;
 
   // 앱 차트 — 추세 시작 앞에 맥락 구간(추세 길이의 절반, 10~250거래일)을 붙인다. lead = 추세 시작의 배열 위치
   const lead = Math.min(s, Math.max(10, Math.min(250, Math.round(len * 0.5))));
@@ -303,7 +392,8 @@ function analyze(bars, bench, opts) {
     width: r4(bars[hi].c / bars[lo].c - 1), pos: r2(bars[hi].c > bars[lo].c ? (now.c - bars[lo].c) / (bars[hi].c - bars[lo].c) : 0.5) } : null;
   const toKey = (e) => ({ s: ymd(e.s), e: ymd(e.eT), si: lead + e.a + 1, ei: lead + e.e + 1, n: e.n, ar: r4(e.ar), ret: r4(e.ret), mret: r4(e.mret), vr: r2(e.vr), gap: r4(e.gap) });
   return {
-    cls: rg.cls, kind: rg.kind, from: ymd(base.t), to: ymd(now.t), n: len, cut: s === 0, benchLag,
+    cls: rg.cls, kind: rg.kind, from: ymd(base.t), to: ymd(now.t), n: len, cut: rg.kind === "window", benchLag,
+    rule: young ? "Z10" : "Z10F", young: young ? { n: nAll, why: nAll < SIG_N + 1 ? "short" : "nopivot" } : undefined, roll: young ? undefined : ymd(bars[SIG_N].t),
     h: r4(h), sigD: r4(sigD),
     ret: r4(ret), mret: r4(mret), beta: r2(beta), betaN: est.length, mkt: r4(Math.exp(logMkt) - 1), spec: r4(Math.exp(logSpec) - 1),
     rel, relRaw: r4(relRaw), relBand: REL_BAND,
@@ -329,4 +419,4 @@ function fingerprint(a) {
   return [a.cls, a.from].concat((a.keys || []).slice(0, 3).map((k) => k.s).sort()).join("|");
 }
 
-module.exports = { LOOKBACK, H_K, H_MIN, H_MAX, QUIET, analyze, regime, zigzag, breakpoints, phases, fingerprint, ymd, bandOf, clsOf };
+module.exports = { LOOKBACK, SIG_N, H_K, H_MIN, H_MAX, QUIET, analyze, regime, zigzag, forwardRegime, forwardZigzag, flipNext, breakpoints, phases, fingerprint, ymd, bandOf, clsOf };

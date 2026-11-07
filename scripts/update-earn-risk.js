@@ -5,7 +5,8 @@
 //     발표가 얼마나 남았든(다음 발표까지). 과거 발표 1만 8천여 건에서 발표 때 크게 움직일 확률(위·아래 모두)이 약 2배 — 방향은 가르지 못했다.
 //     tp   증권사 목표가 평균 3개월 −5% 이하(야후 증권사별 이력 — 180일 안 증권사별 최신, 3곳 이상)
 //     prev 직전 실적 발표 반응(발표 전날 → 다음 날 종가, 지수 대비) −5% 이하(200일 안, events.js 지난 발표일)
-//     weak 최근 60거래일 지수 대비 −10% 이하(data/trend 의 1년 일봉·지수)
+//     weak 최근 60거래일 지수 대비 −10% 이하(종목 차트 파일 data/chart 의 일봉 260개 · S&P 500 1년 일봉 — 2026-11-07 전엔 data/trend 의
+//          추세 구간 계열을 써서 추세가 60거래일보다 짧은 종목(미국 45종목 중 12)은 weak·prev 가 비었다)
 //     pre  30일 목표가 내림 2건 이상이고 올림보다 많음
 //   한국(2026-10-31 한국 프리뷰 시험 PREREG-KR — 사전 기준 미달이지만 사용자 선택 '프리뷰 기준으로 바꾸기'): 다음 발표가 20거래일 안이고
 //     최근 30일 증권사 리포트(제목 + 미리보기 240자)에서 부정 낱말 리포트가 긍정 낱말 리포트보다 많으면. 뜻은 '기대에 못 미칠 가능성' —
@@ -18,6 +19,7 @@ const fs = require("fs");
 const os = require("os");
 const path = require("path");
 const { execFile } = require("child_process");
+const { settleDailyBars } = require("./lib-quote");
 
 const ROOT = path.join(__dirname, "..");
 const DATA = path.join(ROOT, "data");
@@ -77,6 +79,20 @@ function nextReportDeadline(T) {
   return out.filter((d) => d >= T).sort()[0];
 }
 
+// ── 미국: S&P 500 1년 일봉(실행마다 한 번, 끝난 장 기준) — weak·prev 의 지수 대비 ──
+let SPX = null;
+async function spxCloses() {
+  if (SPX) return SPX;
+  SPX = new Map();
+  const j = await getJson("https://query1.finance.yahoo.com/v8/finance/chart/%5EGSPC?interval=1d&range=1y");
+  const res = j && j.chart && j.chart.result && j.chart.result[0];
+  if (res && res.timestamp && res.indicators && res.indicators.quote) {
+    settleDailyBars(res);
+    const off = ((res.meta && res.meta.gmtoffset) || 0) * 1000, q = res.indicators.quote[0];
+    res.timestamp.forEach((ts, k) => { if (q.close[k] > 0) SPX.set(+new Date(ts * 1000 + off).toISOString().slice(0, 10).replace(/-/g, ""), q.close[k]); });
+  }
+  return SPX;
+}
 // ── 미국: 야후 증권사별 목표가 이력(이번 대상 종목만) ──
 const JAR = path.join(os.tmpdir(), "earn-risk-yahoo.txt");
 let crumb;
@@ -186,8 +202,11 @@ async function krReports(code, T) {
       await wait(150);
       continue;
     }
-    const tr = readJ(path.join(DATA, "trend", x.t + ".json"));
-    const S = tr && tr.series, bars = S && S.t ? S.t.map((d, i) => [d, S.c[i], S.m[i]]) : [];
+    // 종목 일봉(차트 파일, 260개) × S&P 500 종가 — 차트가 기준일까지 오지 않았거나 지수를 못 받았으면 weak·prev 를 비운다
+    const ch = readJ(path.join(DATA, "chart", x.t.replace(/[^A-Za-z0-9.\-]/g, "_") + ".json")), spx = await spxCloses();
+    const kT = +T.replace(/-/g, "");
+    const bars = ch && Array.isArray(ch.d) && ch.d.length && ch.d[ch.d.length - 1][0] >= kT && spx.size
+      ? ch.d.map((r) => [r[0], r[4], spx.get(r[0]) || null]) : [];
     const idxOn = (iso) => { const k = +iso.replace(/-/g, ""); return bars.findIndex((b) => b[0] >= k); };
     const sig = {};
     // weak — 60거래일 지수 대비
