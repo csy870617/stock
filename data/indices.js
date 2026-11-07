@@ -3,7 +3,7 @@
 // 거시 유동성 '게이지 등급'은 판단 영역이라 data/liquidity.js 에서 온디맨드로 남는다.
 window.INDEX_TA = {
  "asOf": "2026-11-06",
- "builtAt": "2026-11-06T22:15:21Z",
+ "builtAt": "2026-11-07T00:10:09Z",
  "note": "기술적 지표는 Yahoo 일봉에서 매일 자동 계산(LLM 토큰 0). 이동평균(SMA·EMA)과 오실레이터(RSI·MACD·스토캐스틱·CCI·Williams %R·ADX·모멘텀)를 종합 투표한 5단계 신호 — 단기=일봉, 중기=주봉, 장기=월봉 3기간.",
  "indices": [
   {
@@ -20,12 +20,12 @@ window.INDEX_TA = {
     "signal": "중립",
     "sigFlow": "매도",
     "sigMtf": "중립",
-    "scoreMtf": -0.015652261900068354,
-    "scoreFlow": -0.4296804123405628,
+    "scoreMtf": -0.01565532772760239,
+    "scoreFlow": -0.42968518507600484,
     "flow": {
      "ma": -0.47000000000000003,
      "ichimoku": -0.7000000000000001,
-     "volume": -0.014721649362251142,
+     "volume": -0.014740740304019104,
      "osc": -0.5
     },
     "metrics": [
@@ -57,12 +57,12 @@ window.INDEX_TA = {
     "signal": "매수",
     "sigFlow": "매수",
     "sigMtf": "매수",
-    "scoreMtf": 0.3589035152919714,
-    "scoreFlow": 0.24048639554660725,
+    "scoreMtf": 0.35890208348920327,
+    "scoreFlow": 0.24048474509441284,
     "flow": {
      "ma": 0.32666666666666666,
      "ichimoku": 0.35,
-     "volume": 0.299945582186429,
+     "volume": 0.29993898037765143,
      "osc": -0.25
     },
     "metrics": [
@@ -94,12 +94,12 @@ window.INDEX_TA = {
     "signal": "적극매수",
     "sigFlow": "적극매수",
     "sigMtf": "적극매수",
-    "scoreMtf": 0.6352101280311544,
-    "scoreFlow": 0.6352101280311544,
+    "scoreMtf": 0.6352092064103809,
+    "scoreFlow": 0.6352092064103809,
     "flow": {
      "ma": 0.6799999999999999,
      "ichimoku": 1,
-     "volume": 0.5248405121246177,
+     "volume": 0.5248368256415237,
      "osc": 0
     },
     "metrics": [
