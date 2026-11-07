@@ -20,6 +20,7 @@
 const fs = require("fs");
 const path = require("path");
 const { execFile } = require("child_process");
+const { exchangeDate } = require("./lib-quote");   // 봉마다 거래소 현지 날짜(서머타임 반영)
 
 const ROOT = path.join(__dirname, "..");
 const OUT = path.join(ROOT, "data", "liquidity-flow.js");
@@ -73,8 +74,9 @@ async function yahoo(sym, adj, years) {
     const t = await curl(["-A", "Mozilla/5.0", "https://query1.finance.yahoo.com/v8/finance/chart/" + encodeURIComponent(sym) + "?interval=1d&range=" + years + "y"]);
     try {
       const r = JSON.parse(t).chart.result[0], q = r.indicators.quote[0], a = adj && r.indicators.adjclose && r.indicators.adjclose[0].adjclose;
-      const off = (r.meta && r.meta.gmtoffset) || 0, m = {};
-      r.timestamp.forEach((ts, k) => { const v = a ? a[k] : q.close[k]; if (v != null && isFinite(v) && v > 0) m[new Date((ts + off) * 1000).toISOString().slice(0, 10)] = v; });
+      const m = {};
+      // 날짜 = 봉마다 그 시각의 거래소 시간대로 센 현지 날짜(달러인덱스·원/달러 여름 봉이 하루 앞으로 밀리지 않게 — lib-quote exchangeDate)
+      r.timestamp.forEach((ts, k) => { const v = a ? a[k] : q.close[k]; if (v != null && isFinite(v) && v > 0) m[exchangeDate(ts, r.meta)] = v; });
       if (Object.keys(m).length > 100) return m;
     } catch (_e) { /* 다시 */ }
     await sleep(1500 * (i + 1));

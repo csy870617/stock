@@ -13,7 +13,7 @@
 const fs = require("fs");
 const path = require("path");
 const TA = require("./lib-ta.js");
-const { settleDailyBars, fillPrevSessionClose } = require("./lib-quote");   // 일봉을 끝난 장 기준으로 정리(장중 미완성 봉 제외·빈 종가 채움)
+const { settleDailyBars, fillPrevSessionClose, exchangeDate } = require("./lib-quote");   // 일봉을 끝난 장 기준으로 정리(장중 미완성 봉 제외·빈 종가 채움)
 
 const ROOT = path.join(__dirname, "..");
 const RECO = path.join(ROOT, "data", "recommendations.js");
@@ -99,7 +99,8 @@ async function fetchRowsOnce(symbol) {
   const q = res.indicators.quote[0], ts = res.timestamp || [], rows = [];
   for (let i = 0; i < (q.close || []).length; i++) {
     if (q.close[i] == null) continue;
-    rows.push({ t: ts[i], close: q.close[i],
+    rows.push({ t: ts[i], d: exchangeDate(ts[i], res.meta),   // d = 거래소 현지 날짜(봉마다 그 시각의 시간대 — 차트·주봉·월봉 묶음이 쓴다)
+      close: q.close[i],
       open: q.open && q.open[i] != null ? q.open[i] : null,   // 차트 캔들용(지표 계산은 쓰지 않는다)
       high: q.high && q.high[i] != null ? q.high[i] : q.close[i],
       low: q.low && q.low[i] != null ? q.low[i] : q.close[i],
@@ -109,8 +110,7 @@ async function fetchRowsOnce(symbol) {
   // 마지막 봉의 거래소 현지 날짜 = 실제 최신 거래일. 주말·휴장일에 돌려도 실행일이 아닌
   // 이 날짜가 asOf 가 돼야 techNote.asOf 비교에서 전 종목이 '구식'으로 오판되지 않는다.
   const off = ((res.meta && res.meta.gmtoffset) || 0) * 1000;
-  const lastT = rows[rows.length - 1].t;
-  rows.lastDate = lastT ? new Date(lastT * 1000 + off).toISOString().slice(0, 10) : null;
+  rows.lastDate = rows[rows.length - 1].t ? rows[rows.length - 1].d : null;
   rows.offMs = off;
   return rows;
 }

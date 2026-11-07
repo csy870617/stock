@@ -522,6 +522,21 @@ function validate(D, opts) {
   return { errors, warnings };
 }
 
+// 지수 대응 신호(index-notes.js sigShort·sigMid·sigLong) ↔ 엔진 등급(indices.js indices·macro) — 어긋난 항목 [{key, from:[단,중,장], to:[…]}].
+//   §4-2 'sig 는 indices.js 기준' — 문장과 달리 결정적이라 ai-daily 가 맞추고(API 없음) 아래 CLI 가 같은 asOf 의 어긋남을 경고한다.
+//   2026-11-07 점검: 같은 asOf 아래 다우 단·중기·코스피 장기 배지가 엔진과 달랐는데 아무 검사도 없었다.
+const IDX_SIG = [["sigShort", "short"], ["sigMid", "mid"], ["sigLong", "long"]];
+function indexSigDiff(IN, IX) {
+  const out = [], items = (IN && IN.items) || {}, eng = ((IX && IX.indices) || []).concat((IX && IX.macro) || []);
+  Object.keys(items).forEach((k) => {
+    const e = eng.find((x) => x && x.key === k), n = items[k] || {};
+    if (!e) return;
+    const to = IDX_SIG.map((p) => (e[p[1]] && e[p[1]].signal) || ""), from = IDX_SIG.map((p) => n[p[0]] || "");
+    if (to.every(Boolean) && to.join() !== from.join()) out.push({ key: k, from, to });   // 엔진 등급이 비면 보지 않는다
+  });
+  return out;
+}
+
 // 엔진 등급(stock-ta.js) — techNote 신호 등급 정합성 검사용. 없거나 깨졌으면 검사 생략(null).
 function loadTa() {
   const TA_FILE = path.join(ROOT, "data", "stock-ta.js");
@@ -551,21 +566,29 @@ if (require.main === module) {
     if (fz.active && fz.changed.length) warnings.push("선정 규칙 동결 중(" + fz.from + " ~ " + fz.until + "): " + fz.changed.join(", ") +
       " 이(가) 기준선과 다르다 — 버그 수정·승인된 변경이면 node scripts/rules-freeze.js --accept \"사유\", 아니면 되돌린다");
   } catch (e) { warnings.push("선정 규칙 동결 확인 실패: " + e.message); }
+  const win = (f, k) => { const p = path.join(ROOT, "data", f); return fs.existsSync(p) ? loadGlobalScript(p, k) : null; };
   // Top Pick 선정 규칙(2026-10-27~, CLAUDE.md §4-6): 지금 데이터로 다시 매긴 lib-picks 순위 1~3위와 같아야 한다 — 최신 거래일 몫으로 쓴 것만 본다
   try {
     const tp = D.topPicks, T = (loadTa() || {}).asOf;
     if (tp && T && tp.asOf >= T) {
-      const win = (f, k) => { const p = path.join(ROOT, "data", f); return fs.existsSync(p) ? loadGlobalScript(p, k) : null; };
       const R = require("./lib-picks").rankPicks({ D, TA: loadTa(), EV: (win("events.js", "STOCK_EVENTS") || {}).items || {},
         CA: win("candidates.js", "CANDIDATES") || { groups: {} }, DC: win("discovery-candidates.js", "DISCOVERY_CANDIDATES"),
         FU: (win("fundamentals.js", "STOCK_FUND") || {}).items || {}, RV: (win("revisions.js", "STOCK_REVISIONS") || {}).items || {} });
       ["korea", "us"].forEach((c) => {
         const want = R[c].top, got = (tp[c] || []).map((x) => x.ticker);
         if (want.length === 3 && want.join() !== got.join()) warnings.push("topPicks." + c + " 가 지금 순위 1~3위(" + want.join(", ") + ")와 다르다(" + got.join(", ") +
-          ") — node scripts/pick-score.js 로 확인하고 그 순서로 다시 쓴다(§4-6)");
+          ") — node scripts/pick-score.js 로 확인하고 그 순서로 다시 쓴다(§4-6" +
+          (got.length === 3 && got.slice().sort().join() === want.slice().sort().join() ? " — 같은 세 종목이라 node scripts/ai-daily.js --sync 가 순서만 맞춘다" : "") + ")");
       });
     }
   } catch (e) { warnings.push("Top Pick 순위 확인 실패: " + e.message); }
+  // 지수 대응 신호(§4-2 'sig 는 indices.js 기준') — 같은 asOf 인데 배지가 엔진 등급과 다르면 경고(문장은 그대로 두고 신호만 맞춘다)
+  try {
+    const IN = win("index-notes.js", "INDEX_NOTES"), IX = win("indices.js", "INDEX_TA"), per = ["단기", "중기", "장기"];
+    if (IN && IX && IN.asOf && IN.asOf === IX.asOf) indexSigDiff(IN, IX).forEach((d) => warnings.push("index-notes " + d.key + " 신호가 indices.js 와 다르다(" +
+      per.map((p, i) => (d.from[i] !== d.to[i] ? p + " " + (d.from[i] || "–") + "→" + d.to[i] : null)).filter(Boolean).join(", ") +
+      ") — node scripts/ai-daily.js --sync 로 맞춘다(API 없음 — 신호만 맞추고 문장은 그대로, 문장이 옛 신호를 설명하면 고쳐 쓴다)"));
+  } catch (e) { warnings.push("지수 대응 신호 확인 실패: " + e.message); }
   if (warnings.length) {
     console.log("⚠ 경고 " + warnings.length + "건:");
     warnings.forEach((w) => console.log("  - " + w));
@@ -581,4 +604,4 @@ if (require.main === module) {
 }
 
 module.exports = { concentration, GROUP_CAP, FIN_CAP, validate, loadTa, isTrustedSource, isBlockedSource, sourceHost, trustedDomainOf, PERSONAL_THEMES, isPersonalTheme,
-  SPOTLIGHT, SPOT_TAGS, SPOT_PER_TAG, NONFORMAL_THEMES, isFormalTheme, priceNumberIn, politeIn };
+  SPOTLIGHT, SPOT_TAGS, SPOT_PER_TAG, NONFORMAL_THEMES, isFormalTheme, priceNumberIn, politeIn, indexSigDiff, IDX_SIG };

@@ -30,7 +30,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"   # Node 20 은 2026-04 지원 종료(2026-11-07 점검)
 
       # 신뢰도 게이트 — 검증 실패 데이터는 Pages 에 배포되지 않는다
       - name: Validate data (guardrail)

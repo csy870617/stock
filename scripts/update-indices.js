@@ -21,7 +21,7 @@ const fs = require("fs");
 const path = require("path");
 
 const TA = require("./lib-ta.js");   // 공유 기술적 분석 라이브러리(단기/중기/장기)
-const { settleDailyBars, fillPrevSessionClose } = require("./lib-quote");
+const { settleDailyBars, fillPrevSessionClose, exchangeDate } = require("./lib-quote");
 const { writeChart } = require("./lib-chart");
 const LF = require("./lib-flows");   // 코스피·코스닥 투자자별 순매수(지수 상세 '수급' — 차트 아래 막대·수급 표, data/market-flows.json)
 const KR_VOL_THOUSANDS = { kospi: 1, kosdaq: 1 };   // 지수 상세 캔들 차트 data/chart/idx-<key>.json(앱 '오늘의 시장' 지수 칸을 누르면 연다)   // 일봉을 끝난 장 기준으로 정리(장중 미완성 봉 제외·빈 종가 채움)
@@ -159,7 +159,8 @@ async function fetchSeriesOnce(symbol, bustCache) {
   for (let i = 0; i < (q.close || []).length; i++) {
     if (q.close[i] == null) continue;
     rows.push({
-      t: ts[i], close: q.close[i],
+      t: ts[i], d: exchangeDate(ts[i], res.meta),   // d = 거래소 현지 날짜 — 봉마다 그 시각의 시간대(서머타임 포함)로 센다(차트·주봉·월봉·관련 정보가 쓴다)
+      close: q.close[i],
       open: q.open && q.open[i] != null ? q.open[i] : null,   // 차트 캔들용(지표 계산은 쓰지 않는다)
       high: q.high && q.high[i] != null ? q.high[i] : q.close[i],
       low: q.low && q.low[i] != null ? q.low[i] : q.close[i],
@@ -169,12 +170,12 @@ async function fetchSeriesOnce(symbol, bustCache) {
   if (rows.length < TA.MIN_BARS) return null;   // lib 의 최소 봉수와 동일 게이트(불일치 시 조용한 폴백 발생)
   // 마지막 봉의 거래소 현지 날짜 = 실제 최신 거래일. 주말·휴장일에 돌려도 실행일이 아닌
   // 이 날짜가 asOf 가 돼야 INDEX_NOTES.asOf 비교에서 '구식'으로 오판되지 않는다.
+  // 예전엔 지금의 gmtoffset 하나로 셌다 — 서머타임이 끝난 뒤 런던·뉴욕 자정 봉(원/달러·달러인덱스·WTI·금)의 기준일이 하루 앞으로 찍혔다.
   const off = ((res.meta && res.meta.gmtoffset) || 0) * 1000;
   rows.offMs = off;
   const lastT = rows[rows.length - 1].t, prevT = rows[rows.length - 2].t;
-  const day = (t) => (t ? new Date(t * 1000 + off).toISOString().slice(0, 10) : null);
-  rows.lastDate = day(lastT);
-  rows.prevDate = day(prevT);
+  rows.lastDate = lastT ? rows[rows.length - 1].d : null;
+  rows.prevDate = prevT ? rows[rows.length - 2].d : null;
   // 등락률 신뢰도 판단용 — 마지막 두 봉의 달력일 간격(정상: 1일, 주말 낀 금→월: 3일)
   rows.lastGapDays = (lastT && prevT) ? Math.round((lastT - prevT) / 86400) : 99;
   return rows;
@@ -202,13 +203,15 @@ function analyze(cfg, rows, gapOkOverride) {
 // ── 환율·원자재 '관련 정보' — 사실 숫자만(예측 아님): 기간 등락·52주 위치·이동평균 거리·변동성 국면·시장/편성 종목과 같이 움직인 정도 ──
 const rnd = (v, d) => (v == null || !isFinite(v) ? null : Math.round(v * Math.pow(10, d)) / Math.pow(10, d));
 const isoDay = (t, off) => new Date(t * 1000 + (off || 0)).toISOString().slice(0, 10);
+// 행의 거래소 현지 날짜 — fetchSeriesOnce 가 봉마다 센 d(서머타임 반영). d 가 없는 행만 지금 오프셋으로 센다.
+const rowDay = (r, off) => r.d || isoDay(r.t, off);
 const sdOf = (a) => { if (a.length < 2) return null; const m = a.reduce((x, y) => x + y, 0) / a.length; return Math.sqrt(a.reduce((x, y) => x + (y - m) * (y - m), 0) / (a.length - 1)); };
 function macroFacts(rows) {
   const off = rows.offMs || 0, c = rows.map((r) => r.close), n = c.length, last = c[n - 1];
   const back = (k) => (n > k && c[n - 1 - k] > 0 ? (last / c[n - 1 - k] - 1) * 100 : null);
-  const yr = isoDay(rows[n - 1].t, off).slice(0, 4);
+  const yr = rowDay(rows[n - 1], off).slice(0, 4);
   let ytdBase = null;
-  for (let i = n - 1; i >= 0; i--) if (isoDay(rows[i].t, off) < yr + "-01-01") { ytdBase = c[i]; break; }
+  for (let i = n - 1; i >= 0; i--) if (rowDay(rows[i], off) < yr + "-01-01") { ytdBase = c[i]; break; }
   const win = c.slice(-252), hi = Math.max.apply(null, win), lo = Math.min.apply(null, win);
   const sma = (k) => (n >= k ? c.slice(-k).reduce((a, b) => a + b, 0) / k : null);
   const lr = [];
@@ -220,7 +223,7 @@ function macroFacts(rows) {
   const volPct = v60 != null && hist.length >= 20 ? Math.round(hist.filter((x) => x <= v60).length / hist.length * 100) : null;
   const s50 = sma(50), s200 = sma(200);
   return {
-    asOf: isoDay(rows[n - 1].t, off),
+    asOf: rowDay(rows[n - 1], off),
     chg: { d1: rnd(back(1), 2), w1: rnd(back(5), 1), m1: rnd(back(21), 1), m3: rnd(back(63), 1), y1: rnd(back(252), 1),
       ytd: rnd(ytdBase ? (last / ytdBase - 1) * 100 : null, 1) },
     hi52: rnd(hi, 2), lo52: rnd(lo, 2), pos52: hi > lo ? Math.round((last - lo) / (hi - lo) * 100) : null,
@@ -233,16 +236,16 @@ function macroFacts(rows) {
 function nextBases(rows) {
   const off = rows.offMs || 0, c = rows.map((r) => r.close), n = c.length;
   const at = (k) => (n - k >= 0 && c[n - k] > 0 ? rnd(c[n - k], 2) : null);
-  const yr = isoDay(rows[n - 1].t, off).slice(0, 4);
+  const yr = rowDay(rows[n - 1], off).slice(0, 4);
   let ytd = null;
-  for (let i = n - 1; i >= 0; i--) if (isoDay(rows[i].t, off) < yr + "-01-01") { ytd = c[i]; break; }
+  for (let i = n - 1; i >= 0; i--) if (rowDay(rows[i], off) < yr + "-01-01") { ytd = c[i]; break; }
   return { c: at(1), w1: at(5), m1: at(21), m3: at(63), y1: at(252), ytd: rnd(ytd, 2) };
 }
 // 주간 종가(월요일 시작 주 → 그 주 마지막 종가) — 시간대가 다른 시장(서울·런던·뉴욕)끼리 비교할 때 하루 어긋남을 줄인다
 const weekOf = (ymd) => { const d = new Date(ymd + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7)); return d.toISOString().slice(0, 10); };
 function weeklyFromRows(rows) {
   const m = new Map(), off = rows.offMs || 0;
-  rows.forEach((r) => { if (r.close > 0) m.set(weekOf(isoDay(r.t, off)), r.close); });
+  rows.forEach((r) => { if (r.close > 0) m.set(weekOf(rowDay(r, off)), r.close); });
   return m;
 }
 function weeklyFromChart(w) {   // data/chart/<t>.json 의 w 행 [YYYYMMDD, 시, 고, 저, 종, 거래량]

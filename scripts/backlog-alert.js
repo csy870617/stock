@@ -23,9 +23,10 @@ const tok = process.env.GITHUB_TOKEN, repo = process.env.GITHUB_REPOSITORY;
 if (!tok || !repo) { console.log("backlog-alert: (로컬) 열 이슈 — " + title); process.exit(0); }
 const H = { Authorization: "Bearer " + tok, Accept: "application/vnd.github+json", "User-Agent": "stock-backlog-alert" };
 (async () => {
-  const r = await fetch("https://api.github.com/repos/" + repo + "/issues?state=open&per_page=50", { headers: H });
+  // 이 봇이 연 이슈만 본다 — 공개 저장소라 누구나 같은 제목으로 이슈를 열어 알림을 막을 수 있었다(2026-11-07 점검)
+  const r = await fetch("https://api.github.com/repos/" + repo + "/issues?state=open&per_page=50&creator=" + encodeURIComponent("github-actions[bot]"), { headers: H });
   if (!r.ok) { console.log("::warning::backlog-alert: 이슈 목록 실패 " + r.status); return; }
-  const open = (await r.json()).filter((i) => !i.pull_request && String(i.title).startsWith(TITLE));
+  const open = (await r.json()).filter((i) => !i.pull_request && i.user && i.user.login === "github-actions[bot]" && String(i.title).startsWith(TITLE));
   if (open.length) { console.log("backlog-alert: 이미 열린 이슈 #" + open[0].number + " — 그대로 둔다"); return; }
   const c = await fetch("https://api.github.com/repos/" + repo + "/issues", { method: "POST", headers: H, body: JSON.stringify({ title, body }) });
   console.log(c.ok ? "backlog-alert: 이슈 열음 — " + title : "::warning::backlog-alert: 이슈 열기 실패 " + c.status);

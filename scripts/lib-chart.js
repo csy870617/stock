@@ -18,7 +18,9 @@ function chartOf(rows, dp, flows) {
   rows.forEach((x) => {
     if (!(x.close > 0)) return;
     const o = x.open > 0 ? x.open : x.close;
-    const ymd = new Date(x.t * 1000 + off).toISOString().slice(0, 10);
+    // 날짜 = 행의 d(봉마다 그 시각의 거래소 시간대로 센 날짜, lib-quote exchangeDate). 없으면 예전처럼 지금 오프셋 하나로 —
+    // 그 방식은 서머타임이 끝난 뒤 런던·뉴욕 자정에 찍힌 여름 봉을 하루 앞(일요일)으로 밀었다(2026-11-07 감사 AUTO-4).
+    const ymd = x.d || new Date(x.t * 1000 + off).toISOString().slice(0, 10);
     daily.push({ ymd: ymd, o: o, h: Math.max(x.high || 0, o, x.close), l: Math.min(x.low > 0 ? x.low : x.close, o, x.close), c: x.close, v: x.vol || 0 });
   });
   // 주봉(월요일 시작 주)·월봉(달력 월) — 시가는 첫 봉, 종가는 마지막 봉, 고·저는 극값, 거래량은 합

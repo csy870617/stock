@@ -11,25 +11,31 @@
 //       ④반영 — recommendations.js(시황·Top Pick, update-reco.js 가드레일 통과) · liquidity.js · index-notes.js · ai-status.js
 //
 // 덮어쓰기 규칙(세션 작업을 지우지 않는다):
-//   --if-stale(Action) — 항목별로 '오늘 데이터(T)로 아직 안 쓴 것' 또는 'AI 가 쓴 것인데 새 종가가 생긴 것'만 쓴다.
+//   --if-stale(Action) — 항목별로 '오늘 데이터(T)로 아직 안 쓴 것' 또는 'AI 가 쓴 것인데 새 종가·바뀐 재료가 생긴 것'만 쓴다
+//     (바뀐 재료 = 종가일은 같아도 지수 종가·등락·한국 수급·신호가 달라짐 — 잠정 → 확정 종가, Top Pick 은 순위 1~3위 종목이 달라짐).
 //     세션이 같은 T 로 쓴 문장은 그대로 둔다. 저녁(미국 마감 뒤) 실행은 AI 가 쓴 문장을 새 종가로 다시 쓰고,
 //     세션이 쓴 시황·유동성·지수 대응도 '새 종가가 나온 뒤 아무도 고치지 않았으면' 다시 쓴다(Top Pick 은 세션 것 유지).
 //   인자 없이 실행하면 네 항목을 모두 다시 쓴다(수동).
+//   매 실행 맨 앞에 결정적 정리(API·키 없이): 지수 대응 신호(sig*)를 indices.js 등급으로, Top Pick 이 순위 1~3위와 같은 세 종목이면 순서를 맞춘다.
 //   --reapply — API 를 부르지 않고 이번 실행의 결과(.ai-cache/daily.json)를 다시 얹는다(Action rebase 충돌 복구용).
 //     이번 실행이 계획할 때 본 문장이 원격에서 바뀌었으면(그 사이 세션이 씀) 원격을 남긴다.
 //
-//   --who — API 를 부르지 않고 지금 화면 문장을 누가 썼는지(AI 작성분·세션 작성분·미작성)만 보인다(세션 점검용, 키 불필요).
+//   --who — API 를 부르지 않고 지금 화면 문장을 누가 썼는지(AI 작성분·세션 작성분·미작성)와 결정적 정리 할 일만 보인다(세션 점검용, 키 불필요).
+//   --sync — 결정적 정리만 하고 끝낸다(API·키 불필요 — 세션용).
+//   --seen — --sync 에 더해 지금 문장 지문을 지금 종가 기준으로 daily.seen 에 적는다. 미국 마감 뒤(그 마감 Action 전)에 시황·유동성·지수 대응을
+//     쓴 세션이 돌린다 — 안 돌리면 다음 실행은 처음 보는 세션 문장을 미국 마감 전에 쓴 것으로 본다(아래 nextSeen).
 //
-// 사용법: ANTHROPIC_API_KEY=… node scripts/ai-daily.js [--if-stale] [--reapply] [--dry] | node scripts/ai-daily.js --who
+// 사용법: ANTHROPIC_API_KEY=… node scripts/ai-daily.js [--if-stale] [--reapply] [--dry] | node scripts/ai-daily.js --who | --sync [--seen]
 const fs = require("fs");
 const path = require("path");
 const { spawnSync } = require("child_process");
 const L = require("./lib-claude");
 const LP = require("./lib-picks");
-const { isBlockedSource, priceNumberIn } = require("./validate-reco");
+const { isBlockedSource, priceNumberIn, indexSigDiff, IDX_SIG } = require("./validate-reco");
 
 const args = process.argv.slice(2);
 const IF_STALE = args.includes("--if-stale"), REAPPLY = args.includes("--reapply"), DRY = args.includes("--dry"), WHO = args.includes("--who");
+const SYNC = args.includes("--sync"), SEEN = args.includes("--seen");
 const today = new Date().toISOString().slice(0, 10);
 const IDX_KEYS = ["nasdaq", "dow", "kospi", "kosdaq"];
 const MACRO_KEYS = ["usdkrw", "dxy", "wti", "gold"];   // 환율·원자재(indices.js macro, 2026-10-23~) — 지수와 같은 형식의 분석을 index-notes.js 에 함께 쓴다
@@ -63,15 +69,50 @@ function sigs(S) {
 //   세션이 쓴 날은 미국 마감 뒤에도 하루 묵은 시황이 다음 아침까지 남았다(2026-10-21 점검).
 const REFRESH_SESSION = ["market", "liquidity", "indexNotes"];
 const newer = (a, b) => !!(a && b && ((a.kr || "") > (b.kr || "") || (a.us || "") > (b.us || "")));
-// seen = 실행마다 본 문장 지문과 '그 지문을 처음 본 때의 종가 기준' — 지문이 그대로면 처음 본 기준을 잇는다.
-//   처음 보는 지문은 지금 기준으로 적는다(세션이 언제 썼는지 모르면 최신으로 본다 — 세션 작업을 덮지 않는 쪽).
-function nextSeen(prevSeen, cur, basis) {
-  const items = {}, p = (prevSeen && prevSeen.items) || {};
-  ITEMS.forEach((k) => { items[k] = p[k] && L.sameSig(p[k].sig, cur[k]) ? { sig: cur[k], basis: p[k].basis } : { sig: cur[k], basis }; });
-  return { at: new Date().toISOString(), items };
+// seen = 실행마다 본 문장 지문과 '그 문장이 기대는 종가 기준'(+ basis: 그 실행이 본 종가 기준). 지문이 그대로면 적어 둔 기준을 잇고,
+//   이번 실행이 쓴 항목(fresh)과 --seen(exact)은 지금 기준으로 적는다.
+// 처음 보는 지문(지난 관찰 뒤 세션이 쓴 문장)은 한국은 지금 기준, 미국은 지난 관찰 때 기준으로 적는다 — 세션 문장은 A 루틴
+//   (09:07 UTC, 한국 마감 뒤·미국 마감 전)이 쓴다. 2026-11-07 점검: 예전엔 지금 기준으로 적어, A 가 고친 시황·지수 대응을 미국 마감 뒤
+//   실행이 처음 보면(그 사이 한국 마감 실행이 없던 날) '새 종가 뒤 아무도 고치지 않음'이 영영 성립하지 않았다 — 11/05 미국장 문장이 주말 내내 남음.
+//   미국 마감 뒤(그 마감 Action 전)에 쓴 세션은 --seen 으로 지금 기준을 적어 두면 다시 쓰이지 않는다.
+function firstBasis(prevSeen, basis, fallback) {
+  const pb = (prevSeen && prevSeen.basis) || fallback || null;   // 예전 기록엔 seen.basis 가 없어 지난 성공 실행의 종가 기준으로 대신한다
+  return { kr: basis.kr, us: pb && pb.us && basis.us && pb.us < basis.us ? pb.us : basis.us };
 }
-function plan(S, st) {
-  const T = S.TA && S.TA.asOf, basis = basisOf(S.Q), prev = st.daily || {}, cur = sigs(S);
+function nextSeen(prevSeen, cur, basis, o) {
+  o = o || {};
+  const items = {}, p = (prevSeen && prevSeen.items) || {}, first = o.exact ? basis : firstBasis(prevSeen, basis, o.prevBasis);
+  ITEMS.forEach((k) => {
+    items[k] = (o.fresh || []).includes(k) ? { sig: cur[k], basis }
+      : p[k] && L.sameSig(p[k].sig, cur[k]) ? { sig: cur[k], basis: p[k].basis } : { sig: cur[k], basis: first };
+  });
+  return { at: new Date().toISOString(), basis, items };
+}
+// 문장이 기대는 재료의 지문 — AI 가 쓴 항목마다 쓸 때 daily.inputs 에 남기고, 종가일이 같아도 재료가 바뀌면 그 AI 문장을 다시 쓴다.
+//   2026-11-07 점검: 15:45 KST 직후 실행이 잠정 종가(코스피 5,050.29·−6.19%)로 쓴 시황·지수 대응이, 16:30 KST 뒤 확정 종가(5,059.69·−6.02%)로
+//   다시 돈 실행에선 종가일이 같아 그대로 남았다. 시황 = 지수 4개 종가·등락 + 코스피·코스닥 최근일 수급, 지수 대응 = 그것 + 8개 항목의
+//   단·중·장기 등급(환율·원자재 값은 거의 24시간 움직여 넣지 않는다 — 실행마다 다시 쓰게 된다).
+const INPUT_ITEMS = ["market", "indexNotes"];
+function inputsOf(IX) {
+  const idx = (IX && IX.indices) || [], sg = (x) => x.key + " " + IDX_SIG.map((p) => (x[p[1]] && x[p[1]].signal) || "").join("/");
+  const nums = idx.map((i) => { const f = (i.flows && i.flows.last) || {}; return i.key + " " + i.level + " " + i.change + " " + [f.f, f.o, f.p].join("/"); });
+  return { market: L.fpOf(nums.join("\n")), indexNotes: L.fpOf(nums.concat(idx.concat((IX && IX.macro) || []).map(sg)).join("\n")) };
+}
+// 다음 daily.inputs — 이번에 쓴 항목은 지금 지문. 재료가 바뀌었는데 못 쓴 AI 문장은 예전 지문을 남겨(없으면 'pending') 다음 실행이 다시 시도하고,
+//   지문 없는 AI 문장(이 기록 전에 쓴 것)은 처음 본 지금 재료로 적는다.
+function nextInputs(pin, P, wrote) {
+  const o = Object.assign({}, pin || {});
+  INPUT_ITEMS.forEach((k) => {
+    const x = P.items[k];
+    if (wrote.includes(k)) o[k] = P.inputs[k];
+    else if (!o[k] && x.mine) o[k] = x.moved ? "pending" : P.inputs[k];
+  });
+  return o;
+}
+// o.sigDiff = 결정적 정리가 맞추기 전의 지수 대응 신호 어긋남, o.top = 오늘의 Top Pick 순위 1~3위(나라별)
+function plan(S, st, o) {
+  o = o || {};
+  const T = S.TA && S.TA.asOf, basis = basisOf(S.Q), prev = st.daily || {}, cur = sigs(S), inputs = inputsOf(S.IX), pin = prev.inputs || {}, top = o.top;
   const stale = {
     market: !(S.D.marketNoteAsOf >= T),
     liquidity: !(S.LQ && S.LQ.asOf >= T),
@@ -79,18 +120,35 @@ function plan(S, st) {
     topPicks: !(S.D.topPicks && S.D.topPicks.asOf >= T),
   };
   const newClose = !!(prev.basis && (prev.basis.kr !== basis.kr || prev.basis.us !== basis.us));
-  const seenItems = (prev.seen && prev.seen.items) || {};
+  // AI 문장의 재료가 바뀌었나 — 시황·지수 대응은 재료 지문(지수 대응은 신호 어긋남도 — 문장이 옛 신호를 설명한다),
+  //   Top Pick 은 순위 1~3위 종목(같은 세 종목이면 순서는 결정적 정리가 맞춘다)
+  const tpSet = (c) => (((S.D.topPicks || {})[c]) || []).map((x) => x.ticker).sort().join();
+  const moved = {
+    market: !!(pin.market && pin.market !== inputs.market),
+    liquidity: false,
+    indexNotes: !!(pin.indexNotes && pin.indexNotes !== inputs.indexNotes) || (o.sigDiff || []).length > 0,
+    topPicks: !!top && ["korea", "us"].some((c) => top[c].length === 3 && top[c].slice().sort().join() !== tpSet(c)),
+  };
+  // 순위가 3종목 미만인 나라가 있으면 Top Pick 은 쓸 수 없다(검사가 막는다) — 할 일에서 빼 빈 호출을 막는다
+  const blocked = { topPicks: !!top && ["korea", "us"].some((c) => top[c].length < 3) };
+  const seen = prev.seen || {}, seenItems = seen.items || {}, first = firstBasis(seen, basis, prev.basis);
   const out = {};
   ITEMS.forEach((k) => {
     const mine = L.sameSig(prev.sig && prev.sig[k], cur[k]);
-    const sn = seenItems[k];
-    const outdated = !stale[k] && !mine && REFRESH_SESSION.includes(k) && !!(sn && L.sameSig(sn.sig, cur[k]) && newer(basis, sn.basis));
-    out[k] = { stale: stale[k], mine, outdated, need: stale[k] || (mine && newClose) || outdated, write: !IF_STALE || stale[k] || mine || outdated };
+    const sn = seenItems[k], snBasis = sn && L.sameSig(sn.sig, cur[k]) ? sn.basis : first;   // 처음 보는 지문은 nextSeen 과 같은 규칙으로
+    const outdated = !stale[k] && !mine && REFRESH_SESSION.includes(k) && newer(basis, snBasis);
+    const can = !blocked[k];
+    out[k] = { stale: stale[k], mine, moved: moved[k], outdated, blocked: !can,
+      need: can && (stale[k] || (mine && (newClose || moved[k])) || outdated), write: can && (!IF_STALE || stale[k] || mine || outdated) };
   });
-  return { T, basis, items: out, cur, run: !IF_STALE || ITEMS.some((k) => out[k].need) };
+  return { T, basis, newClose, inputs, items: out, cur, run: !IF_STALE || ITEMS.some((k) => out[k].need) };
 }
-const planLine = (P) => "ai-daily: T " + P.T + " · 종가 한국 " + P.basis.kr + " 미국 " + P.basis.us + " · " +
-  ITEMS.map((k) => k + (P.items[k].stale ? "(미작성)" : P.items[k].mine ? "(AI 작성분)" : P.items[k].outdated ? "(세션 작성분 — 새 종가로 갱신)" : "(세션 작성분)")).join(" ");
+const MOVED_KO = { market: "종가 숫자 바뀜", indexNotes: "숫자·신호 바뀜", topPicks: "순위 종목 바뀜" };
+const planLine = (P) => "ai-daily: T " + P.T + " · 종가 한국 " + P.basis.kr + " 미국 " + P.basis.us + " · " + ITEMS.map((k) => {
+  const x = P.items[k];
+  return k + (x.blocked ? "(순위 3종목 미만 — 유지)" : x.stale ? "(미작성)" : x.mine ? (x.moved && !P.newClose ? "(AI 작성분 — " + MOVED_KO[k] + ")" : "(AI 작성분)")
+    : x.outdated ? "(세션 작성분 — 새 종가로 갱신)" : "(세션 작성분)");
+}).join(" ");
 
 // ── 프롬프트 재료 ──
 const n2 = (v) => (v == null || !isFinite(v) ? "–" : (Math.round(v * 100) / 100).toString());
@@ -186,8 +244,10 @@ function liquidityBlock(A, LQ, FW, SE) {
 }
 // Top Pick — lib-picks 순위(건강 관문 + 상승 가능성 점수, 2026-10-27 사용자 요청 '건강하면서 상승 가능성이 가장 높은 종목')의 나라별 1~3위.
 //   종목은 규칙이 고르고 AI 는 그 세 종목의 이유 문장만 쓴다 — 검사가 순서까지 강제한다.
-function pickTable(S) {
-  const R = LP.rankPicks({ D: S.D, TA: S.TA, EV: S.EV, CA: S.CA, DC: S.DC, FU: S.FU, RV: S.RV });
+const ranking = (S) => LP.rankPicks({ D: S.D, TA: S.TA, EV: S.EV, CA: S.CA, DC: S.DC, FU: S.FU, RV: S.RV });
+const topOf = (R) => ({ korea: R.korea.top, us: R.us.top });
+function pickTable(S, R) {
+  R = R || ranking(S);
   const ta = (S.TA && S.TA.ta) || {}, rows = { korea: [], us: [] }, top = { korea: [], us: [] }, excluded = [];
   ["korea", "us"].forEach((c) => {
     const r = R[c];
@@ -228,6 +288,17 @@ function normIdx(data) {
   const m = {};
   data.indexNotes.forEach((x) => { if (x && x.key && !m[x.key]) m[x.key] = { value: x.value, short: x.short, mid: x.mid, long: x.long }; });
   return Object.assign({}, data, { indexNotes: m });
+}
+// Top Pick ticker 는 코드만 — 모델이 순위표 줄('1위 139130 iM금융지주')을 그대로 옮겨 적어(2026-10-27~11-07 거의 모든 실행)
+//   검사가 매번 '1위는 139130' 오류를 내고 다시 쓰기 호출을 한 번 더 했다. 순위 표기를 떼고 첫 코드 토큰만 남긴다(검사·반영 모두 이 값).
+const tickerOnly = (t) => {
+  const s = String(t == null ? "" : t).trim().replace(/^\d+\s*위[\s.:)\-]*/, ""), m = s.match(/[A-Za-z0-9][A-Za-z0-9.\-]*/);
+  return m ? m[0] : s;
+};
+function normOut(data) {
+  const d = normIdx(data), tp = d && d.topPicks;
+  if (tp) ["korea", "us"].forEach((c) => (Array.isArray(tp[c]) ? tp[c] : []).forEach((it) => { if (it && it.ticker != null) it.ticker = tickerOnly(it.ticker); }));
+  return d;
 }
 const SCHEMA = obj({
   marketNote: STR, marketNoteUS: STR, marketNoteKR: STR,
@@ -296,6 +367,7 @@ const COMPOSE_SYSTEM = [
   "  (달러인덱스: 원화·신흥국 자금·원자재 / 금: 실질금리·안전자산 수요)",
   "  usdkrw 상태는 달러 기준이다(상승세 = 원/달러 상승·원화 약세). 환율·원자재의 방향을 예측하지 않는다.",
   "- topPicks: 한국·미국 각 [Top Pick 순위]의 1·2·3위를 그 순서 그대로 쓴다 — 종목은 규칙(건강 관문 + 상승 가능성 점수, 미국은 업종마다 한 종목)이 이미 골랐다. 고르지도 바꾸지도 않는다.",
+  "  ticker 는 종목 코드만 쓴다(예: 139130·MTB — 순위·이름을 붙이지 않는다).",
   "  reason 은 한국어 1문장 — 그 종목이 건강 조건(흑자·희석 없음·자산 급증·이익 변동 없음)을 통과하고 점수가 높은 이유를",
   "  [Top Pick 순위]의 사실(주식 수 감소·자사주 소각·배당·주주환원 계획·ROIC·최근 분기 실적·논거)로 쓴다. 점수 재료는 미국 = 주식 수 감소·주주환원·ROIC, 한국 = 주식 수 감소·배당이다",
   "  (한국은 주식 수를 줄인 사실 — 자사주 소각 등 — 과 배당 사실 — 배당 확대·주주환원 계획 — 을 쓰되 배당수익률 숫자는 쓰지 않는다). 앞에 주제·tier 를 붙이지 않는다('가치 주제 Tier1 —' 금지).",
@@ -372,6 +444,9 @@ function check(out, picks) {
   return err;
 }
 const errCount = (e) => Object.values(e).reduce((a, x) => a + x.length, 0);
+// 다시 쓰게 할 오류 — 이번에 쓰는 항목(todo)의 것만(정책 뉴스는 유동성과 함께). 2026-11-07 점검: 쓰지도 않는 Top Pick 의 검사 오류로
+//   매번 한 번 더 불렀다(11/07 00:17Z 실행 — 유동성만 쓰면서 Opus 작성 2회·$1.78).
+const retryErrors = (err, todo) => todo.reduce((a, k) => a.concat(err[k] || []), []).concat(todo.includes("liquidity") ? err.policy : []);
 
 const cleanReason = (r) => String(r || "").replace(/^\s*(?:우량|성장|가치|저평가|배당)(?:\s*주제)?\s*(?:Tier|T)\s*\d\s*[—\-–:]\s*/i, "").replace(/^\s*(?:주목|관심)(?:\s*\((?:신고가|턴어라운드)\))?\s*[—\-–:]\s*/, "").trim();
 function srcList(idxs, urls) {
@@ -476,6 +551,49 @@ function writeOutputs(res, errors) {
   return wrote;
 }
 
+// ── 결정적 정리(API 없음) — 매 실행 맨 앞·--sync·--reapply 뒤. write=false 면 할 일만 돌려준다(--who·--dry) ──
+// Top Pick 순서(§4-6, 누가 썼든): 순위 1~3위와 같은 세 종목인데 순서만 다르면 순위대로 다시 세운다(이유·이름·asOf 그대로, rank 만).
+//   2026-11-07 점검: 미국 마감 뒤 CI·ORLY 점수가 뒤바뀌어 순위가 MTB·CI·ORLY 가 됐는데 세션이 쓴 MTB·ORLY·CI 가 주말 내내 남았다.
+//   종목이 다르면 여기서 고치지 않는다 — 새 종목의 이유를 써야 해서 AI(AI 작성분일 때)나 세션이 쓴다.
+function reorderPicks(tp, top) {
+  if (!tp || !top) return null;
+  const out = Object.assign({}, tp), moved = [];
+  ["korea", "us"].forEach((c) => {
+    const cur = Array.isArray(tp[c]) ? tp[c] : [], want = top[c] || [], got = cur.map((x) => x && x.ticker);
+    if (cur.length !== 3 || want.length !== 3 || got.join() === want.join() || got.slice().sort().join() !== want.slice().sort().join()) return;
+    out[c] = want.map((t, i) => Object.assign({}, cur.find((x) => x.ticker === t), { rank: i + 1 }));
+    moved.push(c + " " + got.join(",") + " → " + want.join(","));
+  });
+  return moved.length ? { tp: out, moved } : null;
+}
+// 지수 대응 신호(sig*)는 indices.js 엔진 등급 그대로(§4-2) — 어긋나면 신호만 맞추고 문장은 그대로 둔다(AI 문장이면 plan 이 다시 쓰게 한다).
+//   2026-11-07 점검: 같은 asOf 아래 다우 단·중기·코스피 장기 배지가 엔진과 달랐다(잠정 종가 뒤 신호 변경·세션 수정).
+function tidy(S, st, top, write) {
+  const res = { sigDiff: indexSigDiff(S.IN, S.IX), picks: reorderPicks(S.D && S.D.topPicks, top), wrote: [], errors: [] };
+  if (!write) return res;
+  if (res.sigDiff.length) {
+    const IN = JSON.parse(JSON.stringify(S.IN));
+    res.sigDiff.forEach((d) => IDX_SIG.forEach((p, i) => { IN.items[d.key][p[0]] = d.to[i]; }));
+    writeWin("index-notes.js", "INDEX_NOTES", IN, IN_HEAD);
+    res.wrote.push("indexNotes");
+  }
+  if (res.picks) {
+    const d0 = st.daily || {}, mine = L.sameSig(d0.sig && d0.sig.topPicks, L.aiSig("topPicks", { D: S.D }));
+    try {
+      applyReco({ topPicks: res.picks.tp });
+      res.wrote.push("topPicks");
+      // AI 가 쓴 Top Pick 이면 지문을 새 순서로 — 계속 'AI 작성분'으로 알아보게(앱 AI 표시·새 종가 때 다시 쓰기)
+      if (mine) L.writeStatus("daily", Object.assign({}, d0, { sig: Object.assign({}, d0.sig, { topPicks: L.aiSig("topPicks", { D: L.loadWin("recommendations.js", "STOCK_DATA") }) }) }));
+    } catch (e) { res.errors.push(e.message); }
+  }
+  return res;
+}
+const PER3 = ["단기", "중기", "장기"];
+const tidyLine = (t, preview) => "ai-daily: 결정적 정리" + (preview ? "(할 일)" : "") + " — " + ([
+  t.sigDiff.length ? "지수 대응 신호 " + t.sigDiff.map((d) => d.key + " " + PER3.map((p, i) => (d.from[i] !== d.to[i] ? p + " " + (d.from[i] || "–") + "→" + d.to[i] : null)).filter(Boolean).join("·")).join(", ") : null,
+  t.picks ? "Top Pick 순서 " + t.picks.moved.join(" / ") : null,
+].filter(Boolean).join(" · ") || "없음") + (t.errors.length ? " · 오류 " + t.errors.join(" / ") : "");
+
 // --reapply: 원격 최신 위에 이번 실행 결과를 다시 얹는다 — 원격이 같은 날 이후로 쓴 항목은 원격을 남긴다
 function reapply() {
   const c = L.readCache("daily.json");
@@ -495,31 +613,47 @@ function reapply() {
   const errs = [];
   const wrote = writeOutputs(res, errs);
   console.log("ai-daily --reapply: " + (wrote.length ? wrote.join(", ") + " 다시 반영" : "원격이 최신 — 반영 없음") + (errs.length ? " · 오류 " + errs.join(" / ") : ""));
+  // 결정적 정리도 원격 위에서 다시(API 없음) — 원격 세션의 지수 대응 신호·Top Pick 순서를 이번 실행의 indices.js·순위로
+  const S2 = loadAll();
+  if (S2.D && S2.IX && S2.TA) { const t = tidy(S2, L.readStatus(), topOf(ranking(S2)), true); if (t.sigDiff.length || t.picks) console.log(tidyLine(t)); }
 }
 
 async function main() {
   if (REAPPLY) return reapply();
-  if (WHO) { const S = loadAll(); if (S.D && S.IX && S.TA) console.log(planLine(plan(S, L.readStatus()))); return; }
+  const S0 = loadAll();
+  if (!S0.D || !S0.IX || !S0.TA) { console.log("ai-daily: 데이터 파일 부족 — 건너뜀"); return; }
+  // ① 결정적 정리 — 키·API 없이 먼저(--who·--dry 는 할 일만 보인다). 여기서 실패해도 AI 단계는 막지 않는다
+  let top0 = null, T0 = { sigDiff: [], picks: null, wrote: [], errors: [] };
+  try { top0 = topOf(ranking(S0)); T0 = tidy(S0, L.readStatus(), top0, !(WHO || DRY)); } catch (e) { T0.errors.push(L.describeError(e)); }
+  if (WHO) { console.log(planLine(plan(S0, L.readStatus(), { top: top0, sigDiff: T0.sigDiff }))); console.log(tidyLine(T0, true)); return; }
+  if (T0.sigDiff.length || T0.picks || T0.errors.length || SYNC || SEEN) console.log(tidyLine(T0, DRY));
+  if (SEEN) {   // 세션이 방금 쓴 문장 — 지금 종가 기준으로 적는다(AI 기록이 없으면 다시 쓸 일도 없어 건너뜀)
+    const S1 = loadAll(), st1 = L.readStatus(), b = basisOf(S1.Q);
+    if (st1.daily) L.writeStatus("daily", Object.assign({}, st1.daily, { seen: nextSeen(st1.daily.seen, sigs(S1), b, { exact: true }) }));
+    console.log("ai-daily --seen: " + (st1.daily ? "지금 문장 지문을 적음 — 종가 기준 한국 " + b.kr + " · 미국 " + b.us : "AI 기록 없음 — 건너뜀"));
+  }
+  if (SYNC || SEEN) return;
+  const S = T0.wrote.length ? loadAll() : S0;
   const cl = L.client();
   if (!cl) { console.log("ai-daily: ANTHROPIC_API_KEY 없음 — 건너뜀(그날 몫은 A 루틴 세션이 쓴다)"); return; }
-  const S = loadAll();
-  if (!S.D || !S.IX || !S.TA) { console.log("ai-daily: 데이터 파일 부족 — 건너뜀"); return; }
-  const st = L.readStatus(), P = plan(S, st);
+  let R = null;
+  try { R = ranking(S); } catch (e) { console.log("ai-daily: Top Pick 순위 계산 실패 — " + L.describeError(e)); }
+  const st = L.readStatus(), P = plan(S, st, { top: R && topOf(R), sigDiff: T0.sigDiff });
   const todo = ITEMS.filter((k) => P.items[k].write);
   console.log(planLine(P));
-  const prevSeen = (st.daily || {}).seen;
+  const prev = st.daily || {}, prevSeen = prev.seen, seenOpt = { prevBasis: prev.basis };
   if (!P.run || !todo.length) {
     console.log("ai-daily: 쓸 항목 없음 — 오늘 몫이 이미 최신이거나 세션이 썼다");
-    // 건너뛴 사실도 남긴다(앱 'AI 연결' 창) — 지난 성공의 지문·종가 기준은 그대로 두고, 본 문장 지문(seen)만 갱신
-    const prev = st.daily || {};
-    L.writeStatus("daily", Object.assign({}, prev, { checkedAt: new Date().toISOString(), seen: nextSeen(prevSeen, P.cur, P.basis),
+    // 건너뛴 사실도 남긴다(앱 'AI 연결' 창) — 지난 성공의 지문·종가 기준은 그대로 두고, 본 문장 지문(seen)·재료 지문만 갱신
+    L.writeStatus("daily", Object.assign({}, prev, { checkedAt: new Date().toISOString(), seen: nextSeen(prevSeen, P.cur, P.basis, seenOpt), inputs: nextInputs(prev.inputs, P, []),
       skipped: "오늘(" + P.T + ") 몫이 이미 최신 — " + (ITEMS.some((k) => P.items[k].mine) ? "AI 작성분 유지" : "루틴 세션이 작성") }));
     return;
   }
 
   const model = L.MODELS.daily, startedAt = new Date().toISOString();
   let usage = L.newUsage(), memo = "", urls = [], note = [];
-  const status = { at: startedAt, T: P.T, basis: P.basis, model, ok: false, seen: nextSeen(prevSeen, P.cur, P.basis) };   // skipped·checkedAt 은 새 실행에서 지운다
+  // skipped·checkedAt 은 새 실행에서 지운다. 실패하면 seen·inputs 는 이 값 — 못 쓴 AI 문장의 예전 재료 지문이 남아 다음 실행이 다시 시도한다
+  const status = { at: startedAt, T: P.T, basis: P.basis, model, ok: false, seen: nextSeen(prevSeen, P.cur, P.basis, seenOpt), inputs: nextInputs(prev.inputs, P, []) };
   const refreshed = ITEMS.filter((k) => P.items[k].outdated);
   if (refreshed.length) note.push("새 종가로 세션 문장 갱신: " + refreshed.join(", "));
   try {
@@ -531,18 +665,19 @@ async function main() {
       note.push("조사 실패 — " + L.describeError(e));
       console.log("ai-daily: 조사 단계 실패(데이터만으로 계속) — " + L.describeError(e));
     }
-    const picks = pickTable(S);
+    const picks = pickTable(S, R);
     let prompt = composePrompt(S, P, memo, urls, picks);
     let c1 = await L.compose(cl, { model, system: COMPOSE_SYSTEM, prompt, schema: SCHEMA, effort: "high" });
     usage = L.mergeUsage(usage, c1.usage);
-    let out = normIdx(c1.data), err = check(out, picks);
-    if (errCount(err)) {
-      const list = Object.values(err).flat();
+    let out = normOut(c1.data), err = check(out, picks);
+    const list = retryErrors(err, todo);   // 쓰지 않는 항목의 오류로는 다시 부르지 않는다
+    if (errCount(err) > list.length) console.log("ai-daily: 쓰지 않는 항목의 검사 오류 " + (errCount(err) - list.length) + "건 — 무시");
+    if (list.length) {
       console.log("ai-daily: 검사 오류 " + list.length + "건 — 한 번 고쳐 쓰게 한다\n  - " + list.join("\n  - "));
       const fix = prompt + "\n\n[직전 출력]\n" + JSON.stringify(c1.data) + "\n\n[직전 출력의 문제 — 이것만 고쳐 같은 형식으로 다시 써라]\n- " + list.join("\n- ");
       const c2 = await L.compose(cl, { model, system: COMPOSE_SYSTEM, prompt: fix, schema: SCHEMA, effort: "high" });
       usage = L.mergeUsage(usage, c2.usage);
-      out = normIdx(c2.data); err = check(out, picks);
+      out = normOut(c2.data); err = check(out, picks);
     }
     const ok = {};
     ITEMS.forEach((k) => { ok[k] = todo.includes(k) && !err[k].length; });
@@ -557,7 +692,7 @@ async function main() {
     if (wErr.length) note.push(wErr.join(" · "));
     const after = loadAll(), afterSig = sigs(after);
     Object.assign(status, { ok: wrote.length > 0, wrote, sig: Object.assign({}, (st.daily && st.daily.sig) || {}, pickSig(afterSig, wrote)), sources: urls.length,
-      seen: nextSeen(prevSeen, afterSig, P.basis) });
+      seen: nextSeen(prevSeen, afterSig, P.basis, Object.assign({ fresh: wrote }, seenOpt)), inputs: nextInputs(prev.inputs, P, wrote) });
     console.log("ai-daily: 반영 " + (wrote.join(", ") || "없음") + " · 검색 결과 " + urls.length + "건");
   } catch (e) {
     status.error = L.describeError(e);
@@ -579,4 +714,7 @@ async function main() {
 }
 function pickSig(cur, wrote) { const o = {}; wrote.forEach((k) => { o[k] = cur[k]; }); return o; }
 
-main().catch((e) => { console.error("ai-daily 오류: " + L.describeError(e)); process.exitCode = 1; });
+if (require.main === module) main().catch((e) => { console.error("ai-daily 오류: " + L.describeError(e)); process.exitCode = 1; });
+// 판단 함수(시험용 — 불러오기만 하면 아무것도 실행하지 않는다)
+module.exports = { plan, planLine, nextSeen, firstBasis, inputsOf, nextInputs, sigs, basisOf, loadAll, check, normOut, tickerOnly, retryErrors, errCount,
+  reorderPicks, tidy, tidyLine, ranking, topOf, pickTable, buildOutputs, main };

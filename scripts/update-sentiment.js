@@ -8,7 +8,7 @@ const fs = require("fs");
 const path = require("path");
 const { execFile } = require("child_process");
 const L = require("./lib-sentiment");
-const { settleDailyBars, fillPrevSessionClose } = require("./lib-quote");
+const { settleDailyBars, fillPrevSessionClose, exchangeDate } = require("./lib-quote");
 
 const ROOT = path.join(__dirname, "..");
 const OUT = path.join(ROOT, "data", "sentiment.js");
@@ -18,7 +18,6 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const curl = (args) => new Promise((res) => execFile("curl", ["-s", "--max-time", "60"].concat(args), { maxBuffer: 256 << 20 }, (e, out) => res(e ? null : String(out))));
 const ok = (v) => v != null && isFinite(v);
 const rnd = (v, d) => (ok(v) ? Math.round(v * Math.pow(10, d)) / Math.pow(10, d) : null);
-const iso = (sec) => new Date(sec * 1000).toISOString().slice(0, 10);
 
 // 검증 사실(scripts/research/sentiment/README.md — 2026-11-06 사전 등록 시험). 통과한 것만 '검증' 문장으로 보인다(사전 반영 규칙).
 const EVIDENCE = {
@@ -48,12 +47,12 @@ async function yahoo(sym, adj) {
         const res = (await r.json()).chart.result[0];
         settleDailyBars(res);   // 진행 중인 장의 미완성 봉은 버리고 끝난 장의 빈 종가는 채운다(지표와 같은 '끝난 장' 기준)
         await fillPrevSessionClose(res, sym);
-        const off = (res.meta && res.meta.gmtoffset) || 0, q = res.indicators.quote[0], a = adj && res.indicators.adjclose && res.indicators.adjclose[0].adjclose, m = {};
+        const q = res.indicators.quote[0], a = adj && res.indicators.adjclose && res.indicators.adjclose[0].adjclose, m = {};
         let ratio = null;   // 수정종가가 빈 마지막 날은 직전 날의 수정/종가 비율로 채운다
         (res.timestamp || []).forEach((ts, k) => {
           const c = q.close[k]; let v = c;
           if (a) { if (ok(a[k]) && ok(c) && c > 0) { v = a[k]; ratio = a[k] / c; } else v = ok(c) && ratio ? c * ratio : null; }
-          if (ok(v) && v > 0) m[iso(ts + off)] = v;
+          if (ok(v) && v > 0) m[exchangeDate(ts, res.meta)] = v;   // 봉마다 그 시각의 거래소 시간대로 센 날짜(원/달러 여름 봉이 하루 앞으로 밀리지 않게)
         });
         if (Object.keys(m).length > 100) { clearTimeout(to); return m; }
       }

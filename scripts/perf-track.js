@@ -13,6 +13,7 @@
 const fs = require("fs");
 const path = require("path");
 const LP = require("./lib-perf");
+const LH = require("./lib-history");
 
 const ROOT = path.join(__dirname, "..");
 const DATA = path.join(ROOT, "data");
@@ -84,31 +85,39 @@ async function main() {
   const last = H[H.length - 1], base = H[0].date;
   const cache = Object.assign({}, (PREV && PREV.cache) || {});
 
-  // ── 1. 편출(국가 단위 — 기록일 i-1 에 있다가 i 에 없는 종목)·교체(같은 날·같은 주제의 편입 ⇄ 편출) 이벤트 ──
-  const exits = [], swaps = [];
+  // ── 1. 편출·교체 이벤트 — 소속(주제) 단위로 견준다(lib-history: 두 주제에 있던 종목이 한 주제에서만 빠지거나 들어도 그 주제의 편출·편입) ──
+  //   exits  = 기록일 i-1 에 있다가 i 에 통째로 없는 종목(국가 단위) — 그날 종가를 야후로 채운다(chain 의 마지막 하루)
+  //   leaves = 주제에서 빠짐(편출 목록) — 다른 주제에 남은 종목(stay)은 그날 스냅샷 가격이 있다
+  //   swaps  = 같은 날·같은 정식 주제의 편입 ⇄ 편출. 정식 주제끼리 옮긴 종목(한 정식 주제에서 빠지고 다른 정식 주제에 듦)은 교체가 아니라 이동이다
+  const exits = [], leaves = [], swaps = [];
   for (let i = 1; i < H.length; i++) {
     const a = H[i - 1], b = H[i];
     COUNTRIES.forEach((c) => {
-      const A = {}, B = {};
-      (a.stocks || []).forEach((e) => { if (e.c === c) A[e.t] = e; });
-      (b.stocks || []).forEach((e) => { if (e.c === c) B[e.t] = e; });
-      Object.keys(A).forEach((t) => { if (!B[t]) exits.push({ c, t, i, d: b.date, e: A[t] }); });
+      const A = {}, B = {}, thA = {}, thB = {};
+      (a.stocks || []).forEach((e) => { if (e.c === c) { A[e.t] = e; thA[e.t] = LH.themesOf(e); } });
+      (b.stocks || []).forEach((e) => { if (e.c === c) { B[e.t] = e; thB[e.t] = LH.themesOf(e); } });
+      const inA = (t, th) => !!thA[t] && thA[t].indexOf(th) >= 0, inB = (t, th) => !!thB[t] && thB[t].indexOf(th) >= 0;
+      Object.keys(A).forEach((t) => {
+        if (!B[t]) exits.push({ c, t, i, d: b.date, e: A[t] });
+        LH.members(A[t]).forEach((m) => { if (!inB(t, m[0])) leaves.push({ c, t, i, d: b.date, th: m[0], tier: m[1], e: A[t], stay: !!B[t] }); });
+      });
+      const gainF = (t) => (thB[t] || []).some((x) => !LP.PERSONAL[x] && !inA(t, x));
+      const lostF = (t) => (thA[t] || []).some((x) => !LP.PERSONAL[x] && !inB(t, x));
       FORMAL.forEach((th) => {
-        // 다른 주제에서 옮겨 온·옮겨 간 종목은 교체가 아니라 이동이다
-        const add = Object.keys(B).filter((t) => B[t].th === th && !A[t]);
-        const rem = Object.keys(A).filter((t) => A[t].th === th && !B[t]);
+        const add = Object.keys(B).filter((t) => inB(t, th) && !inA(t, th) && !lostF(t));
+        const rem = Object.keys(A).filter((t) => inA(t, th) && !inB(t, th) && !gainF(t));
         if (add.length && rem.length) swaps.push({ c, i, d: b.date, pd: LP.pdOf(b, c), th, add: add.map((t) => B[t]), rem: rem.map((t) => A[t]) });
       });
     });
   }
   const recentSwaps = swaps.filter((s) => dayDiff(last.date, s.d) <= SWAP_DAYS);
-  const recentExits = exits.filter((x) => dayDiff(last.date, x.d) <= REMOVED_DAYS);
+  const recentLeaves = leaves.filter((x) => dayDiff(last.date, x.d) <= REMOVED_DAYS);
 
   // ── 2. 야후 일봉 — 편출 종목(편출일 종가 보충·편출 후 성적)과 교체 종목, 지수 ──
   const maxD = {}; COUNTRIES.forEach((c) => { maxD[c] = LP.pdOf(last, c); });
   const need = {};
   exits.forEach((x) => { if (!cache[x.c + ":" + x.t + "@" + x.d]) need[x.c + ":" + x.t] = 1; });
-  recentExits.forEach((x) => { need[x.c + ":" + x.t] = 1; });
+  recentLeaves.forEach((x) => { need[x.c + ":" + x.t] = 1; });
   recentSwaps.forEach((s) => s.add.concat(s.rem).forEach((e) => { need[s.c + ":" + e.t] = 1; }));
   const earliest = [].concat(exits.map((x) => x.d), recentSwaps.map((s) => s.d)).sort()[0] || last.date;
   const range = dayDiff(last.date, earliest) > 330 ? "2y" : dayDiff(last.date, earliest) > 160 ? "1y" : "6mo";
@@ -171,7 +180,7 @@ async function main() {
         if (st) w.rule = st;
       }
       groups[g] = { w, nav,
-        n: g === "picks" ? ((last.picks && last.picks[c]) || []).length : lastC.filter((e) => LP.inGroup(sel, e.th, e.tier)).length };
+        n: g === "picks" ? ((last.picks && last.picks[c]) || []).length : lastC.filter((e) => LP.inGroup(sel, e)).length };
     });
 
     // ── 3-1. 정식 전체 비중(lib-perf ANCHORS — 한국 대표 2종목 각 15%, 2026-10-25 사용자 결정) — 앱이 비중과
@@ -183,7 +192,7 @@ async function main() {
       const px = (cc, t, i) => exitPx(cc, t, i + off);
       const now = LP.stats(LP.chain(HB, c, null, px, "always"), 0, HB[0].date);
       const ew = LP.stats(LP.chain(HB, c, null, px, "never"), 0, HB[0].date);
-      const formal = lastC.filter((e) => LP.inGroup(null, e.th, e.tier));
+      const formal = lastC.filter((e) => LP.inGroup(null, e));
       const anchors = Object.keys(AN.w).map((t) => {
         const e = formal.find((x) => x.t === t);
         return e ? { t, n: e.n, w: r2(AN.w[t] * 100) } : null;
@@ -192,34 +201,49 @@ async function main() {
         beta: now && ew ? { now: now.beta, ew: ew.beta, from: now.from, days: now.days } : null };
     }
 
-    // ── 4. 종목별 — 지금 편성(이번 주제 연속 보유 시작일부터)과 최근 90일 편출 ──
+    // ── 4. 종목별 — 지금 편성(갈래마다 연속 보유 시작일부터)과 최근 90일 편출(주제에서 빠진 종목) ──
     const ix = (i) => { for (let j = i; j >= 0; j--) if (H[j][LP.idxKey(c)]) return H[j][LP.idxKey(c)]; return null; };
-    // 기록일 i 부터 거꾸로 같은 갈래(정식 편성·관심·보유)로 이어진 첫 기록일 — 정식 안에서 주제만 옮긴 종목은 처음 추천한 날부터 센다
-    //   (스냅샷은 종목당 한 주제만 남겨, 두 주제에 있던 종목은 한쪽이 빠진 날 '옮긴' 것처럼 보인다)
-    const kind = (th) => (LP.PERSONAL[th] ? th : "formal");
-    const runStart = (i, t, th) => {
+    // 기록일 i 부터 거꾸로 같은 갈래(정식 편성·주목·관심·보유)로 이어진 첫 기록일 — 정식 안에서 주제만 옮긴 종목은 처음 추천한 날부터 센다
+    const runStart = (i, t, k) => {
       let j = i;
-      while (j > 0 && (H[j - 1].stocks || []).some((e) => e.c === c && e.t === t && kind(e.th) === kind(th))) j--;
+      while (j > 0 && (H[j - 1].stocks || []).some((e) => e.c === c && e.t === t && LH.hasKind(e, k))) j--;
       return j;
     };
-    const priceIn = (i, t) => { const e = (H[i].stocks || []).find((x) => x.c === c && x.t === t); return e ? e.p : null; };
+    const rowIn = (i, t) => (H[i].stocks || []).find((x) => x.c === c && x.t === t) || null;
+    const priceIn = (i, t) => { const e = rowIn(i, t); return e ? e.p : null; };
     const L = H.length - 1, ixL = ix(L);
-    const stocks = lastC.map((e) => {
-      const j = runStart(L, e.t, e.th), p0 = priceIn(j, e.t), i0 = ix(j);
-      const ret = p0 && e.p ? (e.p / p0 - 1) * 100 : null, ir = i0 && ixL ? (ixL / i0 - 1) * 100 : null;
-      return { t: e.t, n: e.n, th: e.th, tier: e.tier, d0: H[j].date, ret: r2(ret), ex: ret != null && ir != null ? r2(ret - ir) : null };
+    // 한 종목이 두 갈래에 있으면(예: 우량 + 관심) 갈래마다 한 줄 — 앱 묶음 화면이 그 갈래의 보유 시작일로 보인다. 정식 두 주제는 한 줄(ths)
+    const stocks = [];
+    lastC.forEach((e) => {
+      const ms = LH.members(e), kinds = [];
+      ms.forEach((m) => { const k = LH.kindOf(m[0]); if (kinds.indexOf(k) < 0) kinds.push(k); });
+      kinds.forEach((k) => {
+        const mk = ms.filter((m) => LH.kindOf(m[0]) === k);
+        const j = runStart(L, e.t, k), p0 = priceIn(j, e.t), i0 = ix(j);
+        const ret = p0 && e.p ? (e.p / p0 - 1) * 100 : null, ir = i0 && ixL ? (ixL / i0 - 1) * 100 : null;
+        const row = { t: e.t, n: e.n, th: mk[0][0], tier: mk[0][1], d0: H[j].date, ret: r2(ret), ex: ret != null && ir != null ? r2(ret - ir) : null };
+        if (row.tier == null) delete row.tier;
+        if (mk.length > 1) row.ths = mk;
+        stocks.push(row);
+      });
     });
     const nowIdx = lastClose(idx[c]);
-    const removed = recentExits.filter((x) => x.c === c && !RETIRED.has(x.e.th) && !lastC.some((e) => e.t === x.t)).map((x) => {
-      const j = runStart(x.i - 1, x.t, x.e.th), p0 = priceIn(j, x.t), ex = cache[c + ":" + x.t + "@" + x.d];
+    const lastHas = (t, th) => lastC.some((e) => e.t === t && LH.themesOf(e).indexOf(th) >= 0);
+    const removed = recentLeaves.filter((x) => x.c === c && !RETIRED.has(x.th) && !lastHas(x.t, x.th)).map((x) => {
+      // 다른 주제에 남은 종목은 빠진 날 스냅샷 종가, 통째로 빠진 종목은 그날 야후 종가(없으면 전날 스냅샷 가격)
+      const stayRow = x.stay ? rowIn(x.i, x.t) : null;
+      const j = runStart(x.i - 1, x.t, LH.kindOf(x.th)), p0 = priceIn(j, x.t);
+      const ex = stayRow && stayRow.p ? { p: stayRow.p, d: stayRow.pd } : cache[c + ":" + x.t + "@" + x.d];
       const px = ex ? ex.p : x.e.p, i0 = ix(j), i1 = ix(x.i);
       const ret = p0 && px ? (px / p0 - 1) * 100 : null, ir = i0 && i1 ? (i1 / i0 - 1) * 100 : null;
-      const row = { t: x.t, n: x.e.n, th: x.e.th, tier: x.e.tier, d0: H[j].date, d1: x.d, ret: r2(ret), ex: ret != null && ir != null ? r2(ret - ir) : null };
+      const row = { t: x.t, n: x.e.n, th: x.th, tier: x.tier, d0: H[j].date, d1: x.d, ret: r2(ret), ex: ret != null && ir != null ? r2(ret - ir) : null };
+      if (row.tier == null) delete row.tier;
       // 편출 후 — 편출일 종가 → 마지막 종가, 같은 기간 지수 대비(양수면 뺀 뒤에 지수보다 더 올랐다)
       const m = charts[c + ":" + x.t], now = lastClose(m), pdx = ex ? ex.d : null;
       if (ex && now && now.d > pdx) {
-        // 종목 마지막 종가와 같은 날의 지수로 비교(지수·종목 일봉의 마지막 날이 다를 수 있다)
-        const ia = closeAt(idx[c], pdx), iz = closeAt(idx[c], now.d), post = (now.p / ex.p - 1) * 100;
+        // 종목 마지막 종가와 같은 날의 지수로 비교(지수·종목 일봉의 마지막 날이 다를 수 있다). 남은 종목은 그날 야후 종가부터(분할 조정이 같게)
+        const p1 = (stayRow && m[pdx]) || ex.p;
+        const ia = closeAt(idx[c], pdx), iz = closeAt(idx[c], now.d), post = (now.p / p1 - 1) * 100;
         row.post = r2(post);
         if (ia && iz) row.postEx = r2(post - (iz / ia - 1) * 100);
       }

@@ -20,7 +20,9 @@
 //   tpcut 컨센서스 목표가 14일 새 -10% 이상 하향 — 논거 훼손 확인
 // 세션·AI 판정(candidate-notes.json defects[그룹][티커] = {verdict: 실질|형식|없음|보호, note, asOf, flags, triedAt, by?, sources?}):
 //   '점검 필요'는 ai-defects.js(Claude API, 키가 있을 때 Action 이 매일)가 먼저 판정하고(by:"ai") 세션이 검토·교체한다.
-//   판정이 덮는 신호(flags)에 없는 새 신호가 뜨면 다시 '점검 필요'가 된다.
+//   판정이 덮는 신호(flags)에 없는 새 신호가 뜨면 다시 '점검 필요'가 된다. 같은 종류라도 판정일이 이번 신호의 시작
+//   (실적 발표일·5거래일 창 첫날·목표가 비교 기준일)보다 앞서면 지난 신호의 판정이라 덮지 않는다(2026-11-07 — 그 전엔 한 번
+//   'earn' 을 판정하면 다음 분기 실적도 덮어 정식 72자리 중 42자리가 실적 점검에서 영영 빠졌다).
 //   실질 결격은 매 거래일(T) 대체 후보로 교체를 시도하고 triedAt 을 남긴다(대체가 없으면 결격 표시 유지).
 //
 // 사용법: node scripts/check-defects.js            # data/candidates.js 기록 + 세션 큐 출력
@@ -105,11 +107,13 @@ function tpChange(c, t) {
   });
   return old && cur ? (cur / old - 1) * 100 : null;
 }
+const R5FROM = {};   // 5거래일 수익률 창의 첫날(YYYY-MM-DD) — 'drop' 신호의 시작으로 쓴다
 function ret5(t) {
   try {
     const j = JSON.parse(fs.readFileSync(path.join(DATA, "chart", t + ".json"), "utf8"));
     const d = j.d || [];
     if (d.length < 6) return null;
+    const f = String(d[d.length - 6][0]); R5FROM[t] = f.slice(0, 4) + "-" + f.slice(4, 6) + "-" + f.slice(6, 8);
     return (d[d.length - 1][4] / d[d.length - 6][4] - 1) * 100;
   } catch (_e) { return null; }
 }
@@ -131,9 +135,9 @@ function flagsFor(c, th, s, screenRow) {
   if (!prot && sg && sg.every((x) => BAD.has(x))) out.push({ k: "trend", hard: true, msg: "추세 붕괴(단·중·장기 모두 매도 이하)" });
   if (screenFresh && screenRow && screenRow.fails && screenRow.fails.length)
     out.push({ k: "theme", hard: true, msg: "주제 기준 미달 — " + screenRow.fails.join(", ") });
-  // 실적 발표 직후 — 한국은 events.next(지난 날짜가 남아 있는 동안), 미국은 hist[0]
+  // 실적 발표 직후 — 한국은 events.next(그날)·last(직전 발표 — 지난 일정은 update-events 가 last 로 남긴다), 미국은 hist[0]
   const ev = EV[s.ticker] || {};
-  const ed = c === "us" ? (ev.hist && ev.hist[0] && ev.hist[0].date) : (ev.next && ev.next.date);
+  const ed = c === "us" ? (ev.hist && ev.hist[0] && ev.hist[0].date) : (ev.next && ev.next.date <= T ? ev.next.date : ev.last && ev.last.date);
   if (ed && ed <= T && dayDiff(T, ed) <= EARN_DAYS) {
     const fq = (FU[s.ticker] || {}).q || {};
     const neg = [];
@@ -144,9 +148,9 @@ function flagsFor(c, th, s, screenRow) {
   }
   const r5 = ret5(s.ticker);
   if (r5 != null && r5 - MKT5[c] <= DROP_PCT)
-    out.push({ k: "drop", hard: false, msg: "5거래일 " + pct(r5) + "%(시장 중앙값 " + pct(MKT5[c]) + "%) 급락 — 원인 확인" });
+    out.push({ k: "drop", hard: false, since: R5FROM[s.ticker], msg: "5거래일 " + pct(r5) + "%(시장 중앙값 " + pct(MKT5[c]) + "%) 급락 — 원인 확인" });
   const tc = tpChange(c, s.ticker);
-  if (tc != null && tc <= TPCUT_PCT) out.push({ k: "tpcut", hard: false, msg: "컨센서스 목표가 " + TPCUT_DAYS + "일 새 " + pct(tc) + "% 하향 — 논거 확인" });
+  if (tc != null && tc <= TPCUT_PCT) out.push({ k: "tpcut", hard: false, since: new Date(Date.parse(T) - TPCUT_DAYS * 86400000).toISOString().slice(0, 10), msg: "컨센서스 목표가 " + TPCUT_DAYS + "일 새 " + pct(tc) + "% 하향 — 논거 확인" });
   return out;
 }
 
@@ -188,12 +192,14 @@ COUNTRIES.forEach((c) => {
   });
 });
 // 결격이 이어진 날수의 시작일 — 직전 candidates.js 의 since 를 이어받는다(판정을 다시 써도 시계가 초기화되지 않게).
-// 결격 상태가 한 번이라도 풀렸다면 이어받을 값이 없어 새로 센다.
+// 실질 판정이 남은 채 새 신호로 '점검 필요'가 된 동안에도 since 를 적어 이어 간다(2026-11-07 — 그 전엔 결격 상태만 이어받아
+// 점검 필요를 한 번 거치면 재판정일부터 다시 세었다: 에이피알 10-21 → 10-30, 14·28일 단계가 9일 늦어짐).
+// 실질 판정이 풀렸다면(없음·형식) since 를 적지 않아 다음 결격은 새로 센다.
 const PREV_SINCE = {};
 (() => {
   const prev = load("candidates.js", "CANDIDATES");
   Object.keys((prev && prev.groups) || {}).forEach((g) => ((prev.groups[g] || {}).defects || []).forEach((d) => {
-    if (d.state === "결격" && d.since) PREV_SINCE[g + "|" + d.ticker] = d.since;
+    if (d.since) PREV_SINCE[g + "|" + d.ticker] = d.since;
   }));
 })();
 const minDate = (...xs) => xs.filter((x) => typeof x === "string" && /^\d{4}-\d{2}-\d{2}$/.test(x)).sort()[0] || null;
@@ -226,15 +232,16 @@ COUNTRIES.forEach((c) => THEMES.forEach((th) => {
       return;
     }
     if (v && opts.baseline && !v.flags) { v.flags = fl.map((x) => x.k); baselineTouched++; }
-    const covered = v && v.flags ? new Set(v.flags) : new Set();
-    const fresh = fl.filter((x) => !covered.has(x.k));
+    // 판정이 덮는 신호 — 같은 종류이고, 신호에 시작일(since)이 있으면 판정일이 그날 이후일 때만(지난 신호의 판정은 덮지 않는다)
+    const covers = (x) => !!(v && v.flags && v.flags.includes(x.k) && (!x.since || (v.asOf && v.asOf >= x.since)));
+    const fresh = fl.filter((x) => !covers(x));
     let state = null;
     if (v && v.verdict === "보호") state = fresh.some((x) => x.k === "earn" || x.k === "drop" || x.k === "tpcut") ? "점검 필요" : null;
     else if (fresh.length) state = "점검 필요";
     else if (v && v.verdict === "실질") state = "결격";
     else if (v && v.verdict === "형식") state = "감시";
     if (!state) return;
-    const d = { ticker: s.ticker, name: s.name, state, flags: fl.map((x) => ({ k: x.k, msg: x.msg, fresh: !covered.has(x.k) })) };
+    const d = { ticker: s.ticker, name: s.name, state, flags: fl.map((x) => ({ k: x.k, msg: x.msg, fresh: !covers(x) })) };
     if (v && v.note) d.note = v.note;
     if (v && v.asOf) d.judged = v.asOf;
     if (v && v.verdict) d.verdict = v.verdict;
@@ -245,6 +252,8 @@ COUNTRIES.forEach((c) => THEMES.forEach((th) => {
       const since = minDate(PREV_SINCE[g + "|" + s.ticker], v && v.since, v && v.asOf) || T;
       d.since = since; d.age = Math.max(0, dayDiff(T, since));
       if (d.age >= LONG_DAYS) d.long = d.age >= LONGER_DAYS ? 2 : 1;
+    } else if (state === "점검 필요" && v && v.verdict === "실질") {   // 실질 결격이 이어지는 중 — 날수 시작일만 이어 적는다(표시 없음)
+      d.since = minDate(PREV_SINCE[g + "|" + s.ticker], v.since, v.asOf) || T;
     }
     defects.push(d);
     if (state === "점검 필요") queue.review.push({ g, d, hard: fresh.some((x) => x.hard) });
@@ -284,6 +293,13 @@ COUNTRIES.forEach((c) => THEMES.forEach((th) => {
     push(t, "검증 대기", null, x);
   });
   groups[g] = { eligible: sg.eligible != null ? sg.eligible : null, defects, list };
+}));
+
+// 그룹에 없는 종목의 결격 판정(고아) — 다시 편입되면 옛 판정·since 가 그대로 살아나므로 세션이 지운다(2026-11-07 점검: UNH·AMZN 등 4건)
+const ORPHANS = [];
+COUNTRIES.forEach((c) => THEMES.forEach((th) => {
+  const g = c + "|" + th, mem = new Set(D[c].filter((s) => s.theme === th).map((s) => s.ticker));
+  Object.keys(notes.defects[g] || {}).forEach((t) => { if (!mem.has(t)) ORPHANS.push(g + " " + t + "(" + ((notes.defects[g][t] || {}).asOf || "?") + ")"); });
 }));
 
 if (opts.baseline && baselineTouched) {
@@ -337,4 +353,5 @@ if (queue.swap.length) {
     console.log("  " + x.g + " " + x.d.ticker + " " + x.d.name + (x.d.triedAt >= T ? " [교체 시도 " + x.d.triedAt + "]" : " [오늘 교체 시도 필요]") + esc + " — " + (x.d.note || "") + " · 대체 " + (ready.length ? ready.join(", ") : "검증 통과 후보 없음 → 스크린 상위 검증"));
   });
 }
+if (ORPHANS.length) console.log("\n[고아 판정] 그룹에 없는 종목의 결격 판정 " + ORPHANS.length + "건 — candidate-notes.json defects 에서 지운다(다시 편입되면 옛 판정이 살아난다): " + ORPHANS.join(", "));
 if (opts.gate && (outObj.summary.review || outObj.summary.untried)) process.exit(1);

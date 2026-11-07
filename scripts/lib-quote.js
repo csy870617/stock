@@ -13,28 +13,92 @@
 //   inSession      — 지금 정규장이 열려 있거나 마감 직후 정산 중이면 true
 const STALE_QUOTE_DAYS = 7;          // 이보다 오래된 시세(거래정지·상장폐지 심볼)는 거부
 const SETTLE_SEC = 40 * 60;          // 마감 후 이 시간까지는 장중으로 본다(KRX 는 야후 end 06:00Z 뒤 06:30Z 동시호가 마감)
+// 거의 24시간 거래하는 상품(원/달러 KRW=X·달러인덱스 DX-Y.NYB·WTI CL=F·금 GC=F) — 야후가 정규장을 현지 하루 전체(00:00~23:59,
+// 원/달러는 런던·나머지는 뉴욕)로 준다. 정규장 길이로 알아본다(instrumentType 은 쓰지 않는다 — DX-Y.NYB 는 'INDEX'라 빠진다).
+const ROUND_CLOCK_SEC = 20 * 3600;
+// 외환·미국 선물(CME·ICE)의 주말 휴장 — 뉴욕 시각 금요일 17:00(주간 마감) ~ 일요일 17:00(외환 재개, CME 는 18:00). 서머타임은 Intl 이 맞춘다.
+const FX_WEEK_CLOSE_MIN = 17 * 60 + 10;   // 금요일 17:10 ET 부터(마지막 체결이 봉에 들어갈 여유 10분)
+const FX_WEEK_OPEN_MIN = 17 * 60;         // 일요일 17:00 ET 까지
 
-function localDate(sec, off) { return new Date((sec + (off || 0)) * 1000).toISOString().slice(0, 10); }
+// 거래소 현지 날짜(YYYY-MM-DD) — 봉마다 '그 시각'의 시간대 규칙(서머타임 포함)으로 센다(2026-11-07 감사 AUTO-4).
+//   예전엔 지금의 gmtoffset 하나로 10년치를 셌다 — 서머타임이 끝나자 런던·뉴욕 자정에 찍힌 여름 봉(23:00Z·04:00Z)이 하루 앞으로
+//   밀려 일요일 봉·일요일에 끝나는 주봉이 생겼다. 주식·지수·ETF 는 장중 시각에 찍혀 어느 방식으로 세도 같은 날짜다.
+//   시간대 이름이 없거나 Intl 이 모르는 이름이면 예전처럼 gmtoffset 으로 센다. 15분 칸마다 한 번만 센다(시간대 차이는 15분의 배수).
+const TZ_DAY = {};
+function tzDay(tz) {
+  if (Object.prototype.hasOwnProperty.call(TZ_DAY, tz)) return TZ_DAY[tz];
+  let f = null;
+  try {
+    const dtf = new Intl.DateTimeFormat("en-US", { timeZone: tz, year: "numeric", month: "2-digit", day: "2-digit" });
+    const memo = new Map();
+    f = (sec) => {
+      const k = Math.floor(sec / 900);
+      let d = memo.get(k);
+      if (d === undefined) {
+        const p = {};
+        dtf.formatToParts(new Date(k * 900000)).forEach((x) => { p[x.type] = x.value; });
+        d = p.year + "-" + p.month + "-" + p.day;
+        memo.set(k, d);
+      }
+      return d;
+    };
+  } catch (_e) { f = null; }
+  TZ_DAY[tz] = f;
+  return f;
+}
+function exchangeDate(sec, meta) {
+  const f = meta && meta.exchangeTimezoneName ? tzDay(meta.exchangeTimezoneName) : null;
+  return f ? f(sec) : new Date((sec + ((meta && meta.gmtoffset) || 0)) * 1000).toISOString().slice(0, 10);
+}
+const isWeekendDate = (d) => { const w = new Date(d + "T00:00:00Z").getUTCDay(); return w === 0 || w === 6; };
+function roundClock(meta) {
+  const reg = meta && meta.currentTradingPeriod && meta.currentTradingPeriod.regular;
+  return !!(reg && typeof reg.start === "number" && typeof reg.end === "number" && reg.end - reg.start >= ROUND_CLOCK_SEC);
+}
+const weekendTrades = (meta) => !!(meta && meta.instrumentType === "CRYPTOCURRENCY");   // 암호화폐는 주말에도 거래한다
+let NY_CLOCK = null;
+function fxWeekend(sec) {
+  try {
+    if (!NY_CLOCK) NY_CLOCK = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", weekday: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23" });
+    const p = {};
+    NY_CLOCK.formatToParts(new Date(sec * 1000)).forEach((x) => { p[x.type] = x.value; });
+    const m = +p.hour * 60 + +p.minute;
+    return p.weekday === "Sat" || (p.weekday === "Fri" && m >= FX_WEEK_CLOSE_MIN) || (p.weekday === "Sun" && m < FX_WEEK_OPEN_MIN);
+  } catch (_e) { return false; }
+}
 
 // 지금 정규장이 열려 있으면(마감 후 정산 여유 포함) 그 장의 거래소 현지 날짜, 아니면 null
+// 24시간 상품(2026-11-07 감사 AUTO-3·F4): ①마감 동시호가가 없어 정산 여유를 두지 않는다(야후 정규장 = 현지 하루가 끝나면 끝난 장)
+// ②외환·선물 주말 휴장(뉴욕 금 17:10 ~ 일 17:00) 동안엔 진행 중인 장이 없다 — 예전엔 야후 정규장이 토요일 00:00Z(원/달러)·
+// 05:00Z(뉴욕 자정)까지 이어져 그 사이 실행이 금요일 봉을 잘랐고, 주말에 다시 돌지 않아 금요일 값이 약 57시간 빠졌다(10/31~11/2).
+// 평일 저녁(뉴욕 18:00 이후)에는 그대로 자른다 — 야후는 다음 거래일 장의 체결을 그날 봉에 섞어 두었다가 뉴욕 자정 뒤 공식 정산값으로
+// 다시 쓴다(liquidity-flow 기록: 11/3 02:30Z 달러인덱스 11/2 봉 101.85 → 공식 101.75).
 function openSessionDate(meta, nowMs) {
   const reg = meta && meta.currentTradingPeriod && meta.currentTradingPeriod.regular;
   if (!reg || typeof reg.start !== "number" || typeof reg.end !== "number") return null;
   const nowSec = (nowMs != null ? nowMs : Date.now()) / 1000;
-  if (!(nowSec >= reg.start && nowSec < reg.end + SETTLE_SEC)) return null;
-  return localDate(reg.start, meta.gmtoffset || 0);
+  const h24 = roundClock(meta);
+  if (!(nowSec >= reg.start && nowSec < reg.end + (h24 ? 0 : SETTLE_SEC))) return null;
+  if (h24 && !weekendTrades(meta) && fxWeekend(nowSec)) return null;
+  return exchangeDate(reg.start, meta);
 }
 
 // 차트 응답(result)에서 진행 중인 장의 미완성 일봉을 잘라낸다(제자리 수정, 잘라낸 봉 수 반환).
 // 장중에 돈 실행이 미완성 봉으로 기술 신호·지표를 계산하면, 같은 asOf 아래 신호가 바뀌어 세션이 쓴
 // techNote 와 어긋나고(2026-10-08 미국 18건) 2단계 이상이면 validate 가 커밋을 막는다.
+// 24시간 상품(주말에 쉬는 것)은 끝에 붙은 '오늘(현지)보다 뒤 날짜' 봉과 '주말 날짜' 봉도 뺀다 — 다음 거래일 장이 미리 붙은 진행 중 봉이거나
+// 야후의 주말 임시 봉이다(2026-10-24 원/달러 토요일 봉 O=H=L=C 1,325.40 — 그날 원/달러 기준일이 토요일로 찍혔다). 서머타임을 맞춘
+// 날짜로 세면 네 상품 10년 일봉에 주말 날짜 봉은 하나도 없다(2026-11-07 확인).
 function trimOpenBar(res, nowMs) {
   if (!res || !Array.isArray(res.timestamp) || !res.timestamp.length) return 0;
-  const sd = openSessionDate(res.meta, nowMs);
-  if (!sd) return 0;
-  const off = (res.meta && res.meta.gmtoffset) || 0;
+  const meta = res.meta || {};
+  const sd = openSessionDate(meta, nowMs);
+  const guard = roundClock(meta) && !weekendTrades(meta);
+  if (!sd && !guard) return 0;
+  const today = guard ? exchangeDate((nowMs != null ? nowMs : Date.now()) / 1000, meta) : null;
+  const open = (d) => (sd && d >= sd) || (guard && (d > today || isWeekendDate(d)));
   let n = res.timestamp.length;
-  while (n > 0 && localDate(res.timestamp[n - 1], off) >= sd) n--;
+  while (n > 0 && open(exchangeDate(res.timestamp[n - 1], meta))) n--;
   const cut = res.timestamp.length - n;
   if (!cut) return 0;
   res.timestamp = res.timestamp.slice(0, n);
@@ -65,8 +129,7 @@ async function yahooQuote(symbol, opts) {
   if (!m || typeof m.regularMarketPrice !== "number" || !isFinite(m.regularMarketPrice)) throw new Error("no price");
   // regularMarketTime 이 없으면 신선도를 판정할 수 없다 — 폐지·정지 심볼의 옛 시세가 필드 하나 빠졌다고 통과하지 않게 거부
   if (!m.regularMarketTime) throw new Error("no regularMarketTime (신선도 판정 불가)");
-  const off = m.gmtoffset || 0;
-  const date = localDate(m.regularMarketTime, off);
+  const date = exchangeDate(m.regularMarketTime, m);
   const ageDays = (nowSec - m.regularMarketTime) / 86400;
   if (isFinite(ageDays) && ageDays > STALE_QUOTE_DAYS) throw new Error("stale quote (" + date + ", " + Math.round(ageDays) + "일 경과)");
   await fillPrevSessionClose(res, symbol, nowSec * 1000);   // 직전 장 일봉 종가가 비었으면 채운다(아래 함수 주석)
@@ -76,7 +139,7 @@ async function yahooQuote(symbol, opts) {
   const cl = (res.indicators && res.indicators.quote && res.indicators.quote[0] && res.indicators.quote[0].close) || [];
   const bars = [];
   // 일봉 종가는 float32 잔여(336.6700134277344)가 붙어 오므로 소수 4자리로 정리
-  ts.forEach(function (t, i) { const c = cl[i]; if (typeof c === "number" && isFinite(c)) bars.push({ d: localDate(t, off), c: Math.round(c * 10000) / 10000 }); });
+  ts.forEach(function (t, i) { const c = cl[i]; if (typeof c === "number" && isFinite(c)) bars.push({ d: exchangeDate(t, m), c: Math.round(c * 10000) / 10000 }); });
 
   // 직전 거래일 종가 — price 날짜보다 앞선 마지막 일봉. 없으면 야후 previousClose
   let prevClose = null;
@@ -113,15 +176,15 @@ function fillLastClose(res, nowMs) {
   // 끝난 장의 확정 시세다. 야후 한국 지수는 다음 장이 열린 뒤에도 전날 확정 시세에 머물고 전날 일봉 종가는 비워 둔다
   // (2026-10-27 09:2x KST ^KS11·^KQ11 — 그대로 두면 장중 실행이 코스피·코스닥을 하루 전으로 되돌렸다).
   const sd = openSessionDate(m, nowMs);
-  if (sd && !(m.regularMarketTime && localDate(m.regularMarketTime, m.gmtoffset || 0) < sd)) return false;
+  if (sd && !(m.regularMarketTime && exchangeDate(m.regularMarketTime, m) < sd)) return false;
   if (typeof m.regularMarketPrice !== "number" || !isFinite(m.regularMarketPrice) || !m.regularMarketTime) return false;
   const q = res.indicators && res.indicators.quote && res.indicators.quote[0];
   if (!q || !Array.isArray(q.close)) return false;
-  const off = m.gmtoffset || 0, rd = localDate(m.regularMarketTime, off);
+  const rd = exchangeDate(m.regularMarketTime, m);
   let i = res.timestamp.length - 1;
   // meta 날짜 뒤의 빈 봉(다음 장 자리 — 장 시작 무렵 생긴다)은 건너뛰고 meta 날짜의 봉을 찾는다
-  while (i > 0 && q.close[i] == null && localDate(res.timestamp[i], off) > rd) i--;
-  if (q.close[i] != null || localDate(res.timestamp[i], off) !== rd) return false;
+  while (i > 0 && q.close[i] == null && exchangeDate(res.timestamp[i], m) > rd) i--;
+  if (q.close[i] != null || exchangeDate(res.timestamp[i], m) !== rd) return false;
   const px = m.regularMarketPrice;
   q.close[i] = px;
   if (Array.isArray(q.high)) q.high[i] = typeof m.regularMarketDayHigh === "number" ? m.regularMarketDayHigh : px;
@@ -156,11 +219,11 @@ async function fillPrevSessionClose(res, symbol, nowMs) {
   if (!(m.exchangeTimezoneName ? m.exchangeTimezoneName === "Asia/Seoul" : off === 32400)) return false;
   const q = res.indicators && res.indicators.quote && res.indicators.quote[0];
   if (!q || !Array.isArray(q.close) || !m.regularMarketTime) return false;
-  const ref = openSessionDate(m, nowMs) || localDate(m.regularMarketTime, off);
+  const ref = openSessionDate(m, nowMs) || exchangeDate(m.regularMarketTime, m);
   // range=1d 의 '전 장'은 meta 의 장 기준이다 — meta 가 아직 앞 장에 머물러 있으면(그 값은 fillLastClose 가 채운다) 하루 더 앞 종가가 온다
-  if (localDate(m.regularMarketTime, off) !== ref) return false;
+  if (exchangeDate(m.regularMarketTime, m) !== ref) return false;
   let i = res.timestamp.length - 1;
-  while (i >= 0 && localDate(res.timestamp[i], off) >= ref) i--;
+  while (i >= 0 && exchangeDate(res.timestamp[i], m) >= ref) i--;
   if (i < 0 || q.close[i] != null) return false;
   const px = await prevCloseOf(symbol);
   if (px == null) return false;
@@ -178,4 +241,4 @@ function settleDailyBars(res, nowMs) {
   return { cut: cut, filled: filled };
 }
 
-module.exports = { yahooQuote, trimOpenBar, fillLastClose, fillPrevSessionClose, settleDailyBars, openSessionDate, STALE_QUOTE_DAYS };
+module.exports = { yahooQuote, trimOpenBar, fillLastClose, fillPrevSessionClose, settleDailyBars, openSessionDate, exchangeDate, roundClock, STALE_QUOTE_DAYS };

@@ -7,14 +7,17 @@
 // data/history-index.js(기록일 목록 + 날짜별 편입·제외·주제 이동)를 함께 쓴다 — 앱은 history.js 를 '과거 보기'를 열 때만 받는다.
 // 가격·지수는 모두 '마지막으로 끝난 정규장 종가'다(quotes.js close) — 장중에 돌아도 장중가가 섞이지 않는다.
 // 같은 날짜(generatedAt)의 스냅샷이 이미 있으면 교체한다(멱등).
-// 스냅샷은 (국가,티커) 기준으로 중복 제거하며, 여러 주제에 등장하면 가장 높은 확신(tier 최소값) 항목을 기록한다.
+// 스냅샷은 (국가,티커)마다 한 줄이고, 여러 주제에 있으면 대표 소속(정식 → 주목 → 관심·보유, 같은 갈래는 tier 순)을 th·tier 에,
+// 소속 전부를 ths 에 적는다(lib-history.js — 2026-11-07 전엔 tier 가 가장 낮은 카드 하나만 남겨 다른 주제가 빠졌다).
 
 const fs = require("fs");
 const path = require("path");
+const LH = require("./lib-history");
 
 const ROOT = path.join(__dirname, "..");
 const RECO = path.join(ROOT, "data", "recommendations.js");
 const HIST = path.join(ROOT, "data", "history.js");
+const INDEX = path.join(ROOT, "data", "history-index.js");
 
 function arg(name) {
   const i = process.argv.indexOf("--" + name);
@@ -36,8 +39,8 @@ if (fs.existsSync(HIST)) {
 }
 if (process.argv.includes("--rewrite")) {
   history = history.filter((h) => h && typeof h.date === "string" && Array.isArray(h.stocks)).sort((a, b) => a.date.localeCompare(b.date));
-  writeHistory(history);
-  writeIndex(history);
+  LH.writeHistory(HIST, history);
+  LH.writeIndex(INDEX, history);
   console.log("다시 씀: history.js·history-index.js — " + history.length + "일치");
   process.exit(0);
 }
@@ -71,24 +74,21 @@ function idxClose(k) {
   return c;
 }
 
-// (국가,티커) 중복 제거 — tier 최소(=확신 최고) 항목 우선
-const seen = {};
-["korea", "us"].forEach((c) => {
-  (D[c] || []).forEach((s) => {
-    const key = c + ":" + s.ticker;
-    // tier 없는 개인 목록 카드(undefined)가 정식 카드를 밀어내지 않게 정규화(없음=9)
-    if (!seen[key] || (s.tier ?? 9) < (seen[key].tier ?? 9)) {
-      seen[key] = { t: s.ticker, n: s.name, c, th: s.theme, tier: s.tier,
-                    p: priceOf(s), pd: priceDateOf(s), tp: s.targetPrice,
-                    // 그날의 단기·중기·장기 신호 등급 — 앱의 '기준일 선택'이 과거 편성을 보여줄 때 쓴다.
-                    // 문구(techNote.short/mid/long)는 용량이 커 저장하지 않고 등급만 남긴다.
-                    ss: (s.techNote && s.techNote.sigShort) || null,
-                    sm: (s.techNote && s.techNote.sigMid) || null,
-                    sl: (s.techNote && s.techNote.sigLong) || null,
-                    // AI 적정가 — 나중에 맞았는지 잴 수 있게 그날 값을 남긴다(값이 없으면 키를 쓰지 않는다)
-                    ai: typeof s.aiTarget === "number" && isFinite(s.aiTarget) ? s.aiTarget : undefined };
-    }
-  });
+// (국가,티커)마다 한 줄 — 가격·신호 등은 대표 카드(lib-history groupCards: 정식 → 주목 → 관심·보유, 같은 갈래는 tier 순)에서,
+// 소속(주제·tier)은 카드 전부에서. 같은 종목의 카드는 목표가·신호·AI 적정가가 같다(종목 단위로 갱신된다).
+const rows = Object.values(LH.groupCards(D)).map((g) => {
+  const s = g.card;
+  return { t: s.ticker, n: s.name, c: g.c, th: s.theme, tier: s.tier,
+           p: priceOf(s), pd: priceDateOf(s), tp: s.targetPrice,
+           // 그날의 단기·중기·장기 신호 등급 — 앱의 '기준일 선택'이 과거 편성을 보여줄 때 쓴다.
+           // 문구(techNote.short/mid/long)는 용량이 커 저장하지 않고 등급만 남긴다.
+           ss: (s.techNote && s.techNote.sigShort) || null,
+           sm: (s.techNote && s.techNote.sigMid) || null,
+           sl: (s.techNote && s.techNote.sigLong) || null,
+           // AI 적정가 — 나중에 맞았는지 잴 수 있게 그날 값을 남긴다(값이 없으면 키를 쓰지 않는다)
+           ai: typeof s.aiTarget === "number" && isFinite(s.aiTarget) ? s.aiTarget : undefined,
+           // 소속 전부 — 두 곳 이상일 때만(대표가 맨 앞). 예: AAPL [["core",2],["watch",1]]
+           ths: g.ms.length > 1 ? g.ms : undefined };
 });
 
 // 그날의 요약 분석 — 앱 '기준일 선택'이 과거를 되짚을 때 최소한의 맥락을 준다.
@@ -114,7 +114,7 @@ const snap = {
   liq: LQ ? { us: (LQ.us && LQ.us.shortTerm) || null, korea: (LQ.korea && LQ.korea.shortTerm) || null,
              headline: LQ.headline || null } : null,
   picks: D.topPicks ? { korea: pickTickers(D.topPicks.korea), us: pickTickers(D.topPicks.us) } : null,
-  stocks: Object.values(seen)
+  stocks: rows
 };
 
 // 가드: 스냅샷 날짜는 generatedAt 인데 가격은 '오늘' quotes.js 값이다.
@@ -181,45 +181,7 @@ const TPH = path.join(ROOT, "data", "tp-history.json");
     Object.keys(tph.days).length + "일치");
 })();
 
-writeHistory(history);
-writeIndex(history);
+LH.writeHistory(HIST, history);
+LH.writeIndex(INDEX, history);
 console.log("스냅샷 저장: " + snap.date + " (" + snap.stocks.length + "종목, KOSPI " +
   (snap.kospi ?? "–") + ", S&P500 " + (snap.sp500 ?? "–") + ") / 총 " + history.length + "일치 기록");
-
-// 한 기록일을 한 줄로 — 파일이 작아지고(들여쓰기 없음) 하루 기록이 git 에서 한 줄 변경으로 보인다
-function writeHistory(list) {
-  const out = "// 일별 추천 스냅샷 히스토리 — scripts/snapshot.js 가 자동 생성/추가(지우지 않는다, 한 줄 = 한 기록일)\n" +
-    "// 각 항목: {date, kospi, sp500, rsp(동일비중 S&P500 ETF), note·noteUS·noteKR 시황, liq 유동성{us,korea,headline}, picks Top Pick{korea[],us[]},\n" +
-    "//           stocks:[{t 티커, n 이름, c 국가, th 주제, tier, p 종가(마지막으로 끝난 정규장), pd 그 거래일, tp 목표가, ss·sm·sl 단·중·장기 신호, ai AI 적정가}]}\n" +
-    "// kospi·sp500·rsp 도 같은 조회 시점의 끝난 장 종가다(장중 실행이어도 장중가를 기록하지 않음).\n" +
-    "// 앱은 이 파일을 '과거 보기'를 열 때만 받는다 — 시작할 때는 history-index.js 만 받는다.\n" +
-    "window.STOCK_HISTORY = [\n" + list.map((h) => JSON.stringify(h)).join(",\n") + "\n];\n";
-  fs.writeFileSync(HIST, out);
-}
-
-// 앱 시작용 색인 — 기록일 목록(과거 보기 날짜 고르기)과 인접 기록일 사이의 편입(a)·제외(r)·주제 이동(m, from = 이전 주제).
-// 앱 '종목 업데이트'와 목록의 NEW 표시가 쓴다. 편입·제외는 티어와 무관하게 티커 기준(앱이 예전에 history.js 로 하던 계산과 같다).
-function writeIndex(list) {
-  const H = list.filter((h) => h && typeof h.date === "string" && Array.isArray(h.stocks));
-  const pick = (s) => ({ t: s.t, n: s.n, c: s.c, th: s.th });
-  const roster = [];
-  for (let i = 1; i < H.length; i++) {
-    const prev = H[i - 1], cur = H[i], ps = {}, cs = {};
-    prev.stocks.forEach((s) => { ps[s.t] = s; });
-    cur.stocks.forEach((s) => { cs[s.t] = s; });
-    const e = { d: cur.date, p: prev.date };
-    const a = cur.stocks.filter((s) => !ps[s.t]).map(pick);
-    const r = prev.stocks.filter((s) => !cs[s.t]).map(pick);
-    const m = cur.stocks.filter((s) => { const p = ps[s.t]; return p && p.th && s.th && p.th !== s.th; })
-      .map((s) => Object.assign(pick(s), { from: ps[s.t].th }));
-    if (a.length) e.a = a;
-    if (r.length) e.r = r;
-    if (m.length) e.m = m;
-    roster.push(e);
-  }
-  const idx = { asOf: H.length ? H[H.length - 1].date : null, dates: H.map((h) => h.date), roster };
-  fs.writeFileSync(path.join(ROOT, "data", "history-index.js"),
-    "// 스냅샷 색인 — scripts/snapshot.js 가 history.js 와 함께 쓴다(손으로 고치지 않는다). 앱이 시작할 때 받는다.\n" +
-    "// {asOf 마지막 기록일, dates 기록일 전부, roster:[{d 기록일, p 직전 기록일, a 편입·r 제외·m 주제 이동(from) — [{t, n, c, th}]}]}\n" +
-    "window.HISTORY_INDEX = " + JSON.stringify(idx) + ";\n");
-}

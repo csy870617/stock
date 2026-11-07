@@ -11,7 +11,9 @@
 
 // 정식 밖 목록 — 주목(spotlight, 2026-10-30~ 신고가·턴어라운드)·관심·보유. 정식 전체·티어 묶음에 넣지 않고 각자 따로 잰다.
 //   (없어진 주제 — 2026-10-30 폐지한 'rising' — 는 그 시절 기록에선 정식이었으므로 정식 전체 계산에 그대로 남는다)
-const PERSONAL = { spotlight: 1, watch: 1, hold: 1 };
+// 스냅샷 한 줄의 소속(th·tier + 두 곳 이상이면 ths)은 lib-history.js — 묶음은 소속마다 센다(한 종목이 우량·관심이면 두 묶음 모두).
+const LH = require("./lib-history");
+const PERSONAL = LH.PERSONAL;
 const MIN_DAYS = 20;   // β·t 를 계산하는 최소 거래일
 const HELD_DAYS = 90;  // '지금 편성'의 시장 민감도를 재는 최근 기록 창(달력일) — 결격 점검의 β 밴드·앱 '지금 비중 기준 β'
 
@@ -30,10 +32,14 @@ function anchorsFor(country, sel, date, mode) {
 
 // 선택자: null = 정식 전체(주목·관심·보유 제외), "core" 등 = 그 주제, "tier:1" = 정식 중 그 티어, "spotlight"/"watch"/"hold" = 정식 밖 목록,
 //   "picks" = 그 기록일의 그 나라 Top Pick(스냅샷 picks — chain 이 기록일마다 고른다, inGroup 으로는 가릴 수 없다)
-function inGroup(sel, th, tier) {
-  if (!sel) return !PERSONAL[th];
-  if (sel.indexOf("tier:") === 0) return !PERSONAL[th] && tier === +sel.slice(5);
-  return th === sel;
+// e = 스냅샷 한 줄(또는 perf.json 종목 행) — 소속 중 하나라도 맞으면 그 묶음이다. 정식 전체·티어는 한 종목을 한 번만 센다(chain 의 seen).
+function inGroup(sel, e) {
+  return LH.members(e).some((m) => {
+    const th = m[0];
+    if (!sel) return !PERSONAL[th];
+    if (sel.indexOf("tier:") === 0) return !PERSONAL[th] && m[1] === +sel.slice(5);
+    return th === sel;
+  });
 }
 // 스냅샷의 그 나라 가격 기준일 — 미국은 한국 시각 기록이라 전날 미국 종가가 많다(가장 흔한 pd)
 function pdOf(snap, country) {
@@ -68,7 +74,7 @@ function chain(H, country, sel, exitPx, anchorMode) {
     const pk = sel === "picks" ? (a.picks && a.picks[country]) || [] : null;
     const wA = anchorsFor(country, sel, b.date, anchorMode);
     (a.stocks || []).forEach((e) => {
-      if (e.c !== country || seen[e.t] || !e.p || (pk ? pk.indexOf(e.t) < 0 : !inGroup(sel, e.th, e.tier))) return;
+      if (e.c !== country || seen[e.t] || !e.p || (pk ? pk.indexOf(e.t) < 0 : !inGroup(sel, e))) return;
       let p1 = pb[e.t];
       if (!p1 && exitPx) p1 = exitPx(country, e.t, i);
       if (!p1) return;

@@ -227,6 +227,9 @@ function dyCheck(o, card) {
     // 선행 PER(미국) — 현재가 ÷ 12개월 선행 EPS(양수일 때만)
     const q = QT.quotes && QT.quotes[x.t];
     if (x.c === "us" && v.feps > 0 && q && q.price > 0) v.fper = ratioOk(q.price / v.feps);
+    // 버크셔 B 주는 네이버가 A 주 EPS 를 줘 PER 0.01 이 나왔다(2026-11-07 점검) — A 주 1주 = B 주 1,500주로 바꿔 B 주 가격으로 다시 잰다
+    if (x.c === "us" && /^BRK[.-]B$/.test(x.t) && v.eps > 1000) { v.eps = r2(v.eps / 1500); v.per = q && q.price > 0 ? ratioOk(q.price / v.eps) : null; }
+    if (v.per != null && v.per < 1) v.per = null;   // 1배 미만 PER 은 출처 오류(주식 종류·통화 불일치)로 본다 — 앱에 '0.0배'로 보였다
     items[x.t] = v;
   });
   const today = new Date().toISOString().slice(0, 10);

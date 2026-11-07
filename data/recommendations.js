@@ -33,8 +33,8 @@ window.STOCK_DATA = {
     ],
     us: [
       {"rank":1,"ticker":"MTB","market":"NYSE","name":"M&T Bank","reason":"꾸준한 자사주 매입·배당으로 주식 수가 연 5.1% 줄었고, 3분기 유형자기자본이익률 17.29%·CET1 10.16%로 수익성과 자본 여력을 유지한다."},
-      {"rank":2,"ticker":"ORLY","market":"NASDAQ","name":"O'Reilly Automotive","reason":"배당 대신 자사주 매입으로 주식 수가 연 2.8% 줄고 ROIC 53.3%이며, 3분기 기존점 매출 +7.2%로 연간 기존점 성장 가이던스를 올렸다."},
-      {"rank":3,"ticker":"CI","market":"NYSE","name":"Cigna","reason":"주식 수가 연 5.2% 줄고 ROIC 11.1%이며, 2분기 실적이 예상을 웃돌아 2026년 조정 EPS 가이던스를 올렸다."},
+      {"rank":2,"ticker":"CI","market":"NYSE","name":"Cigna","reason":"주식 수가 연 5.2% 줄고 ROIC 11.1%이며, 2분기 실적이 예상을 웃돌아 2026년 조정 EPS 가이던스를 올렸다."},
+      {"rank":3,"ticker":"ORLY","market":"NASDAQ","name":"O'Reilly Automotive","reason":"배당 대신 자사주 매입으로 주식 수가 연 2.8% 줄고 ROIC 53.3%이며, 3분기 기존점 매출 +7.2%로 연간 기존점 성장 가이던스를 올렸다."},
     ],
   },
   themes: [

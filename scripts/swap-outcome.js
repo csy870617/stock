@@ -9,10 +9,11 @@
 // data/history.js 스냅샷을 차례로 비교해 정식 편성(우량·성장·저평가·배당)의 편입·편출을 뽑고, 같은 날·같은 나라의
 // 편입 묶음과 편출 묶음을 '교체 1회'로 짝지어 교체일 종가 → (현재, 20거래일 뒤) 같은 나라 지수 대비 초과수익을 비교한다.
 // 2026-10-12 점검: 미국 교체일 7회 중 6회 편입이 나았고(평균 +4.5% vs -2.0%), 한국은 4회 중 1회(-2.8% vs +2.3%).
-// 한계: 스냅샷은 (국가,티커)로 중복 제거되므로, 여러 주제에 있는 종목의 한 주제만 뺀 교체(예: TSM value 슬롯)는
-//       편출로 잡히지 않는다. 표본이 작을 때는 방향만 참고한다(§5 교체 기준을 바꿀 근거로는 부족).
+// 소속(주제) 단위로 견준다 — 여러 주제에 있는 종목의 한 주제만 뺀 교체(예: TSM value 슬롯)도 편출이고(스냅샷 ths — lib-history.js),
+//   같은 날 한 정식 주제에서 빠지고 다른 정식 주제에 든 종목은 이동이라 세지 않는다. 표본이 작을 때는 방향만 참고한다(§5 교체 기준을 바꿀 근거로는 부족).
 
 const path = require("path");
+const LH = require("./lib-history");
 const ROOT = path.join(__dirname, "..");
 const FORMAL = new Set(["core", "growth", "value", "dividend"]);   // 2026-10-30 히든 폐지 — 그 주제의 교체는 더 세지 않는다
 const si = process.argv.indexOf("--since");
@@ -27,14 +28,24 @@ const D = global.window.STOCK_DATA;
 const market = {};
 ["korea", "us"].forEach((c) => (D[c] || []).forEach((s) => { market[c + ":" + s.ticker] = s.market; }));
 
-// 정식 편성 집합 — 스냅샷 항목 e: {t 티커, n 이름, c 국가, th 주제, tier, p 가격, pd 가격일}
-const formal = (snap) => { const m = {}; (snap.stocks || []).forEach((e) => { if (FORMAL.has(e.th)) m[e.c + ":" + e.t] = e; }); return m; };
+// 정식 소속 — "국가:티커" → {e 스냅샷 항목(t 티커, n 이름, c 국가, th·tier·ths 소속, p 가격, pd 가격일), ths 정식 주제 목록}
+const formal = (snap) => {
+  const m = {};
+  (snap.stocks || []).forEach((e) => { const ths = LH.themesOf(e).filter((th) => FORMAL.has(th)); if (ths.length) m[e.c + ":" + e.t] = { e, ths }; });
+  return m;
+};
 const events = [];
 for (let i = 1; i < H.length; i++) {
   if (H[i].date < SINCE) continue;
-  const a = formal(H[i - 1]), b = formal(H[i]);
-  Object.keys(b).forEach((k) => { if (!a[k]) events.push({ d: H[i].date, type: "add", k, n: b[k].n, th: b[k].th }); });
-  Object.keys(a).forEach((k) => { if (!b[k]) events.push({ d: H[i].date, type: "rem", k, n: a[k].n, th: a[k].th }); });
+  const a = formal(H[i - 1]), b = formal(H[i]), d = H[i].date;
+  new Set(Object.keys(a).concat(Object.keys(b))).forEach((k) => {
+    const A = a[k] ? a[k].ths : [], B = b[k] ? b[k].ths : [];
+    const gain = B.filter((th) => A.indexOf(th) < 0), lost = A.filter((th) => B.indexOf(th) < 0);
+    if (gain.length && lost.length) return;   // 정식 주제끼리 옮김 — 교체가 아니다
+    // 한 종목이 같은 날 두 주제에 들거나 빠져도 한 번만 센다(평균 비중이 겹치지 않게)
+    if (gain.length) events.push({ d, type: "add", k, n: b[k].e.n, th: gain[0] });
+    if (lost.length) events.push({ d, type: "rem", k, n: a[k].e.n, th: lost[0] });
+  });
 }
 
 function yahoo(k) {

@@ -406,6 +406,15 @@ if (process.argv.includes("--emit")) {
   //   Action 이 backlog-alert.js 로 '업데이트 요청 — 밀린 회전' 이슈를 연다(CLAUDE.md §2·§3-5).
   status.overdue = status.rotation.filter((r) => !r.ok && r.oldestDays != null && r.oldestDays > VERIF_CYCLE_DAYS + 1)
     .map((r) => ({ key: r.key, label: r.label, days: r.oldestDays }));
+  // 데이터 지문 — 분석·시세·추세 파일 내용이 바뀌면 이 파일도 바뀌어 켜 둔 앱이 '새 분석 도착'을 띄운다(2026-11-07 점검: 저녁 U 회차가
+  // recommendations.js 를 80줄 바꿨는데 이 파일이 그대로라 알림이 안 떴다). 내용이 같으면 지문도 같아 빈 커밋이 생기지 않는다.
+  try {
+    const h = require("crypto").createHash("sha1");
+    ["recommendations.js", "quotes.js", "stock-ta.js", "indices.js", "trend-summary.js", "index-notes.js", "liquidity.js", "candidates.js"].forEach((f) => {
+      try { h.update(fs.readFileSync(path.join(ROOT, "data", f))); } catch (_e) {}
+    });
+    status.dataHash = h.digest("hex").slice(0, 12);
+  } catch (_e) {}
   const out = path.join(ROOT, "data/coverage-status.js");
   fs.writeFileSync(out, "// 자동 생성 — scripts/coverage.js --emit (refresh-quotes Action, 토큰 0)\n" +
     "// 앱 상단 '데이터 신선도' 패널이 읽는다. 직접 수정하지 말 것.\n" +

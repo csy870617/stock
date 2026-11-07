@@ -190,8 +190,12 @@ async function us(ticker) {
     else none++;
     // 일부 조회만 실패했으면(예: 수급만 실패) 그 항목은 이전 값을 잇는다 — 각 항목에 자체 asOf 가 있어 신선도는 화면에서 보인다
     if (v && r && prev[x.t] && prev[x.t].flow && !v.flow) v = Object.assign({}, v, { flow: prev[x.t].flow });
-    // 지난 일정은 '다음 실적'이 아니다 — 날짜가 오늘(UTC)보다 이르면 버린다
-    if (v && v.next && v.next.date && v.next.date < today) { v = Object.assign({}, v); delete v.next; }
+    // 지난 일정은 '다음 실적'이 아니다 — 날짜가 오늘(UTC)보다 이르면 버리고, 한국은 '직전 발표(last)'로 남긴다
+    // (결격 점검 'earn' 이 발표 뒤 10일 동안 보게 — 2026-11-07 점검: 다음 날 지워져 한국 실적 점검 창이 하루뿐이었다)
+    if (v && v.next && v.next.date && v.next.date < today) { v = Object.assign({}, v); if (x.c === "korea") v.last = { date: v.next.date, title: v.next.title }; delete v.next; }
+    // 직전 발표는 출처가 다시 주지 않으므로 이전 값을 잇는다(40일 지나면 버림)
+    const pl = prev[x.t] && prev[x.t].last;
+    if (v && !v.last && pl && pl.date && Date.parse(today) - Date.parse(pl.date) <= 40 * 864e5) v = Object.assign({}, v, { last: pl });
     if (v && Object.keys(v).length) items[x.t] = v;
   });
   const E = {
@@ -201,7 +205,7 @@ async function us(ticker) {
     items,
   };
   fs.writeFileSync(OUT, "// 다음 실적 일정·직전 서프라이즈 — scripts/update-events.js 가 자동 생성 (LLM 토큰 0)\n" +
-    "// ticker → { next:{date, title(한국)|tentative(추정일 여부)·when·qtr·epsEst·epsPrev·analysts(미국)}, hist:[{date,qtr,eps,est,pct}](미국 최근 4분기),\n" +
+    "// ticker → { next:{date, title(한국)|tentative(추정일 여부)·when·qtr·epsEst·epsPrev·analysts(미국)}, last:{date,title}(한국 직전 발표 — 40일), hist:[{date,qtr,eps,est,pct}](미국 최근 4분기),\n" +
     "//            flow(한국):{asOf, days, fi20·f20·o20·p20(20일 외국인+기관·외국인·기관·개인 순매수 / 거래량), f5·o5(5일), fStreak(외국인 연속 순매수+/순매도− 일수),\n" +
     "//                        fHold(외국인 보유율 %), fHoldChg(20일 변화 %p), hot(fi20 ≥ 6.33% — 수급 과열)}\n" +
     "//            flow(미국):{si:{asOf, shares, dtc(평균 거래량 대비 일수), chg(직전 집계 대비 %), pct(발행주식 대비 %)}, inst:{pct(기관 보유 %), net(지난 분기 순증 / 발행주식 %)}} }\n" +

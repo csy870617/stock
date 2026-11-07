@@ -125,24 +125,32 @@ function fmtNum(x, dp) {
   return Number(x).toLocaleString("en-US", { minimumFractionDigits: dp, maximumFractionDigits: dp });
 }
 
+// 봉의 거래소 현지 날짜 — 행에 d('YYYY-MM-DD', update 스크립트가 봉마다 그 시각의 시간대로 센 날짜)가 있으면 그 날 00:00 UTC 초,
+// 없으면(브라우저 라이트 분석·백테스트 일부) 타임스탬프 그대로. 주식·지수는 장중 시각에 찍혀 둘이 같은 주·달로 묶인다.
+// 런던·뉴욕 자정에 찍히는 24시간 상품(원/달러 여름 봉 23:00Z 등)은 UTC 로 묶으면 앞 주·앞 달로 들어갔다(2026-11-07 감사 AUTO-4).
+function dayT(r) {
+  if (typeof r.d === "string" && r.d.length === 10) { const t = Date.parse(r.d + "T00:00:00Z"); if (isFinite(t)) return t / 1000; }
+  return r.t;
+}
+
 // 일봉 → 주봉 리샘플 (월요일 시작 주 버킷: 마지막 종가, 최고/최저)
 // 유닉스 epoch(1970-01-01)는 목요일이라 단순 t/604800 버킷은 주가 목~수로 잘린다.
 // +3일(259200초)을 보정해 경계를 월요일 00:00 UTC 에 맞춘다(실제 거래주 단위와 일치).
 function toWeekly(rows) {
   const map = {}, order = [];
   rows.forEach((r) => {
-    const k = Math.floor((r.t + 259200) / 604800);
+    const k = Math.floor((dayT(r) + 259200) / 604800);
     if (!map[k]) { map[k] = { t: r.t, close: r.close, high: r.high, low: r.low, vol: r.vol || 0 }; order.push(k); }
     else { const w = map[k]; w.high = Math.max(w.high, r.high); w.low = Math.min(w.low, r.low); w.close = r.close; w.t = r.t; w.vol += r.vol || 0; }
   });
   return order.map((k) => map[k]);
 }
 
-// 월봉 집계 — 달력 월(UTC) 단위로 묶는다. 장기(6~12M+) 판단의 기준 시계열.
+// 월봉 집계 — 달력 월(거래소 현지 날짜, 없으면 UTC) 단위로 묶는다. 장기(6~12M+) 판단의 기준 시계열.
 function toMonthly(rows) {
   const map = {}, order = [];
   rows.forEach((r) => {
-    const d = new Date(r.t * 1000);
+    const d = new Date(dayT(r) * 1000);
     const k = d.getUTCFullYear() * 12 + d.getUTCMonth();
     if (!map[k]) { map[k] = { t: r.t, close: r.close, high: r.high, low: r.low, vol: r.vol || 0 }; order.push(k); }
     else { const w = map[k]; w.high = Math.max(w.high, r.high); w.low = Math.min(w.low, r.low); w.close = r.close; w.t = r.t; w.vol += r.vol || 0; }
@@ -457,7 +465,7 @@ function analyzeTimeframes(rows, opts) {
   const closes = rows.map((r) => r.close), level = closes[closes.length - 1];
   const prev = closes[closes.length - 2];
   const changePct = prev ? (level - prev) / prev * 100 : 0;
-  const lastT = rows[rows.length - 1].t;
+  const lastT = rows[rows.length - 1].t ? dayT(rows[rows.length - 1]) : null;
   const period = lastT ? (new Date(lastT * 1000).toISOString().slice(5, 10).replace("-", "/") + " 종가") : "";
 
   // 3구간 — 단기(일봉) · 중기(주봉) · 장기(월봉).
