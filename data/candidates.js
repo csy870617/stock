@@ -461,19 +461,18 @@ window.CANDIDATES = {
      "url": "https://m.stock.naver.com/domestic/stock/012330/total"
     },
     {
-     "ticker": "047050",
-     "name": "포스코인터내셔널",
-     "status": "검증 대기",
-     "why": "EBIT/EV 7.5% · FCF/시총 14.9% · 매출 성장 0.3%",
-     "alsoIn": "dividend",
-     "url": "https://m.stock.naver.com/domestic/stock/047050/total"
-    },
-    {
      "ticker": "081660",
      "name": "미스토홀딩스",
      "status": "검증 대기",
      "why": "EBIT/EV 11.9% · FCF/시총 16% · 매출 성장 4.7%",
      "url": "https://m.stock.naver.com/domestic/stock/081660/total"
+    },
+    {
+     "ticker": "021240",
+     "name": "코웨이",
+     "status": "검증 대기",
+     "why": "EBIT/EV 9.1% · FCF/시총 -2.5% · 매출 성장 15.2%",
+     "url": "https://m.stock.naver.com/domestic/stock/021240/total"
     }
    ]
   },
@@ -1112,7 +1111,7 @@ window.CANDIDATES = {
      "url": "https://m.stock.naver.com/worldstock/stock/BAC/total"
     },
     {
-     "ticker": "PBR A",
+     "ticker": "PBR.A",
      "name": "Petroleo Brasileiro Reptg 2 Pref Shs",
      "status": "검증 대기",
      "why": "배당성향 4.5% · 배당 6%",

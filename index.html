@@ -5073,7 +5073,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
   function slotLabel(s) {
     return isPersonal(s.theme) ? plist(s.theme).label : isSpot(s.theme) ? themeMeta(s.theme).label + (s.watchTag ? " · " + s.watchTag : "") : themeMeta(s.theme).label + " · T" + s.tier;
   }
-  var SPOT_TIP = "주목 — 시가총액 상위 회사 가운데 흑자·희석 없음·이익 안정(Top Pick 건강 조건)을 통과하고 매출·영업이익이 늘고 있는 회사 중, 차트가 신고가(오래 다진 뒤 1년 고점을 막 넘어섬)나 턴어라운드(바닥을 다진 뒤 5·20·60일선이 모여 정배열로 돌아섬) 모양인 종목. 정기 분석이 나라·모양별 5종목까지 담고(사용자가 직접 담은 종목은 별도), 티어는 없다.\n\n" +
+  var SPOT_TIP = "주목 — 시가총액 상위 회사 가운데 흑자·희석 없음·자산 급증 없음·이익 안정(Top Pick 건강 조건)을 통과하고 매출·영업이익이 늘고 있는 회사 중, 차트가 신고가(오래 다진 뒤 1년 고점을 막 넘어섬)나 턴어라운드(바닥을 다진 뒤 5·20·60일선이 모여 정배열로 돌아섬) 모양인 종목. 정기 분석이 나라·모양별 5종목까지 담고(사용자가 직접 담은 종목은 별도), 티어는 없다. 담은 뒤에도 같은 재무 조건을 매일 다시 보고 걸리면 뺀다(사용자가 직접 담은 종목은 그대로 둔다).\n\n" +
     "과거 시험(미국 2011~2026·한국 2022~2026): 두 모양 자체는 이후 6개월 수익이 시장과 비슷하거나 조금 낮았고, 신고가 종목은 12개월 −30% 넘게 떨어진 경우가 적었다(미국 4.4% vs 전체 6.8%). 차이를 만든 것은 회사 쪽(수익성·성장) — 살 때를 알려 주는 신호가 아니라 지켜볼 목록.";
   function plist(k) { return PLIST[k] || PLIST.watch; }
   var wlCache = {};   // "country:ticker" → undefined(미조회) | "loading" | null(실패) | {price,date,ta,sym}
