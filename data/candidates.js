@@ -35,10 +35,10 @@ window.CANDIDATES = {
        "fresh": false
       }
      ],
-     "note": "추세 붕괴(단·중·장기 모두 하락세) — 3분기 매출은 분기 최대였지만 원화 강세에 따른 외화 평가손실로 영업이익이 컨센서스를 밑돌고 이익률이 낮아졌으며 증권사들이 실적 눈높이를 내렸다.",
+     "note": "추세 붕괴(단·중·장기 모두 하락세) — 3분기 영업이익이 원화 강세에 따른 외화 평가손실로 컨센서스를 밑돌고 이익률이 낮아졌다. 우량 정체성(시총 상위·ROIC)·금융 상한·삼성그룹 상한·추세를 모두 통과하는 대체 후보가 없다(산일전기·크래프톤 기각, 삼양식품 보류).",
      "judged": "2026-11-07",
      "verdict": "실질",
-     "triedAt": "2026-11-06",
+     "triedAt": "2026-11-07",
      "since": "2026-10-21",
      "age": 16,
      "long": 1
@@ -77,22 +77,6 @@ window.CANDIDATES = {
    ],
    "list": [
     {
-     "ticker": "003230",
-     "name": "삼양식품",
-     "status": "검증 통과",
-     "note": "3년 평균 ROIC 19.5%·6분기 연속 영업이익률 20%대·희석 없음. 증설로 FCF 적자, β 낮음 — 에이피알 자리 14일 범위 확대 때 1순위.",
-     "asOf": "2026-11-05",
-     "url": "https://m.stock.naver.com/domestic/stock/003230/total"
-    },
-    {
-     "ticker": "259960",
-     "name": "크래프톤",
-     "status": "보류",
-     "note": "3년 평균 ROIC가 문턱 근처, 2025 영업이익 감소, 3분기 매출 감소 전망.",
-     "asOf": "2026-11-05",
-     "url": "https://m.stock.naver.com/domestic/stock/259960/total"
-    },
-    {
      "ticker": "323410",
      "name": "카카오뱅크",
      "status": "보류",
@@ -101,12 +85,12 @@ window.CANDIDATES = {
      "url": "https://m.stock.naver.com/domestic/stock/323410/total"
     },
     {
-     "ticker": "062040",
-     "name": "산일전기",
+     "ticker": "003230",
+     "name": "삼양식품",
      "status": "보류",
-     "note": "우량 숫자는 충족(3년 평균 ROIC 22.8%·부채비율 16%)하지만 3분기 실적 발표 전이고 10월 하순 이후 급락 원인 미확인.",
-     "asOf": "2026-11-05",
-     "url": "https://m.stock.naver.com/domestic/stock/062040/total"
+     "note": "우량 수익성은 충족하지만 시총 순위가 우량 정체성 조건 바로 밖이고 시장 민감도가 매우 낮아 한국 편성 β 를 더 낮춘다.",
+     "asOf": "2026-11-07",
+     "url": "https://m.stock.naver.com/domestic/stock/003230/total"
     }
    ]
   },
@@ -481,6 +465,7 @@ window.CANDIDATES = {
      "name": "포스코인터내셔널",
      "status": "검증 대기",
      "why": "EBIT/EV 7.5% · FCF/시총 14.9% · 매출 성장 0.3%",
+     "alsoIn": "dividend",
      "url": "https://m.stock.naver.com/domestic/stock/047050/total"
     },
     {
@@ -495,25 +480,6 @@ window.CANDIDATES = {
   "korea|dividend": {
    "eligible": 32,
    "defects": [
-    {
-     "ticker": "000810",
-     "name": "삼성화재",
-     "state": "결격",
-     "verdict": "실질",
-     "flags": [
-      {
-       "k": "dup",
-       "msg": "중복 편성 — 우량 주제에도 있어 분산이 줄어든다",
-       "fresh": false
-      }
-     ],
-     "note": "중복 편성 — 우량 주제에 남기고 이 주제는 다른 종목으로 교체",
-     "dup": "core",
-     "triedAt": "2026-11-06",
-     "since": "2026-10-21",
-     "age": 16,
-     "long": 1
-    },
     {
      "ticker": "029780",
      "name": "삼성카드",
@@ -564,8 +530,8 @@ window.CANDIDATES = {
      "ticker": "383220",
      "name": "F&F",
      "status": "보류",
-     "note": "3분기 실적 발표 전, 테일러메이드 인수 미정(자산 급증 필터 위험), 2025 DPS 신뢰 출처 2곳 미확인.",
-     "asOf": "2026-11-05",
+     "note": "3분기 실적 발표 전이고 2분기 영업이익이 컨센서스를 밑돌았으며 이익 변동이 배당 후보 중 가장 크다.",
+     "asOf": "2026-11-07",
      "why": "배당 비감소 4년 · 배당성향 25.4% · 배당 4.2%",
      "url": "https://m.stock.naver.com/domestic/stock/383220/total"
     },
@@ -620,26 +586,17 @@ window.CANDIDATES = {
      "ticker": "018670",
      "name": "SK가스",
      "status": "보류",
-     "note": "배당 비감소 4년이지만 LPG 트레이딩 이익 변동이 커 하방 경직성 의문, 3분기 실적 발표 전.",
-     "asOf": "2026-11-05",
+     "note": "2분기 영업손실로 이익 안정성이 배당 주제에 못 미치고 3분기 실적 발표 전.",
+     "asOf": "2026-11-07",
      "why": "배당 비감소 4년 · 배당성향 34.5% · 배당 3.9%",
      "url": "https://m.stock.naver.com/domestic/stock/018670/total"
-    },
-    {
-     "ticker": "047050",
-     "name": "포스코인터내셔널",
-     "status": "보류",
-     "note": "배당 조건은 통과하나 3년 매출 역성장과 모기업 지분 매각 오버행, 컨센서스 미확인.",
-     "asOf": "2026-10-26",
-     "why": "배당 비감소 4년 · 배당성향 51.4% · 배당 3.8%",
-     "url": "https://m.stock.naver.com/domestic/stock/047050/total"
     },
     {
      "ticker": "001800",
      "name": "오리온홀딩스",
      "status": "보류",
-     "note": "2025 DPS 증액·중간배당·3년 800원 이상 배당 계획 확인. 지주사 연결 왜곡과 컨센서스 목표가 두 번째 출처 미확보.",
-     "asOf": "2026-11-05",
+     "note": "배당 증액·최소 배당 계획은 확인했지만 지주사 목표가를 내는 최근 리포트가 네이버 집계 외에 없다.",
+     "asOf": "2026-11-07",
      "why": "배당 비감소 4년 · 배당성향 54.7% · 배당 4.5%",
      "url": "https://m.stock.naver.com/domestic/stock/001800/total"
     },
@@ -651,14 +608,6 @@ window.CANDIDATES = {
      "asOf": "2026-11-04",
      "why": "배당 비감소 0년 · 배당성향 27.7% · 배당 3.6%",
      "url": "https://m.stock.naver.com/domestic/stock/005380/total"
-    },
-    {
-     "ticker": "003550",
-     "name": "LG",
-     "status": "보류",
-     "note": "배당성향 65% 안팎·자사주 전량 소각은 확인했지만 배당 비감소 연수가 없고 3분기 실적 미확인.",
-     "asOf": "2026-11-06",
-     "url": "https://m.stock.naver.com/domestic/stock/003550/total"
     },
     {
      "ticker": "024110",
@@ -1230,10 +1179,10 @@ window.CANDIDATES = {
  },
  "summary": {
   "review": 0,
-  "defect": 2,
+  "defect": 1,
   "watch": 23,
   "untried": 0,
-  "dup": 1,
-  "long": 2
+  "dup": 0,
+  "long": 1
  }
 };

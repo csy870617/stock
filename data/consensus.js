@@ -2,28 +2,12 @@
 // key "<country>:<ticker>" → {code 네이버 코드, mean 평균 목표가, high, low, date 집계 기준일, recomm 투자의견 평균(5=강력매수)}
 window.STOCK_CONSENSUS = {
  "asOf": "2026-11-07",
- "builtAt": "2026-11-07T00:10:06.680Z",
+ "builtAt": "2026-11-07T09:17:39.873Z",
  "source": "네이버 증권 consensusInfo(한국 FnGuide·미국 LSEG 집계)",
  "items": {
-  "korea:005930": {
-   "code": "005930",
-   "mean": 472381,
-   "high": null,
-   "low": null,
-   "date": "2026-11-05",
-   "recomm": 4
-  },
   "korea:105560": {
    "code": "105560",
    "mean": 219722,
-   "high": null,
-   "low": null,
-   "date": "2026-11-05",
-   "recomm": 4
-  },
-  "korea:207940": {
-   "code": "207940",
-   "mean": 1946431,
    "high": null,
    "low": null,
    "date": "2026-11-05",
@@ -37,13 +21,13 @@ window.STOCK_CONSENSUS = {
    "date": "2026-11-05",
    "recomm": 4
   },
-  "korea:000810": {
-   "code": "000810",
-   "mean": 774824,
+  "korea:207940": {
+   "code": "207940",
+   "mean": 1946431,
    "high": null,
    "low": null,
    "date": "2026-11-05",
-   "recomm": 3.88
+   "recomm": 4
   },
   "korea:012450": {
    "code": "012450",
@@ -53,25 +37,25 @@ window.STOCK_CONSENSUS = {
    "date": "2026-11-05",
    "recomm": 4
   },
-  "korea:029780": {
-   "code": "029780",
-   "mean": 56500,
+  "korea:000810": {
+   "code": "000810",
+   "mean": 774824,
+   "high": null,
+   "low": null,
+   "date": "2026-11-05",
+   "recomm": 3.88
+  },
+  "korea:005930": {
+   "code": "005930",
+   "mean": 472381,
    "high": null,
    "low": null,
    "date": "2026-11-05",
    "recomm": 4
   },
-  "korea:032640": {
-   "code": "032640",
-   "mean": 20237,
-   "high": null,
-   "low": null,
-   "date": "2026-11-05",
-   "recomm": 4
-  },
-  "korea:000270": {
-   "code": "000270",
-   "mean": 161478,
+  "korea:009540": {
+   "code": "009540",
+   "mean": 444200,
    "high": null,
    "low": null,
    "date": "2026-11-05",
@@ -85,9 +69,25 @@ window.STOCK_CONSENSUS = {
    "date": "2026-11-05",
    "recomm": 4
   },
-  "korea:009540": {
-   "code": "009540",
-   "mean": 444200,
+  "korea:000270": {
+   "code": "000270",
+   "mean": 161478,
+   "high": null,
+   "low": null,
+   "date": "2026-11-05",
+   "recomm": 4
+  },
+  "korea:032640": {
+   "code": "032640",
+   "mean": 20237,
+   "high": null,
+   "low": null,
+   "date": "2026-11-05",
+   "recomm": 4
+  },
+  "korea:029780": {
+   "code": "029780",
+   "mean": 56500,
    "high": null,
    "low": null,
    "date": "2026-11-05",
@@ -109,25 +109,9 @@ window.STOCK_CONSENSUS = {
    "date": "2026-11-05",
    "recomm": 3.77
   },
-  "korea:139130": {
-   "code": "139130",
-   "mean": 23233,
-   "high": null,
-   "low": null,
-   "date": "2026-11-05",
-   "recomm": 4
-  },
   "korea:035900": {
    "code": "035900",
    "mean": 56059,
-   "high": null,
-   "low": null,
-   "date": "2026-11-05",
-   "recomm": 4
-  },
-  "korea:036570": {
-   "code": "036570",
-   "mean": 354167,
    "high": null,
    "low": null,
    "date": "2026-11-05",
@@ -141,17 +125,17 @@ window.STOCK_CONSENSUS = {
    "date": "2026-11-05",
    "recomm": 3.9
   },
-  "korea:316140": {
-   "code": "316140",
-   "mean": 43526,
+  "korea:139130": {
+   "code": "139130",
+   "mean": 23233,
    "high": null,
    "low": null,
    "date": "2026-11-05",
    "recomm": 4
   },
-  "korea:000660": {
-   "code": "000660",
-   "mean": 3054286,
+  "korea:036570": {
+   "code": "036570",
+   "mean": 354167,
    "high": null,
    "low": null,
    "date": "2026-11-05",
@@ -165,9 +149,33 @@ window.STOCK_CONSENSUS = {
    "date": "2026-11-05",
    "recomm": 4
   },
+  "korea:316140": {
+   "code": "316140",
+   "mean": 43526,
+   "high": null,
+   "low": null,
+   "date": "2026-11-05",
+   "recomm": 4
+  },
   "korea:267260": {
    "code": "267260",
    "mean": 859412,
+   "high": null,
+   "low": null,
+   "date": "2026-11-05",
+   "recomm": 4
+  },
+  "korea:012750": {
+   "code": "012750",
+   "mean": 112750,
+   "high": null,
+   "low": null,
+   "date": "2026-11-05",
+   "recomm": 4
+  },
+  "korea:000660": {
+   "code": "000660",
+   "mean": 3054286,
    "high": null,
    "low": null,
    "date": "2026-11-05",
@@ -181,9 +189,9 @@ window.STOCK_CONSENSUS = {
    "date": "2026-11-05",
    "recomm": 4
   },
-  "korea:012750": {
-   "code": "012750",
-   "mean": 112750,
+  "korea:241560": {
+   "code": "241560",
+   "mean": 78429,
    "high": null,
    "low": null,
    "date": "2026-11-05",
@@ -213,14 +221,6 @@ window.STOCK_CONSENSUS = {
    "date": "2026-11-05",
    "recomm": 3.83
   },
-  "korea:005830": {
-   "code": "005830",
-   "mean": 241625,
-   "high": null,
-   "low": null,
-   "date": "2026-11-05",
-   "recomm": 4
-  },
   "korea:001120": {
    "code": "001120",
    "mean": 59857,
@@ -229,17 +229,9 @@ window.STOCK_CONSENSUS = {
    "date": "2026-11-05",
    "recomm": 4
   },
-  "korea:241560": {
-   "code": "241560",
-   "mean": 78429,
-   "high": null,
-   "low": null,
-   "date": "2026-11-05",
-   "recomm": 4
-  },
-  "korea:018260": {
-   "code": "018260",
-   "mean": 275867,
+  "korea:005830": {
+   "code": "005830",
+   "mean": 241625,
    "high": null,
    "low": null,
    "date": "2026-11-05",
@@ -253,25 +245,9 @@ window.STOCK_CONSENSUS = {
    "date": "2026-11-05",
    "recomm": 4
   },
-  "korea:066570": {
-   "code": "066570",
-   "mean": 253235,
-   "high": null,
-   "low": null,
-   "date": "2026-11-05",
-   "recomm": 4
-  },
   "korea:278470": {
    "code": "278470",
    "mean": 462045,
-   "high": null,
-   "low": null,
-   "date": "2026-11-05",
-   "recomm": 4
-  },
-  "korea:005850": {
-   "code": "005850",
-   "mean": 83444,
    "high": null,
    "low": null,
    "date": "2026-11-05",
@@ -285,33 +261,33 @@ window.STOCK_CONSENSUS = {
    "date": "2026-11-05",
    "recomm": 4
   },
+  "korea:018260": {
+   "code": "018260",
+   "mean": 275867,
+   "high": null,
+   "low": null,
+   "date": "2026-11-05",
+   "recomm": 4
+  },
+  "korea:066570": {
+   "code": "066570",
+   "mean": 253235,
+   "high": null,
+   "low": null,
+   "date": "2026-11-05",
+   "recomm": 4
+  },
+  "korea:005850": {
+   "code": "005850",
+   "mean": 83444,
+   "high": null,
+   "low": null,
+   "date": "2026-11-05",
+   "recomm": 4
+  },
   "korea:030200": {
    "code": "030200",
    "mean": 74111,
-   "high": null,
-   "low": null,
-   "date": "2026-11-05",
-   "recomm": 4
-  },
-  "korea:005490": {
-   "code": "005490",
-   "mean": 485000,
-   "high": null,
-   "low": null,
-   "date": "2026-11-05",
-   "recomm": 4
-  },
-  "korea:010120": {
-   "code": "010120",
-   "mean": 270412,
-   "high": null,
-   "low": null,
-   "date": "2026-11-05",
-   "recomm": 4
-  },
-  "korea:103590": {
-   "code": "103590",
-   "mean": 114200,
    "high": null,
    "low": null,
    "date": "2026-11-05",
@@ -325,25 +301,33 @@ window.STOCK_CONSENSUS = {
    "date": "2026-11-05",
    "recomm": 4
   },
+  "korea:005490": {
+   "code": "005490",
+   "mean": 485000,
+   "high": null,
+   "low": null,
+   "date": "2026-11-05",
+   "recomm": 4
+  },
+  "korea:103590": {
+   "code": "103590",
+   "mean": 114200,
+   "high": null,
+   "low": null,
+   "date": "2026-11-05",
+   "recomm": 4
+  },
+  "korea:010120": {
+   "code": "010120",
+   "mean": 270412,
+   "high": null,
+   "low": null,
+   "date": "2026-11-05",
+   "recomm": 4
+  },
   "korea:012330": {
    "code": "012330",
    "mean": 606957,
-   "high": null,
-   "low": null,
-   "date": "2026-11-05",
-   "recomm": 4
-  },
-  "korea:033780": {
-   "code": "033780",
-   "mean": 244286,
-   "high": null,
-   "low": null,
-   "date": "2026-11-05",
-   "recomm": 4
-  },
-  "korea:030190": {
-   "code": "030190",
-   "mean": 20000,
    "high": null,
    "low": null,
    "date": "2026-11-05",
@@ -357,9 +341,9 @@ window.STOCK_CONSENSUS = {
    "date": "2026-11-05",
    "recomm": 4
   },
-  "korea:047050": {
-   "code": "047050",
-   "mean": 88933,
+  "korea:030190": {
+   "code": "030190",
+   "mean": 20000,
    "high": null,
    "low": null,
    "date": "2026-11-05",
@@ -373,6 +357,22 @@ window.STOCK_CONSENSUS = {
    "date": "2026-11-05",
    "recomm": 4
   },
+  "korea:047050": {
+   "code": "047050",
+   "mean": 88933,
+   "high": null,
+   "low": null,
+   "date": "2026-11-05",
+   "recomm": 4
+  },
+  "korea:033780": {
+   "code": "033780",
+   "mean": 244286,
+   "high": null,
+   "low": null,
+   "date": "2026-11-05",
+   "recomm": 4
+  },
   "korea:064400": {
    "code": "064400",
    "mean": 97750,
@@ -381,17 +381,17 @@ window.STOCK_CONSENSUS = {
    "date": "2026-11-05",
    "recomm": 4
   },
-  "korea:095340": {
-   "code": "095340",
-   "mean": 215714,
+  "korea:282330": {
+   "code": "282330",
+   "mean": 186400,
    "high": null,
    "low": null,
    "date": "2026-11-05",
    "recomm": 4
   },
-  "korea:282330": {
-   "code": "282330",
-   "mean": 186400,
+  "korea:095340": {
+   "code": "095340",
+   "mean": 215714,
    "high": null,
    "low": null,
    "date": "2026-11-05",
@@ -437,14 +437,6 @@ window.STOCK_CONSENSUS = {
    "date": "2026-10-29",
    "recomm": 3.9
   },
-  "us:NVDA": {
-   "code": "NVDA.O",
-   "mean": 324.29,
-   "high": 515,
-   "low": 180,
-   "date": "2026-10-29",
-   "recomm": 4.32
-  },
   "us:META": {
    "code": "META.O",
    "mean": 844.8,
@@ -452,6 +444,14 @@ window.STOCK_CONSENSUS = {
    "low": 629.06,
    "date": "2026-10-29",
    "recomm": 4.16
+  },
+  "us:NVDA": {
+   "code": "NVDA.O",
+   "mean": 324.29,
+   "high": 515,
+   "low": 180,
+   "date": "2026-10-29",
+   "recomm": 4.32
   },
   "us:AVGO": {
    "code": "AVGO.O",
@@ -469,13 +469,13 @@ window.STOCK_CONSENSUS = {
    "date": "2026-10-29",
    "recomm": 4.35
   },
-  "us:KO": {
-   "code": "KO",
-   "mean": 97.98,
-   "high": 106,
-   "low": 76.5,
+  "us:UBER": {
+   "code": "UBER.K",
+   "mean": 102.34,
+   "high": 150,
+   "low": 72,
    "date": "2026-10-29",
-   "recomm": 3.96
+   "recomm": 4.1
   },
   "us:C": {
    "code": "C",
@@ -484,22 +484,6 @@ window.STOCK_CONSENSUS = {
    "low": 131.69,
    "date": "2026-10-29",
    "recomm": 4.04
-  },
-  "us:VZ": {
-   "code": "VZ",
-   "mean": 50.91,
-   "high": 71,
-   "low": 44,
-   "date": "2026-10-29",
-   "recomm": 3.58
-  },
-  "us:UBER": {
-   "code": "UBER.K",
-   "mean": 102.34,
-   "high": 150,
-   "low": 72,
-   "date": "2026-10-29",
-   "recomm": 4.1
   },
   "us:GM": {
    "code": "GM",
@@ -517,13 +501,21 @@ window.STOCK_CONSENSUS = {
    "date": "2026-10-29",
    "recomm": 3.65
   },
-  "us:TSLA": {
-   "code": "TSLA.O",
-   "mean": 391.82,
-   "high": 550,
-   "low": 24.86,
+  "us:VZ": {
+   "code": "VZ",
+   "mean": 50.91,
+   "high": 71,
+   "low": 44,
    "date": "2026-10-29",
-   "recomm": 3.63
+   "recomm": 3.58
+  },
+  "us:KO": {
+   "code": "KO",
+   "mean": 97.98,
+   "high": 106,
+   "low": 76.5,
+   "date": "2026-10-29",
+   "recomm": 3.96
   },
   "us:AAPL": {
    "code": "AAPL.O",
@@ -533,6 +525,14 @@ window.STOCK_CONSENSUS = {
    "date": "2026-10-29",
    "recomm": 3.67
   },
+  "us:CI": {
+   "code": "CI",
+   "mean": 338.67,
+   "high": 400,
+   "low": 288,
+   "date": "2026-10-29",
+   "recomm": 3.92
+  },
   "us:LLY": {
    "code": "LLY",
    "mean": 1156,
@@ -540,6 +540,14 @@ window.STOCK_CONSENSUS = {
    "low": 1156,
    "date": "2026-10-29",
    "recomm": 4.38
+  },
+  "us:TSLA": {
+   "code": "TSLA.O",
+   "mean": 391.82,
+   "high": 550,
+   "low": 24.86,
+   "date": "2026-10-29",
+   "recomm": 3.63
   },
   "us:JNJ": {
    "code": "JNJ",
@@ -557,14 +565,6 @@ window.STOCK_CONSENSUS = {
    "date": "2026-10-29",
    "recomm": 3.88
   },
-  "us:CI": {
-   "code": "CI",
-   "mean": 338.67,
-   "high": 400,
-   "low": 288,
-   "date": "2026-10-29",
-   "recomm": 3.92
-  },
   "us:MU": {
    "code": "MU.O",
    "mean": 1538.93,
@@ -573,13 +573,13 @@ window.STOCK_CONSENSUS = {
    "date": "2026-10-29",
    "recomm": 4.25
   },
-  "us:IREN": {
-   "code": "IREN.O",
-   "mean": 79.21,
-   "high": 131,
-   "low": 43.86,
+  "us:MDT": {
+   "code": "MDT",
+   "mean": 105.05,
+   "high": 121,
+   "low": 85,
    "date": "2026-10-29",
-   "recomm": 4.05
+   "recomm": 3.94
   },
   "us:UNH": {
    "code": "UNH",
@@ -597,6 +597,14 @@ window.STOCK_CONSENSUS = {
    "date": "2026-10-29",
    "recomm": 4.23
   },
+  "us:IREN": {
+   "code": "IREN.O",
+   "mean": 79.21,
+   "high": 131,
+   "low": 43.86,
+   "date": "2026-10-29",
+   "recomm": 4.05
+  },
   "us:GS": {
    "code": "GS",
    "mean": 1045.3,
@@ -604,22 +612,6 @@ window.STOCK_CONSENSUS = {
    "low": 875,
    "date": "2026-10-29",
    "recomm": 3.42
-  },
-  "us:MDT": {
-   "code": "MDT",
-   "mean": 105.05,
-   "high": 121,
-   "low": 85,
-   "date": "2026-10-29",
-   "recomm": 3.94
-  },
-  "us:SO": {
-   "code": "SO",
-   "mean": 96.02,
-   "high": 112,
-   "low": 74,
-   "date": "2026-10-29",
-   "recomm": 3.32
   },
   "us:AMP": {
    "code": "AMP",
@@ -629,22 +621,6 @@ window.STOCK_CONSENSUS = {
    "date": "2026-10-29",
    "recomm": 3.47
   },
-  "us:WEC": {
-   "code": "WEC",
-   "mean": 116.78,
-   "high": 129,
-   "low": 106.5,
-   "date": "2026-10-29",
-   "recomm": 3.38
-  },
-  "us:MTB": {
-   "code": "MTB",
-   "mean": 246.07,
-   "high": 294,
-   "low": 198,
-   "date": "2026-10-29",
-   "recomm": 3.27
-  },
   "us:TJX": {
    "code": "TJX",
    "mean": 169.86,
@@ -652,6 +628,14 @@ window.STOCK_CONSENSUS = {
    "low": 127.5,
    "date": "2026-10-29",
    "recomm": 4.04
+  },
+  "us:SO": {
+   "code": "SO",
+   "mean": 96.02,
+   "high": 112,
+   "low": 74,
+   "date": "2026-10-29",
+   "recomm": 3.32
   },
   "us:PNC": {
    "code": "PNC",
@@ -661,13 +645,21 @@ window.STOCK_CONSENSUS = {
    "date": "2026-10-29",
    "recomm": 3.96
   },
-  "us:BRK.B": {
-   "code": "BRKb",
-   "mean": 490.07,
-   "high": 628,
-   "low": 313.22,
+  "us:MTB": {
+   "code": "MTB",
+   "mean": 246.07,
+   "high": 294,
+   "low": 198,
    "date": "2026-10-29",
-   "recomm": 3.6
+   "recomm": 3.27
+  },
+  "us:WEC": {
+   "code": "WEC",
+   "mean": 116.78,
+   "high": 129,
+   "low": 106.5,
+   "date": "2026-10-29",
+   "recomm": 3.38
   },
   "us:GILD": {
    "code": "GILD.O",
@@ -676,22 +668,6 @@ window.STOCK_CONSENSUS = {
    "low": 126,
    "date": "2026-10-29",
    "recomm": 4.07
-  },
-  "us:GD": {
-   "code": "GD",
-   "mean": 401.46,
-   "high": 465,
-   "low": 309,
-   "date": "2026-10-29",
-   "recomm": 3.72
-  },
-  "us:CB": {
-   "code": "CB",
-   "mean": 362.96,
-   "high": 425,
-   "low": 127.42,
-   "date": "2026-10-29",
-   "recomm": 3.48
   },
   "us:ANET": {
    "code": "ANET.K",
@@ -709,37 +685,29 @@ window.STOCK_CONSENSUS = {
    "date": "2026-10-29",
    "recomm": 3.69
   },
-  "us:CTAS": {
-   "code": "CTAS.O",
-   "mean": 217.94,
-   "high": 250,
-   "low": 181,
+  "us:GD": {
+   "code": "GD",
+   "mean": 401.46,
+   "high": 465,
+   "low": 309,
    "date": "2026-10-29",
-   "recomm": 3.57
+   "recomm": 3.72
   },
-  "us:RSG": {
-   "code": "RSG",
-   "mean": 243.96,
-   "high": 272,
-   "low": 212.16,
+  "us:CB": {
+   "code": "CB",
+   "mean": 362.96,
+   "high": 425,
+   "low": 127.42,
    "date": "2026-10-29",
-   "recomm": 3.71
+   "recomm": 3.48
   },
-  "us:TMO": {
-   "code": "TMO",
-   "mean": 740.32,
-   "high": 830,
-   "low": 571.2,
+  "us:BRK.B": {
+   "code": "BRKb",
+   "mean": 490.07,
+   "high": 628,
+   "low": 313.22,
    "date": "2026-10-29",
-   "recomm": 4.13
-  },
-  "us:MSI": {
-   "code": "MSI",
-   "mean": 517.35,
-   "high": 550,
-   "low": 430,
-   "date": "2026-10-29",
-   "recomm": 4.13
+   "recomm": 3.6
   },
   "us:ORLY": {
    "code": "ORLY.O",
@@ -749,6 +717,22 @@ window.STOCK_CONSENSUS = {
    "date": "2026-10-29",
    "recomm": 4.03
   },
+  "us:MSI": {
+   "code": "MSI",
+   "mean": 517.35,
+   "high": 550,
+   "low": 430,
+   "date": "2026-10-29",
+   "recomm": 4.13
+  },
+  "us:TMO": {
+   "code": "TMO",
+   "mean": 740.32,
+   "high": 830,
+   "low": 571.2,
+   "date": "2026-10-29",
+   "recomm": 4.13
+  },
   "us:ECL": {
    "code": "ECL",
    "mean": 326.96,
@@ -757,13 +741,29 @@ window.STOCK_CONSENSUS = {
    "date": "2026-10-29",
    "recomm": 4.12
   },
-  "us:WAB": {
-   "code": "WAB",
-   "mean": 333.41,
-   "high": 355,
-   "low": 292,
+  "us:RSG": {
+   "code": "RSG",
+   "mean": 243.96,
+   "high": 272,
+   "low": 212.16,
    "date": "2026-10-29",
-   "recomm": 4.07
+   "recomm": 3.71
+  },
+  "us:CTAS": {
+   "code": "CTAS.O",
+   "mean": 217.94,
+   "high": 250,
+   "low": 181,
+   "date": "2026-10-29",
+   "recomm": 3.57
+  },
+  "us:NTES": {
+   "code": "NTES.O",
+   "mean": 162.36,
+   "high": 204,
+   "low": 132,
+   "date": "2026-10-29",
+   "recomm": 4.2
   },
   "us:ADP": {
    "code": "ADP.O",
@@ -781,13 +781,13 @@ window.STOCK_CONSENSUS = {
    "date": "2026-10-29",
    "recomm": 3.2
   },
-  "us:YUM": {
-   "code": "YUM",
-   "mean": 170.43,
-   "high": 190,
-   "low": 147,
+  "us:WAB": {
+   "code": "WAB",
+   "mean": 333.41,
+   "high": 355,
+   "low": 292,
    "date": "2026-10-29",
-   "recomm": 3.61
+   "recomm": 4.07
   },
   "us:VRT": {
    "code": "VRT",

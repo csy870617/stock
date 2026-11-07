@@ -679,13 +679,6 @@ window.STOCK_QUOTES = {
    "close": 89.89,
    "closeDate": "2026-11-06"
   },
-  "YUM": {
-   "price": 161.14,
-   "date": "2026-11-06",
-   "changePct": -3,
-   "close": 161.14,
-   "closeDate": "2026-11-06"
-  },
   "ADP": {
    "price": 303.35,
    "date": "2026-11-06",
@@ -712,6 +705,13 @@ window.STOCK_QUOTES = {
    "date": "2026-11-06",
    "changePct": 1.8,
    "close": 283.59,
+   "closeDate": "2026-11-06"
+  },
+  "NTES": {
+   "price": 129.45,
+   "date": "2026-11-06",
+   "changePct": 2.3,
+   "close": 129.45,
    "closeDate": "2026-11-06"
   }
  },
