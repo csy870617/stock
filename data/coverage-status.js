@@ -3,21 +3,21 @@
 window.COVERAGE_STATUS = {
  "asOf": "2026-11-08",
  "T": "2026-11-06",
- "total": 102,
+ "total": 103,
  "cycleDays": 7,
  "daily": [
   {
    "key": "techNote",
    "label": "기술 대응",
-   "done": 102,
-   "total": 102,
+   "done": 103,
+   "total": 103,
    "ok": true
   },
   {
    "key": "valueNote",
    "label": "밸류 설명",
-   "done": 102,
-   "total": 102,
+   "done": 103,
+   "total": 103,
    "ok": true
   },
   {
@@ -65,8 +65,8 @@ window.COVERAGE_STATUS = {
   {
    "key": "trend",
    "label": "현재 추세",
-   "done": 99,
-   "total": 99,
+   "done": 100,
+   "total": 100,
    "ok": true
   },
   {
@@ -81,8 +81,8 @@ window.COVERAGE_STATUS = {
   {
    "key": "verified",
    "label": "목표가 재검증",
-   "fresh": 102,
-   "total": 102,
+   "fresh": 103,
+   "total": 103,
    "oldestDays": 4,
    "ok": true
   },
@@ -92,7 +92,7 @@ window.COVERAGE_STATUS = {
    "fresh": 8,
    "total": 8,
    "unit": "그룹",
-   "oldestDays": 3,
+   "oldestDays": 0,
    "ok": true
   },
   {
@@ -101,14 +101,14 @@ window.COVERAGE_STATUS = {
    "fresh": 1,
    "total": 1,
    "unit": "회",
-   "oldestDays": 3,
+   "oldestDays": 0,
    "ok": true
   },
   {
    "key": "aiTarget",
    "label": "AI 적정가 재시도",
-   "fresh": 102,
-   "total": 102,
+   "fresh": 103,
+   "total": 103,
    "oldestDays": 14,
    "ok": true
   },
@@ -124,5 +124,5 @@ window.COVERAGE_STATUS = {
  ],
  "ok": true,
  "overdue": [],
- "dataHash": "271fd2f7020b"
+ "dataHash": "028bcb867ce2"
 };

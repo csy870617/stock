@@ -5,7 +5,7 @@
 //   price·date 는 조회 시각의 현재가(장중이면 장중가), close·closeDate 는 마지막으로 끝난 정규장 종가(스냅샷 기록용)
 // indices: 성과 기준 지수(kospi ^KS11·sp500 ^GSPC·rsp RSP) — 같은 형식, snapshot.js 가 종목 종가와 짝지어 기록
 window.STOCK_QUOTES = {
- "generatedAt": "2026-11-07",
+ "generatedAt": "2026-11-08",
  "quotes": {
   "103590": {
    "price": 43250,
@@ -497,13 +497,6 @@ window.STOCK_QUOTES = {
    "close": 358.22,
    "closeDate": "2026-11-06"
   },
-  "MDLZ": {
-   "price": 66.02,
-   "date": "2026-11-06",
-   "changePct": -1.2,
-   "close": 66.02,
-   "closeDate": "2026-11-06"
-  },
   "AAPL": {
    "price": 342.37,
    "date": "2026-11-06",
@@ -651,13 +644,6 @@ window.STOCK_QUOTES = {
    "close": 300.68,
    "closeDate": "2026-11-06"
   },
-  "MSI": {
-   "price": 514.51,
-   "date": "2026-11-06",
-   "changePct": -0.5,
-   "close": 514.51,
-   "closeDate": "2026-11-06"
-  },
   "RSG": {
    "price": 246.85,
    "date": "2026-11-06",
@@ -712,6 +698,13 @@ window.STOCK_QUOTES = {
    "date": "2026-11-06",
    "changePct": 2.3,
    "close": 129.45,
+   "closeDate": "2026-11-06"
+  },
+  "ROST": {
+   "price": 231.09,
+   "date": "2026-11-06",
+   "changePct": -1.8,
+   "close": 231.09,
    "closeDate": "2026-11-06"
   }
  },
