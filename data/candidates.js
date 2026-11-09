@@ -2,12 +2,12 @@
 // groups["<country>|<theme>"] = {defects 편성 결격(state 결격|점검 필요|감시), list 후보(status 검증 통과|보류|검증 대기)}
 // 세션 판정은 data/candidate-notes.json(CLAUDE.md §3-7) — 이 파일을 직접 고치지 않는다.
 window.CANDIDATES = {
- "asOf": "2026-11-08",
- "T": "2026-11-06",
+ "asOf": "2026-11-09",
+ "T": "2026-11-09",
  "screenAsOf": "2026-11-08",
  "screenFresh": true,
  "beta": {
-  "korea": 0.69,
+  "korea": 0.68,
   "us": 0.88
  },
  "groups": {
@@ -38,9 +38,9 @@ window.CANDIDATES = {
      "note": "추세 붕괴(단·중·장기 모두 하락세) — 3분기 영업이익이 원화 강세에 따른 외화 평가손실로 컨센서스를 밑돌고 이익률이 낮아졌다. 코스피 시총 상위 60 중 편성 밖이면서 우량 정체성(3년 평균 ROIC 상위 절반)을 채우는 회사는 SK스퀘어(지분법 왜곡·문턱 미달)·크래프톤(월봉 추세 붕괴)·삼성E&A(삼성그룹 상한)뿐이라 대체 후보가 없다.",
      "judged": "2026-11-07",
      "verdict": "실질",
-     "triedAt": "2026-11-08",
+     "triedAt": "2026-11-09",
      "since": "2026-10-21",
-     "age": 16,
+     "age": 19,
      "long": 1
     },
     {
@@ -51,6 +51,11 @@ window.CANDIDATES = {
       {
        "k": "earn",
        "msg": "실적 발표(11/05) — 가이던스·논거 확인",
+       "fresh": false
+      },
+      {
+       "k": "drop",
+       "msg": "5거래일 -16.2%(시장 중앙값 -2.1%) 급락 — 원인 확인",
        "fresh": false
       }
      ],
@@ -103,11 +108,6 @@ window.CANDIDATES = {
      "state": "감시",
      "flags": [
       {
-       "k": "earn",
-       "msg": "실적 발표(10/29) — 가이던스·논거 확인",
-       "fresh": false
-      },
-      {
        "k": "tpcut",
        "msg": "컨센서스 목표가 14일 새 -17.6% 하향 — 논거 확인",
        "fresh": false
@@ -129,7 +129,7 @@ window.CANDIDATES = {
       },
       {
        "k": "drop",
-       "msg": "5거래일 -17.9%(시장 중앙값 -0.9%) 급락 — 원인 확인",
+       "msg": "5거래일 -26%(시장 중앙값 -2.1%) 급락 — 원인 확인",
        "fresh": false
       }
      ],
@@ -144,13 +144,8 @@ window.CANDIDATES = {
      "state": "감시",
      "flags": [
       {
-       "k": "earn",
-       "msg": "실적 발표(10/27) — 가이던스·논거 확인",
-       "fresh": false
-      },
-      {
        "k": "drop",
-       "msg": "5거래일 -22.3%(시장 중앙값 -0.9%) 급락 — 원인 확인",
+       "msg": "5거래일 -24.2%(시장 중앙값 -2.1%) 급락 — 원인 확인",
        "fresh": false
       }
      ],
@@ -322,13 +317,7 @@ window.CANDIDATES = {
      "ticker": "066570",
      "name": "LG전자",
      "state": "감시",
-     "flags": [
-      {
-       "k": "earn",
-       "msg": "실적 발표(10/28) — 가이던스·논거 확인",
-       "fresh": false
-      }
-     ],
+     "flags": [],
      "note": "3분기 영업이익이 예상치를 밑돌고 전분기보다 크게 줄었지만 전년보다는 늘었고 누적 영업이익은 처음 4조원을 넘었다. 연내 매입 자사주 전량 소각과 추가 주주환원 계획도 유지돼 저평가 논거는 그대로다.",
      "judged": "2026-11-07",
      "verdict": "형식"
@@ -357,11 +346,6 @@ window.CANDIDATES = {
       {
        "k": "theme",
        "msg": "주제 기준 미달 — 정체성 조건 미달(EBIT/EV·FCF 수익률 상위 30%)",
-       "fresh": false
-      },
-      {
-       "k": "earn",
-       "msg": "실적 발표(10/29) — 가이던스·논거 확인",
        "fresh": false
       }
      ],
@@ -485,11 +469,6 @@ window.CANDIDATES = {
      "state": "감시",
      "flags": [
       {
-       "k": "earn",
-       "msg": "실적 발표(10/27) · 전년 대비 매출 -5.6% — 가이던스·논거 확인",
-       "fresh": false
-      },
-      {
        "k": "tpcut",
        "msg": "컨센서스 목표가 14일 새 -16.5% 하향 — 논거 확인",
        "fresh": false
@@ -503,13 +482,7 @@ window.CANDIDATES = {
      "ticker": "139130",
      "name": "iM금융지주",
      "state": "감시",
-     "flags": [
-      {
-       "k": "earn",
-       "msg": "실적 발표(10/29) · 전년 대비 영업이익 -8% — 가이던스·논거 확인",
-       "fresh": false
-      }
-     ],
+     "flags": [],
      "note": "3분기 누적 순이익은 판관비 증가로 소폭 줄었지만 이자이익이 늘고 보통주자본비율이 역대 최고다. 배당 삭감 발표는 없고 회사는 주주환원을 자사주 매입·소각 중심으로 늘리는 방향을 밝혔다.",
      "judged": "2026-11-07",
      "verdict": "형식"
@@ -630,11 +603,6 @@ window.CANDIDATES = {
        "k": "theme",
        "msg": "주제 기준 미달 — 정체성 조건 미달",
        "fresh": false
-      },
-      {
-       "k": "earn",
-       "msg": "실적 발표(10/27) · EPS 서프라이즈 1.5% — 가이던스·논거 확인",
-       "fresh": false
       }
      ],
      "note": "2026.09 분기 순매출 121억 달러(+13%), GAAP 순이익 60억 달러(+18%)로 대형·흑자 조건은 유지됐다. 신호 발동 원인인 3년 평균 ROIC 순위는 확인 전까지 감시한다.",
@@ -646,13 +614,7 @@ window.CANDIDATES = {
      "ticker": "GOOGL",
      "name": "Alphabet",
      "state": "감시",
-     "flags": [
-      {
-       "k": "earn",
-       "msg": "실적 발표(10/28) · EPS 서프라이즈 -27.9% — 가이던스·논거 확인",
-       "fresh": false
-      }
-     ],
+     "flags": [],
      "note": "10/28 실적 뒤 급락은 투자 평가손과 AI 설비투자 대비 잉여현금흐름 적자 우려 때문이다. 매출 +25%·클라우드 매출 두 배 성장·연간 capex 가이던스 유지로 사업 논거는 그대로라 형식 판정, 현금흐름 추이를 감시한다.",
      "judged": "2026-10-29",
      "verdict": "형식"
@@ -913,13 +875,7 @@ window.CANDIDATES = {
      "ticker": "AMP",
      "name": "Ameriprise Financial",
      "state": "감시",
-     "flags": [
-      {
-       "k": "earn",
-       "msg": "실적 발표(10/29) · EPS 서프라이즈 4.1% · 전년 대비 EBIT -2.9% — 가이던스·논거 확인",
-       "fresh": false
-      }
-     ],
+     "flags": [],
      "note": "10/29 3분기 EPS가 시장 예상을 4.1% 웃돌았고 순이익도 +5%였으나 EBIT는 전년 대비 -1%였다. 가이던스 훼손과 회사 고유 악재는 확인되지 않아 EBIT 감소 원인과 Comerica 자산 유출 영향 확인 전까지 감시한다.",
      "judged": "2026-10-30",
      "verdict": "형식",
@@ -1042,11 +998,6 @@ window.CANDIDATES = {
       {
        "k": "theme",
        "msg": "주제 기준 미달 — 정체성 조건 미달",
-       "fresh": false
-      },
-      {
-       "k": "earn",
-       "msg": "실적 발표(10/27) · EPS 서프라이즈 4.6% — 가이던스·논거 확인",
        "fresh": false
       }
      ],

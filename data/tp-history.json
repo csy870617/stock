@@ -1148,7 +1148,12 @@
    "us:MDLZ": null,
    "us:MSI": null,
    "us:YUM": null
+  },
+  "2026-11-09": {
+   "us:ROST": 273.44,
+   "korea:021240": null,
+   "korea:282330": null
   }
  },
- "lastRun": "2026-11-07"
+ "lastRun": "2026-11-09"
 }
