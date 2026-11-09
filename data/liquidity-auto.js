@@ -6,102 +6,102 @@ window.LIQUIDITY_AUTO = {
  "note": "Yahoo 시장지표 기반 자동 baseline(금리·일드커브·VIX·HY신용·달러·원달러·코스피). 거시 이벤트·내러티브는 미반영 — 온디맨드 유동성이 보정.",
  "inputs": {
   "us10y": "4.86",
-  "curve": "0.86",
-  "vix": "25.6",
-  "hyg20": "0.0",
+  "curve": "0.83",
+  "vix": "19.9",
+  "hyg20": "0.3",
   "dxy": "102.3",
   "usdkrw": "1356"
  },
  "us": {
   "shortTerm": "우호",
   "midTerm": "부정",
-  "shortScore": 0.54,
-  "midScore": -0.73,
+  "shortScore": 0.75,
+  "midScore": -0.41,
   "drivers": [
    "10Y 추세 (+2)",
    "일드커브 (+2)",
-   "VIX 25.6 (−1)",
+   "VIX 19.9 (·0)",
    "HY 신용(20d) (·0)"
   ]
  },
  "korea": {
   "shortTerm": "매우 부정",
   "midTerm": "부정",
-  "shortScore": -0.66,
-  "midScore": -0.72,
+  "shortScore": -0.48,
+  "midScore": -0.39,
   "drivers": [
    "⚠ 코스피 급락 floor 발동 (20일 -21%)",
    "코스피 모멘텀(20d) (−2)",
-   "글로벌 변동성 VIX (−1)",
    "원/달러 추세 (·0)",
+   "글로벌 변동성 VIX (·0)",
    "글로벌 신용(20d) (·0)"
   ]
  },
  "fed": {
   "asOf": "2026-11-09",
-  "current": 3.88,
+  "current": 3.878,
   "meetings": [
    {
     "date": "2026-12-09",
-    "rate": 4.084,
-    "stepBp": 20.4,
-    "cumBp": 20.4,
+    "rate": 4.085,
+    "stepBp": 20.8,
+    "cumBp": 20.8,
     "outcomes": [
      {
       "n": 1,
-      "p": 82
+      "p": 83
      },
      {
       "n": 0,
-      "p": 18
+      "p": 17
      }
     ]
    },
    {
     "date": "2027-01-27",
     "rate": 4.15,
-    "stepBp": 6.6,
-    "cumBp": 27,
+    "stepBp": 6.5,
+    "cumBp": 27.2,
     "outcomes": [
      {
       "n": 1,
-      "p": 92
+      "p": 91
      },
      {
       "n": 2,
-      "p": 8
+      "p": 9
      }
     ]
    },
    {
     "date": "2027-03-17",
-    "rate": 4.261,
-    "stepBp": 11.1,
-    "cumBp": 38.1,
+    "rate": 4.272,
+    "stepBp": 12.2,
+    "cumBp": 39.4,
     "outcomes": [
      {
       "n": 2,
-      "p": 52
+      "p": 58
      },
      {
       "n": 1,
-      "p": 48
+      "p": 42
      }
     ]
    },
    {
     "date": "2027-04-28",
     "rate": 4.31,
-    "stepBp": 4.9,
-    "cumBp": 43,
+    "stepBp": 3.8,
+    "cumBp": 43.2,
     "outcomes": [
      {
       "n": 2,
-      "p": 72
+      "p": 73
      },
      {
       "n": 1,
-      "p": 28
+      "p": 27
      }
     ]
    },
@@ -109,47 +109,47 @@ window.LIQUIDITY_AUTO = {
     "date": "2027-06-09",
     "rate": 4.374,
     "stepBp": 6.4,
-    "cumBp": 49.4,
+    "cumBp": 49.7,
     "outcomes": [
      {
       "n": 2,
-      "p": 98
+      "p": 99
      },
      {
       "n": 1,
-      "p": 2
+      "p": 1
      }
     ]
    },
    {
     "date": "2027-07-28",
-    "rate": 4.385,
-    "stepBp": 1.1,
-    "cumBp": 50.5,
+    "rate": 4.39,
+    "stepBp": 1.6,
+    "cumBp": 51.2,
     "outcomes": [
      {
       "n": 2,
-      "p": 98
+      "p": 95
      },
      {
       "n": 3,
-      "p": 2
+      "p": 5
      }
     ]
    },
    {
     "date": "2027-09-15",
-    "rate": 4.405,
-    "stepBp": 2,
-    "cumBp": 52.5,
+    "rate": 4.4,
+    "stepBp": 1,
+    "cumBp": 52.2,
     "outcomes": [
      {
       "n": 2,
-      "p": 90
+      "p": 91
      },
      {
       "n": 3,
-      "p": 10
+      "p": 9
      }
     ]
    }
@@ -181,32 +181,32 @@ window.LIQUIDITY_AUTO = {
  "rateModel": {
   "validatedAt": "2026-10-20",
   "us": {
-   "asOf": "2026-11-05",
+   "asOf": "2026-11-06",
    "policy": 3.88,
    "forecasts": [
     {
      "h": 3,
-     "rate": 4.16,
-     "chg": 0.28,
+     "rate": 4.17,
+     "chg": 0.29,
      "rmse": 0.33,
      "noChangeRmse": 0.47,
-     "market": 4
+     "market": 4.01
     },
     {
      "h": 6,
-     "rate": 4.3,
-     "chg": 0.42,
+     "rate": 4.37,
+     "chg": 0.49,
      "rmse": 0.52,
      "noChangeRmse": 0.86,
-     "market": 4.08
+     "market": 4.12
     },
     {
      "h": 12,
-     "rate": 4.36,
-     "chg": 0.48,
+     "rate": 4.47,
+     "chg": 0.59,
      "rmse": 1.08,
      "noChangeRmse": 1.53,
-     "market": 4.28
+     "market": 4.33
     }
    ],
    "taylor": {
