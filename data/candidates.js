@@ -8,7 +8,7 @@ window.CANDIDATES = {
  "screenFresh": true,
  "beta": {
   "korea": 0.7,
-  "us": 0.91
+  "us": 0.9
  },
  "groups": {
   "korea|core": {
