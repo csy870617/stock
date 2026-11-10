@@ -25,8 +25,8 @@
 //
 //       ※ 성장의 최종 확인(최근 분기·연간 매출·이익 YoY)·컨센서스는 편입 전 LLM 루틴이 웹으로 검증한다(CLAUDE.md §4-7).
 //
-// 또한 현재 주목 종목(theme:"spotlight")이 자기 태그 조건을 여전히 충족하는지 점검해
-// current[] 에 남긴다(루틴의 교체 판단용).
+// 또한 현재 주목 종목(theme:"spotlight")이 자기 태그 조건을 여전히 충족하는지, 그리고 ③ 관문을 여전히 통과하는지 점검해
+// current[] 에 남긴다(루틴의 교체 판단용 — 관문 탈락은 빼고, 사용자가 직접 담은 종목(userPick)은 표시만. 2026-11-07 사용자 결정).
 //
 // 사용법: node scripts/screen-watch.js [--date YYYY-MM-DD]
 
@@ -158,8 +158,13 @@ function argVal(name) {
 function symbolFor(ticker, market) {
   if (market === "KOSPI") return ticker + ".KS";
   if (market === "KOSDAQ") return ticker + ".KQ";
-  return ticker === "BRK.B" ? "BRK-B" : ticker;
+  return String(ticker).replace(/\./g, "-");   // 야후 클래스 주식 표기(BRK.B → BRK-B)
 }
+// 티커 표기 차이(BRK.B·'BRK B'·BRK-B)를 한 키로 — 유니버스(네이버 표기)와 편성의 짝 맞추기
+const tkey = (t) => String(t || "").trim().toUpperCase().replace(/[\s.\-\/]+/g, ".");
+// 같은 회사의 다른 주식(BRK.A·BRK.B …)을 한 회사로 묶는 이름 키(screen-discovery.js coKey 와 같은 규칙)
+const coKey = (n) => String(n || "").toLowerCase().replace(/\bclass\s+[a-z]\b/g, "").replace(/\b(inc|corp|corporation|co|company|ltd|plc|holdings?|group|the|n\.?v|s\.?a|ag|se)\b\.?/g, "")
+  .replace(/[^a-z0-9가-힣]/g, "");
 function sma(arr, n, off) {
   off = off || 0;
   if (arr.length < n + off) return null;
@@ -174,14 +179,16 @@ function loadRoster() {
   delete require.cache[require.resolve(RECO)];
   require(RECO);
   const D = global.window.STOCK_DATA || {};
-  const held = {};      // ticker → true (모든 편성 종목: 후보에서 제외)
-  const watch = [];     // 현재 주목 종목(태그 유효성 점검 대상)
+  const held = {};      // 티커 키(tkey) → true (모든 편성 종목: 후보에서 제외)
+  const heldCo = {};    // "나라|회사 키" → true (같은 회사의 다른 주식도 후보에서 제외)
+  const watch = [];     // 현재 주목 종목(태그 유효성·관문 점검 대상)
   ["korea", "us"].forEach((c) => (D[c] || []).forEach((s) => {
     if (!s || !s.ticker) return;
-    held[s.ticker] = true;
-    if (s.theme === "spotlight") watch.push({ country: c, ticker: s.ticker, name: s.name, market: s.market, tag: s.watchTag || "" });
+    held[tkey(s.ticker)] = true;
+    if (c === "us" && coKey(s.name)) heldCo[c + "|" + coKey(s.name)] = true;
+    if (s.theme === "spotlight") watch.push({ country: c, ticker: s.ticker, name: s.name, market: s.market, tag: s.watchTag || "", userPick: s.userPick || null });
   }));
-  return { held: held, watch: watch };
+  return { held: held, heldCo: heldCo, watch: watch };
 }
 
 const sleep = (ms) => new Promise((res) => setTimeout(res, ms));
@@ -319,7 +326,7 @@ async function mapLimit(items, limit, fn) {
 
 (async () => {
   const asOf = argVal("date") || new Date().toISOString().slice(0, 10);
-  const { held, watch } = loadRoster();
+  const { held, heldCo, watch } = loadRoster();
 
   // 1) 유니버스 스크리닝(편성·관심·보유 종목 제외) — 발굴 스크린 유니버스(재무 관문 포함), 없으면 손 목록(차트만)
   const U = loadUniverse();
@@ -327,13 +334,13 @@ async function mapLimit(items, limit, fn) {
   if (U) {
     U.items.forEach((u) => {
       const c = u.c === "korea" || u.c === "us" ? u.c : null;
-      if (!c || !u.ticker || held[u.ticker]) return;
+      if (!c || !u.ticker || held[tkey(u.ticker)] || (c === "us" && heldCo[c + "|" + coKey(u.name)])) return;
       const market = c === "korea" ? (u.market === "KOSDAQ" ? "KOSDAQ" : "KOSPI") : (u.market || "NYSE");
       targets.push({ country: c, ticker: u.ticker, name: u.name, market, symbol: symbolFor(u.ticker, market), u, why: healthWhy(c, u) });
     });
   } else {
     ["korea", "us"].forEach((c) => UNIVERSE[c].forEach((row) => {
-      if (held[row[0]]) return;
+      if (held[tkey(row[0])]) return;
       targets.push({ country: c, ticker: row[0], name: row[1], market: row[2], symbol: symbolFor(row[0], row[2]), u: null, why: null });
     }));
   }
@@ -393,13 +400,28 @@ async function mapLimit(items, limit, fn) {
     gated[c].sort((x, y) => x.ticker < y.ticker ? -1 : 1);
   });
 
-  // 2) 현재 주목 종목의 태그 유효성 점검(루틴의 교체 판단용)
+  // 2) 현재 주목 종목 점검(루틴의 교체 판단용) — 태그 유효성(차트) + 훌륭한 기업 관문.
+  //    관문(2026-11-07 사용자 결정 '이미 있는 종목에도 적용'): 후보와 같은 재무 조건을 담은 뒤에도 매일 다시 본다 — 걸리면 '관문 탈락'(차트 상태보다 앞선다),
+  //    정기 분석(A 회차 §4-7)이 뺀다. 유니버스 밖(시총 순위 밖)이거나 재무 자료가 없으면 판정하지 않는다('확인 불가' — 자료 공백으로 빼지 않게).
+  const uniBy = {};
+  if (U) U.items.forEach((u) => { if (u && u.c && u.ticker) uniBy[u.c + "|" + tkey(u.ticker)] = u; });
   const current = [];
   await mapLimit(watch, 6, async (w) => {
+    const u = uniBy[w.country + "|" + tkey(w.ticker)] || null;
+    const why = u ? healthWhy(w.country, u) : null;
+    const g = !U ? null : !u ? { gate: "확인 불가", gateWhy: "유니버스 밖(시총 순위 밖)" }
+      : why === "재무 자료 없음" ? { gate: "확인 불가", gateWhy: why } : why ? { gate: "탈락", gateWhy: why } : { gate: "통과" };
+    const row = (status, note) => {
+      const r = { ticker: w.ticker, name: w.name, country: w.country, tag: w.tag, status: status, note: note };
+      if (g) Object.assign(r, g);
+      if (w.userPick) r.userPick = w.userPick;   // 사용자가 직접 담은 종목 — 관문 탈락이어도 표시만(§4-7)
+      if (g && g.gate === "탈락") { r.chart = status; r.status = "관문 탈락"; }
+      return r;
+    };
     const cl = await fetchCloses(symbolFor(w.ticker, w.market));
-    if (!cl) { current.push({ ticker: w.ticker, name: w.name, country: w.country, tag: w.tag, status: "확인 불가", note: "시세 조회 실패" }); return; }
+    if (!cl) { current.push(row("확인 불가", "시세 조회 실패")); return; }
     const a = analyze(cl);
-    if (!a) { current.push({ ticker: w.ticker, name: w.name, country: w.country, tag: w.tag, status: "확인 불가", note: "계산 불가" }); return; }
+    if (!a) { current.push(row("확인 불가", "계산 불가")); return; }
     // 보유 종목은 '오늘 새로 편입할 만한가'가 아니라 '편입 논리가 유지되는가'로 본다.
     //   유지 = 셋업 진행 중 · 졸업 = 목표를 달성해 태그 전환 검토 · 이탈 = 논리 훼손(교체 후보)
     let status = "확인 불가", note = "";
@@ -418,8 +440,10 @@ async function mapLimit(items, limit, fn) {
       status = "태그 없음";
       note = "사용자 요청 편입 종목 등 — 차트 태그 미적용";
     }
-    current.push({ ticker: w.ticker, name: w.name, country: w.country, tag: w.tag, status: status, note: note });
+    current.push(row(status, note));
   });
+  // 받은 순서(병렬 조회)에 따라 줄 순서가 바뀌지 않게 — 매일 의미 없는 차이 방지
+  current.sort((x, y) => (x.country < y.country ? -1 : x.country > y.country ? 1 : x.ticker < y.ticker ? -1 : x.ticker > y.ticker ? 1 : 0));
 
   const W = {
     asOf: asOf,
@@ -427,7 +451,8 @@ async function mapLimit(items, limit, fn) {
           "turnaround=바닥 확인+5·20·60일선 수렴+정배열(근접), breakout=물량 소화 후 신고가 갓 돌파. " +
           (U ? "후보는 훌륭한 기업 관문(Top Pick 건강 관문의 재무 조건) 통과 회사만 — growth=연간·최근 분기 매출·영업이익 모두 플러스(숫자 근사, 앞에 둔다). "
              : "유니버스 파일이 없어 손 목록으로 차트만 봤다(재무 관문 미적용). ") +
-          "편입 전 LLM 루틴이 최근 분기·연간 성장과 컨센서스를 웹으로 반드시 검증한다.",
+          "편입 전 LLM 루틴이 최근 분기·연간 성장과 컨센서스를 웹으로 반드시 검증한다. " +
+          "current = 현재 주목 종목 — status(유지·졸업·이탈·관문 탈락), gate(통과·탈락·확인 불가)·gateWhy — 관문 탈락은 정기 분석이 뺀다(userPick 은 표시만).",
     params: { TOP_N, SPREAD_MAX, OFF_HIGH_MAX, ABOVE_LOW_MIN, BASE_MIN_DAYS, BASE_WIDTH_MAX, REL_MIN, REL_MAX },
     universe: U ? { source: "screen-universe.json " + U.asOf, korea: U.items.filter((u) => u.c === "korea").length, us: U.items.filter((u) => u.c === "us").length,
       screened: ok, failed: fail, gate: "건강(흑자·희석 ≤5%·자산 증가·이익 변동 상위 10% 밖)" }
@@ -442,7 +467,7 @@ async function mapLimit(items, limit, fn) {
   };
   fs.writeFileSync(OUT,
     "// 주목 차트 후보 스냅샷 — scripts/screen-watch.js 가 자동 생성 (LLM 토큰 0, 순수 스크립트)\n" +
-    "// turnaround/breakout = 국가별 상위 후보(점수순), current = 현재 주목 종목의 태그 유효성 점검.\n" +
+    "// turnaround/breakout = 국가별 상위 후보(점수순), current = 현재 주목 종목의 태그 유효성·훌륭한 기업 관문 점검.\n" +
     "window.WATCH_CANDIDATES = " + JSON.stringify(W) + ";\n");
 
   console.log("watch-candidates.js 갱신 (" + asOf + ") — 스크리닝 " + ok + "종목(실패 " + fail + ")");
@@ -466,6 +491,10 @@ async function mapLimit(items, limit, fn) {
   });
   const out = current.filter((x) => x.status === "이탈");
   const grad = current.filter((x) => x.status === "졸업");
+  const gf = current.filter((x) => x.status === "관문 탈락");
+  const gu = current.filter((x) => x.gate === "확인 불가");
   if (grad.length) console.log("  ★ 졸업(신고가 전환 검토): " + grad.map((x) => x.name).join(", "));
   if (out.length) console.log("  ⚠ 이탈(교체 검토): " + out.map((x) => x.name + "(" + x.tag + ")").join(", "));
+  if (gf.length) console.log("  ⚠ 관문 탈락(제외 — 사용자 담음은 표시만): " + gf.map((x) => x.name + "(" + x.gateWhy + (x.userPick ? " · 사용자 담음" : "") + ")").join(", "));
+  if (gu.length) console.log("  · 관문 확인 불가: " + gu.map((x) => x.name + "(" + x.gateWhy + ")").join(", "));
 })();

@@ -119,7 +119,9 @@ async function rankUS(exch, pages) {
     (j && j.stocks || []).forEach((s) => out.push(s));
   }
   return out.filter((s) => s.stockEndType === "stock" && s.reutersCode)
-    .map((s) => ({ c: "us", code: s.reutersCode, ticker: s.symbolCode, name: s.stockNameEng || s.stockName, nameKo: s.stockName,
+    // 네이버는 클래스 주식을 공백으로 쓴다('BRK B') — 편성 표기('BRK.B')와 맞춘다. 예전엔 편성 버크셔가 순위 줄과 짝을 못 지어
+    //   시총 없는 보충 줄로 들어가 재무 팩터가 비었다(2026-11-07 — Top Pick '점수 자료 없음'·주목 관문 '재무 자료 없음').
+    .map((s) => ({ c: "us", code: s.reutersCode, ticker: String(s.symbolCode || "").trim().replace(/\s+/g, "."), name: s.stockNameEng || s.stockName, nameKo: s.stockName,
       market: exch, industry: s.industryCodeType && s.industryCodeType.industryGroupKor, price: num(s.closePriceRaw),
       mcap: num(s.marketValueRaw), divYieldRank: num(s.dividendYield) }));
 }

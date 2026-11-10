@@ -58,15 +58,20 @@ async function run(browser, base) {
     const ok = await page.evaluate(() => {
       const sel = document.getElementById("rosterDate");
       if (!sel) return false;
-      if (!document.querySelector(".roster-line.out [data-open]")) {
-        const o = [].find.call(sel.options, (x) => /제외/.test(x.textContent));
-        if (!o) return false;
+      // 지금 편성에 아예 없는 종목의 제외 칩만 — 한 주제에서만 빠지고 다른 주제에 남은 종목(2026-11-07~ 주제별 제외 기록)은
+      // 지금 상세가 열려 '제외 사유'가 없다(그걸 기다리다 상세가 열린 채 남아 뒤 단계가 모두 막혔다)
+      const D = window.STOCK_DATA || {}, inRoster = (c, t) => (D[c] || []).some((x) => x.ticker === t);
+      const pick = () => [].find.call(document.querySelectorAll(".roster-line.out [data-open]"), (e) => !inRoster(e.getAttribute("data-c"), e.getAttribute("data-t")));
+      let e = pick();
+      if (!e) for (const o of [].filter.call(sel.options, (x) => /제외/.test(x.textContent))) {
         sel.value = o.value; sel.dispatchEvent(new Event("change"));
+        if ((e = pick())) break;
       }
-      return !!document.querySelector(".roster-line.out [data-open]");
+      if (e) e.setAttribute("data-smoke", "1");
+      return !!e;
     });
-    if (!ok) return;   // 제외 기록이 없으면 건너뛴다
-    await page.click(".roster-line.out [data-open]");
+    if (!ok) return;   // 완전히 빠진 종목의 제외 기록이 없으면 건너뛴다
+    await page.click('.roster-line.out [data-open][data-smoke="1"]');
     await page.waitForFunction(() => { const s = document.getElementById("sheet"), o = document.getElementById("dt-out"); return s && !s.hidden && o && !/불러오는 중/.test(o.textContent); }, null, T);
     await page.click("#shBack");
     await page.waitForFunction(() => document.getElementById("sheet").hidden, null, T);

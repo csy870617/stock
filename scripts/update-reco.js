@@ -22,6 +22,7 @@
 //     ],
 //     "add":    [ { "country": "us", "theme": "growth", "tier": 2, "name": "...", "ticker": "...", ... } ],
 //     "remove": [ { "country": "korea", "ticker": "000810" } ]   // theme 생략 시 해당 티커 전부
+//               // "reason": "…" — 결격 판정 메모가 없는 제외(주목 이탈·관문 탈락 등)의 제외 사유(앱 '제외 사유', 가격 의존 수치 금지)
 //   }
 //
 // 시세(price·priceDate·upside)는 quotes.js 가 담당하므로 패치에 넣을 필요가 없다.
@@ -132,6 +133,11 @@ function narrativeNumberErrors(f, who) {
 }
 // ── 종목 필드 merge (국가+티커[+주제]) ──
 const guardErrors = [];
+// 제외 사유(remove.reason)도 앱에 그대로 보인다 — 같은 규칙
+(patch.remove || []).forEach((r, i) => {
+  const hit = r && typeof r.reason === "string" ? priceNumberIn(r.reason) : null;
+  if (hit && !FORCE) guardErrors.push("remove[" + i + "] — 제외 사유에 가격 의존 수치('" + hit + "') 금지 — 수치 없이 쓸 것");
+});
 // Top Pick 이유도 같은 규칙 — 상승여력 크기로 고르지 않으므로(§4-6) 이유에 그 수치를 쓰지 않는다
 if (patch.topPicks && typeof patch.topPicks === "object" && !FORCE) {
   ["korea", "us"].forEach((g) => (Array.isArray(patch.topPicks[g]) ? patch.topPicks[g] : []).forEach((it, i) => {
@@ -243,7 +249,8 @@ const origTp = {};
     if (typeof base === "number" && base > 0 && !(ok in ledgerTp) && !(ok in tpChanged)) tpChanged[ok] = base;
   });
   // 지우기 직전 카드를 보관 — 앱이 편성에서 빠진 종목도 '제외 당시 분석'으로 열 수 있게(data/removed.json, lib-removed.js)
-  D[r.country].forEach((s) => { if (s.ticker === r.ticker && (r.theme == null || s.theme === r.theme)) removedCards.push({ c: r.country, card: JSON.parse(JSON.stringify(s)) }); });
+  const why = typeof r.reason === "string" && r.reason.trim() ? r.reason.trim() : null;   // 패치가 준 제외 사유(결격 판정 메모보다 앞선다)
+  D[r.country].forEach((s) => { if (s.ticker === r.ticker && (r.theme == null || s.theme === r.theme)) removedCards.push({ c: r.country, card: JSON.parse(JSON.stringify(s)), why }); });
   D[r.country] = D[r.country].filter((s) => !(s.ticker === r.ticker && (r.theme == null || s.theme === r.theme)));
   removed += before - D[r.country].length;
 });
@@ -447,7 +454,7 @@ if (IS_REAL_SAVE && (realOps > 0 || Object.keys(tpChanged).length)) {
 }
 
 // 편출 카드 보관(data/removed.json) — 실제 저장이고 편입·편출이 있을 때만(시세·컨센서스만 바꾸는 Action 실행은 이 파일을 건드리지 않는다).
-//   사유 = 지금 candidate-notes.json 의 결격 판정 메모(없으면 candidates.js 의 결격 신호). 다시 편입된 종목은 보관에서 뺀다.
+//   사유 = 패치의 remove.reason → 지금 candidate-notes.json 의 결격 판정 메모 → candidates.js 의 결격 신호. 다시 편입된 종목은 보관에서 뺀다.
 if (IS_REAL_SAVE && (removedCards.length || added > 0)) {
   try {
     const LR = require("./lib-removed");
@@ -455,7 +462,7 @@ if (IS_REAL_SAVE && (removedCards.length || added > 0)) {
     try { notes = JSON.parse(fs.readFileSync(path.join(__dirname, "..", "data", "candidate-notes.json"), "utf8")); } catch (_e) { notes = null; }
     try { const cw = {}; new Function("window", fs.readFileSync(path.join(__dirname, "..", "data", "candidates.js"), "utf8"))(cw); cands = cw.CANDIDATES || null; } catch (_e) { cands = null; }
     const recs = removedCards.map((x) => ({ c: x.c, card: x.card, removedAt: todayUTC,
-      reason: LR.defectNote(notes, x.c, x.card.theme, x.card.ticker) || LR.defectFlags(cands, x.c, x.card.theme, x.card.ticker) }));
+      reason: (x.why ? { verdict: null, note: x.why, asOf: todayUTC } : null) || LR.defectNote(notes, x.c, x.card.theme, x.card.ticker) || LR.defectFlags(cands, x.c, x.card.theme, x.card.ticker) }));
     const n = LR.upsertRemoved(recs, todayUTC, LR.presentSet(D));
     if (n != null) console.log("  data/removed.json 갱신 — 편출 카드 " + recs.length + "건 보관 · 전체 " + n + "종목(함께 커밋)");
   } catch (e) { console.log("  ⚠ 편출 카드 보관 실패(본 작업은 저장됨): " + e.message); }

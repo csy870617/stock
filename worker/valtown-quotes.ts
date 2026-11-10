@@ -5,8 +5,13 @@
 //   2) 오른쪽 위 "New" → "HTTP val" (또는 New val 후 HTTP 선택)
 //   3) 편집기의 기본 코드를 전부 지우고 이 파일 내용을 붙여넣기
 //   4) 자동 저장·배포됨. 오른쪽/상단의 HTTP 엔드포인트 주소를 복사
-//      (형식: https://<사용자명>-<val이름>.web.val.run)
+//      (형식: https://<사용자명>--<id>.web.val.run)
 //   5) 그 주소를 data/config.js 의 quotesApi 에 넣고 커밋·푸시
+//   이미 만든 val 을 고칠 때는 그 val 을 열어 코드를 전부 이 파일로 바꾸고 저장하면 된다(주소는 그대로).
+//
+// 허용 주소: 아래 ALLOWED_ORIGINS 의 사이트에서 연 페이지만 시세를 받는다(그 밖은 403).
+//   앱 주소가 바뀌면(사용자 도메인 등) 여기에 추가한다. 주소창에 직접 넣어 열어도 403 이 정상이다
+//   (브라우저가 Origin 을 붙이지 않는다) — 확인은 앱에서 한다.
 //
 // 사용 예: GET https://<사용자명>-quotes.web.val.run/?symbols=005930.KS,AAPL,^KS11
 // 응답 예: {"005930.KS":{"price":71900,"date":"2026-07-04","prevClose":70500,"changePct":1.99,"open":70800,"high":72100,"low":70600,"volume":15230000},…}
@@ -17,11 +22,19 @@
 //   기술적 분석(RSI·이동평균·골든/데드크로스)에 필요한 기간의 일봉 종가를 서버-사이드로
 //   받아 CORS 로 돌려준다. range 는 Yahoo 표기(1mo·3mo·6mo·1y…), 기본 6mo.
 
-const CORS = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, OPTIONS",
-  "Access-Control-Allow-Headers": "*",
-};
+// 이 사이트에서 연 페이지만 허용(2026-11-07 — 전엔 "*" 라 어느 사이트든 가져다 쓸 수 있었다).
+//   브라우저는 다른 사이트의 주소를 부를 때 Origin 을 반드시 붙이므로 다른 웹사이트의 무단 사용은 막힌다.
+//   curl 같은 프로그램은 Origin 을 꾸밀 수 있어 완전한 차단은 아니다.
+const ALLOWED_ORIGINS = new Set(["https://csy870617.github.io"]);
+
+function corsFor(origin: string) {
+  return {
+    "Access-Control-Allow-Origin": origin,
+    "Access-Control-Allow-Methods": "GET, OPTIONS",
+    "Access-Control-Allow-Headers": "*",
+    "Vary": "Origin",
+  };
+}
 
 const ALLOWED_RANGE = new Set(["1mo", "3mo", "6mo", "1y", "2y"]);
 
@@ -74,6 +87,12 @@ async function oneQuote(sym: string) {
 }
 
 export default async function (req: Request): Promise<Response> {
+  const origin = req.headers.get("Origin") || "";
+  if (!ALLOWED_ORIGINS.has(origin)) {
+    return new Response(JSON.stringify({ error: "forbidden origin" }),
+      { status: 403, headers: { "Content-Type": "application/json", "Vary": "Origin" } });
+  }
+  const CORS = corsFor(origin);
   if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
 
   const url = new URL(req.url);

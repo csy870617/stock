@@ -3,10 +3,10 @@
  "until": "2027-01-21",
  "note": "선정 규칙 동결(CLAUDE.md §6) — 아래 파일·주제 정의가 기준선과 다르면 validate-reco 가 경고한다. 받아들인 변경은 accepted 에 사유와 함께 남는다.",
  "baseline": {
-  "scripts/screen-discovery.js": "ab4a74c8fcff6794",
+  "scripts/screen-discovery.js": "89fcfa969501b9f3",
   "scripts/screen-factors.js": "343af9eeaec1acdc",
   "scripts/lib-factors.js": "022c5e81e2c7d0f5",
-  "scripts/check-defects.js": "4d6221f6f5961bc0",
+  "scripts/check-defects.js": "511441b463f19d20",
   "scripts/lib-ta.js": "f9d715583519f6c9",
   "scripts/shadow-track.js": "52321294ad58c3cf",
   "docs/DEEP-AUDIT-AGENT.md": "84a8d8333ac5486d",
@@ -54,6 +54,20 @@
     "scripts/lib-ta.js"
    ],
    "reason": "버그 수정(2026-11-07 전체 점검): check-defects — 같은 종류 신호를 한 번 판정하면 다음 분기·다음 급락도 덮던 문제(판정일이 신호 시작보다 앞서면 덮지 않음)·장기 결격 since 가 '점검 필요'를 거치면 초기화되던 문제·한국 실적 신호 하루뿐(events last)·고아 판정 출력; lib-ta — 24시간 상품(환율·원자재) 주·월봉을 거래소 날짜로 묶음(서머타임 하루 밀림), 주식·지수 결과 불변(132개 시계열 바이트 동일)"
+  },
+  {
+   "at": "2026-11-07",
+   "items": [
+    "scripts/check-defects.js"
+   ],
+   "reason": "사용자 결정(2026-11-07 '허용 범위를 우선'): 장기 결격 28일 규칙보다 국가 β 허용 범위(0.7~1.3)가 먼저 — check-defects ★ 안내 문구에 반영(판정 기준 자체는 그대로)"
+  },
+  {
+   "at": "2026-11-07",
+   "items": [
+    "scripts/screen-discovery.js"
+   ],
+   "reason": "버그 수정(2026-11-07): 발굴 스크린이 네이버 클래스 주식 표기 'BRK B'를 그대로 써 편성 'BRK.B'와 짝을 못 지음 → 재무 팩터 누락. 순위 줄 표기만 'BRK.B'로 맞춤(판정 기준 불변)"
   }
  ]
 }
