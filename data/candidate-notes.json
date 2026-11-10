@@ -1053,11 +1053,17 @@
       },
       "030200": {
         "verdict": "형식",
-        "note": "1·2분기 영업이익이 전년보다 줄었지만 2025년 부동산 분양이익 기저와 해킹 보상 비용 영향이고 최저 배당 공시와 자사주 소각 계획은 유지된다.",
+        "note": "11/10 발표된 3분기 영업이익은 5053억원으로 전년 대비 6.1% 감소에 그쳤고, 해킹 보상 영향이 컸으며 AX 매출은 9%대 성장했다. 2026년 최소 DPS 2,400원 방침은 유지되어 논거는 살아 있다.",
+        "asOf": "2026-11-10",
         "flags": [
-          "theme"
+          "earn"
         ],
-        "asOf": "2026-11-05"
+        "by": "ai",
+        "sources": [
+          "https://www.inthenews.co.kr/news/article.html?no=94244",
+          "https://www.shinailbo.co.kr/news/articleView.html?idxno=5081636",
+          "https://v.daum.net/v/20260512134258083?sicode=01"
+        ]
       },
       "047050": {
         "verdict": "없음",

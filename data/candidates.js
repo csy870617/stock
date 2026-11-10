@@ -3,11 +3,11 @@
 // 세션 판정은 data/candidate-notes.json(CLAUDE.md §3-7) — 이 파일을 직접 고치지 않는다.
 window.CANDIDATES = {
  "asOf": "2026-11-10",
- "T": "2026-11-09",
+ "T": "2026-11-10",
  "screenAsOf": "2026-11-09",
  "screenFresh": true,
  "beta": {
-  "korea": 0.69,
+  "korea": 0.7,
   "us": 0.91
  },
  "groups": {
@@ -25,11 +25,6 @@ window.CANDIDATES = {
        "fresh": false
       },
       {
-       "k": "earn",
-       "msg": "실적 발표(10/30) — 가이던스·논거 확인",
-       "fresh": false
-      },
-      {
        "k": "tpcut",
        "msg": "컨센서스 목표가 14일 새 -11.5% 하향 — 논거 확인",
        "fresh": false
@@ -40,7 +35,7 @@ window.CANDIDATES = {
      "verdict": "실질",
      "triedAt": "2026-11-09",
      "since": "2026-10-21",
-     "age": 19,
+     "age": 20,
      "long": 1
     },
     {
@@ -51,11 +46,6 @@ window.CANDIDATES = {
       {
        "k": "earn",
        "msg": "실적 발표(11/05) — 가이던스·논거 확인",
-       "fresh": false
-      },
-      {
-       "k": "drop",
-       "msg": "5거래일 -16.2%(시장 중앙값 -2.1%) 급락 — 원인 확인",
        "fresh": false
       }
      ],
@@ -109,7 +99,7 @@ window.CANDIDATES = {
      "flags": [
       {
        "k": "tpcut",
-       "msg": "컨센서스 목표가 14일 새 -18.8% 하향 — 논거 확인",
+       "msg": "컨센서스 목표가 14일 새 -17.4% 하향 — 논거 확인",
        "fresh": false
       }
      ],
@@ -129,7 +119,7 @@ window.CANDIDATES = {
       },
       {
        "k": "drop",
-       "msg": "5거래일 -26%(시장 중앙값 -2.1%) 급락 — 원인 확인",
+       "msg": "5거래일 -13.9%(시장 중앙값 -0.1%) 급락 — 원인 확인",
        "fresh": false
       }
      ],
@@ -145,7 +135,7 @@ window.CANDIDATES = {
      "flags": [
       {
        "k": "drop",
-       "msg": "5거래일 -24.2%(시장 중앙값 -2.1%) 급락 — 원인 확인",
+       "msg": "5거래일 -15.2%(시장 중앙값 -0.1%) 급락 — 원인 확인",
        "fresh": false
       }
      ],
@@ -278,13 +268,8 @@ window.CANDIDATES = {
        "fresh": false
       },
       {
-       "k": "earn",
-       "msg": "실적 발표(10/30) · 전년 대비 영업이익 -4.9% — 가이던스·논거 확인",
-       "fresh": false
-      },
-      {
        "k": "tpcut",
-       "msg": "컨센서스 목표가 14일 새 -13.9% 하향 — 논거 확인",
+       "msg": "컨센서스 목표가 14일 새 -11.5% 하향 — 논거 확인",
        "fresh": false
       }
      ],
@@ -301,11 +286,6 @@ window.CANDIDATES = {
       {
        "k": "theme",
        "msg": "주제 기준 미달 — 정체성 조건 미달(EBIT/EV·FCF 수익률 상위 30%)",
-       "fresh": false
-      },
-      {
-       "k": "tpcut",
-       "msg": "컨센서스 목표가 14일 새 -21.2% 하향 — 논거 확인",
        "fresh": false
       }
      ],
@@ -333,13 +313,7 @@ window.CANDIDATES = {
      "ticker": "086280",
      "name": "현대글로비스",
      "state": "감시",
-     "flags": [
-      {
-       "k": "earn",
-       "msg": "실적 발표(10/30) · 전년 대비 영업이익 -8.1% — 가이던스·논거 확인",
-       "fresh": false
-      }
-     ],
+     "flags": [],
      "note": "실적 발표 당일(10/30) 확정치 미확인 — 영업이익 감소는 유가·운임 요인으로 논거는 유지",
      "judged": "2026-10-30",
      "verdict": "형식",
@@ -498,10 +472,17 @@ window.CANDIDATES = {
      "ticker": "030200",
      "name": "KT",
      "state": "감시",
-     "flags": [],
-     "note": "1·2분기 영업이익이 전년보다 줄었지만 2025년 부동산 분양이익 기저와 해킹 보상 비용 영향이고 최저 배당 공시와 자사주 소각 계획은 유지된다.",
-     "judged": "2026-11-05",
-     "verdict": "형식"
+     "flags": [
+      {
+       "k": "earn",
+       "msg": "실적 발표(11/10) · 전년 대비 매출 -10.1%, 영업이익 -36.1% — 가이던스·논거 확인",
+       "fresh": false
+      }
+     ],
+     "note": "11/10 발표된 3분기 영업이익은 5053억원으로 전년 대비 6.1% 감소에 그쳤고, 해킹 보상 영향이 컸으며 AX 매출은 9%대 성장했다. 2026년 최소 DPS 2,400원 방침은 유지되어 논거는 살아 있다.",
+     "judged": "2026-11-10",
+     "verdict": "형식",
+     "by": "ai"
     }
    ],
    "list": [
@@ -1132,7 +1113,7 @@ window.CANDIDATES = {
   "review": 0,
   "defect": 1,
   "watch": 23,
-  "untried": 0,
+  "untried": 1,
   "dup": 0,
   "long": 1
  }
