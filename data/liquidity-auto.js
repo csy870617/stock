@@ -2,7 +2,7 @@
 // Yahoo 시장지표(금리·일드커브·VIX·HY신용·달러·원달러·코스피)의 가중 합성 → 5단계.
 // 온디맨드 유동성(data/liquidity.js)이 있으면 그것을 우선 표시하고, 이 baseline 을 함께 보여준다.
 window.LIQUIDITY_AUTO = {
- "asOf": "2026-11-09",
+ "asOf": "2026-11-10",
  "note": "Yahoo 시장지표 기반 자동 baseline(금리·일드커브·VIX·HY신용·달러·원달러·코스피). 거시 이벤트·내러티브는 미반영 — 온디맨드 유동성이 보정.",
  "inputs": {
   "us10y": "4.86",
@@ -10,7 +10,7 @@ window.LIQUIDITY_AUTO = {
   "vix": "19.9",
   "hyg20": "0.3",
   "dxy": "102.3",
-  "usdkrw": "1356"
+  "usdkrw": "1363"
  },
  "us": {
   "shortTerm": "우호",
@@ -27,18 +27,18 @@ window.LIQUIDITY_AUTO = {
  "korea": {
   "shortTerm": "매우 부정",
   "midTerm": "부정",
-  "shortScore": -0.48,
+  "shortScore": -0.72,
   "midScore": -0.39,
   "drivers": [
    "⚠ 코스피 급락 floor 발동 (20일 -21%)",
    "코스피 모멘텀(20d) (−2)",
-   "원/달러 추세 (·0)",
+   "원/달러 추세 (−1)",
    "글로벌 변동성 VIX (·0)",
    "글로벌 신용(20d) (·0)"
   ]
  },
  "fed": {
-  "asOf": "2026-11-09",
+  "asOf": "2026-11-10",
   "current": 3.878,
   "meetings": [
    {
@@ -91,65 +91,65 @@ window.LIQUIDITY_AUTO = {
    },
    {
     "date": "2027-04-28",
-    "rate": 4.31,
-    "stepBp": 3.8,
-    "cumBp": 43.2,
+    "rate": 4.305,
+    "stepBp": 3.3,
+    "cumBp": 42.7,
     "outcomes": [
      {
       "n": 2,
-      "p": 73
+      "p": 71
      },
      {
       "n": 1,
-      "p": 27
+      "p": 29
      }
     ]
    },
    {
     "date": "2027-06-09",
-    "rate": 4.374,
+    "rate": 4.369,
     "stepBp": 6.4,
-    "cumBp": 49.7,
+    "cumBp": 49.2,
     "outcomes": [
      {
       "n": 2,
-      "p": 99
+      "p": 97
      },
      {
       "n": 1,
-      "p": 1
+      "p": 3
      }
     ]
    },
    {
     "date": "2027-07-28",
-    "rate": 4.39,
+    "rate": 4.385,
     "stepBp": 1.6,
-    "cumBp": 51.2,
+    "cumBp": 50.7,
     "outcomes": [
      {
       "n": 2,
-      "p": 95
+      "p": 97
      },
      {
       "n": 3,
-      "p": 5
+      "p": 3
      }
     ]
    },
    {
     "date": "2027-09-15",
-    "rate": 4.4,
+    "rate": 4.395,
     "stepBp": 1,
-    "cumBp": 52.2,
+    "cumBp": 51.7,
     "outcomes": [
      {
       "n": 2,
-      "p": 91
+      "p": 93
      },
      {
       "n": 3,
-      "p": 9
+      "p": 7
      }
     ]
    }
@@ -162,8 +162,8 @@ window.LIQUIDITY_AUTO = {
   "call": 3.034,
   "cd91": 3.34,
   "y1": 3.602,
-  "y2": 3.621,
-  "y3": 3.634,
+  "y2": 3.644,
+  "y3": 3.636,
   "exp3m": {
    "rate": 3.16,
    "chg": 0.16,
