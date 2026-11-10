@@ -3,21 +3,21 @@
 window.COVERAGE_STATUS = {
  "asOf": "2026-11-10",
  "T": "2026-11-10",
- "total": 101,
+ "total": 100,
  "cycleDays": 7,
  "daily": [
   {
    "key": "techNote",
    "label": "기술 대응",
-   "done": 101,
-   "total": 101,
+   "done": 100,
+   "total": 100,
    "ok": true
   },
   {
    "key": "valueNote",
    "label": "밸류 설명",
-   "done": 101,
-   "total": 101,
+   "done": 100,
+   "total": 100,
    "ok": true
   },
   {
@@ -65,25 +65,25 @@ window.COVERAGE_STATUS = {
   {
    "key": "trend",
    "label": "현재 추세",
-   "done": 98,
-   "total": 98,
+   "done": 97,
+   "total": 97,
    "ok": true
   },
   {
    "key": "defects",
    "label": "결격 점검",
-   "done": 0,
+   "done": 1,
    "total": 1,
-   "ok": false
+   "ok": true
   }
  ],
  "rotation": [
   {
    "key": "verified",
    "label": "목표가 재검증",
-   "fresh": 101,
-   "total": 101,
-   "oldestDays": 5,
+   "fresh": 100,
+   "total": 100,
+   "oldestDays": 4,
    "ok": true
   },
   {
@@ -107,8 +107,8 @@ window.COVERAGE_STATUS = {
   {
    "key": "aiTarget",
    "label": "AI 적정가 재시도",
-   "fresh": 101,
-   "total": 101,
+   "fresh": 100,
+   "total": 100,
    "oldestDays": 7,
    "ok": true
   },
@@ -122,7 +122,7 @@ window.COVERAGE_STATUS = {
    "ok": true
   }
  ],
- "ok": false,
+ "ok": true,
  "overdue": [],
- "dataHash": "d0e91153b3e5"
+ "dataHash": "9d25c1123b81"
 };

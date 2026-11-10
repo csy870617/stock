@@ -38,117 +38,117 @@ window.LIQUIDITY_AUTO = {
  },
  "fed": {
   "asOf": "2026-11-10",
-  "current": 3.88,
+  "current": 3.878,
   "meetings": [
    {
     "date": "2026-12-09",
-    "rate": 4.084,
-    "stepBp": 20.4,
-    "cumBp": 20.4,
+    "rate": 4.092,
+    "stepBp": 21.5,
+    "cumBp": 21.5,
     "outcomes": [
      {
       "n": 1,
-      "p": 82
+      "p": 86
      },
      {
       "n": 0,
-      "p": 18
+      "p": 14
      }
     ]
    },
    {
     "date": "2027-01-27",
-    "rate": 4.145,
-    "stepBp": 6.1,
-    "cumBp": 26.5,
+    "rate": 4.14,
+    "stepBp": 4.8,
+    "cumBp": 26.2,
     "outcomes": [
      {
       "n": 1,
-      "p": 94
+      "p": 95
      },
      {
       "n": 2,
-      "p": 6
+      "p": 5
      }
     ]
    },
    {
     "date": "2027-03-17",
-    "rate": 4.256,
-    "stepBp": 11.1,
-    "cumBp": 37.6,
+    "rate": 4.262,
+    "stepBp": 12.2,
+    "cumBp": 38.4,
     "outcomes": [
      {
-      "n": 1,
-      "p": 50
+      "n": 2,
+      "p": 54
      },
      {
-      "n": 2,
-      "p": 50
+      "n": 1,
+      "p": 46
      }
     ]
    },
    {
     "date": "2027-04-28",
-    "rate": 4.3,
-    "stepBp": 4.4,
-    "cumBp": 42,
+    "rate": 4.295,
+    "stepBp": 3.3,
+    "cumBp": 41.7,
     "outcomes": [
      {
       "n": 2,
-      "p": 68
+      "p": 67
      },
      {
       "n": 1,
-      "p": 32
+      "p": 33
      }
     ]
    },
    {
     "date": "2027-06-09",
-    "rate": 4.371,
-    "stepBp": 7.1,
-    "cumBp": 49.1,
+    "rate": 4.359,
+    "stepBp": 6.4,
+    "cumBp": 48.2,
     "outcomes": [
      {
       "n": 2,
-      "p": 96
+      "p": 93
      },
      {
       "n": 1,
-      "p": 4
+      "p": 7
      }
     ]
    },
    {
     "date": "2027-07-28",
-    "rate": 4.37,
-    "stepBp": -0.1,
-    "cumBp": 49,
+    "rate": 4.365,
+    "stepBp": 0.6,
+    "cumBp": 48.7,
     "outcomes": [
      {
       "n": 2,
-      "p": 96
+      "p": 95
      },
      {
       "n": 1,
-      "p": 4
+      "p": 5
      }
     ]
    },
    {
     "date": "2027-09-15",
-    "rate": 4.39,
+    "rate": 4.385,
     "stepBp": 2,
-    "cumBp": 51,
+    "cumBp": 50.7,
     "outcomes": [
      {
       "n": 2,
-      "p": 96
+      "p": 97
      },
      {
       "n": 3,
-      "p": 4
+      "p": 3
      }
     ]
    }
