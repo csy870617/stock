@@ -2,12 +2,12 @@
 // groups["<country>|<theme>"] = {defects 편성 결격(state 결격|점검 필요|감시), list 후보(status 검증 통과|보류|검증 대기)}
 // 세션 판정은 data/candidate-notes.json(CLAUDE.md §3-7) — 이 파일을 직접 고치지 않는다.
 window.CANDIDATES = {
- "asOf": "2026-11-10",
+ "asOf": "2026-11-11",
  "T": "2026-11-10",
  "screenAsOf": "2026-11-10",
  "screenFresh": true,
  "beta": {
-  "korea": 0.7,
+  "korea": 0.71,
   "us": 0.9
  },
  "groups": {
@@ -26,7 +26,7 @@ window.CANDIDATES = {
       },
       {
        "k": "tpcut",
-       "msg": "컨센서스 목표가 14일 새 -11.5% 하향 — 논거 확인",
+       "msg": "컨센서스 목표가 14일 새 -12.3% 하향 — 논거 확인",
        "fresh": false
       }
      ],
@@ -269,7 +269,7 @@ window.CANDIDATES = {
       },
       {
        "k": "tpcut",
-       "msg": "컨센서스 목표가 14일 새 -11.5% 하향 — 논거 확인",
+       "msg": "컨센서스 목표가 14일 새 -13.5% 하향 — 논거 확인",
        "fresh": false
       }
      ],
