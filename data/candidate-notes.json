@@ -729,7 +729,7 @@
           "https://news.bizwatch.co.kr/article/consumer/2026/10/15/0025"
         ],
         "since": "2026-10-21",
-        "triedAt": "2026-11-10"
+        "triedAt": "2026-11-11"
       },
       "005930": {
         "verdict": "보호",
@@ -786,6 +786,18 @@
         "sources": [
           "https://www.cbci.co.kr/news/articleView.html?idxno=621254",
           "https://www.chickstockfi.com/disclosures/20261030800194"
+        ]
+      },
+      "000810": {
+        "verdict": "없음",
+        "note": "5거래일 하락은 11/6 국내 증시 급락과 11/11 대형 손보 3사(삼성화재·현대해상·DB손해보험) 동반 약세가 겹친 결과다. 회사 고유 악재 공시나 지배구조·배당 정책 변경은 없고, 3분기 감익 전망은 이미 카드 위험에 있으며 실제 실적은 11/12 발표다.",
+        "asOf": "2026-11-11",
+        "flags": [
+          "drop"
+        ],
+        "sources": [
+          "https://www.insjournal.co.kr/news/articleView.html?idxno=33877",
+          "https://www.cbci.co.kr/news/articleView.html?idxno=625611"
         ]
       }
     },
@@ -897,6 +909,18 @@
       }
     },
     "korea|value": {
+      "138040": {
+        "verdict": "없음",
+        "note": "3분기 순이익 감소는 시장 하락에 따른 메리츠화재 주식 평가·처분손실과 충당금 증가 때문이고 보험손익은 개선됐다. 누적 순이익 감소 폭이 작고 ROE 20%대·순이익 50% 환원 원칙이 유지돼 논거 훼손은 아니다.",
+        "asOf": "2026-11-11",
+        "flags": [
+          "earn"
+        ],
+        "sources": [
+          "https://www.newspim.com/news/view/20261111001374",
+          "https://view.asiae.co.kr/article/2026111116595131791"
+        ]
+      },
       "241560": {
         "verdict": "없음",
         "note": "10/29 실적 확정치는 검색에 아직 없고, 직전 2분기 영업이익이 전년보다 늘어 논거 훼손 근거가 없다. 발표 후 다음 회차에 다시 본다.",
