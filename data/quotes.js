@@ -344,345 +344,345 @@ window.STOCK_QUOTES = {
    "closeDate": "2026-11-11"
   },
   "MSFT": {
-   "price": 533.16,
-   "date": "2026-11-10",
-   "changePct": -2.2,
+   "price": 533.33,
+   "date": "2026-11-11",
+   "changePct": 0,
    "close": 533.16,
    "closeDate": "2026-11-10"
   },
   "V": {
-   "price": 423,
-   "date": "2026-11-10",
-   "changePct": 0.2,
+   "price": 419.575,
+   "date": "2026-11-11",
+   "changePct": -0.8,
    "close": 423,
    "closeDate": "2026-11-10"
   },
   "MA": {
-   "price": 658.84,
-   "date": "2026-11-10",
-   "changePct": 0.5,
+   "price": 655.65,
+   "date": "2026-11-11",
+   "changePct": -0.5,
    "close": 658.84,
    "closeDate": "2026-11-10"
   },
   "GOOGL": {
-   "price": 287.38,
-   "date": "2026-11-10",
-   "changePct": -0.3,
+   "price": 290.68,
+   "date": "2026-11-11",
+   "changePct": 1.1,
    "close": 287.38,
    "closeDate": "2026-11-10"
   },
   "COST": {
-   "price": 1066.14,
-   "date": "2026-11-10",
-   "changePct": 0,
+   "price": 1089.42,
+   "date": "2026-11-11",
+   "changePct": 2.2,
    "close": 1066.14,
    "closeDate": "2026-11-10"
   },
   "NVDA": {
-   "price": 168.89,
-   "date": "2026-11-10",
-   "changePct": -5.5,
+   "price": 174.11,
+   "date": "2026-11-11",
+   "changePct": 3.1,
    "close": 168.89,
    "closeDate": "2026-11-10"
   },
   "META": {
-   "price": 641.39,
-   "date": "2026-11-10",
-   "changePct": 0,
+   "price": 643.35,
+   "date": "2026-11-11",
+   "changePct": 0.3,
    "close": 641.39,
    "closeDate": "2026-11-10"
   },
   "AVGO": {
-   "price": 331.98,
-   "date": "2026-11-10",
-   "changePct": 3.9,
+   "price": 351.402,
+   "date": "2026-11-11",
+   "changePct": 5.9,
    "close": 331.98,
    "closeDate": "2026-11-10"
   },
   "TSM": {
-   "price": 396.48,
-   "date": "2026-11-10",
-   "changePct": 2,
+   "price": 412.86,
+   "date": "2026-11-11",
+   "changePct": 4.1,
    "close": 396.48,
    "closeDate": "2026-11-10"
   },
   "UBER": {
-   "price": 70.05,
-   "date": "2026-11-10",
-   "changePct": -1.6,
+   "price": 69.68,
+   "date": "2026-11-11",
+   "changePct": -0.5,
    "close": 70.05,
    "closeDate": "2026-11-10"
   },
   "GM": {
-   "price": 88.69,
-   "date": "2026-11-10",
-   "changePct": -1.1,
+   "price": 88.19,
+   "date": "2026-11-11",
+   "changePct": -0.6,
    "close": 88.69,
    "closeDate": "2026-11-10"
   },
   "VZ": {
-   "price": 46.31,
-   "date": "2026-11-10",
-   "changePct": 0.5,
+   "price": 46.16,
+   "date": "2026-11-11",
+   "changePct": -0.3,
    "close": 46.31,
    "closeDate": "2026-11-10"
   },
   "C": {
-   "price": 122.27,
-   "date": "2026-11-10",
-   "changePct": 0.2,
+   "price": 122.9,
+   "date": "2026-11-11",
+   "changePct": 0.5,
    "close": 122.27,
    "closeDate": "2026-11-10"
   },
   "DUK": {
-   "price": 128.94,
-   "date": "2026-11-10",
-   "changePct": 0.7,
+   "price": 128.37,
+   "date": "2026-11-11",
+   "changePct": -0.4,
    "close": 128.94,
    "closeDate": "2026-11-10"
   },
   "KO": {
-   "price": 96.91,
-   "date": "2026-11-10",
-   "changePct": 0.9,
+   "price": 96.345,
+   "date": "2026-11-11",
+   "changePct": -0.6,
    "close": 96.91,
    "closeDate": "2026-11-10"
   },
   "JNJ": {
-   "price": 280.78,
-   "date": "2026-11-10",
-   "changePct": -0.5,
+   "price": 277.79,
+   "date": "2026-11-11",
+   "changePct": -1.1,
    "close": 280.78,
    "closeDate": "2026-11-10"
   },
   "LLY": {
-   "price": 1432.29,
-   "date": "2026-11-10",
-   "changePct": 1.4,
+   "price": 1421.05,
+   "date": "2026-11-11",
+   "changePct": -0.8,
    "close": 1432.29,
    "closeDate": "2026-11-10"
   },
   "CI": {
-   "price": 303.13,
-   "date": "2026-11-10",
-   "changePct": 2.5,
+   "price": 298.38,
+   "date": "2026-11-11",
+   "changePct": -1.6,
    "close": 303.13,
    "closeDate": "2026-11-10"
   },
   "TSLA": {
-   "price": 379.78,
-   "date": "2026-11-10",
-   "changePct": 0.5,
+   "price": 389.189,
+   "date": "2026-11-11",
+   "changePct": 2.5,
    "close": 379.78,
    "closeDate": "2026-11-10"
   },
   "AAPL": {
-   "price": 348.51,
-   "date": "2026-11-10",
-   "changePct": -0.6,
+   "price": 352.348,
+   "date": "2026-11-11",
+   "changePct": 1.1,
    "close": 348.51,
    "closeDate": "2026-11-10"
   },
   "MU": {
-   "price": 725.11,
-   "date": "2026-11-10",
-   "changePct": -1.1,
+   "price": 775.485,
+   "date": "2026-11-11",
+   "changePct": 6.9,
    "close": 725.11,
    "closeDate": "2026-11-10"
   },
   "MDT": {
-   "price": 101.59,
-   "date": "2026-11-10",
-   "changePct": -1.2,
+   "price": 100.87,
+   "date": "2026-11-11",
+   "changePct": -0.7,
    "close": 101.59,
    "closeDate": "2026-11-10"
   },
   "IREN": {
-   "price": 19.73,
-   "date": "2026-11-10",
-   "changePct": -7.8,
+   "price": 21.295,
+   "date": "2026-11-11",
+   "changePct": 7.9,
    "close": 19.73,
    "closeDate": "2026-11-10"
   },
   "UNH": {
-   "price": 405.12,
-   "date": "2026-11-10",
-   "changePct": 1.9,
+   "price": 399.845,
+   "date": "2026-11-11",
+   "changePct": -1.3,
    "close": 405.12,
    "closeDate": "2026-11-10"
   },
   "DVN": {
-   "price": 43.41,
-   "date": "2026-11-10",
-   "changePct": 2.4,
+   "price": 43.64,
+   "date": "2026-11-11",
+   "changePct": 0.5,
    "close": 43.41,
    "closeDate": "2026-11-10"
   },
   "GS": {
-   "price": 910.19,
-   "date": "2026-11-10",
-   "changePct": 0.4,
+   "price": 917.96,
+   "date": "2026-11-11",
+   "changePct": 0.9,
    "close": 910.19,
    "closeDate": "2026-11-10"
   },
   "AMP": {
-   "price": 519.96,
-   "date": "2026-11-10",
-   "changePct": 0.3,
+   "price": 516.045,
+   "date": "2026-11-11",
+   "changePct": -0.8,
    "close": 519.96,
    "closeDate": "2026-11-10"
   },
   "PNC": {
-   "price": 231.3,
-   "date": "2026-11-10",
-   "changePct": 0,
+   "price": 231.03,
+   "date": "2026-11-11",
+   "changePct": -0.1,
    "close": 231.3,
    "closeDate": "2026-11-10"
   },
   "MTB": {
-   "price": 220.61,
-   "date": "2026-11-10",
-   "changePct": -1,
+   "price": 219.255,
+   "date": "2026-11-11",
+   "changePct": -0.6,
    "close": 220.61,
    "closeDate": "2026-11-10"
   },
   "SO": {
-   "price": 93.65,
-   "date": "2026-11-10",
-   "changePct": 0.1,
+   "price": 93.5,
+   "date": "2026-11-11",
+   "changePct": -0.2,
    "close": 93.65,
    "closeDate": "2026-11-10"
   },
   "WEC": {
-   "price": 117.01,
-   "date": "2026-11-10",
-   "changePct": -0.1,
+   "price": 116.53,
+   "date": "2026-11-11",
+   "changePct": -0.4,
    "close": 117.01,
    "closeDate": "2026-11-10"
   },
   "TJX": {
-   "price": 136.92,
-   "date": "2026-11-10",
-   "changePct": -0.9,
+   "price": 136.18,
+   "date": "2026-11-11",
+   "changePct": -0.5,
    "close": 136.92,
    "closeDate": "2026-11-10"
   },
   "ANET": {
-   "price": 185.02,
-   "date": "2026-11-10",
-   "changePct": -0.6,
+   "price": 195.945,
+   "date": "2026-11-11",
+   "changePct": 5.9,
    "close": 185.02,
    "closeDate": "2026-11-10"
   },
   "GD": {
-   "price": 367.44,
-   "date": "2026-11-10",
-   "changePct": 1.5,
+   "price": 365,
+   "date": "2026-11-11",
+   "changePct": -0.7,
    "close": 367.44,
    "closeDate": "2026-11-10"
   },
   "LMT": {
-   "price": 603.12,
-   "date": "2026-11-10",
-   "changePct": 2.5,
+   "price": 600.875,
+   "date": "2026-11-11",
+   "changePct": -0.4,
    "close": 603.12,
    "closeDate": "2026-11-10"
   },
   "CB": {
-   "price": 369.11,
-   "date": "2026-11-10",
-   "changePct": 1.6,
+   "price": 366.19,
+   "date": "2026-11-11",
+   "changePct": -0.8,
    "close": 369.11,
    "closeDate": "2026-11-10"
   },
   "GILD": {
-   "price": 170.87,
-   "date": "2026-11-10",
-   "changePct": 0.9,
+   "price": 169.525,
+   "date": "2026-11-11",
+   "changePct": -0.8,
    "close": 170.87,
    "closeDate": "2026-11-10"
   },
   "BRK.B": {
-   "price": 583.34,
-   "date": "2026-11-10",
-   "changePct": 1.4,
+   "price": 579.841,
+   "date": "2026-11-11",
+   "changePct": -0.6,
    "close": 583.34,
    "closeDate": "2026-11-10"
   },
   "TMO": {
-   "price": 718.2,
-   "date": "2026-11-10",
-   "changePct": -0.5,
+   "price": 718.87,
+   "date": "2026-11-11",
+   "changePct": 0.1,
    "close": 718.2,
    "closeDate": "2026-11-10"
   },
   "ECL": {
-   "price": 306.03,
-   "date": "2026-11-10",
-   "changePct": -0.2,
+   "price": 304.62,
+   "date": "2026-11-11",
+   "changePct": -0.5,
    "close": 306.03,
    "closeDate": "2026-11-10"
   },
   "RSG": {
-   "price": 247.62,
-   "date": "2026-11-10",
-   "changePct": 0.3,
+   "price": 247.77,
+   "date": "2026-11-11",
+   "changePct": 0.1,
    "close": 247.62,
    "closeDate": "2026-11-10"
   },
   "CTAS": {
-   "price": 225.28,
-   "date": "2026-11-10",
-   "changePct": 0.9,
+   "price": 225.22,
+   "date": "2026-11-11",
+   "changePct": 0,
    "close": 225.28,
    "closeDate": "2026-11-10"
   },
   "ORLY": {
-   "price": 89.39,
-   "date": "2026-11-10",
-   "changePct": -0.4,
+   "price": 89.145,
+   "date": "2026-11-11",
+   "changePct": -0.3,
    "close": 89.39,
    "closeDate": "2026-11-10"
   },
   "ADP": {
-   "price": 305.44,
-   "date": "2026-11-10",
-   "changePct": 1.1,
+   "price": 304.85,
+   "date": "2026-11-11",
+   "changePct": -0.2,
    "close": 305.44,
    "closeDate": "2026-11-10"
   },
   "FAST": {
    "price": 54.84,
-   "date": "2026-11-10",
-   "changePct": 0.5,
+   "date": "2026-11-11",
+   "changePct": 0,
    "close": 54.84,
    "closeDate": "2026-11-10"
   },
   "VRT": {
-   "price": 194.22,
-   "date": "2026-11-10",
-   "changePct": -3.1,
+   "price": 206.81,
+   "date": "2026-11-11",
+   "changePct": 6.5,
    "close": 194.22,
    "closeDate": "2026-11-10"
   },
   "WAB": {
-   "price": 303.49,
-   "date": "2026-11-10",
-   "changePct": 1.8,
+   "price": 303.59,
+   "date": "2026-11-11",
+   "changePct": 0,
    "close": 303.49,
    "closeDate": "2026-11-10"
   },
   "NTES": {
-   "price": 128.03,
-   "date": "2026-11-10",
-   "changePct": -1.2,
+   "price": 123.405,
+   "date": "2026-11-11",
+   "changePct": -3.6,
    "close": 128.03,
    "closeDate": "2026-11-10"
   },
   "ROST": {
-   "price": 238.95,
-   "date": "2026-11-10",
-   "changePct": 0.8,
+   "price": 238.705,
+   "date": "2026-11-11",
+   "changePct": -0.1,
    "close": 238.95,
    "closeDate": "2026-11-10"
   }
@@ -698,17 +698,17 @@ window.STOCK_QUOTES = {
   },
   "sp500": {
    "symbol": "^GSPC",
-   "price": 7520.93,
-   "date": "2026-11-10",
-   "changePct": -0.4,
-   "close": 7520.93,
+   "price": 7588.72,
+   "date": "2026-11-11",
+   "changePct": 0.9,
+   "close": 7520.9302,
    "closeDate": "2026-11-10"
   },
   "rsp": {
    "symbol": "RSP",
-   "price": 220.88,
-   "date": "2026-11-10",
-   "changePct": 0,
+   "price": 221.24,
+   "date": "2026-11-11",
+   "changePct": 0.2,
    "close": 220.88,
    "closeDate": "2026-11-10"
   }

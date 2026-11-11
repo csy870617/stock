@@ -2,36 +2,43 @@
 // 앱 'AI 연결' 창이 '매일 자동 분석' 칸에 보여 준다. 비용은 토큰 기준 추정(웹 검색은 횟수만 — 검색당 요금 별도).
 window.AI_STATUS = {
  "defects": {
-  "at": "2026-11-11T00:45:07.326Z",
+  "at": "2026-11-11T14:56:59.999Z",
   "model": "claude-sonnet-5-5",
   "ok": true,
-  "pending": 0,
-  "judged": 0,
-  "items": [],
+  "pending": 1,
+  "judged": 1,
+  "items": [
+   {
+    "g": "korea|core",
+    "t": "278470",
+    "name": "에이피알",
+    "verdict": "실질"
+   }
+  ],
   "usage": {
-   "calls": 0,
-   "input": 0,
-   "output": 0,
+   "calls": 2,
+   "input": 47536,
+   "output": 2196,
    "cacheRead": 0,
-   "searches": 0,
-   "usd": 0
+   "searches": 3,
+   "usd": 0.117
   }
  },
  "news": {
-  "at": "2026-11-11T00:49:13.986Z",
+  "at": "2026-11-11T14:58:40.700Z",
   "model": "claude-haiku-5-5",
   "ok": true,
   "stocks": 97,
   "fetched": 97,
-  "called": 77,
-  "lines": 69,
+  "called": 79,
+  "lines": 68,
   "usage": {
-   "calls": 77,
-   "input": 121915,
-   "output": 4926,
+   "calls": 79,
+   "input": 129497,
+   "output": 6163,
    "cacheRead": 0,
    "searches": 0,
-   "usd": 0.015
+   "usd": 0.016
   }
  },
  "daily": {
@@ -44,30 +51,30 @@ window.AI_STATUS = {
   "model": "claude-opus-5-5",
   "ok": true,
   "seen": {
-   "at": "2026-11-11T00:49:13.899Z",
+   "at": "2026-11-11T14:58:40.566Z",
    "basis": {
-    "kr": "2026-11-10",
+    "kr": "2026-11-11",
     "us": "2026-11-10"
    },
    "items": {
     "market": {
-     "sig": "10월 물가가 예상보다 높게 나오며 미국 증시는 하락했고, 한국은 사흘 #1nfgprm",
+     "sig": "10월 물가 상회로 미국 증시는 하락했고, 한국은 사흘 급락 뒤 이틀 연#12o5f6t",
      "basis": {
-      "kr": "2026-11-10",
+      "kr": "2026-11-11",
       "us": "2026-11-10"
      }
     },
     "liquidity": {
-     "sig": "미국은 돈의 흐름이 중간 수준을 유지하나 물가 상회와 12월 인상 기대가#oqjgfe",
+     "sig": "미국은 돈의 흐름이 중간 수준을 유지하나 물가 상회와 12월 인상 기대가#zoq280",
      "basis": {
-      "kr": "2026-11-10",
+      "kr": "2026-11-11",
       "us": "2026-11-10"
      }
     },
     "indexNotes": {
-     "sig": "하락세 — 4.39% 급반등에도 일봉 구름 아래, 전환선<기준선, RSI#1poa8d7",
+     "sig": "하락세 — 2.60% 상승에도 일봉 구름 아래, 전환선<기준선, MACD#dtjybk",
      "basis": {
-      "kr": "2026-11-10",
+      "kr": "2026-11-11",
       "us": "2026-11-10"
      }
     },
@@ -104,6 +111,8 @@ window.AI_STATUS = {
    "searches": 6,
    "usd": 1.578
   },
-  "note": "새 종가로 세션 문장 갱신: market, liquidity, indexNotes"
+  "note": "새 종가로 세션 문장 갱신: market, liquidity, indexNotes",
+  "checkedAt": "2026-11-11T14:58:40.565Z",
+  "skipped": "오늘(2026-11-11) 몫이 이미 최신 — 루틴 세션이 작성"
  }
 };
