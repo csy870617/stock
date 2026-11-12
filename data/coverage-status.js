@@ -118,11 +118,11 @@ window.COVERAGE_STATUS = {
    "fresh": 8,
    "total": 8,
    "unit": "그룹",
-   "oldestDays": 4,
+   "oldestDays": 3,
    "ok": true
   }
  ],
  "ok": false,
  "overdue": [],
- "dataHash": "16e2b7ef3d04"
+ "dataHash": "55167fd7766c"
 };
