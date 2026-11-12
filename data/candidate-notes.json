@@ -790,15 +790,18 @@
         ]
       },
       "000810": {
-        "verdict": "없음",
-        "note": "5거래일 하락은 11/6 국내 증시 급락과 11/11 대형 손보 3사(삼성화재·현대해상·DB손해보험) 동반 약세가 겹친 결과다. 회사 고유 악재 공시나 지배구조·배당 정책 변경은 없고, 3분기 감익 전망은 이미 카드 위험에 있으며 실제 실적은 11/12 발표다.",
-        "asOf": "2026-11-11",
+        "verdict": "형식",
+        "note": "3분기 지배주주순이익 4,932억원(-8.3%)으로 감익했으나 카드 전망 범위 안이다. 1~9월 누적 1조8,655억원(+4.6%), 3분기 보험손익 191억원 흑자 전환으로 본업은 유지돼 매출 -6.6% 산식 확인 전까지 감시한다.",
+        "asOf": "2026-11-12",
         "flags": [
+          "earn",
           "drop"
         ],
+        "by": "ai",
         "sources": [
-          "https://www.insjournal.co.kr/news/articleView.html?idxno=33877",
-          "https://www.cbci.co.kr/news/articleView.html?idxno=625611"
+          "https://view.asiae.co.kr/article/2026111210055678841",
+          "https://www.insjournal.co.kr/news/articleView.html?idxno=33884",
+          "https://www.newscj.com/news/articleView.html?idxno=3448081"
         ]
       }
     },
@@ -911,15 +914,17 @@
     },
     "korea|value": {
       "138040": {
-        "verdict": "없음",
-        "note": "3분기 순이익 감소는 시장 하락에 따른 메리츠화재 주식 평가·처분손실과 충당금 증가 때문이고 보험손익은 개선됐다. 누적 순이익 감소 폭이 작고 ROE 20%대·순이익 50% 환원 원칙이 유지돼 논거 훼손은 아니다.",
-        "asOf": "2026-11-11",
+        "verdict": "형식",
+        "note": "11일 발표한 3분기 지배주주순이익 4,707억원(전년비 -28.1%)이 컨센서스 6,345억원을 하회했다. 화재 투자손익 급감이 원인이나 보험손익(+34.9%)과 증권은 견조했고 50% 환원 방침도 재확인해 4분기 변동성 확인 전까지 감시한다.",
+        "asOf": "2026-11-12",
         "flags": [
-          "earn"
+          "drop"
         ],
+        "by": "ai",
         "sources": [
-          "https://www.newspim.com/news/view/20261111001374",
-          "https://view.asiae.co.kr/article/2026111116595131791"
+          "https://www.fnnews.com/news/202611120946530308",
+          "https://www.insjournal.co.kr/news/articleView.html?idxno=33896",
+          "http://www.srtimes.kr/news/articleView.html?idxno=217401"
         ]
       },
       "241560": {
@@ -1100,6 +1105,20 @@
         "sources": [
           "https://www.newspim.com/news/view/20261103000827",
           "https://markets.hankyung.com/stock/047050/consensus"
+        ]
+      },
+      "005830": {
+        "verdict": "없음",
+        "note": "11/12 공시 3분기 순이익은 4,440억원(+35.3%), 영업이익은 6,183억원(+40.1%)이다. 합산비율 87.5%에 자동차·일반보험이 흑자로 전환됐고, 투자손익 감소는 증시 하락 영향이다.",
+        "asOf": "2026-11-12",
+        "flags": [
+          "earn"
+        ],
+        "by": "ai",
+        "sources": [
+          "https://www.g-enews.com/article/Finance/2026/11/202611121514203184e30fcb1ba8_1",
+          "https://www.fnnews.com/news/202611121507229983",
+          "https://www.insjournal.co.kr/news/articleView.html?idxno=33894"
         ]
       }
     },
