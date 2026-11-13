@@ -3,11 +3,11 @@
 // 세션 판정은 data/candidate-notes.json(CLAUDE.md §3-7) — 이 파일을 직접 고치지 않는다.
 window.CANDIDATES = {
  "asOf": "2026-11-13",
- "T": "2026-11-12",
+ "T": "2026-11-13",
  "screenAsOf": "2026-11-12",
  "screenFresh": true,
  "beta": {
-  "korea": 0.71,
+  "korea": 0.7,
   "us": 0.91
  },
  "groups": {
@@ -40,7 +40,7 @@ window.CANDIDATES = {
      "verdict": "실질",
      "triedAt": "2026-11-12",
      "since": "2026-10-21",
-     "age": 22,
+     "age": 23,
      "long": 1
     },
     {
@@ -50,7 +50,7 @@ window.CANDIDATES = {
      "flags": [
       {
        "k": "drop",
-       "msg": "5거래일 -19.5%(시장 중앙값 -2.2%) 급락 — 원인 확인",
+       "msg": "5거래일 -12.9%(시장 중앙값 2.1%) 급락 — 원인 확인",
        "fresh": false
       }
      ],
@@ -304,7 +304,7 @@ window.CANDIDATES = {
      "flags": [
       {
        "k": "drop",
-       "msg": "5거래일 -16.6%(시장 중앙값 -2.2%) 급락 — 원인 확인",
+       "msg": "5거래일 -10.4%(시장 중앙값 2.1%) 급락 — 원인 확인",
        "fresh": false
       }
      ],
@@ -1115,7 +1115,7 @@ window.CANDIDATES = {
   "review": 0,
   "defect": 1,
   "watch": 25,
-  "untried": 0,
+  "untried": 1,
   "dup": 0,
   "long": 1
  }
