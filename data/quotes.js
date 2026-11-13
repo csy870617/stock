@@ -5,341 +5,341 @@
 //   price·date 는 조회 시각의 현재가(장중이면 장중가), close·closeDate 는 마지막으로 끝난 정규장 종가(스냅샷 기록용)
 // indices: 성과 기준 지수(kospi ^KS11·sp500 ^GSPC·rsp RSP) — 같은 형식, snapshot.js 가 종목 종가와 짝지어 기록
 window.STOCK_QUOTES = {
- "generatedAt": "2026-11-12",
+ "generatedAt": "2026-11-13",
  "quotes": {
   "103590": {
-   "price": 54300,
-   "date": "2026-11-12",
-   "changePct": 3,
+   "price": 57900,
+   "date": "2026-11-13",
+   "changePct": 6.6,
    "close": 54300,
    "closeDate": "2026-11-12"
   },
   "105560": {
-   "price": 151800,
-   "date": "2026-11-12",
-   "changePct": -1,
+   "price": 158000,
+   "date": "2026-11-13",
+   "changePct": 4.1,
    "close": 151800,
    "closeDate": "2026-11-12"
   },
   "138040": {
-   "price": 112600,
-   "date": "2026-11-12",
-   "changePct": -13.1,
+   "price": 118900,
+   "date": "2026-11-13",
+   "changePct": 5.6,
    "close": 112600,
    "closeDate": "2026-11-12"
   },
   "139130": {
-   "price": 15420,
-   "date": "2026-11-12",
-   "changePct": -1.2,
+   "price": 15900,
+   "date": "2026-11-13",
+   "changePct": 3.1,
    "close": 15420,
    "closeDate": "2026-11-12"
   },
   "175330": {
-   "price": 26400,
-   "date": "2026-11-12",
-   "changePct": -0.8,
+   "price": 27200,
+   "date": "2026-11-13",
+   "changePct": 3,
    "close": 26400,
    "closeDate": "2026-11-12"
   },
   "192400": {
-   "price": 27450,
-   "date": "2026-11-12",
-   "changePct": -0.4,
+   "price": 27550,
+   "date": "2026-11-13",
+   "changePct": 0.4,
    "close": 27450,
    "closeDate": "2026-11-12"
   },
   "207940": {
-   "price": 1449000,
-   "date": "2026-11-12",
-   "changePct": 1.3,
+   "price": 1437000,
+   "date": "2026-11-13",
+   "changePct": -0.8,
    "close": 1449000,
    "closeDate": "2026-11-12"
   },
   "241560": {
-   "price": 52000,
-   "date": "2026-11-12",
-   "changePct": -1.5,
+   "price": 53300,
+   "date": "2026-11-13",
+   "changePct": 2.5,
    "close": 52000,
    "closeDate": "2026-11-12"
   },
   "267250": {
-   "price": 123500,
-   "date": "2026-11-12",
-   "changePct": -0.4,
+   "price": 126900,
+   "date": "2026-11-13",
+   "changePct": 2.8,
    "close": 123500,
    "closeDate": "2026-11-12"
   },
   "267260": {
-   "price": 421000,
-   "date": "2026-11-12",
-   "changePct": 4,
+   "price": 428500,
+   "date": "2026-11-13",
+   "changePct": 1.8,
    "close": 421000,
    "closeDate": "2026-11-12"
   },
   "267270": {
-   "price": 91500,
-   "date": "2026-11-12",
-   "changePct": -1,
+   "price": 94100,
+   "date": "2026-11-13",
+   "changePct": 2.8,
    "close": 91500,
    "closeDate": "2026-11-12"
   },
   "278470": {
-   "price": 241500,
-   "date": "2026-11-12",
-   "changePct": -4,
+   "price": 240500,
+   "date": "2026-11-13",
+   "changePct": -0.4,
    "close": 241500,
    "closeDate": "2026-11-12"
   },
   "298040": {
-   "price": 1837000,
-   "date": "2026-11-12",
-   "changePct": 2.5,
+   "price": 1854000,
+   "date": "2026-11-13",
+   "changePct": 0.9,
    "close": 1837000,
    "closeDate": "2026-11-12"
   },
   "316140": {
-   "price": 31550,
-   "date": "2026-11-12",
-   "changePct": 0.2,
+   "price": 32550,
+   "date": "2026-11-13",
+   "changePct": 3.2,
    "close": 31550,
    "closeDate": "2026-11-12"
   },
   "323410": {
-   "price": 20250,
-   "date": "2026-11-12",
-   "changePct": -0.2,
+   "price": 20850,
+   "date": "2026-11-13",
+   "changePct": 3,
    "close": 20250,
    "closeDate": "2026-11-12"
   },
   "361610": {
-   "price": 12840,
-   "date": "2026-11-12",
-   "changePct": 0.2,
+   "price": 12940,
+   "date": "2026-11-13",
+   "changePct": 0.8,
    "close": 12840,
    "closeDate": "2026-11-12"
   },
   "005930": {
-   "price": 208000,
-   "date": "2026-11-12",
-   "changePct": 1,
+   "price": 213000,
+   "date": "2026-11-13",
+   "changePct": 2.4,
    "close": 208000,
    "closeDate": "2026-11-12"
   },
   "055550": {
-   "price": 85000,
-   "date": "2026-11-12",
-   "changePct": -0.8,
+   "price": 90000,
+   "date": "2026-11-13",
+   "changePct": 5.9,
    "close": 85000,
    "closeDate": "2026-11-12"
   },
   "000810": {
-   "price": 525000,
-   "date": "2026-11-12",
-   "changePct": -7.2,
+   "price": 541000,
+   "date": "2026-11-13",
+   "changePct": 3,
    "close": 525000,
    "closeDate": "2026-11-12"
   },
   "012450": {
-   "price": 654000,
-   "date": "2026-11-12",
-   "changePct": -0.8,
+   "price": 657000,
+   "date": "2026-11-13",
+   "changePct": 0.5,
    "close": 654000,
    "closeDate": "2026-11-12"
   },
   "009540": {
-   "price": 238000,
-   "date": "2026-11-12",
-   "changePct": -0.8,
+   "price": 245500,
+   "date": "2026-11-13",
+   "changePct": 3.2,
    "close": 238000,
    "closeDate": "2026-11-12"
   },
   "068270": {
-   "price": 209500,
-   "date": "2026-11-12",
-   "changePct": 1.2,
+   "price": 211500,
+   "date": "2026-11-13",
+   "changePct": 1,
    "close": 209500,
    "closeDate": "2026-11-12"
   },
   "000270": {
-   "price": 93600,
-   "date": "2026-11-12",
-   "changePct": -1.1,
+   "price": 94900,
+   "date": "2026-11-13",
+   "changePct": 1.4,
    "close": 93600,
    "closeDate": "2026-11-12"
   },
   "032640": {
-   "price": 15070,
-   "date": "2026-11-12",
-   "changePct": -2.4,
+   "price": 15510,
+   "date": "2026-11-13",
+   "changePct": 2.9,
    "close": 15070,
    "closeDate": "2026-11-12"
   },
   "029780": {
-   "price": 40500,
-   "date": "2026-11-12",
-   "changePct": -1,
+   "price": 41000,
+   "date": "2026-11-13",
+   "changePct": 1.2,
    "close": 40500,
    "closeDate": "2026-11-12"
   },
   "035900": {
-   "price": 45100,
-   "date": "2026-11-12",
-   "changePct": 16.5,
+   "price": 45600,
+   "date": "2026-11-13",
+   "changePct": 1.1,
    "close": 45100,
    "closeDate": "2026-11-12"
   },
   "036570": {
-   "price": 189800,
-   "date": "2026-11-12",
-   "changePct": -9.2,
+   "price": 185700,
+   "date": "2026-11-13",
+   "changePct": -2.2,
    "close": 189800,
    "closeDate": "2026-11-12"
   },
   "035720": {
-   "price": 31700,
-   "date": "2026-11-12",
-   "changePct": -0.9,
+   "price": 32125,
+   "date": "2026-11-13",
+   "changePct": 1.3,
    "close": 31700,
    "closeDate": "2026-11-12"
   },
   "001040": {
-   "price": 111900,
-   "date": "2026-11-12",
-   "changePct": -1.4,
+   "price": 112000,
+   "date": "2026-11-13",
+   "changePct": 0.1,
    "close": 111900,
    "closeDate": "2026-11-12"
   },
   "012750": {
-   "price": 99300,
-   "date": "2026-11-12",
-   "changePct": 0.8,
+   "price": 100500,
+   "date": "2026-11-13",
+   "changePct": 1.2,
    "close": 99300,
    "closeDate": "2026-11-12"
   },
   "000660": {
-   "price": 1254000,
-   "date": "2026-11-12",
-   "changePct": -1.8,
+   "price": 1290000,
+   "date": "2026-11-13",
+   "changePct": 2.9,
    "close": 1254000,
    "closeDate": "2026-11-12"
   },
   "086790": {
-   "price": 120500,
-   "date": "2026-11-12",
-   "changePct": 0.3,
+   "price": 124800,
+   "date": "2026-11-13",
+   "changePct": 3.6,
    "close": 120500,
    "closeDate": "2026-11-12"
   },
   "001120": {
-   "price": 34600,
-   "date": "2026-11-12",
-   "changePct": -1,
+   "price": 34650,
+   "date": "2026-11-13",
+   "changePct": 0.1,
    "close": 34600,
    "closeDate": "2026-11-12"
   },
   "005830": {
-   "price": 162500,
-   "date": "2026-11-12",
-   "changePct": -4.1,
+   "price": 163600,
+   "date": "2026-11-13",
+   "changePct": 0.7,
    "close": 162500,
    "closeDate": "2026-11-12"
   },
   "066570": {
-   "price": 137200,
-   "date": "2026-11-12",
-   "changePct": -2.8,
+   "price": 140400,
+   "date": "2026-11-13",
+   "changePct": 2.3,
    "close": 137200,
    "closeDate": "2026-11-12"
   },
   "086280": {
-   "price": 205500,
-   "date": "2026-11-12",
-   "changePct": 2.5,
+   "price": 206500,
+   "date": "2026-11-13",
+   "changePct": 0.5,
    "close": 205500,
    "closeDate": "2026-11-12"
   },
   "018260": {
-   "price": 230500,
-   "date": "2026-11-12",
-   "changePct": 0,
+   "price": 237000,
+   "date": "2026-11-13",
+   "changePct": 2.8,
    "close": 230500,
    "closeDate": "2026-11-12"
   },
   "005850": {
-   "price": 46200,
-   "date": "2026-11-12",
-   "changePct": -2.7,
+   "price": 47450,
+   "date": "2026-11-13",
+   "changePct": 2.7,
    "close": 46200,
    "closeDate": "2026-11-12"
   },
   "005490": {
-   "price": 275000,
-   "date": "2026-11-12",
-   "changePct": -0.5,
+   "price": 280750,
+   "date": "2026-11-13",
+   "changePct": 2.1,
    "close": 275000,
    "closeDate": "2026-11-12"
   },
   "035420": {
-   "price": 181800,
-   "date": "2026-11-12",
-   "changePct": -6.4,
+   "price": 181400,
+   "date": "2026-11-13",
+   "changePct": -0.2,
    "close": 181800,
    "closeDate": "2026-11-12"
   },
   "010120": {
-   "price": 124500,
-   "date": "2026-11-12",
-   "changePct": 2.1,
+   "price": 128800,
+   "date": "2026-11-13",
+   "changePct": 3.5,
    "close": 124500,
    "closeDate": "2026-11-12"
   },
   "030200": {
-   "price": 51300,
-   "date": "2026-11-12",
-   "changePct": 1.4,
+   "price": 50900,
+   "date": "2026-11-13",
+   "changePct": -0.8,
    "close": 51300,
    "closeDate": "2026-11-12"
   },
   "012330": {
-   "price": 352000,
-   "date": "2026-11-12",
-   "changePct": -0.7,
+   "price": 366000,
+   "date": "2026-11-13",
+   "changePct": 4,
    "close": 352000,
    "closeDate": "2026-11-12"
   },
   "047050": {
-   "price": 49000,
-   "date": "2026-11-12",
-   "changePct": -3,
+   "price": 50500,
+   "date": "2026-11-13",
+   "changePct": 3.1,
    "close": 49000,
    "closeDate": "2026-11-12"
   },
   "030190": {
-   "price": 18250,
-   "date": "2026-11-12",
-   "changePct": 0.8,
+   "price": 17660,
+   "date": "2026-11-13",
+   "changePct": -3.2,
    "close": 18250,
    "closeDate": "2026-11-12"
   },
   "042700": {
-   "price": 181900,
-   "date": "2026-11-12",
-   "changePct": -1.1,
+   "price": 185700,
+   "date": "2026-11-13",
+   "changePct": 2.1,
    "close": 181900,
    "closeDate": "2026-11-12"
   },
   "064400": {
-   "price": 75400,
-   "date": "2026-11-12",
-   "changePct": -4.8,
+   "price": 80700,
+   "date": "2026-11-13",
+   "changePct": 7,
    "close": 75400,
    "closeDate": "2026-11-12"
   },
   "095340": {
-   "price": 143400,
-   "date": "2026-11-12",
-   "changePct": -1.7,
+   "price": 158600,
+   "date": "2026-11-13",
+   "changePct": 10.6,
    "close": 143400,
    "closeDate": "2026-11-12"
   },
@@ -690,9 +690,9 @@ window.STOCK_QUOTES = {
  "indices": {
   "kospi": {
    "symbol": "^KS11",
-   "price": 5342.73,
-   "date": "2026-11-12",
-   "changePct": -0.6,
+   "price": 5468.88,
+   "date": "2026-11-13",
+   "changePct": 2.4,
    "close": 5342.73,
    "closeDate": "2026-11-12"
   },
