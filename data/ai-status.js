@@ -2,7 +2,7 @@
 // 앱 'AI 연결' 창이 '매일 자동 분석' 칸에 보여 준다. 비용은 토큰 기준 추정(웹 검색은 횟수만 — 검색당 요금 별도).
 window.AI_STATUS = {
  "defects": {
-  "at": "2026-11-13T06:49:06.657Z",
+  "at": "2026-11-13T14:56:35.196Z",
   "model": "claude-sonnet-5-5",
   "ok": true,
   "pending": 0,
@@ -18,20 +18,20 @@ window.AI_STATUS = {
   }
  },
  "news": {
-  "at": "2026-11-13T06:53:52.107Z",
+  "at": "2026-11-13T14:57:50.908Z",
   "model": "claude-haiku-5-5",
   "ok": true,
   "stocks": 97,
   "fetched": 97,
-  "called": 63,
-  "lines": 74,
+  "called": 75,
+  "lines": 69,
   "usage": {
-   "calls": 63,
-   "input": 108933,
-   "output": 5198,
+   "calls": 75,
+   "input": 114017,
+   "output": 5183,
    "cacheRead": 0,
    "searches": 0,
-   "usd": 0.013
+   "usd": 0.014
   }
  },
  "daily": {
@@ -44,14 +44,14 @@ window.AI_STATUS = {
   "model": "claude-opus-5-5",
   "ok": true,
   "seen": {
-   "at": "2026-11-13T06:53:51.973Z",
+   "at": "2026-11-13T14:57:50.833Z",
    "basis": {
     "kr": "2026-11-13",
     "us": "2026-11-12"
    },
    "items": {
     "market": {
-     "sig": "엔비디아 젠슨 황 CEO 사임과 미 10년물 금리·유가 상승이 겹쳐 미국#17v5mjq",
+     "sig": "엔비디아 젠슨 황 CEO 사임과 미 10년물 금리·유가 상승이 겹쳐 미국#cpgryj",
      "basis": {
       "kr": "2026-11-13",
       "us": "2026-11-12"
@@ -65,7 +65,7 @@ window.AI_STATUS = {
      }
     },
     "indexNotes": {
-     "sig": "하락세 — 구름 아래·전환선<기준선이고 RSI 39.1로 과매도에 가깝다#r3sd1e",
+     "sig": "하락세 — 구름 아래·전환선<기준선이고 RSI 38.9로 과매도에 가깝다#1k29zp8",
      "basis": {
       "kr": "2026-11-13",
       "us": "2026-11-12"
@@ -104,6 +104,8 @@ window.AI_STATUS = {
    "cacheRead": 0,
    "searches": 6,
    "usd": 1.862
-  }
+  },
+  "checkedAt": "2026-11-13T14:57:50.833Z",
+  "skipped": "오늘(2026-11-13) 몫이 이미 최신 — AI 작성분 유지"
  }
 };
