@@ -5,150 +5,150 @@ window.LIQUIDITY_AUTO = {
  "asOf": "2026-11-13",
  "note": "Yahoo 시장지표 기반 자동 baseline(금리·일드커브·VIX·HY신용·달러·원달러·코스피). 거시 이벤트·내러티브는 미반영 — 온디맨드 유동성이 보정.",
  "inputs": {
-  "us10y": "5.10",
-  "curve": "0.98",
-  "vix": "18.7",
-  "hyg20": "0.3",
-  "dxy": "103.2",
-  "usdkrw": "1336"
+  "us10y": "5.15",
+  "curve": "1.03",
+  "vix": "19.3",
+  "hyg20": "0.6",
+  "dxy": "103.4",
+  "usdkrw": "1335"
  },
  "us": {
   "shortTerm": "신중",
   "midTerm": "부정",
-  "shortScore": 0.17,
+  "shortScore": 0.21,
   "midScore": -0.57,
   "drivers": [
    "일드커브 (+2)",
-   "달러 추세 (−1)",
-   "VIX 18.7 (·0)",
-   "10Y 추세 (·0)"
+   "10Y 추세 (−1)",
+   "HY 신용(20d) (+1)",
+   "달러 추세 (−1)"
   ]
  },
  "korea": {
   "shortTerm": "부정",
   "midTerm": "부정",
-  "shortScore": -0.64,
+  "shortScore": -0.46,
   "midScore": -0.59,
   "drivers": [
    "코스피 모멘텀(20d) (−2)",
+   "글로벌 신용(20d) (+1)",
    "달러 추세 (−1)",
-   "원/달러 추세 (·0)",
-   "글로벌 변동성 VIX (·0)"
+   "원/달러 추세 (·0)"
   ]
  },
  "fed": {
   "asOf": "2026-11-13",
-  "current": 3.88,
+  "current": 3.878,
   "meetings": [
    {
     "date": "2026-12-09",
-    "rate": 4.155,
-    "stepBp": 27.5,
-    "cumBp": 27.5,
+    "rate": 4.149,
+    "stepBp": 27.1,
+    "cumBp": 27.1,
     "outcomes": [
      {
       "n": 1,
-      "p": 90
+      "p": 92
      },
      {
       "n": 2,
-      "p": 10
+      "p": 8
      }
     ]
    },
    {
     "date": "2027-01-27",
-    "rate": 4.33,
-    "stepBp": 17.5,
-    "cumBp": 45,
+    "rate": 4.32,
+    "stepBp": 17.1,
+    "cumBp": 44.2,
     "outcomes": [
      {
       "n": 2,
-      "p": 80
+      "p": 77
      },
      {
       "n": 1,
-      "p": 20
+      "p": 23
      }
     ]
    },
    {
     "date": "2027-03-17",
-    "rate": 4.507,
-    "stepBp": 17.7,
-    "cumBp": 62.7,
+    "rate": 4.486,
+    "stepBp": 16.6,
+    "cumBp": 60.9,
     "outcomes": [
      {
-      "n": 3,
-      "p": 51
+      "n": 2,
+      "p": 56
      },
      {
-      "n": 2,
-      "p": 49
+      "n": 3,
+      "p": 44
      }
     ]
    },
    {
     "date": "2027-04-28",
-    "rate": 4.595,
-    "stepBp": 8.8,
-    "cumBp": 71.5,
+    "rate": 4.57,
+    "stepBp": 8.4,
+    "cumBp": 69.2,
     "outcomes": [
      {
       "n": 3,
-      "p": 86
+      "p": 77
      },
      {
       "n": 2,
-      "p": 14
+      "p": 23
      }
     ]
    },
    {
     "date": "2027-06-09",
-    "rate": 4.695,
-    "stepBp": 10,
-    "cumBp": 81.5,
+    "rate": 4.677,
+    "stepBp": 10.7,
+    "cumBp": 80,
     "outcomes": [
      {
       "n": 3,
-      "p": 74
+      "p": 80
      },
      {
       "n": 4,
-      "p": 26
+      "p": 20
      }
     ]
    },
    {
     "date": "2027-07-28",
-    "rate": 4.735,
-    "stepBp": 4,
-    "cumBp": 85.5,
+    "rate": 4.715,
+    "stepBp": 3.8,
+    "cumBp": 83.7,
     "outcomes": [
      {
       "n": 3,
-      "p": 58
+      "p": 65
      },
      {
       "n": 4,
-      "p": 42
+      "p": 35
      }
     ]
    },
    {
     "date": "2027-09-15",
-    "rate": 4.775,
-    "stepBp": 4,
-    "cumBp": 89.5,
+    "rate": 4.745,
+    "stepBp": 3,
+    "cumBp": 86.8,
     "outcomes": [
      {
-      "n": 4,
-      "p": 58
+      "n": 3,
+      "p": 53
      },
      {
-      "n": 3,
-      "p": 42
+      "n": 4,
+      "p": 47
      }
     ]
    }
@@ -180,32 +180,32 @@ window.LIQUIDITY_AUTO = {
  "rateModel": {
   "validatedAt": "2026-10-20",
   "us": {
-   "asOf": "2026-11-11",
+   "asOf": "2026-11-12",
    "policy": 3.88,
    "forecasts": [
     {
      "h": 3,
-     "rate": 4.29,
-     "chg": 0.41,
+     "rate": 4.31,
+     "chg": 0.43,
      "rmse": 0.33,
      "noChangeRmse": 0.47,
-     "market": 4.12
+     "market": 4.14
     },
     {
      "h": 6,
-     "rate": 4.61,
-     "chg": 0.73,
+     "rate": 4.68,
+     "chg": 0.8,
      "rmse": 0.52,
      "noChangeRmse": 0.86,
-     "market": 4.26
+     "market": 4.3
     },
     {
      "h": 12,
-     "rate": 4.97,
-     "chg": 1.09,
+     "rate": 5.16,
+     "chg": 1.28,
      "rmse": 1.08,
      "noChangeRmse": 1.53,
-     "market": 4.56
+     "market": 4.65
     }
    ],
    "taylor": {
