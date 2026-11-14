@@ -42,104 +42,88 @@ window.LIQUIDITY_AUTO = {
   "meetings": [
    {
     "date": "2026-12-09",
-    "rate": 4.149,
-    "stepBp": 27.1,
-    "cumBp": 27.1,
+    "rate": 4.156,
+    "stepBp": 27.8,
+    "cumBp": 27.8,
     "outcomes": [
      {
       "n": 1,
-      "p": 92
+      "p": 89
      },
      {
       "n": 2,
-      "p": 8
+      "p": 11
      }
     ]
    },
    {
     "date": "2027-01-27",
-    "rate": 4.32,
-    "stepBp": 17.1,
-    "cumBp": 44.2,
+    "rate": 4.34,
+    "stepBp": 18.4,
+    "cumBp": 46.2,
     "outcomes": [
      {
       "n": 2,
-      "p": 77
+      "p": 85
      },
      {
       "n": 1,
-      "p": 23
+      "p": 15
      }
     ]
    },
    {
     "date": "2027-03-17",
-    "rate": 4.486,
-    "stepBp": 16.6,
-    "cumBp": 60.9,
+    "rate": 4.517,
+    "stepBp": 17.7,
+    "cumBp": 64,
     "outcomes": [
      {
-      "n": 2,
+      "n": 3,
       "p": 56
      },
      {
-      "n": 3,
+      "n": 2,
       "p": 44
      }
     ]
    },
    {
     "date": "2027-04-28",
-    "rate": 4.57,
-    "stepBp": 8.4,
-    "cumBp": 69.2,
+    "rate": 4.605,
+    "stepBp": 8.8,
+    "cumBp": 72.8,
     "outcomes": [
      {
       "n": 3,
-      "p": 77
+      "p": 91
      },
      {
       "n": 2,
-      "p": 23
+      "p": 9
      }
     ]
    },
    {
     "date": "2027-06-09",
-    "rate": 4.677,
-    "stepBp": 10.7,
-    "cumBp": 80,
+    "rate": 4.705,
+    "stepBp": 10,
+    "cumBp": 82.8,
     "outcomes": [
      {
       "n": 3,
-      "p": 80
+      "p": 69
      },
      {
       "n": 4,
-      "p": 20
+      "p": 31
      }
     ]
    },
    {
     "date": "2027-07-28",
-    "rate": 4.715,
-    "stepBp": 3.8,
-    "cumBp": 83.7,
-    "outcomes": [
-     {
-      "n": 3,
-      "p": 65
-     },
-     {
-      "n": 4,
-      "p": 35
-     }
-    ]
-   },
-   {
-    "date": "2027-09-15",
     "rate": 4.745,
-    "stepBp": 3,
+    "stepBp": 4,
     "cumBp": 86.8,
     "outcomes": [
      {
@@ -149,6 +133,22 @@ window.LIQUIDITY_AUTO = {
      {
       "n": 4,
       "p": 47
+     }
+    ]
+   },
+   {
+    "date": "2027-09-15",
+    "rate": 4.785,
+    "stepBp": 4,
+    "cumBp": 90.7,
+    "outcomes": [
+     {
+      "n": 4,
+      "p": 63
+     },
+     {
+      "n": 3,
+      "p": 37
      }
     ]
    }

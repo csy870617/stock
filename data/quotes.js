@@ -694,7 +694,8 @@ window.STOCK_QUOTES = {
    "date": "2026-11-13",
    "changePct": -1,
    "close": 5290.53,
-   "closeDate": "2026-11-13"
+   "closeDate": "2026-11-13",
+   "at": "2026-11-14T14:41:52Z"
   },
   "sp500": {
    "symbol": "^GSPC",
@@ -702,7 +703,8 @@ window.STOCK_QUOTES = {
    "date": "2026-11-13",
    "changePct": -0.4,
    "close": 7561.67,
-   "closeDate": "2026-11-13"
+   "closeDate": "2026-11-13",
+   "at": "2026-11-14T14:41:52Z"
   },
   "rsp": {
    "symbol": "RSP",
@@ -710,7 +712,8 @@ window.STOCK_QUOTES = {
    "date": "2026-11-13",
    "changePct": 0.2,
    "close": 221.16,
-   "closeDate": "2026-11-13"
+   "closeDate": "2026-11-13",
+   "at": "2026-11-14T14:41:52Z"
   }
  }
 };

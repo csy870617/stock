@@ -2,7 +2,7 @@
 // 앱 'AI 연결' 창이 '매일 자동 분석' 칸에 보여 준다. 비용은 토큰 기준 추정(웹 검색은 횟수만 — 검색당 요금 별도).
 window.AI_STATUS = {
  "defects": {
-  "at": "2026-11-14T00:57:26.131Z",
+  "at": "2026-11-14T14:46:14.848Z",
   "model": "claude-sonnet-5-5",
   "ok": true,
   "pending": 0,
@@ -18,20 +18,20 @@ window.AI_STATUS = {
   }
  },
  "news": {
-  "at": "2026-11-14T01:01:29.150Z",
+  "at": "2026-11-14T14:47:24.023Z",
   "model": "claude-haiku-5-5",
   "ok": true,
   "stocks": 97,
   "fetched": 97,
-  "called": 78,
-  "lines": 75,
+  "called": 54,
+  "lines": 69,
   "usage": {
-   "calls": 78,
-   "input": 115787,
-   "output": 5413,
+   "calls": 54,
+   "input": 79048,
+   "output": 3741,
    "cacheRead": 0,
    "searches": 0,
-   "usd": 0.014
+   "usd": 0.01
   }
  },
  "daily": {
@@ -44,7 +44,7 @@ window.AI_STATUS = {
   "model": "claude-opus-5-5",
   "ok": true,
   "seen": {
-   "at": "2026-11-14T01:01:29.064Z",
+   "at": "2026-11-14T14:47:23.896Z",
    "basis": {
     "kr": "2026-11-13",
     "us": "2026-11-13"
@@ -72,7 +72,7 @@ window.AI_STATUS = {
      }
     },
     "topPicks": {
-     "sig": "순이익의 50% 이상을 배당과 자사주 매입·소각으로 돌려주는 원칙으로 2#181anqq",
+     "sig": "300억원 자사주 매입을 마쳐 밸류업 계획 이후 유통주식수가 누적 약 7#3aab9w",
      "basis": {
       "kr": "2026-11-13",
       "us": "2026-11-13"
@@ -105,6 +105,8 @@ window.AI_STATUS = {
    "searches": 6,
    "usd": 1.281
   },
-  "note": "새 종가로 세션 문장 갱신: market, indexNotes"
+  "note": "새 종가로 세션 문장 갱신: market, indexNotes",
+  "checkedAt": "2026-11-14T14:47:23.896Z",
+  "skipped": "오늘(2026-11-13) 몫이 이미 최신 — AI 작성분 유지"
  }
 };
