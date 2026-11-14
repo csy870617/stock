@@ -6,7 +6,7 @@
   "scripts/screen-discovery.js": "6b29c744ad54eed5",
   "scripts/screen-factors.js": "343af9eeaec1acdc",
   "scripts/lib-factors.js": "022c5e81e2c7d0f5",
-  "scripts/check-defects.js": "e06260eee2a0e1ea",
+  "scripts/check-defects.js": "4626811c6c5488dd",
   "scripts/lib-ta.js": "f9d715583519f6c9",
   "scripts/shadow-track.js": "cd486f042e20a38b",
   "docs/DEEP-AUDIT-AGENT.md": "84a8d8333ac5486d",
@@ -77,6 +77,13 @@
     "scripts/shadow-track.js"
    ],
    "reason": "2026-11-14 전체 점검 — 버그 수정·출력 추가(판정식 불변): screen-discovery 미달 조건 문구·failKeys·nearMiss·personal 보유 포함, check-defects 조건별 시작일(hard)·보호 범위·감시 표시·근접 후보·nofx, shadow-track 같은 마감 재실행 보정"
+  },
+  {
+   "at": "2026-11-14",
+   "items": [
+    "scripts/check-defects.js"
+   ],
+   "reason": "2026-11-14 전체 점검 재검증 반영 — check-defects 조건 시작일 기록의 빈틈 수정(유예 복원·flags 글자), 판정식 불변"
   }
  ]
 }

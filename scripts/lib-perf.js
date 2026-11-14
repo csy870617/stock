@@ -67,7 +67,8 @@ const baseOf = (H, country) => { const h = (H || []).find((x) => x[idxKey(countr
 // 보유 기준 일별 수익 — [{d, r, rb, re, eq, n}] (거래일만, 앞쪽 n=0 은 그 묶음이 아직 비어 있던 날)
 //   exitPx(country, ticker, i) → 기록일 i-1 에 있다가 i 에 없는 종목의 기록일 i 종가(없으면 null — 그 종목은 그날 빠진다)
 //   anchorMode → anchorsFor 의 mode(정식 전체 비중을 언제부터 쓰나)
-function chain(H, country, sel, exitPx, anchorMode) {
+// pre = H 앞의 기록(선택) — 최근 창만 잴 때 창 앞에서 이미 그날 가격이 적힌 종목을 알려 준다(아래 fresh)
+function chain(H, country, sel, exitPx, anchorMode, pre) {
   const bk = idxKey(country), prev = {};
   const lv = (snap, k) => { if (snap[k]) prev[k] = snap[k]; return prev[k] || null; };
   if (!H.length) return [];
@@ -77,17 +78,19 @@ function chain(H, country, sel, exitPx, anchorMode) {
   // 그 묶음에 들어온 뒤 '그날 가격'이 한 번이라도 적힌 종목 — 낡은 가격 줄을 건너뛰는 것은 편입 때 시세를 못 받은 줄뿐이다.
   //   보유 중인 종목이 거래정지·시세 실패로 5일 넘게 같은 가격에 머문 것까지 건너뛰면 정지 앞뒤의 움직임이 통째로 빠진다(2026-11-14 검토).
   const fresh = {};
+  const track = (a) => {
+    const pk0 = sel === "picks" ? (a.picks && a.picks[country]) || [] : null, pd0 = pdOf(a, country), mem = {};
+    (a.stocks || []).forEach((e) => {
+      if (e.c !== country || !e.p || (pk0 ? pk0.indexOf(e.t) < 0 : !inGroup(sel, e))) return;
+      mem[e.t] = 1;
+      if (!staleRow(e, pd0)) fresh[e.t] = 1;
+    });
+    Object.keys(fresh).forEach((t) => { if (!mem[t]) delete fresh[t]; });
+  };
+  (pre || []).forEach(track);
   for (let i = 1; i < H.length; i++) {
     const a = H[i - 1], b = H[i];
-    {
-      const pk0 = sel === "picks" ? (a.picks && a.picks[country]) || [] : null, pd0 = pdOf(a, country), mem = {};
-      (a.stocks || []).forEach((e) => {
-        if (e.c !== country || !e.p || (pk0 ? pk0.indexOf(e.t) < 0 : !inGroup(sel, e))) return;
-        mem[e.t] = 1;
-        if (!staleRow(e, pd0)) fresh[e.t] = 1;
-      });
-      Object.keys(fresh).forEach((t) => { if (!mem[t]) delete fresh[t]; });
-    }
+    track(a);
     const b0 = prev[bk] || null, e0 = prev.rsp || null;
     const b1 = lv(b, bk), e1 = lv(b, "rsp");
     // 지수 기준값을 아직 모르는 앞 구간(첫 기록에 지수가 비어 있을 때 — 미국 2026-07-06 기록)은 재지 않는다:

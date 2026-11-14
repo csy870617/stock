@@ -61,7 +61,7 @@ function capturedCloses() {
       out.fetched[k] = !!q && (q.at ? Date.now() - Date.parse(q.at) < 3 * 3600 * 1000 : q.changePct != null);
     });
     return out;
-  } catch (e) { return {}; }
+  } catch (e) { return { fetched: { kr: false, us: false } }; }   // 시세 파일을 못 읽음 — 받지 못한 것으로(시도로 세지 않는다)
 }
 
 const now = new Date();
@@ -77,6 +77,9 @@ if (process.argv.includes("--mark")) {
   Object.keys(MARKETS).forEach((k) => {
     const prev = st[k] || {};
     const captured = !!(got[k] && got[k] >= exp[k]);
+    // 잠정 종가(16:30 KST 전)를 잡아 둔 마감 — 이번 실행이 지수를 받지 못했으면 잠정 상태를 그대로 둔다
+    //   (그 전 실행이 남긴 종가일이 그대로라 '잡았다'로 보이지만 확정 종가를 받은 것이 아니다)
+    if (k === "kr" && prev.prov && prev.expected === exp[k] && got.fetched && got.fetched[k] === false) { next[k] = prev; return; }
     // 한국 16:30 전에 잡은 종가는 잠정 — 완료로 치지 않고(16:30 뒤 첫 슬롯이 다시 돈다) 시도 횟수도 늘리지 않는다
     if (k === "kr" && captured && krEarly()) {
       next[k] = { expected: exp[k], captured: got[k], tries: prev.expected === exp[k] ? prev.tries || 0 : 0, done: false, prov: true };

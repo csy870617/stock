@@ -263,7 +263,15 @@ function repairTopPicks(tp, R, D, TA) {
   const broken = (t) => { const x = ta[t]; return !!x && ["short", "mid", "long"].every((k) => x[k] && /매도/.test(x[k].signal || "")); };
   ["korea", "us"].forEach((c) => {
     const cur = Array.isArray(tp[c]) ? tp[c] : [], want = (R[c] && R[c].top) || [];
-    if (want.length !== 3 || !cur.length) return;
+    if (!cur.length) return;
+    if (want.length !== 3) {
+      // 순위가 3종목이 안 되는 날(시장 전체가 관문에 걸림) — 검증 오류가 되는 종목(편성 밖·추세 붕괴)이 들었으면 그 나라 목록을 비운다.
+      //   앱은 순위로 자동 표시하고 coverage 가 red 로 알린다. 두면 전체 검증 실패로 기술 대응 저장까지 막힌다.
+      const pk0 = new Set((D[c] || []).filter((x) => canPick(x.theme)).map((x) => x.ticker));
+      const err = cur.filter((x) => !x || !pk0.has(x.ticker) || broken(x.ticker));
+      if (err.length) { delete out[c]; moved.push(c + " " + err.map((x) => (x && x.ticker) || "?").join(",") + " 제외(편성 밖·추세 붕괴) — 순위가 3종목 미만이라 목록을 비움"); }
+      return;
+    }
     const pickable = new Set((D[c] || []).filter((x) => canPick(x.theme)).map((x) => x.ticker));
     // 고를 수 없는 Top Pick = 편성 밖·추세 붕괴(검증 오류), 그리고 지금 건강 관문에 걸렸거나 점수 자료가 없어 순위에 없는 종목
     //   (수급 과열·실질 결격·목표가 급락 … — 순위 1~3위에 다시 들 수 없으므로 누가 썼든 그 나라 목록을 순위대로 다시 세운다)

@@ -267,7 +267,7 @@ const allowedRemoves = [];
     D[r.country].filter((x) => x.ticker === r.ticker && (r.theme == null || x.theme === r.theme) && FORMAL.has(x.theme)).forEach((x) => {
       if (hasDefect(r.country, x.theme, x.ticker)) return;
       // 같은 패치가 같은 자리(나라·종목·주제)에 카드를 다시 넣으면 '카드 교체'지 제외가 아니다
-      if ((patch.add || []).some((a) => a && a.country === r.country && a.ticker === x.ticker && a.theme === x.theme)) return;
+      if ((patch.add || []).some((a) => a && a.name && a.country === r.country && a.ticker === x.ticker && a.theme === x.theme)) return;   // 이름 없는 add 는 뒤에서 건너뛰므로 교체로 치지 않는다
       if (ALLOW_REMOVE || FORCE) { allowedRemoves.push(r.country + ":" + x.ticker + "/" + x.theme); return; }
       guardErrors.push("remove " + r.country + ":" + x.ticker + "/" + x.theme + " (" + x.name + ") — 정식 추천 종목은 '실질' 결격 판정(candidate-notes.json)이나 중복 편성이 있을 때만 뺀다(§5 ④ — '더 좋아 보인다'만으로는 교체하지 않는다). " +
         "결격을 먼저 판정해 기록하거나, 사용자가 직접 빼 달라고 한 경우 등은 --allow-remove \"<사유>\" 로 다시 실행");

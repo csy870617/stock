@@ -197,8 +197,8 @@ async function main() {
     if (AN) {
       const HB = LP.recentSnaps(H, LP.HELD_DAYS), off = H.length - HB.length;
       const px = (cc, t, i) => exitPx(cc, t, i + off);
-      const now = LP.stats(LP.chain(HB, c, null, px, "always"), 0, HB[0].date);
-      const ew = LP.stats(LP.chain(HB, c, null, px, "never"), 0, HB[0].date);
+      const now = LP.stats(LP.chain(HB, c, null, px, "always", H.slice(0, off)), 0, HB[0].date);
+      const ew = LP.stats(LP.chain(HB, c, null, px, "never", H.slice(0, off)), 0, HB[0].date);
       const formal = lastC.filter((e) => LP.inGroup(null, e));
       const anchors = Object.keys(AN.w).map((t) => {
         const e = formal.find((x) => x.t === t);

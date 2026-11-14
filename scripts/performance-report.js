@@ -193,7 +193,7 @@ const HELD_DAYS = LP.HELD_DAYS;
 const HB = LP.recentSnaps(H, HELD_DAYS);
 const exitPx = (c, t, i) => { const v = EXIT[c + ":" + t + "@" + HB[i].date]; return v ? v.p : null; };
 function held(country, themeKey) {
-  const s = LP.stats(LP.chain(HB, country, themeKey || null, exitPx, "always"), 0, HB[0].date);
+  const s = LP.stats(LP.chain(HB, country, themeKey || null, exitPx, "always", H.slice(0, H.length - HB.length)), 0, HB[0].date);
   if (!s) return null;
   return { ret: s.ret, bench: s.bench, excess: s.excess, beta: s.beta, betaAlpha: s.betaAlpha, tExcess: s.tEx,
     vsEqualWeight: s.vsEq != null ? s.vsEq : null };

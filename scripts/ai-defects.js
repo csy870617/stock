@@ -34,8 +34,10 @@ const THEME_DEF = {
 // 주제 기준 미달 문구(screen-discovery WHY·EX 라벨)에 나오는 조건 낱말 — AI note 가 걸린 조건을 짚었는지 확인하는 데 쓴다
 const THEME_KW = ["시총", "KOSPI", "ROE", "부채비율", "영업이익", "매출", "EBIT", "ROA", "배당", "ROIC", "FCF", "PER", "PBR", "희석", "주식 수", "자산", "이익 변동", "이익 개선", "흑자", "적자", "금융", "원자재", "합자"];
 // 같은 조건을 가리키는 다른 낱말 — note 가 '시총' 대신 '시가총액', '흑자가 아니다' 대신 '적자'라고 써도 조건을 짚은 것으로 본다
-const THEME_SYN = [["시총", "시가총액"], ["KOSPI", "코스피", "코스닥", "KOSDAQ"], ["흑자", "적자", "순이익", "순손실"], ["희석", "주식 수", "주식수", "증자", "발행주식"],
-  ["이익 변동", "변동성", "변동이"], ["이익 개선", "영업이익", "이익이"], ["부채비율", "부채"], ["자산", "인수", "합병"], ["배당", "주주환원"], ["매출", "외형", "역성장"]];
+const THEME_SYN = [["시총", "시가총액", "순위"], ["KOSPI", "코스피", "코스닥", "KOSDAQ"], ["흑자", "적자", "순이익", "순손실", "손실", "손익"], ["희석", "주식 수", "주식수", "증자", "발행주식"],
+  ["이익 변동", "변동", "편차"], ["이익 개선", "영업이익", "영업익", "이익이", "감익", "증익"], ["부채비율", "부채", "차입"], ["EBIT", "영업이익", "영업익", "영업손실", "마진", "기업가치"],
+  ["ROE", "자기자본이익률"], ["ROIC", "투하자본"], ["ROA", "총자산이익률"], ["FCF", "현금흐름"], ["PER", "PBR", "배수", "밸류"], ["자산", "인수", "합병", "덩치", "영업권"],
+  ["배당", "주주환원"], ["매출", "외형", "역성장", "성장률", "판매"], ["금융", "은행", "보험", "증권", "지주"], ["원자재", "광산", "광업", "석유"], ["합자", "MLP"]];
 const themeAlt = (k) => { const out = [k]; THEME_SYN.forEach((g) => { if (g.indexOf(k) >= 0) g.forEach((x) => { if (out.indexOf(x) < 0) out.push(x); }); }); return out; };
 const readNotes = () => (fs.existsSync(NOTES) ? JSON.parse(fs.readFileSync(NOTES, "utf8")) : { candidates: {}, defects: {} });
 const writeNotes = (n) => fs.writeFileSync(NOTES, JSON.stringify(n, null, 2) + "\n");
@@ -114,11 +116,18 @@ async function judge(cl, model, item, S) {
     // 주제 기준 미달을 새로 판정할 땐 note 가 걸린 조건을 짚어야 한다 — 신호 문구에 나온 낱말(시총·ROE·배당 …) 중 하나는 note 에 있어야 한다
     const th0 = d.flags.find((f) => f.fresh && f.k === "theme");
     if (th0 && o.note) {
-      const kw = THEME_KW.filter((k) => th0.msg.indexOf(k) >= 0);
+      const msg0 = th0.msg.replace(/\(비금융\)|비금융/g, "");   // '(비금융)' 꼬리표의 '금융'을 조건 낱말로 세지 않는다
+      const kw = THEME_KW.filter((k) => msg0.indexOf(k) >= 0);
       if (kw.length && !kw.some((k) => themeAlt(k).some((a) => o.note.indexOf(a) >= 0))) p.push("주제 기준 미달 신호의 걸린 조건(" + kw.slice(0, 4).join("·") + " 중 해당하는 것)을 note 에 짚어야 한다 — 그 조건이 왜 형식/실질인지");
       // '확인 전까지 감시'는 다른 신호(실적·급락)에는 쓸 수 있는 표현이라, 주제 기준 미달만 새로 판정할 때와 '어느 조건인지·원인 미확인'이라고 미룰 때만 막는다
+      //   문장 단위로 본다 — 주제 조건(그 낱말·조건·기준·미달·이탈)을 '확인 전까지'로 미루는 문장은 다른 신호가 함께 떠도 막고,
+      //   급락·실적·목표가 하향의 '원인 미확인'은 그 신호의 허용된 사유라 막지 않는다
       const onlyTheme = !d.flags.some((f) => f.fresh && f.k !== "theme");
-      if (o.verdict === "형식" && (/(어느|어떤|무슨)\s*조건|조건[^.。]{0,14}확인 전까지|원인[^.。]{0,6}(미확인|확인되지|확인 전)/.test(o.note) || (onlyTheme && /확인 전까지/.test(o.note)))) p.push("주제 기준 미달에 '확인 전까지 감시'·'원인 미확인'은 형식 사유가 아니다 — 문구에 적힌 조건을 판단한다");
+      const sents = o.note.split(/(?<=[.。])\s*/), kwAll = [].concat.apply([], kw.map(themeAlt));
+      const UNK = /확인 전까지|확인 전이|확인하지 못|확인되지 않|확인이 필요|추가 확인|미확인/;   // 판단을 미루는 표현
+      const aboutTheme = (x) => kwAll.some((a) => x.indexOf(a) >= 0) || /조건|기준|미달|이탈/.test(x);
+      const defer = sents.some((x) => /(어느|어떤|무슨)\s*조건/.test(x) || (UNK.test(x) && (onlyTheme || aboutTheme(x))));
+      if (o.verdict === "형식" && defer) p.push("주제 기준 미달에 '확인 전까지 감시'·'원인 미확인'은 형식 사유가 아니다 — 문구에 적힌 조건을 판단한다");
     }
     return p;
   };
@@ -158,6 +167,9 @@ function put(notes, g, t, entry) {
 function reapply() {
   const c = L.readCache("defects.json");
   if (!c || !c.items || !c.items.length) { console.log("ai-defects --reapply: 캐시 없음 — 건너뜀"); return; }
+  // 판정을 얹기 전에 결격 점검을 한 번 돌린다 — 원격을 되돌려 받은 candidates.js 엔 이번 실행이 처음 본 조건의 기록이 없다.
+  //   판정을 먼저 얹으면 그 조건이 '판정 뒤에 처음 보인 것'으로 적혀, 바로 그 조건을 본 판정이 덮지 못하고 다음 실행이 다시 조사한다
+  rerunCheck();
   const notes = readNotes();
   let n = 0;
   c.items.forEach((x) => {

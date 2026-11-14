@@ -212,7 +212,7 @@ const PREV_SINCE = {};
 //   예전엔 이 두 신호에 시작일이 없어, 판정에 "theme" 이 한 번 적히면 그 뒤 '다른 조건'이 새로 걸려도, 추세가 풀렸다 다시 무너져도 영영 덮였다
 //   (정식 72자리 중 18자리가 그런 판정 — 주제 기준에 걸린 14자리 가운데 결격으로 다루는 것은 1자리). 판정은 자기보다 뒤에 새로 뜬 신호를 덮지 못한다:
 //   추세 붕괴 = 이번 붕괴가 시작된 날, 주제 기준 미달 = 지금 걸린 조건 가운데 가장 늦게 걸리기 시작한 날. 판정일이 그날보다 앞서면 다시 '점검 필요'.
-//   hard["<그룹>|<티커>"] = { trend: 날짜|"-", tvf, scheme: "keys"|"text", theme: { 조건 키: 날짜|"-" }, vf: { 조건 키: 지문 }, gone: { "trend"|"theme:<키>": [날짜, 마지막으로 본 날, 지문] } }
+//   hard["<그룹>|<티커>"] = { trend: 날짜|"-", tvf, scheme: "keys"|"text", theme: { 조건 키: 날짜|"-" }, vf: { 조건 키: 지문 }, gone: { "trend"|"theme:<키>": [날짜, 마지막으로 본 날, 지문, 풀릴 때 판정 대기 중이었나] } }
 //   — "-" 는 '이 기록을 시작하기 전부터'(기준선). 지도가 아직 없는 첫 실행과, 스크린 출력이 글자 → 키로 바뀌는 날만 기준선으로 둔다
 //   (그날 한꺼번에 다시 점검으로 올리지 않는다). 지도가 있는데 그 종목 기록이 없으면 '오늘 처음 걸린 것'이다(2026-11-14 검토 — 기록이 없다고
 //   기준선으로 두면 통과하던 종목이 새로 걸려도, 뺐다가 다시 넣은 종목도 옛 판정이 덮는다).
@@ -229,7 +229,7 @@ const GRACE_DAYS = 14;
 const isDay = (x) => typeof x === "string" && /^\d{4}-\d{2}-\d{2}$/.test(x);
 const verdictFp = (v) => {   // 판정 지문 — 날짜·등급·신호·메모가 같으면 같은 판정
   if (!v) return "";
-  const str = [v.asOf || "", v.verdict || "", (v.flags || []).join(","), v.note || ""].join("|");
+  const str = [v.asOf || "", v.verdict || "", [].concat(v.flags || []).join(","), v.note || ""].join("|");   // flags 가 배열이 아니어도(손으로 쓴 글자) 멈추지 않는다
   let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
   return (h >>> 0).toString(36);
 };
@@ -243,18 +243,21 @@ function hardSince(g, ticker, fl, v, known) {
   const back = (k) => { const x = pg[k]; return Array.isArray(x) && isDay(x[1]) && dayDiff(T, x[1]) <= GRACE_DAYS ? x : null; };
   const tf = fl.find((x) => x.k === "trend"), hf = fl.find((x) => x.k === "theme" && x.keys);
   const used = {};
+  // 조건이 풀리는 순간 아직 판정을 기다리던 것이었나(1) — 그랬다면 다시 걸릴 때 그 사이에 다른 일로 고쳐 쓴 판정이 덮지 못하게
+  //   '지금 판정'을 처음 본 판정으로 다시 적는다(날짜는 처음 걸린 날 그대로). 이미 판정된 조건은 그대로 되살린다(문턱을 오가는 종목은 조용히).
+  const pend = (kind, d, vf0) => (!isDay(d) ? 0 : (v && v.flags && v.flags.includes(kind) && (v.verdict === "실질" || (!!v.asOf && v.asOf >= d && (vf0 == null || vf0 !== fp)))) ? 0 : 1);
   // ── 추세 붕괴
   if (tf) {
     if (first) cur.trend = "-";
     else if (pr.trend) { cur.trend = pr.trend; if (pr.tvf != null) cur.tvf = pr.tvf; }
     else {
       const b = back("trend");
-      if (b) { cur.trend = b[0]; if (b[2] != null) cur.tvf = b[2]; used.trend = 1; } else { cur.trend = T; cur.tvf = fp; }
+      if (b) { cur.trend = b[0]; if (b[3]) cur.tvf = fp; else if (b[2] != null) cur.tvf = b[2]; used.trend = 1; } else { cur.trend = T; cur.tvf = fp; }
     }
     if (isDay(cur.trend)) tf.sinces = [{ d: cur.trend, vf: cur.tvf }];
   } else if (pr.trend) {
     if (!known.trend) { cur.trend = pr.trend; if (pr.tvf != null) cur.tvf = pr.tvf; }
-    else gone.trend = [pr.trend, PREV_T, pr.tvf != null ? pr.tvf : null];
+    else gone.trend = [pr.trend, PREV_T, pr.tvf != null ? pr.tvf : null, pend("trend", pr.trend, pr.tvf)];
   }
   // ── 주제 기준 미달(조건 키마다)
   const prevKeys = pr.theme && typeof pr.theme === "object" ? pr.theme : null, prevVf = (pr.vf && typeof pr.vf === "object" && pr.vf) || {};
@@ -265,14 +268,14 @@ function hardSince(g, ticker, fl, v, known) {
       if (first || !same) { cur.theme[k] = "-"; return; }
       if (was[k]) { cur.theme[k] = was[k]; if (prevVf[k] != null) cur.vf[k] = prevVf[k]; return; }
       const b = back("theme:" + k);
-      if (b) { cur.theme[k] = b[0]; if (b[2] != null) cur.vf[k] = b[2]; used["theme:" + k] = 1; } else { cur.theme[k] = T; cur.vf[k] = fp; }
+      if (b) { cur.theme[k] = b[0]; if (b[3]) cur.vf[k] = fp; else if (b[2] != null) cur.vf[k] = b[2]; used["theme:" + k] = 1; } else { cur.theme[k] = T; cur.vf[k] = fp; }
     });
-    if (same) Object.keys(was).forEach((k) => { if (!(k in cur.theme)) gone["theme:" + k] = [was[k], PREV_T, prevVf[k] != null ? prevVf[k] : null]; });
+    if (same) Object.keys(was).forEach((k) => { if (!(k in cur.theme)) gone["theme:" + k] = [was[k], PREV_T, prevVf[k] != null ? prevVf[k] : null, pend("theme", was[k], prevVf[k])]; });
     if (!Object.keys(cur.vf).length) delete cur.vf;
     hf.sinces = Object.keys(cur.theme).filter((k) => isDay(cur.theme[k])).map((k) => ({ d: cur.theme[k], vf: cur.vf && cur.vf[k] }));
   } else if (prevKeys) {
     if (!known.theme) { cur.scheme = pr.scheme; cur.theme = prevKeys; if (Object.keys(prevVf).length) cur.vf = prevVf; }
-    else Object.keys(prevKeys).forEach((k) => { gone["theme:" + k] = [prevKeys[k], PREV_T, prevVf[k] != null ? prevVf[k] : null]; });
+    else Object.keys(prevKeys).forEach((k) => { gone["theme:" + k] = [prevKeys[k], PREV_T, prevVf[k] != null ? prevVf[k] : null, pend("theme", prevKeys[k], prevVf[k])]; });
   }
   // 아직 유예 안인 '풀린 조건'은 이어 적는다(다시 걸려 되살린 것은 뺀다)
   Object.keys(pg).forEach((k) => { if (!used[k] && !(k in gone) && back(k)) gone[k] = pg[k]; });
