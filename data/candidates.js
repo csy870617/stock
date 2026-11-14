@@ -44,22 +44,6 @@ window.CANDIDATES = {
      "long": 1
     },
     {
-     "ticker": "064400",
-     "name": "LG씨엔에스",
-     "state": "점검 필요",
-     "flags": [
-      {
-       "k": "theme",
-       "msg": "주제 기준 미달 — 정체성 조건 미달",
-       "fresh": true
-      }
-     ],
-     "note": "2026.06 분기 영업이익은 -9.2%였지만 3분기 영업이익은 1,382억원으로 전년 대비 15.0% 늘었다. 어느 정체성 조건이 미달인지와 자사주 소각 이행 여부 확인 전까지 감시한다.",
-     "judged": "2026-11-06",
-     "verdict": "형식",
-     "by": "ai"
-    },
-    {
      "ticker": "000810",
      "name": "삼성화재",
      "state": "감시",
@@ -93,6 +77,21 @@ window.CANDIDATES = {
      ],
      "note": "11/5 반도체 업종 동반 급락 — 3분기 매출 +8.9%·영업이익 +33.9%(영업이익률 50%대)로 역성장이 아니고 추세 붕괴도 아니다.",
      "judged": "2026-11-05",
+     "verdict": "형식"
+    },
+    {
+     "ticker": "064400",
+     "name": "LG씨엔에스",
+     "state": "감시",
+     "flags": [
+      {
+       "k": "theme",
+       "msg": "주제 기준 미달 — 정체성 조건 미달",
+       "fresh": false
+      }
+     ],
+     "note": "시가총액 순위가 우량 주제 문턱 밖으로 밀렸다 — 상장 뒤 주가가 오래 공모가 부근에 머물러 다른 대형주보다 덜 오른 탓이다. 2026년 3분기 영업이익은 전년보다 15.0% 늘어 사업 악화는 아니다.",
+     "judged": "2026-11-14",
      "verdict": "형식"
     }
    ],
@@ -267,21 +266,6 @@ window.CANDIDATES = {
    "eligible": 57,
    "defects": [
     {
-     "ticker": "018260",
-     "name": "삼성에스디에스",
-     "state": "점검 필요",
-     "flags": [
-      {
-       "k": "theme",
-       "msg": "주제 기준 미달 — 정체성 조건 미달(EBIT/EV·FCF 수익률 상위 30%)",
-       "fresh": true
-      }
-     ],
-     "note": "10/29 실적 확정치는 검색에 아직 없고, 새로 확인된 악재는 없다. 주제 기준 미달은 숫자 순위 경계로 보고 발표 후 다시 본다.",
-     "judged": "2026-10-29",
-     "verdict": "형식"
-    },
-    {
      "ticker": "000270",
      "name": "기아",
      "state": "감시",
@@ -377,6 +361,21 @@ window.CANDIDATES = {
      "judged": "2026-10-30",
      "verdict": "형식",
      "triedAt": "2026-10-30"
+    },
+    {
+     "ticker": "018260",
+     "name": "삼성에스디에스",
+     "state": "감시",
+     "flags": [
+      {
+       "k": "theme",
+       "msg": "주제 기준 미달 — 정체성 조건 미달(EBIT/EV·FCF 수익률 상위 30%)",
+       "fresh": false
+      }
+     ],
+     "note": "EBIT/EV·FCF/시총이 저평가 주제 문턱 아래로 내려갔다 — 2025년 결산 영업이익은 늘었는데 주가가 더 크게 올라 비율이 낮아졌다. 2026년 1분기 이익 급감은 주로 퇴직급여 일회성 비용이었고 3분기 영업이익은 3.7% 늘었다.",
+     "judged": "2026-11-14",
+     "verdict": "형식"
     }
    ],
    "list": [
@@ -758,26 +757,6 @@ window.CANDIDATES = {
    "eligible": 68,
    "defects": [
     {
-     "ticker": "UBER",
-     "name": "Uber Technologies",
-     "state": "점검 필요",
-     "flags": [
-      {
-       "k": "theme",
-       "msg": "주제 기준 미달 — 이익 변동 큼(주제 안 상위 10%)",
-       "fresh": true
-      },
-      {
-       "k": "earn",
-       "msg": "실적 발표(11/04) · EPS 서프라이즈 -73.4% — 가이던스·논거 확인",
-       "fresh": false
-      }
-     ],
-     "note": "3분기(11/4) 총거래액 +20%(고정환율)·조정 EPS +35%로 가이던스 상단. GAAP EPS 하회는 지분 투자 평가손실 때문 — 논거 훼손 아님. 인수 완료 시 자산 급증 가능.",
-     "judged": "2026-11-05",
-     "verdict": "형식"
-    },
-    {
      "ticker": "META",
      "name": "Meta Platforms",
      "state": "감시",
@@ -786,6 +765,26 @@ window.CANDIDATES = {
      "judged": "2026-10-22",
      "verdict": "형식",
      "by": "ai"
+    },
+    {
+     "ticker": "UBER",
+     "name": "Uber Technologies",
+     "state": "감시",
+     "flags": [
+      {
+       "k": "theme",
+       "msg": "주제 기준 미달 — 이익 변동 큼(주제 안 상위 10%)",
+       "fresh": false
+      },
+      {
+       "k": "earn",
+       "msg": "실적 발표(11/04) · EPS 서프라이즈 -73.4% — 가이던스·논거 확인",
+       "fresh": false
+      }
+     ],
+     "note": "5년 이익 변동이 성장 주제 건전성 문턱을 넘었다 — 그 창에 적자→흑자 전환과 2024·2025년 법인세 평가충당금 환입 일회성 이익이 들어 있어서다. 영업이익은 2025년 99%, 2026년 3분기 EBIT는 35% 늘었다.",
+     "judged": "2026-11-14",
+     "verdict": "형식"
     }
    ],
    "list": [
@@ -890,18 +889,17 @@ window.CANDIDATES = {
     {
      "ticker": "GM",
      "name": "General Motors",
-     "state": "점검 필요",
+     "state": "감시",
      "flags": [
       {
        "k": "theme",
        "msg": "주제 기준 미달 — 정체성 조건 미달, 매출 역성장(가치 함정)",
-       "fresh": true
+       "fresh": false
       }
      ],
-     "note": "10/20 3분기 EPS가 예상을 4.2% 웃돌았다 — 가이던스·GAAP 이익 확인 전까지 감시.",
-     "judged": "2026-10-21",
-     "verdict": "형식",
-     "by": "ai"
+     "note": "매출 역성장 필터(2025년 결산 매출 감소)에 걸렸다 — 2026년 2·3분기 매출이 각각 1.9%·2.9% 늘어 역성장이 이어지지 않았고 3분기 조정 EBIT도 21.6% 늘었다. 최근 분기 성장 조건은 자료가 없어 잴 수 없다.",
+     "judged": "2026-11-14",
+     "verdict": "형식"
     },
     {
      "ticker": "AMP",
@@ -1025,21 +1023,6 @@ window.CANDIDATES = {
    "eligible": 65,
    "defects": [
     {
-     "ticker": "LMT",
-     "name": "Lockheed Martin",
-     "state": "점검 필요",
-     "flags": [
-      {
-       "k": "theme",
-       "msg": "주제 기준 미달 — 정체성 조건 미달",
-       "fresh": true
-      }
-     ],
-     "note": "2분기 EBIT 감소로 주제 기준 미달 신호가 떴지만, 10월 22일 3분기 매출 +11%·EPS 7.97달러(전년 6.95달러)로 4개 부문이 모두 성장하고 수주잔고가 사상 최대로 늘었으며 연간 매출·EPS·잉여현금흐름 전망을 다시 올려 실질 결격은 아니다.",
-     "judged": "2026-10-23",
-     "verdict": "형식"
-    },
-    {
      "ticker": "KO",
      "name": "Coca-Cola",
      "state": "감시",
@@ -1068,6 +1051,21 @@ window.CANDIDATES = {
      ],
      "note": "주가 상승",
      "judged": "2026-10-18",
+     "verdict": "형식"
+    },
+    {
+     "ticker": "LMT",
+     "name": "Lockheed Martin",
+     "state": "감시",
+     "flags": [
+      {
+       "k": "theme",
+       "msg": "주제 기준 미달 — 정체성 조건 미달",
+       "fresh": false
+      }
+     ],
+     "note": "배당수익률이 배당 주제 하한 아래로 내려갔다 — 배당을 줄여서가 아니라 2026년 들어 주가가 크게 오른 탓이다. 2026년 10월 9일 분기 배당을 주당 3.60달러로 0.15달러 올려 24년 연속 인상했다.",
+     "judged": "2026-11-14",
      "verdict": "형식"
     }
    ],
@@ -1258,9 +1256,9 @@ window.CANDIDATES = {
   }
  },
  "summary": {
-  "review": 5,
+  "review": 0,
   "defect": 1,
-  "watch": 21,
+  "watch": 26,
   "untried": 0,
   "dup": 0,
   "long": 1
