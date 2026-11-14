@@ -303,6 +303,17 @@ async function main() {
         edge: r2(((z.f / a0.f) - (z.s / a0.s)) * 100), tEdge: r2(LP.tMean(diffs)),
         themes: (S.summary && S.summary.themes) || null,
         series: se.map((x) => ({ d: x.d, f: r4(x.f), s: r4(x.s), i: r4(x.i) })) };
+      // 그림자 선정 규칙이 바뀐 날(shadow.json ruleFrom — 2026-11-14 '재무 자료 없는 종목 제외') 뒤는 따로 잰다:
+      //   그 전 구간의 그림자엔 판정하지 못한 종목이 섞여 있어, 판단 검증(추천 − 그림자)은 이 구간으로 읽는다(CLAUDE.md §6)
+      if (S.ruleFrom) {
+        let k = -1;
+        for (let q = 0; q < se.length; q++) if (se[q].d <= S.ruleFrom) k = q;
+        const b = k >= 0 ? se[k] : null, d2 = [];
+        for (let q = k + 1; q > 0 && q < se.length; q++) d2.push(se[q].f / se[q - 1].f - se[q].s / se[q - 1].s);
+        shadow.rule = { from: S.ruleFrom, what: "재무 자료 없는 종목 제외", days: b ? se.length - 1 - k : 0 };
+        if (b && se.length - 1 - k > 0) Object.assign(shadow.rule, { f: r2((z.f / b.f - 1) * 100), s: r2((z.s / b.s - 1) * 100), i: r2((z.i / b.i - 1) * 100),
+          edge: r2(((z.f / b.f) - (z.s / b.s)) * 100), tEdge: d2.length >= 2 ? r2(LP.tMean(d2)) : null });
+      }
     }
     // 야후를 못 받았으면(--offline·장애) 교체 성과·편출 후 성적은 지난 계산을 잇는다 — 하루 빈 화면보다 하루 늦은 값이 낫다
     let swapsOut = { list: swapRows, summary: swapSum };

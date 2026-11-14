@@ -44,16 +44,25 @@ function yahooSym(c, ticker, market) {
   return String(ticker).replace(".", "-");
 }
 // 그림자 편성 고르기 — 위 규칙 그대로
+// 선정 규칙 2(2026-11-14 사용자 승인): 재무 팩터가 없는 종목은 뺀다 — 건전성 필터·점수를 잴 수 없어 '주제 기준을 통과한 기계적 선정'이 아니다
+//   (2026-11-09 재선정: 미국 배당 9종목 중 7종목이 그런 외국 ADR — PBR·PBR.A 같은 회사 두 주식 포함. 추천 − 그림자 비교가 스크린 규칙이 아니라
+//   판정하지 못한 종목의 운을 재고 있었다). 같은 회사의 다른 주식 종류도 한 번만 담는다. 규칙이 바뀐 첫 실행에서 다시 고르고 그날을 ruleFrom 에 적는다.
+const RULE_V = 2;
+const RULE_TEXT = "국가별 주제 순서대로 스크린 점수 상위 9(주제 기준 미달·재무 자료 없는 종목 제외, 같은 회사·중복 없음), 매주 월요일 재선정, 동일비중";
+const coKey = (n) => String(n || "").toLowerCase().replace(/\bclass\s+[a-z]\b/g, "").replace(/\b(inc|corp|corporation|co|company|ltd|plc|holdings?|group|the|n\.?v|s\.?a|ag|se|adr|preferred|pfd)\b\.?/g, "")
+  .replace(/[^a-z0-9가-힣]+/g, " ").trim();
 function pickShadow(c) {
-  const chosen = [], seen = new Set();
+  const chosen = [], seen = new Set(), seenCo = new Set();
   THEMES.forEach((th) => {
     const g = (SC.groups || {})[c + "|" + th];
     if (!g) return;
-    const rows = (g.candidates || []).concat(g.incumbents || []).filter((r) => r && r.ticker && r.score != null && !(r.fails && r.fails.length));
+    const rows = (g.candidates || []).concat(g.incumbents || []).filter((r) => r && r.ticker && r.score != null && !(r.fails && r.fails.length) && !!r.fx);
     rows.sort((a, b) => b.score - a.score);
     let n = 0;
     rows.forEach((r) => {
-      if (n >= PER || seen.has(r.ticker)) return;
+      const ck = coKey(r.name);
+      if (n >= PER || seen.has(r.ticker) || (ck && seenCo.has(ck))) return;
+      if (ck) seenCo.add(ck);
       seen.add(r.ticker); n++;
       chosen.push({ t: r.ticker, y: yahooSym(c, r.ticker, r.market), th });
     });
@@ -126,11 +135,17 @@ function stats(series, key) {
 
 async function main() {
   if (!D || !SC.groups) { console.log("shadow-track: 데이터 없음 — 건너뜀"); return; }
-  const S = state || { startedAt: today, rule: "국가별 주제 순서대로 스크린 점수 상위 9(주제 기준 미달 제외·중복 없음), 매주 월요일 재선정, 동일비중", korea: {}, us: {} };
+  const fresh = !state;
+  const S = state || { startedAt: today, rule: RULE_TEXT, korea: {}, us: {} };
+  // 선정 규칙이 바뀐 뒤 첫 실행 — 나라마다 새 규칙으로 바로 다시 고르고 그 기준일(ruleFrom — 새 편성이 시작하는 종가일)을 적는다.
+  //   규칙 판(ruleV)은 나라마다 적는다: 한 나라가 이번 실행을 건너뛰어도(지수 종가 없음) 다음 실행에서 새 규칙으로 고른다.
+  if (S.rule !== RULE_TEXT) { S.rule = RULE_TEXT; S.ruleLog = (S.ruleLog || []).concat([{ d: today, v: RULE_V, what: "재무 자료 없는 종목·같은 회사 다른 주식 제외" }]); }
   const ix = Q.indices || {};
   for (const c of ["korea", "us"]) {
     const C = S[c] = S[c] || {};
     C.series = C.series || []; C.picks = C.picks || {};
+    if (fresh) C.ruleV = RULE_V;
+    const ruleChanged = (C.ruleV || 1) < RULE_V;
     const idx = ix[IDX[c]];
     if (!idx || idx.close == null || !idx.closeDate) { console.log("shadow-track " + c + ": 지수 종가 없음 — 건너뜀"); continue; }
     const dNow = idx.closeDate, last = C.series[C.series.length - 1];
@@ -179,8 +194,9 @@ async function main() {
     C.idxClose = idx.close;
     if (rspOk) C.rspClose = ix.rsp.close;
     // 재선정 — 보유가 없거나, 월요일(UTC) 첫 실행이거나, 마지막 재선정 7일 경과(월요일 실행이 실패한 주), 또는 강제
-    const due = !hold || FORCE_REBAL || dayDiff(today, hold.rebalAt) >= REBAL_DAYS || (new Date().getUTCDay() === 1 && hold.rebalAt < today);
+    const due = !hold || FORCE_REBAL || ruleChanged || dayDiff(today, hold.rebalAt) >= REBAL_DAYS || (new Date().getUTCDay() === 1 && hold.rebalAt < today);
     if (due) {
+      if (ruleChanged) { C.ruleFrom = dNow; C.ruleV = RULE_V; }
       const picks = pickShadow(c);
       const px = await yahooCloses(picks);
       // 계속 담는 종목은 방금 맞춘 기준가(지수 종가일 기준)를 잇는다 — 야후 종가가 그보다 새것이거나 빠졌을 때 하루가 새지 않게

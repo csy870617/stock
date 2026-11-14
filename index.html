@@ -3576,7 +3576,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
       (df.flags || []).forEach(function (f) { if (f.fresh || !df.note) why.push(f.msg); });
       if (df.state === "결격" && df.since && df.age != null) why.push(mdOf(df.since) + "부터 " + df.age + "일째" + (df.long ? " — " + (df.long === 2 ? "스크린 기준을 통과한 후보로 교체 진행" : "대체 후보 범위를 넓혀 찾는 중") : ""));
       out.push({ warn: df.state === "결격" && !df.dup, k: df.dup ? "중복 편성 · 교체 대기" : df.state === "결격" ? "결격 · 교체 대기" : "결격 점검 중",
-        lead: df.dup ? DUP_LEAD : df.state === "결격" ? "검증을 통과한 대체 후보가 생기면 바로 교체." : "매일 자동 점검에서 신호가 떠 다음 업데이트에서 실질 결격인지 판정.",
+        lead: df.dup ? DUP_LEAD : df.state === "결격" ? "검증을 통과한 대체 후보가 생기면 바로 교체." : "매일 자동 점검에서 신호가 떠 다음 업데이트에서 실질 결격인지 판정. 판정 전까지 Top Pick 후보에서 빠진다.",
         why: why, at: df.judged, by: df.by });
     } else if (df && df.state === "감시") {
       // 자동 점검 신호가 떴지만 '형식'으로 판정해 편성에 둔 종목 — 어느 조건이 왜 떴고 어떻게 판정했는지 숨기지 않고 보인다
@@ -4911,7 +4911,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
   }
 
   // ② 3개월 검증 — 선정 규칙 동결 기간의 추천 vs 그림자(스크린 상위를 기계적으로 고른 편성)
-  var PF_SHADOW_TIP = "그림자 포트폴리오: 같은 스크린(주제 정의·건전성 필터·검증된 점수)에서 점수 상위를 사람 판단 없이 주제마다 9개씩 기계적으로 고른 편성(매주 월요일 재선정, 동일비중). 추천 편성과 같은 날·같은 방식(둘 다 같은 비중 — 종목 선택만 비교)으로 잰다. 추천이 그림자보다 꾸준히 앞서야 검증·교체·티어 같은 사람의 판단이 가치를 더한 것. 선정 규칙은 이 3개월 동안 바꾸지 않는다.";
+  var PF_SHADOW_TIP = "그림자 포트폴리오: 같은 스크린(주제 정의·건전성 필터·검증된 점수)에서 점수 상위를 사람 판단 없이 주제마다 9개씩 기계적으로 고른 편성(재무 자료가 없어 기준을 판정할 수 없는 종목은 제외, 매주 월요일 재선정, 동일비중). 추천 편성과 같은 날·같은 방식(둘 다 같은 비중 — 종목 선택만 비교)으로 잰다. 추천이 그림자보다 꾸준히 앞서야 검증·교체·티어 같은 사람의 판단이 가치를 더한 것. 선정 규칙은 이 3개월 동안 바꾸지 않는다.";
   function pfVerify(C, c) {
     var S = C.shadow, F = PERF.freeze;
     if (!S) return "";
@@ -4945,8 +4945,16 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
       }).join("");
       if (trs) th = pfDetails("pf-shadow-th-" + c, "") + '<summary>주제별 보기</summary><table class="pf-tbl"><thead><tr><th>주제</th><th>추천</th><th>그림자</th><th>차이</th></tr></thead><tbody>' + trs + "</tbody></table></details>";
     }
+    // 그림자 선정 기준이 바뀐 날 뒤의 성적(perf.json shadow.rule) — 그 전 그림자엔 재무 자료 없는 종목이 섞여 있었다
+    var ruleLine = "";
+    if (S.rule && S.rule.from) {
+      ruleLine = '<p class="pf-note">' + esc(mdOf(S.rule.from)) + "부터 그림자 선정에서 " + esc(S.rule.what || "기준 변경") + " — " +
+        (S.rule.days > 0 && S.rule.f != null
+          ? "그 뒤 " + S.rule.days + "거래일: 추천 " + fmtPct(S.rule.f) + " · 그림자 " + fmtPct(S.rule.s) + " · 차이 <b>" + esc(fmtPp(S.rule.edge)) + "</b>. 판단 검증은 이 구간으로 읽는다."
+          : "판단 검증은 이날 뒤 구간으로 읽는다(아직 기록 전).") + "</p>";
+    }
     return pBlk("3개월 검증", "사람의 판단 vs 기계적 선정",
-      prog + '<p class="pf-verdict">' + head + "</p>" + kpis + chart + th +
+      prog + '<p class="pf-verdict">' + head + "</p>" + kpis + chart + ruleLine + th +
       '<p class="pf-note"><button class="lnk" type="button" data-basis="' + esc(PF_SHADOW_TIP) + '">그림자 포트폴리오란?</button></p>');
   }
 

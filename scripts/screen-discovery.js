@@ -30,6 +30,8 @@ const LIMIT = Number(argVal("limit") || 0);
 const IF_STALE = process.argv.includes("--if-stale");
 const numArg = (n, d) => { const v = Number(argVal(n)); return isFinite(v) && v > 0 ? v : d; };
 const STALE_DAYS = numArg("if-stale", 6);
+const NOFX_N = 5;    // 재무 팩터가 없는 후보(대개 IFRS 로 공시하는 외국 ADR)는 판정한 후보 뒤에 이만큼만(2026-11-14 사용자 승인 — 아래 cands)
+const ISS_CA = -0.20; // 주식 수가 한 해 20% 넘게 줄었으면 분할·병합 같은 자본 거래로 보고 점수에서 0(변화 없음)으로 둔다(lib-picks ISS_CA 와 같은 기준, 2026-11-14)
 const TOP_N = 25;   // 2026-10-18 10→25 — 사용자 지시 '최선의 종목'으로 그룹당 검증 후보를 넓힘
 const today = new Date().toISOString().slice(0, 10);
 
@@ -341,7 +343,7 @@ function gateWhy(c, th, s, gi) {
 function feat(s) {
   const x = s.fx || {};
   return {
-    iss: x.ISS != null ? -x.ISS : null, shy: x.SHY != null ? x.SHY : null, cov: x.COV != null ? x.COV : null, roic: x.ROIC != null ? x.ROIC : null,
+    iss: x.ISS != null ? (x.ISS < ISS_CA ? 0 : -x.ISS) : null, shy: x.SHY != null ? x.SHY : null, cov: x.COV != null ? x.COV : null, roic: x.ROIC != null ? x.ROIC : null,
     sroa: x.SROA != null ? -x.SROA : null, streak: x.DSTREAK != null ? x.DSTREAK : null, upside: s.upside,
     roic3: x.ROIC3 != null ? x.ROIC3 : null, gpa: x.GPA != null ? x.GPA : null, buyy: x.BUYY != null ? x.BUYY : null, sg3: x.SG3 != null ? x.SG3 : null,
     fcfm: x.FCFM != null ? x.FCFM : null, netcash: x.NETCASH != null ? x.NETCASH : null, sopm: x.SOPM != null ? -x.SOPM : null, fcfni: x.FCFNI != null ? x.FCFNI : null,
@@ -455,9 +457,15 @@ function view(s, score) {
       const formalT = new Set(formalRows.map((m) => m.ticker));
       const groupCos = new Set(formalRows.map((m) => coKey(m.name)).concat(pool.filter((s) => formalT.has(s.ticker)).map((s) => coKey(s.name))));
       const seenCo = new Set();
-      const cands = elig.filter((s) => !formalT.has(s.ticker) && !groupCos.has(coKey(s.name)))
-        .map((s) => ({ s, sc: score(s) })).sort((a, b) => b.sc - a.sc)
-        .filter(({ s }) => (seenCo.has(coKey(s.name)) ? false : seenCo.add(coKey(s.name)))).slice(0, TOP_N)
+      // 재무 팩터가 없는 종목(대개 IFRS 로 공시하는 외국 ADR)은 건전성 필터·점수 재료를 잴 수 없어 '걸리지 않음·중립 점수'로 통과한다.
+      //   그대로 점수순으로 세우면 판정하지 못한 종목이 목록을 채운다(2026-11-13 미국 배당 후보 25개 중 21개·우량 14개 — KB·신한 같은 한국 금융지주 ADR 포함).
+      //   판정한 종목을 먼저 TOP_N 개, 판정하지 못한 종목은 그 뒤에 NOFX_N 개까지만 싣는다(세션이 문턱으로 직접 판정 — CLAUDE.md §3-6). 적격 판정(elig)·점수는 그대로.
+      const ranked = elig.filter((s) => !formalT.has(s.ticker) && !groupCos.has(coKey(s.name)))
+        .map((s) => ({ s, sc: score(s) })).sort((a, b) => b.sc - a.sc);
+      const oneCo = ({ s }) => (seenCo.has(coKey(s.name)) ? false : seenCo.add(coKey(s.name)));
+      const judged = ranked.filter(({ s }) => !!s.fx).filter(oneCo).slice(0, TOP_N);
+      const blind = ranked.filter(({ s }) => !s.fx).filter(oneCo).slice(0, NOFX_N);
+      const cands = judged.concat(blind)
         .map(({ s, sc }) => Object.assign(view(s, sc), otherTheme(s.ticker).length ? { alsoIn: otherTheme(s.ticker) } : {}));
       const inc = members.map((m) => {
         const row = pool.find((s) => s.ticker === m.ticker);
@@ -489,6 +497,7 @@ function view(s, score) {
         const scoreAny = (s) => Object.keys(rule.w).reduce((acc, k) => acc + rule.w[k] * ((k in prFin ? (s.fin ? prFin[k] : prNon[k]) : pr[k])(featOf(s)[k])), 0);
         const gi = gateInfo(c, th, base0, pool);
         nearMiss = pool.filter((s) => !s.extra && !formalT.has(s.ticker) && !groupCos.has(coKey(s.name)) && !elig.includes(s)).map((s) => {
+          if (!s.fx) return null;                                             // 재무 자료가 없으면 건전성 필터를 '통과'했다고 볼 수 없다
           if (whyEx(s).length) return null;                                   // 건전성 필터(추세 포함)에 걸리면 근접 아님
           let f = null;
           if (!rule.ok(s)) { const w = nearOne(c, th, s); if (w && gate(s)) f = "정체성 조건 미달: " + w; }

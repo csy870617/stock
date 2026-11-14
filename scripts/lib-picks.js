@@ -2,7 +2,7 @@
 //
 // 규칙(결과를 보기 전에 적은 사전 등록과 검증: scripts/research/top-pick/ — PREREG.md·README.md):
 //   ① 건강 관문 — 하나라도 걸리면 후보에서 뺀다(값이 없는 항목은 통과)
-//      기존 제외(CLAUDE.md §4-6): 단기·중기 강한 하락세(엔진 적극매도) · 추세 붕괴(세 기간 모두 매도 이하) · 한국 수급 과열 · 실질 결격
+//      기존 제외(CLAUDE.md §4-6): 단기·중기 강한 하락세(엔진 적극매도) · 추세 붕괴(세 기간 모두 매도 이하) · 한국 수급 과열 · 실질 결격 · 결격 점검 중(판정 전, 2026-11-14~)
 //      재무(검증): 순이익 적자 · 주식 수 연 5% 넘게 증가(희석) · 자산 증가율 상위 10% · 이익 변동(5년 ROA 표준편차) 상위 10%
 //        '상위 10%'는 시장 전체를 매일 다시 잴 수 없어 검증 표본의 월별 90백분위 중앙값을 고정 문턱으로 쓴다(CUTS).
 //   ② 상승 가능성 점수 — 관문을 통과한 같은 나라 종목 안의 백분위(0~1, 높을수록 좋게) 평균, 값이 있는 것만(SCORE):
@@ -109,6 +109,9 @@ function unhealthy(country, s, sig, ev, defState, f, rv) {
   if (country === "korea" && ev && ev.flow && ev.flow.hot) return "수급 과열";
   if (REV[country] && rv && ok(rv.chg) && rv.chg <= REV[country].cutPct) return "목표가 급락(증권사 평균 " + REV[country].months + "개월 " + rv.chg + "%)";
   if (defState === "결격") return "실질 결격(교체 대기)";
+  // 결격 신호가 떴는데 아직 판정하지 않은 종목(점검 필요)도 뺀다(2026-11-14 사용자 승인) — 급락·실적·목표가 하향·주제 미달이 실질인지 모르는 채로
+  //   '오늘의 Top Pick'에 올리지 않는다. 판정이 끝나면(없음·형식 → 감시) 다시 후보다. 검증으로 고른 규칙이 아니라 절차상의 안전장치다.
+  if (defState === "점검 필요") return "결격 점검 중(판정 전)";
   if (!f) return null;
   const C = CUTS[country];
   if (f.niPos === 0) return "순이익 적자";
@@ -138,7 +141,7 @@ function healthChecks(country, sig, ev, defState, f, rv, formal) {
     const has = rv && ok(rv.chg), cut = REV[country].cutPct;
     add("tp", has ? (rv.chg <= cut ? 0 : 1) : null, has ? "증권사 목표가 평균 " + REV[country].months + "개월 " + sgn(rv.chg) + "%(" + sgn(cut) + "% 이하면 제외)" : "증권사 리포트 2곳 미만 — 판정 안 함");
   }
-  if (formal) add("defect", defState === "결격" ? 0 : 1, defState === "결격" ? "실질 결격 — 교체 대기" : defState === "점검 필요" ? "결격 신호 점검 중(실질 판정 전)" : "실질 결격 없음");
+  if (formal) add("defect", defState === "결격" || defState === "점검 필요" ? 0 : 1, defState === "결격" ? "실질 결격 — 교체 대기" : defState === "점검 필요" ? "결격 신호 점검 중 — 판정이 끝날 때까지 Top Pick 에서 제외" : "실질 결격 없음");
   if (!f) { add("fin", null, "재무 자료 없음(스크린 유니버스 밖·외국 ADR 등) — 흑자·희석·자산 급증·이익 변동 판정 안 함"); return out; }
   add("ni", f.niPos === 0 ? 0 : f.niPos == null ? null : 1, f.niPos === 0 ? "최근 결산 순이익 적자" : f.niPos == null ? "순이익 자료 없음" : "최근 결산 순이익 흑자");
   const dilIss = ok(f.iss) && f.iss > C.iss, dilPost = !!(f.post && f.post.chg > POST_CA);

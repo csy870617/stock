@@ -3,12 +3,12 @@
  "until": "2027-01-21",
  "note": "선정 규칙 동결(CLAUDE.md §6) — 아래 파일·주제 정의가 기준선과 다르면 validate-reco 가 경고한다. 받아들인 변경은 accepted 에 사유와 함께 남는다.",
  "baseline": {
-  "scripts/screen-discovery.js": "6b29c744ad54eed5",
+  "scripts/screen-discovery.js": "60c14a5bbda85c11",
   "scripts/screen-factors.js": "343af9eeaec1acdc",
   "scripts/lib-factors.js": "022c5e81e2c7d0f5",
   "scripts/check-defects.js": "4626811c6c5488dd",
   "scripts/lib-ta.js": "f9d715583519f6c9",
-  "scripts/shadow-track.js": "cd486f042e20a38b",
+  "scripts/shadow-track.js": "58a8f7a9a7cfe8af",
   "docs/DEEP-AUDIT-AGENT.md": "84a8d8333ac5486d",
   "docs/DEEP-DISCOVERY-AGENT.md": "af21a0140a2ff2de",
   "recommendations.js themes": "e9c3fe860e73fe46"
@@ -84,6 +84,14 @@
     "scripts/check-defects.js"
    ],
    "reason": "2026-11-14 전체 점검 재검증 반영 — check-defects 조건 시작일 기록의 빈틈 수정(유예 복원·flags 글자), 판정식 불변"
+  },
+  {
+   "at": "2026-11-14",
+   "items": [
+    "scripts/screen-discovery.js",
+    "scripts/shadow-track.js"
+   ],
+   "reason": "2026-11-14 사용자 승인('규칙 변경 5개도 필요하면 다 고쳐줘') — screen-discovery: 후보 목록에서 재무 팩터 없는 종목은 뒤에 5개까지·근접 후보 제외, 한 해 20% 넘게 준 주식 수는 점수에서 0 / shadow-track: 재무 팩터 없는 종목·같은 회사 다른 주식 제외(ruleFrom)"
   }
  ]
 }

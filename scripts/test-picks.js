@@ -55,7 +55,7 @@ for (let i = 0; i < 300000; i++) {
   const hc = LP.healthChecks(c, sig, ev, def, f, rv, pick([true, false]));
   n++;
   // 결격 항목은 정식 자리에만 보인다 — 정식이 아닌데 결격 상태가 들어오는 조합은 실제로 없다(시험에서도 뺀다)
-  const fail = hc.some((k) => k.st === 0) || (def === "결격" && !hc.some((k) => k.k === "defect"));
+  const fail = hc.some((k) => k.st === 0) || ((def === "결격" || def === "점검 필요") && !hc.some((k) => k.k === "defect"));
   if (!!why !== fail) note("무작위 어긋남 " + c + " 사유=" + why + " sig=" + sig.join("/") + " ev=" + JSON.stringify(ev) + " rv=" + JSON.stringify(rv) + " def=" + def + " f=" + JSON.stringify(f) + " 목록=" + JSON.stringify(hc));
   hc.forEach((k) => { if (typeof k.t !== "string" || !k.t || /undefined|NaN|null/.test(k.t)) note("문구 이상 " + JSON.stringify(k)); });
 }
@@ -85,6 +85,12 @@ for (let i = 0; i < 300000; i++) {
   const K2 = LP.rankPicks(S2).korea;
   n++;
   if (!K2.excluded.some((x) => x.ticker === "B" && x.theme === "core")) note("정식 자리의 실질 결격이 Top Pick 제외로 이어지지 않음(대표 자리가 관심으로 잡힘): " + JSON.stringify(K2.ranked.find((x) => x.ticker === "B") || K2.excluded.find((x) => x.ticker === "B")));
+  // 판정 전(점검 필요)인 정식 종목도 Top Pick 에서 뺀다(2026-11-14) — 감시(판정 끝)는 그대로 후보
+  const S3 = S("korea"); S3.CA = { groups: { "korea|value": { defects: [{ ticker: "A", state: "점검 필요" }, { ticker: "B", state: "감시" }] } } };
+  const K3 = LP.rankPicks(S3).korea;
+  n++;
+  if (!K3.excluded.some((x) => x.ticker === "A" && /점검 중/.test(x.why))) note("점검 필요 종목이 Top Pick 후보에서 빠지지 않음: " + JSON.stringify(K3.excluded));
+  if (K3.excluded.some((x) => x.ticker === "B")) note("감시(판정 끝) 종목이 Top Pick 후보에서 빠짐: " + JSON.stringify(K3.excluded));
 }
 console.log("test-picks: " + n + "건 — 어긋남 " + bad);
 process.exit(bad ? 1 : 0);
