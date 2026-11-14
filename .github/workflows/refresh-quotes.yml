@@ -309,6 +309,12 @@ jobs:
               cp "$GEN"/* data/
               # 종목 상세 차트(data/chart/<ticker>.json)도 이번 실행 산출물로 — 폴더째 바꾼다
               if [ -d "$RUNNER_TEMP/gen-chart" ]; then rm -rf data/chart && cp -r "$RUNNER_TEMP/gen-chart" data/chart; fi
+              # 위에서 되살린 시세·기술 지표·실적 일정·투자정보·차트는 '세션이 고치기 전 편성'으로 만든 것이다 — 그 사이 세션이 편입한 종목은
+              # 빠져 있다(2026-11-14 점검). 원격 편성으로 한 번 더 돌려 채운다(실패하면 되살린 값 그대로 — 다음 실행이 채운다)
+              node scripts/update-quotes.js || true
+              node scripts/update-stock-ta.js || true
+              node scripts/update-events.js || true
+              node scripts/update-fundamentals.js || true
               # 현재 추세는 원격(루틴이 쓴 설명 포함)을 기준으로 다시 계산한다 — 설명(ai)은 이어 붙고 편성 변화도 맞춰진다
               node scripts/update-trend.js || true
               node scripts/update-consensus.js || true

@@ -31,6 +31,12 @@ const THEME_DEF = {
   dividend: "배당 — 이익이 안정적이고 배당을 줄이지 않아 온 회사(배당성향 100% 이하)",
 };
 
+// 주제 기준 미달 문구(screen-discovery WHY·EX 라벨)에 나오는 조건 낱말 — AI note 가 걸린 조건을 짚었는지 확인하는 데 쓴다
+const THEME_KW = ["시총", "KOSPI", "ROE", "부채비율", "영업이익", "매출", "EBIT", "ROA", "배당", "ROIC", "FCF", "PER", "PBR", "희석", "주식 수", "자산", "이익 변동", "이익 개선", "흑자", "적자", "금융", "원자재", "합자"];
+// 같은 조건을 가리키는 다른 낱말 — note 가 '시총' 대신 '시가총액', '흑자가 아니다' 대신 '적자'라고 써도 조건을 짚은 것으로 본다
+const THEME_SYN = [["시총", "시가총액"], ["KOSPI", "코스피", "코스닥", "KOSDAQ"], ["흑자", "적자", "순이익", "순손실"], ["희석", "주식 수", "주식수", "증자", "발행주식"],
+  ["이익 변동", "변동성", "변동이"], ["이익 개선", "영업이익", "이익이"], ["부채비율", "부채"], ["자산", "인수", "합병"], ["배당", "주주환원"], ["매출", "외형", "역성장"]];
+const themeAlt = (k) => { const out = [k]; THEME_SYN.forEach((g) => { if (g.indexOf(k) >= 0) g.forEach((x) => { if (out.indexOf(x) < 0) out.push(x); }); }); return out; };
 const readNotes = () => (fs.existsSync(NOTES) ? JSON.parse(fs.readFileSync(NOTES, "utf8")) : { candidates: {}, defects: {} });
 const writeNotes = (n) => fs.writeFileSync(NOTES, JSON.stringify(n, null, 2) + "\n");
 function rerunCheck() {
@@ -52,9 +58,16 @@ const COMPOSE_SYSTEM = [
   "verdict:",
   "- 실질: 편출 사유가 실제로 성립 — 투자 논거의 핵심 가정이 깨짐, 가이던스 하향·역성장, 지배구조 결격(횡령·대규모 희석·부당 내부거래 등),",
   "  일시적이 아닌 주제 이탈, 추세 붕괴 신호의 원인이 회사 고유 악재.",
-  "- 형식: 숫자 신호는 떴지만 실체는 유지 — 일회성 비용·회계 효과, 주가 상승으로 생긴 배당 기준 미달, 가이던스는 지킨 실적, 원인 미확인이라 감시가 필요한 경우.",
+  "- 형식: 숫자 신호는 떴지만 실체는 유지 — 일회성 비용·회계 효과, 주가 상승으로 생긴 배당 기준 미달, 가이던스는 지킨 실적. 급락·목표가 하향 신호의 원인을 찾지 못해 지켜봐야 하는 경우도 형식.",
   "- 없음: 시장·업종 전체 하락, 회사 고유 악재 없음, 가이던스를 지킨 실적.",
   "- 자동 결격 신호(추세 붕괴·주제 기준 미달)가 있으면 '없음'을 줄 수 없다(실질 또는 형식).",
+  // 2026-11-14 점검: 주제 기준 미달이 '어느 조건인지 확인 전까지 감시' 같은 형식 판정으로 쌓였다(신호 문구가 '정체성 조건 미달' 한 마디였고, 형식의 정의에 '원인 미확인'이 있었다).
+  //   이제 신호 문구가 걸린 조건과 값을 적으므로 그 조건을 그대로 판단하게 한다.
+  "- [theme] 주제 기준 미달 신호는 문구에 걸린 조건과 값이 적혀 있다(예: '시총 순위 76위 — 상위 60 안이어야 한다', '이익 개선 없음 — 올해 추정 영업이익 -6.2%').",
+  "  주제 기준 미달은 원칙적으로 주제 이탈 결격(실질)이다. 형식은 걸린 조건이 사업 악화가 아닌 것으로 확인될 때만 준다 — 주가·시가총액 변동으로 생긴 경계 이탈(배당수익률 하한·시총 순위),",
+  "  합병·분할·일회성 회계로 생긴 왜곡, 값이 '자료 없음'이라 조건을 잴 수 없는 경우. 걸린 조건이 사업 실적(이익 감소·매출 역성장·적자·희석·자산 급증·이익 변동)이면",
+  "  그 뒤 실적·가이던스로 회복이 확인될 때만 형식이다. '원인 미확인'은 주제 기준 미달의 형식 사유가 아니다(원인은 문구에 적힌 그 조건이다).",
+  "  note 는 걸린 조건을 그대로 짚으며 시작한다(예: '시총 순위가 상위 60 밖으로 밀렸다 — 주가 하락에 따른 경계 이탈이고 …'). 주제 기준 미달을 '확인 전까지 감시'로 미루지 않는다.",
   "- 근거가 약하면 실질을 주지 않는다(실질은 교체로 이어진다).",
   "- '이번에 판단할 신호'만 판정한다. 이미 판정된 신호의 기존 판정은 따로 유지되니 다시 판정하지 않는다.",
   "note: 한국어 1~2문장, 120자 이내, 존댓말 없이 평서체(~다). 판정의 근거 사실(날짜·회사 수치)을 쓴다. 앱이 그대로 보여 주므로 처리 메모·매매 지시를 쓰지 않는다.",
@@ -70,6 +83,7 @@ function stockPrompt(c, th, s, d, S) {
   return [
     "종목: " + s.name + " (" + s.ticker + ", " + (c === "korea" ? "한국 " : "미국 ") + (s.market || "") + ") — 주제 " + THEME_KO[th] + " T" + s.tier,
     "주제 정의: " + THEME_DEF[th],
+    fresh.some((f) => f.k === "theme") && S.SC && S.SC.groups && S.SC.groups[c + "|" + th] && S.SC.groups[c + "|" + th].rule ? "주제 스크린 기준(이 조건 중 걸린 것이 아래 신호): " + S.SC.groups[c + "|" + th].rule : "",
     "투자 포인트(카드): " + (s.thesis || "–"),
     "리스크(카드): " + ((s.risks || []).join(" / ") || "–"),
     "이번에 판단할 신호:", fresh.map((f) => "- [" + f.k + "] " + f.msg).join("\n") || "- (없음)",
@@ -97,6 +111,15 @@ async function judge(cl, model, item, S) {
     if (hit) p.push("note 에 가격 의존 수치('" + hit + "') 금지");
     if (L.DIRECTIVE.test(o.note || "")) p.push("note 에 매매 지시 문구 금지");
     if (o.verdict === "없음" && d.flags.some((f) => f.k === "trend" || f.k === "theme")) p.push("자동 결격 신호(추세 붕괴·주제 기준 미달)가 있으면 '없음' 불가 — 실질 또는 형식");
+    // 주제 기준 미달을 새로 판정할 땐 note 가 걸린 조건을 짚어야 한다 — 신호 문구에 나온 낱말(시총·ROE·배당 …) 중 하나는 note 에 있어야 한다
+    const th0 = d.flags.find((f) => f.fresh && f.k === "theme");
+    if (th0 && o.note) {
+      const kw = THEME_KW.filter((k) => th0.msg.indexOf(k) >= 0);
+      if (kw.length && !kw.some((k) => themeAlt(k).some((a) => o.note.indexOf(a) >= 0))) p.push("주제 기준 미달 신호의 걸린 조건(" + kw.slice(0, 4).join("·") + " 중 해당하는 것)을 note 에 짚어야 한다 — 그 조건이 왜 형식/실질인지");
+      // '확인 전까지 감시'는 다른 신호(실적·급락)에는 쓸 수 있는 표현이라, 주제 기준 미달만 새로 판정할 때와 '어느 조건인지·원인 미확인'이라고 미룰 때만 막는다
+      const onlyTheme = !d.flags.some((f) => f.fresh && f.k !== "theme");
+      if (o.verdict === "형식" && (/(어느|어떤|무슨)\s*조건|조건[^.。]{0,14}확인 전까지|원인[^.。]{0,6}(미확인|확인되지|확인 전)/.test(o.note) || (onlyTheme && /확인 전까지/.test(o.note)))) p.push("주제 기준 미달에 '확인 전까지 감시'·'원인 미확인'은 형식 사유가 아니다 — 문구에 적힌 조건을 판단한다");
+    }
     return p;
   };
   let pr = problems(out);
@@ -153,6 +176,7 @@ async function main() {
   const S = {
     D: L.loadWin("recommendations.js", "STOCK_DATA"), CA: L.loadWin("candidates.js", "CANDIDATES"),
     EV: (L.loadWin("events.js", "STOCK_EVENTS") || {}).items || {}, FU: (L.loadWin("fundamentals.js", "STOCK_FUND") || {}).items || {},
+    SC: L.loadWin("discovery-candidates.js", "DISCOVERY_CANDIDATES"),
   };
   if (!S.D || !S.CA) { console.log("ai-defects: 데이터 없음 — 건너뜀"); return; }
   const queue = [];

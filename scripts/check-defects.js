@@ -128,13 +128,19 @@ function sigOf(t) {
   return x ? [x.short && x.short.signal, x.mid && x.mid.signal, x.long && x.long.signal] : null;
 }
 
+// 주제 기준 미달의 '걸린 조건' 키 — 스크린이 준 failKeys(2026-11-14~), 없으면(옛 스크린 출력) 문구에서 숫자를 뺀 글자.
+//   문구의 숫자(순위·비율)는 매일 바뀌므로 조건의 종류만 본다.
+function themeKeys(row) {
+  if (Array.isArray(row.failKeys) && row.failKeys.length) return { scheme: "keys", keys: row.failKeys.slice().sort() };
+  return { scheme: "text", keys: (row.fails || []).map((t) => String(t).replace(/[−-]?\d[\d.,]*%?p?/g, "#")).sort() };
+}
 // 편성 종목 한 개의 자동 신호
 function flagsFor(c, th, s, screenRow) {
   const out = [], key = c + ":" + s.ticker, prot = PROTECT.has(key);
   const sg = sigOf(s.ticker);
   if (!prot && sg && sg.every((x) => BAD.has(x))) out.push({ k: "trend", hard: true, msg: "추세 붕괴(단·중·장기 모두 매도 이하)" });
   if (screenFresh && screenRow && screenRow.fails && screenRow.fails.length)
-    out.push({ k: "theme", hard: true, msg: "주제 기준 미달 — " + screenRow.fails.join(", ") });
+    out.push({ k: "theme", hard: true, msg: "주제 기준 미달 — " + screenRow.fails.join(", "), keys: themeKeys(screenRow) });
   // 실적 발표 직후 — 한국은 events.next(그날)·last(직전 발표 — 지난 일정은 update-events 가 last 로 남긴다), 미국은 hist[0]
   const ev = EV[s.ticker] || {};
   const ed = c === "us" ? (ev.hist && ev.hist[0] && ev.hist[0].date) : (ev.next && ev.next.date <= T ? ev.next.date : ev.last && ev.last.date);
@@ -202,6 +208,78 @@ const PREV_SINCE = {};
     if (d.since) PREV_SINCE[g + "|" + d.ticker] = d.since;
   }));
 })();
+// 단단한 신호(추세 붕괴·주제 기준 미달)가 '언제부터' 떴는지(2026-11-14 버그 수정) — 직전 candidates.js 의 hard 지도를 이어받는다.
+//   예전엔 이 두 신호에 시작일이 없어, 판정에 "theme" 이 한 번 적히면 그 뒤 '다른 조건'이 새로 걸려도, 추세가 풀렸다 다시 무너져도 영영 덮였다
+//   (정식 72자리 중 18자리가 그런 판정 — 주제 기준에 걸린 14자리 가운데 결격으로 다루는 것은 1자리). 판정은 자기보다 뒤에 새로 뜬 신호를 덮지 못한다:
+//   추세 붕괴 = 이번 붕괴가 시작된 날, 주제 기준 미달 = 지금 걸린 조건 가운데 가장 늦게 걸리기 시작한 날. 판정일이 그날보다 앞서면 다시 '점검 필요'.
+//   hard["<그룹>|<티커>"] = { trend: 날짜|"-", tvf, scheme: "keys"|"text", theme: { 조건 키: 날짜|"-" }, vf: { 조건 키: 지문 }, gone: { "trend"|"theme:<키>": [날짜, 마지막으로 본 날, 지문] } }
+//   — "-" 는 '이 기록을 시작하기 전부터'(기준선). 지도가 아직 없는 첫 실행과, 스크린 출력이 글자 → 키로 바뀌는 날만 기준선으로 둔다
+//   (그날 한꺼번에 다시 점검으로 올리지 않는다). 지도가 있는데 그 종목 기록이 없으면 '오늘 처음 걸린 것'이다(2026-11-14 검토 — 기록이 없다고
+//   기준선으로 두면 통과하던 종목이 새로 걸려도, 뺐다가 다시 넣은 종목도 옛 판정이 덮는다).
+//   · 판정할 수 없는 날(스크린이 8일 넘게 낡음·스크린에 그 종목 줄이 없음·신호 자료 없음)은 기록을 그대로 이어 둔다 — 지우면 다음에 기준선이나
+//     '오늘'로 다시 적혀, 판정을 기다리던 조건이 아무도 보지 않은 채 덮이거나 전부 한꺼번에 다시 올라온다.
+//   · 풀렸다가 GRACE_DAYS 안에 다시 걸린 조건은 처음 걸린 날을 되살린다(gone) — 문턱 근처를 오가는 종목(배당수익률 하한·시총 순위)이
+//     오갈 때마다 다시 점검으로 올라오지 않게. 그보다 오래 풀려 있었으면 새로 걸린 것으로 본다.
+//   · 날짜만으로는 같은 날 안의 순서를 알 수 없다 — 조건이 처음 보인 순간의 판정 지문(vf)을 함께 적어, 판정일이 그날과 같으면 판정이 그 뒤에
+//     다시 쓰였을 때만(지문이 달라졌을 때만) 덮는다(아침 세션 판정 → 같은 날 저녁 스크린에서 새 조건이 걸리는 순서).
+const PREV_CAND = load("candidates.js", "CANDIDATES");
+const PREV_HARD = PREV_CAND && PREV_CAND.hard && typeof PREV_CAND.hard === "object" && !Array.isArray(PREV_CAND.hard) ? PREV_CAND.hard : null;
+const PREV_T = (PREV_CAND && typeof PREV_CAND.T === "string" && PREV_CAND.T <= T && PREV_CAND.T) || T;   // 직전 실행의 기준일 — 풀린 조건을 '마지막으로 본 날'
+const GRACE_DAYS = 14;
+const isDay = (x) => typeof x === "string" && /^\d{4}-\d{2}-\d{2}$/.test(x);
+const verdictFp = (v) => {   // 판정 지문 — 날짜·등급·신호·메모가 같으면 같은 판정
+  if (!v) return "";
+  const str = [v.asOf || "", v.verdict || "", (v.flags || []).join(","), v.note || ""].join("|");
+  let h = 2166136261; for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return (h >>> 0).toString(36);
+};
+const HARD = {};
+// known = { trend: 기술 신호를 읽을 수 있었나, theme: 스크린이 이 종목을 판정했나 } — 판정 못 한 쪽은 이전 기록을 이어 둔다
+function hardSince(g, ticker, fl, v, known) {
+  const id = g + "|" + ticker, first = !PREV_HARD;
+  const pr = (PREV_HARD && PREV_HARD[id] && typeof PREV_HARD[id] === "object" && PREV_HARD[id]) || {};
+  const pg = pr.gone && typeof pr.gone === "object" ? pr.gone : {};
+  const cur = {}, gone = {}, fp = verdictFp(v);
+  const back = (k) => { const x = pg[k]; return Array.isArray(x) && isDay(x[1]) && dayDiff(T, x[1]) <= GRACE_DAYS ? x : null; };
+  const tf = fl.find((x) => x.k === "trend"), hf = fl.find((x) => x.k === "theme" && x.keys);
+  const used = {};
+  // ── 추세 붕괴
+  if (tf) {
+    if (first) cur.trend = "-";
+    else if (pr.trend) { cur.trend = pr.trend; if (pr.tvf != null) cur.tvf = pr.tvf; }
+    else {
+      const b = back("trend");
+      if (b) { cur.trend = b[0]; if (b[2] != null) cur.tvf = b[2]; used.trend = 1; } else { cur.trend = T; cur.tvf = fp; }
+    }
+    if (isDay(cur.trend)) tf.sinces = [{ d: cur.trend, vf: cur.tvf }];
+  } else if (pr.trend) {
+    if (!known.trend) { cur.trend = pr.trend; if (pr.tvf != null) cur.tvf = pr.tvf; }
+    else gone.trend = [pr.trend, PREV_T, pr.tvf != null ? pr.tvf : null];
+  }
+  // ── 주제 기준 미달(조건 키마다)
+  const prevKeys = pr.theme && typeof pr.theme === "object" ? pr.theme : null, prevVf = (pr.vf && typeof pr.vf === "object" && pr.vf) || {};
+  if (hf) {
+    const same = !pr.scheme || pr.scheme === hf.keys.scheme, was = (same && prevKeys) || {};
+    cur.scheme = hf.keys.scheme; cur.theme = {}; cur.vf = {};
+    hf.keys.keys.forEach((k) => {
+      if (first || !same) { cur.theme[k] = "-"; return; }
+      if (was[k]) { cur.theme[k] = was[k]; if (prevVf[k] != null) cur.vf[k] = prevVf[k]; return; }
+      const b = back("theme:" + k);
+      if (b) { cur.theme[k] = b[0]; if (b[2] != null) cur.vf[k] = b[2]; used["theme:" + k] = 1; } else { cur.theme[k] = T; cur.vf[k] = fp; }
+    });
+    if (same) Object.keys(was).forEach((k) => { if (!(k in cur.theme)) gone["theme:" + k] = [was[k], PREV_T, prevVf[k] != null ? prevVf[k] : null]; });
+    if (!Object.keys(cur.vf).length) delete cur.vf;
+    hf.sinces = Object.keys(cur.theme).filter((k) => isDay(cur.theme[k])).map((k) => ({ d: cur.theme[k], vf: cur.vf && cur.vf[k] }));
+  } else if (prevKeys) {
+    if (!known.theme) { cur.scheme = pr.scheme; cur.theme = prevKeys; if (Object.keys(prevVf).length) cur.vf = prevVf; }
+    else Object.keys(prevKeys).forEach((k) => { gone["theme:" + k] = [prevKeys[k], PREV_T, prevVf[k] != null ? prevVf[k] : null]; });
+  }
+  // 아직 유예 안인 '풀린 조건'은 이어 적는다(다시 걸려 되살린 것은 뺀다)
+  Object.keys(pg).forEach((k) => { if (!used[k] && !(k in gone) && back(k)) gone[k] = pg[k]; });
+  if (Object.keys(gone).length) cur.gone = gone;
+  fl.forEach((x) => { if (x.sinces && x.sinces.length) x.since = x.sinces.map((y) => y.d).sort().pop(); else delete x.sinces; });
+  if (cur.trend || cur.theme || cur.gone) HARD[id] = cur;
+}
 const minDate = (...xs) => xs.filter((x) => typeof x === "string" && /^\d{4}-\d{2}-\d{2}$/.test(x)).sort()[0] || null;
 const LONG_DAYS = 14, LONGER_DAYS = 28;   // 실질 결격이 대체 없이 남은 기간 — 14일: 후보 범위 확대, 28일: 스크린 적격 후보로 교체(CLAUDE.md §3-7)
 const groups = {}, queue = { review: [], swap: [], formal: 0 };
@@ -220,6 +298,7 @@ COUNTRIES.forEach((c) => THEMES.forEach((th) => {
     const row = (sg.incumbents || []).find((r) => r.ticker === s.ticker);
     const fl = flagsFor(c, th, s, row);
     const v = verdicts[s.ticker];
+    hardSince(g, s.ticker, fl, v, { trend: !!sigOf(s.ticker), theme: !!(screenFresh && row && row.passesRule != null) });
     const dupKeep = DUP[c + ":" + th + ":" + s.ticker];
     if (dupKeep) {
       const d = { ticker: s.ticker, name: s.name, state: "결격", verdict: "실질",
@@ -233,15 +312,33 @@ COUNTRIES.forEach((c) => THEMES.forEach((th) => {
     }
     if (v && opts.baseline && !v.flags) { v.flags = fl.map((x) => x.k); baselineTouched++; }
     // 판정이 덮는 신호 — 같은 종류이고, 신호에 시작일(since)이 있으면 판정일이 그날 이후일 때만(지난 신호의 판정은 덮지 않는다)
-    const covers = (x) => !!(v && v.flags && v.flags.includes(x.k) && (!x.since || (v.asOf && v.asOf >= x.since)));
+    //   단단한 신호(추세·주제)는 조건마다: 판정일이 그 조건이 걸린 날 이후이고, 그 조건이 처음 보인 순간에 있던 판정과 다른 판정일 때만
+    //   (지문 비교 — 날짜로는 같은 날 안의 순서도, 주말처럼 판정일이 기준일 T 보다 뒤인 경우의 순서도 알 수 없다).
+    //   '실질' 판정은 같은 종류의 단단한 신호가 더 걸려도 계속 덮는다 — 이미 결격인 종목이 조건이 하나 더 걸렸다고 '점검 필요'로 돌아가면
+    //   교체 대기열·날수(☆★)에서 빠지고 Top Pick 결격 제외도 풀린다(2026-11-14 검토에서 확인한 되돌림).
+    const fpNow = verdictFp(v);
+    const covers = (x) => {
+      if (!(v && v.flags && v.flags.includes(x.k))) return false;
+      if (x.hard) return v.verdict === "실질" || !x.sinces || x.sinces.every((y) => !!v.asOf && v.asOf >= y.d && (y.vf == null || y.vf !== fpNow));
+      return !x.since || !!(v.asOf && v.asOf >= x.since);
+    };
     const fresh = fl.filter((x) => !covers(x));
     let state = null;
-    if (v && v.verdict === "보호") state = fresh.some((x) => x.k === "earn" || x.k === "drop" || x.k === "tpcut") ? "점검 필요" : null;
+    // '보호'는 지수 대표 대형주(PROTECT)에만 통한다 — 다른 종목에 적힌 보호는 형식으로 읽는다(아무 종목이나 보호로 적어 신호를 숨기지 못하게)
+    const prot = PROTECT.has(c + ":" + s.ticker), vv = v && v.verdict === "보호" && !prot ? "형식" : v && v.verdict;
+    if (vv === "보호") state = fresh.some((x) => x.k === "earn" || x.k === "drop" || x.k === "tpcut") ? "점검 필요" : null;
     else if (fresh.length) state = "점검 필요";
-    else if (v && v.verdict === "실질") state = "결격";
-    else if (v && v.verdict === "형식") state = "감시";
+    else if (vv === "실질") state = "결격";
+    else if (vv === "형식") state = "감시";
+    // 단단한 신호(추세 붕괴·주제 기준 미달)가 떠 있으면 '없음' 판정이어도 목록에서 사라지지 않는다 — 감시로 남긴다(CLAUDE.md §1-1b '없음 불가')
+    else if (vv === "없음" && fl.some((x) => x.hard)) state = "감시";
     if (!state) return;
-    const d = { ticker: s.ticker, name: s.name, state, flags: fl.map((x) => ({ k: x.k, msg: x.msg, fresh: !covers(x) })) };
+    // re = 판정에 같은 종류가 적혀 있는데도 다시 올라온 단단한 신호(판정 뒤에 새 조건이 걸렸거나 추세가 다시 무너짐) — 판정을 새로 써야 덮인다
+    const d = { ticker: s.ticker, name: s.name, state, flags: fl.map((x) => {
+      const fr = !covers(x), o = { k: x.k, msg: x.msg, fresh: fr };
+      if (fr && x.hard && v && v.flags && v.flags.includes(x.k)) o.re = 1;
+      return o;
+    }) };
     if (v && v.note) d.note = v.note;
     if (v && v.asOf) d.judged = v.asOf;
     if (v && v.verdict) d.verdict = v.verdict;
@@ -275,6 +372,8 @@ COUNTRIES.forEach((c) => THEMES.forEach((th) => {
     if (note && note.note) it.note = note.note;
     if (asOf) it.asOf = asOf;
     if (r) { const w = why(th, r); if (w) it.why = w; if (x.near) it.near = (r.fails || []).join(", ") || "근접"; }
+    // 재무 팩터를 못 받은 후보(대개 IFRS 로 공시하는 외국 ADR) — 건전성 필터·점수를 판정할 수 없어 중립 점수로 올라온 것이라 표시한다(2026-11-14, 표시만 — 후보 순서·판정 불변)
+    if (r && !r.fx) it.nofx = 1;
     if (formalElsewhere[t]) it.alsoIn = formalElsewhere[t];
     const cap = capBlock(c, th, it).filter((x) => x !== "중복");   // 중복은 alsoIn 으로 이미 보인다
     if (cap.length) it.cap = cap.join("·");
@@ -290,7 +389,7 @@ COUNTRIES.forEach((c) => THEMES.forEach((th) => {
     const t = x.r.ticker;
     if (cn[t] && cn[t].status === "기각") return;
     if (cn[t]) return;   // 위에서 넣음
-    push(t, "검증 대기", null, x);
+    push(t, x.near ? "근접 후보" : "검증 대기", null, x);   // 근접 후보 = 스크린 통과가 아니라 조건 하나를 문턱 가까이에서 못 채운 종목
   });
   groups[g] = { eligible: sg.eligible != null ? sg.eligible : null, defects, list };
 }));
@@ -317,13 +416,13 @@ const BETA = (() => {
     return out;
   } catch (_e) { return {}; }
 })();
-const outObj = { asOf: today, T, screenAsOf: SC.asOf || null, screenFresh: !!screenFresh, beta: BETA, groups,
+const outObj = { asOf: today, T, screenAsOf: SC.asOf || null, screenFresh: !!screenFresh, beta: BETA, groups, hard: HARD,
   summary: { review: queue.review.length, defect: queue.swap.length, watch: queue.formal,
     untried: queue.swap.filter((x) => !(x.d.triedAt >= T)).length,
     dup: queue.swap.filter((x) => x.d.dup).length, long: queue.swap.filter((x) => x.d.long).length } };
 fs.writeFileSync(OUT,
   "// 주제별 후보 종목 + 편성 결격 점검 — scripts/check-defects.js 가 생성(LLM 토큰 0). 앱 '추천 종목' 주제 화면의 T3 아래 '후보 종목'.\n" +
-  "// groups[\"<country>|<theme>\"] = {defects 편성 결격(state 결격|점검 필요|감시), list 후보(status 검증 통과|보류|검증 대기)}\n" +
+  "// groups[\"<country>|<theme>\"] = {defects 편성 결격(state 결격|점검 필요|감시), list 후보(status 검증 통과|보류|검증 대기|근접 후보)}\n" +
   "// 세션 판정은 data/candidate-notes.json(CLAUDE.md §3-7) — 이 파일을 직접 고치지 않는다.\n" +
   "window.CANDIDATES = " + JSON.stringify(outObj, null, 1) + ";\n");
 
@@ -333,7 +432,7 @@ if (queue.review.length) {
   console.log("\n[점검 필요] 웹 검색으로 실질·형식·없음 판정 → candidate-notes.json defects 에 기록(flags = 판정한 신호)");
   queue.review.sort((a, b) => b.hard - a.hard).forEach((x) =>
     console.log("  " + x.g + " " + x.d.ticker + " " + x.d.name + (x.d.verdict ? " [기존 " + x.d.verdict + "]" : "") + " — " +
-      x.d.flags.filter((f) => f.fresh).map((f) => f.msg).join(" / ")));
+      x.d.flags.filter((f) => f.fresh).map((f) => f.msg + (f.re ? " ※판정 뒤 새로 걸림 — 판정을 다시 쓴다" : "")).join(" / ")));
 }
 if (queue.swap.length) {
   console.log("\n[결격 — 교체 대기] 그룹의 '검증 통과' 후보부터 최종 확인 후 교체(§5·§3-7)");
@@ -351,7 +450,7 @@ if (queue.swap.length) {
     });
     // 28일 규칙보다 β 허용 범위가 먼저(2026-11-07 사용자 결정) — 밴드 밖이면 β 를 1 쪽으로 되돌리는 후보만, 없으면 유지(배당 자리는 예외)
     const xc = x.g.split("|")[0], xb = BETA[xc], bOut = xb != null && (xb < 0.7 || xb > 1.3) && x.g.split("|")[1] !== "dividend";
-    const esc = x.d.long === 2 ? " ★" + x.d.age + "일째 — 스크린 적격 후보로 교체(§3-7 28일 규칙)" + (bOut ? " · 단 β " + xb.toFixed(2) + " 밴드 밖이라 β 를 " + (xb < 0.7 ? "높이는" : "낮추는") + " 후보만 — 없으면 결격 유지(β 우선)" : "") : x.d.long === 1 ? " ☆" + x.d.age + "일째 — 후보 범위 확대(스크린 26~50위·근접·인접 주제)" : "";
+    const esc = x.d.long === 2 ? " ★" + x.d.age + "일째 — 스크린 적격 후보로 교체(§3-7 28일 규칙)" + (bOut ? " · 단 β " + xb.toFixed(2) + " 밴드 밖이라 β 를 " + (xb < 0.7 ? "높이는" : "낮추는") + " 후보만 — 없으면 결격 유지(β 우선)" : "") : x.d.long === 1 ? " ☆" + x.d.age + "일째 — 후보 범위 확대(스크린 근접 후보 nearMiss·인접 주제)" : "";
     console.log("  " + x.g + " " + x.d.ticker + " " + x.d.name + (x.d.triedAt >= T ? " [교체 시도 " + x.d.triedAt + "]" : " [오늘 교체 시도 필요]") + esc + " — " + (x.d.note || "") + " · 대체 " + (ready.length ? ready.join(", ") : "검증 통과 후보 없음 → 스크린 상위 검증"));
   });
 }

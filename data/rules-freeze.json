@@ -3,12 +3,12 @@
  "until": "2027-01-21",
  "note": "선정 규칙 동결(CLAUDE.md §6) — 아래 파일·주제 정의가 기준선과 다르면 validate-reco 가 경고한다. 받아들인 변경은 accepted 에 사유와 함께 남는다.",
  "baseline": {
-  "scripts/screen-discovery.js": "89fcfa969501b9f3",
+  "scripts/screen-discovery.js": "6b29c744ad54eed5",
   "scripts/screen-factors.js": "343af9eeaec1acdc",
   "scripts/lib-factors.js": "022c5e81e2c7d0f5",
-  "scripts/check-defects.js": "511441b463f19d20",
+  "scripts/check-defects.js": "e06260eee2a0e1ea",
   "scripts/lib-ta.js": "f9d715583519f6c9",
-  "scripts/shadow-track.js": "52321294ad58c3cf",
+  "scripts/shadow-track.js": "cd486f042e20a38b",
   "docs/DEEP-AUDIT-AGENT.md": "84a8d8333ac5486d",
   "docs/DEEP-DISCOVERY-AGENT.md": "af21a0140a2ff2de",
   "recommendations.js themes": "e9c3fe860e73fe46"
@@ -68,6 +68,15 @@
     "scripts/screen-discovery.js"
    ],
    "reason": "버그 수정(2026-11-07): 발굴 스크린이 네이버 클래스 주식 표기 'BRK B'를 그대로 써 편성 'BRK.B'와 짝을 못 지음 → 재무 팩터 누락. 순위 줄 표기만 'BRK.B'로 맞춤(판정 기준 불변)"
+  },
+  {
+   "at": "2026-11-14",
+   "items": [
+    "scripts/screen-discovery.js",
+    "scripts/check-defects.js",
+    "scripts/shadow-track.js"
+   ],
+   "reason": "2026-11-14 전체 점검 — 버그 수정·출력 추가(판정식 불변): screen-discovery 미달 조건 문구·failKeys·nearMiss·personal 보유 포함, check-defects 조건별 시작일(hard)·보호 범위·감시 표시·근접 후보·nofx, shadow-track 같은 마감 재실행 보정"
   }
  ]
 }

@@ -291,6 +291,27 @@ svg { display: block; }
 .al-at { font-weight: 500; font-size: 12px; color: var(--mut); margin-left: 4px; }
 .al-why { margin: 4px 0 0; padding-left: 16px; }
 .al-why li { margin: 2px 0; }
+/* 건강 점검(종목 상세) — Top Pick 건강 조건을 항목별로(data/pick-scores.js health, 2026-11-14) */
+.hc-top { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.hc-st { display: inline-flex; align-items: center; gap: 5px; height: 28px; padding: 0 10px; border-radius: 7px; font-size: 13.5px; font-weight: 700; background: var(--acc-soft); color: var(--acc-ink); }
+.hc-st.bad { background: var(--warn-soft); color: var(--warn-ink); }
+.hc-st svg { width: 15px; height: 15px; }
+.hc-why { font-size: 13.5px; font-weight: 600; color: var(--ink); }
+.hc-rank { margin: 8px 0 0; font-size: 13.5px; line-height: 1.55; color: var(--ink2); }
+.hc-rank b { color: var(--ink); font-weight: 700; }
+.hc-list { list-style: none; margin: 10px 0 0; padding: 0; }
+.hc-list li { display: grid; grid-template-columns: 18px 4.6em 1fr; gap: 8px; align-items: start; padding: 9px 0; border-top: 1px solid var(--line); font-size: 13.5px; line-height: 1.5; color: var(--ink2); }
+.hc-list i { display: inline-flex; width: 16px; height: 16px; margin-top: 2px; color: var(--acc-ink); }
+.hc-list i svg { width: 16px; height: 16px; }
+.hc-list b { font-weight: 600; color: var(--ink); }
+.hc-list li.bad i { color: var(--warn-ink); }
+.hc-list li.bad span { color: var(--ink); }
+.hc-list li.na i, .hc-list li.na span { color: var(--mut); }
+/* Top Pick 전체 순위(홈) — 4위 이하·건강 조건 제외·순위 없음 */
+.pk-all-h { padding: 12px 16px 4px; font-size: 12.5px; font-weight: 700; color: var(--mut); }
+.pk-all .pk-n { font-size: 14px; font-weight: 700; color: var(--mut); }
+.pk-all .pk-why { -webkit-line-clamp: 3; }
+.pk-all .pk-x { color: var(--warn-ink); }
 .cand-gh { margin-top: 10px; border-top: 8px solid var(--sf2); padding-top: 18px; }
 .cand-sub { padding: 0 16px 6px; font-size: 12.5px; line-height: 1.5; color: var(--mut); }
 .crow { min-height: 58px; color: inherit; text-decoration: none; }
@@ -471,7 +492,8 @@ body:not(.ready) #foot, body:not(.ready) #mktFold { visibility: hidden; }   /* �
 .fw-bar { display: inline-flex; gap: 3px; }
 .fw-bar i { width: 14px; height: 8px; border-radius: 3px; background: var(--track); }
 .fw-bar.big i { width: 20px; height: 10px; }
-.fw-lv { font-size: 19px; font-weight: 800; letter-spacing: -0.3px; }
+.fw-lv { font-size: 19px; font-weight: 800; letter-spacing: -0.3px; color: var(--ink); }   /* 단계 색은 글자 대신 점으로(대비 — 사용 편의 규칙) */
+.fw-lv i { display: inline-block; width: 10px; height: 10px; margin-right: 6px; border-radius: 50%; vertical-align: 1px; }
 .fw-lv.big { font-size: 24px; }
 .fw-pct { font-size: 12.5px; color: var(--mut); }
 .fw-ev { margin-top: 6px; font-size: 13px; line-height: 1.5; color: var(--ink2); }
@@ -968,7 +990,7 @@ body:not(.ready) #foot, body:not(.ready) #mktFold { visibility: hidden; }   /* �
 /* 상세 항목 탭 — 짧은 이름으로 한 줄에 모두 들어가게(좁으면 가로 스크롤) */
 .dt-nav { position: sticky; top: 0; z-index: 3; display: flex; padding: 0 8px; overflow-x: auto; scrollbar-width: none; background: var(--sf); border-bottom: 1px solid var(--line); }
 .dt-nav::-webkit-scrollbar { display: none; }
-.dt-nav a { position: relative; flex: 1 0 auto; padding: 12px 6px 11px; text-align: center; font-size: 14px; font-weight: 600; color: var(--mut); white-space: nowrap; }
+.dt-nav a { position: relative; flex: 1 0 auto; padding: 12px 4px 11px; text-align: center; font-size: 14px; font-weight: 600; color: var(--mut); white-space: nowrap; }
 .dt-nav a.on { color: var(--ink); font-weight: 700; }
 .dt-nav a.on::after { content: ""; position: absolute; left: 6px; right: 6px; bottom: -1px; height: 2px; border-radius: 1px; background: var(--ink); }
 .dt-sec { padding: 22px 20px; border-bottom: 8px solid var(--bg); }
@@ -1088,7 +1110,7 @@ body:not(.ready) #foot, body:not(.ready) #mktFold { visibility: hidden; }   /* �
 .tip-sheet-t { flex: none; font-size: 16.5px; font-weight: 700; letter-spacing: -0.035em; }
 .tip-sheet-body { flex: 1 1 auto; min-height: 0; margin-top: 10px; overflow-y: auto; overscroll-behavior: contain; font-size: 14.5px; line-height: 1.7; color: var(--ink2); white-space: pre-line; }
 .tip-sheet-x { flex: none; height: 48px; margin-top: 14px; border-radius: 12px; background: var(--sf3); font-size: 15px; font-weight: 700; color: var(--ink); }
-.tip-pop { position: fixed; z-index: 95; max-width: min(320px, calc(100vw - 24px)); padding: 10px 12px; border-radius: 10px; background: var(--ink); color: var(--sf); font-size: 13px; line-height: 1.6; box-shadow: var(--shadow); white-space: pre-line; }
+.tip-pop { position: fixed; z-index: 95; max-width: min(320px, calc(100vw - 24px)); max-height: calc(100vh - 20px); overflow-y: auto; overscroll-behavior: contain; padding: 10px 12px; border-radius: 10px; background: var(--ink); color: var(--sf); font-size: 13px; line-height: 1.6; box-shadow: var(--shadow); white-space: pre-line; }
 .toast { position: fixed; left: 50%; bottom: calc(var(--tab) + 18px + env(safe-area-inset-bottom)); z-index: 100; padding: 10px 16px; border-radius: 999px; background: rgba(25,31,40,0.94); color: #fff; font-size: 13.5px; font-weight: 600; white-space: nowrap; opacity: 0; pointer-events: none; transform: translate(-50%, 8px); transition: opacity .2s, transform .2s; }
 .toast.on { opacity: 1; transform: translate(-50%, 0); }
 .toast.act.on { pointer-events: auto; padding: 4px 6px 4px 16px; }
@@ -1293,6 +1315,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
     <section class="blk blk-list" id="picksBox" style="display:none">
       <div class="blk-h"><h2>오늘의 Top Pick</h2><button class="ic-tip" type="button" id="picksTip" aria-label="선정 기준 보기"></button><span class="blk-sub" id="picksSub"></span></div>
       <div class="list" id="picksList" data-ctx="picks"></div>
+      <div class="list" id="picksAll" data-ctx="picksall"></div>
       <button class="pk-rec" type="button" id="picksRec" hidden></button>
     </section>
     <section class="blk blk-list" id="quadBox" style="display:none">
@@ -1594,7 +1617,8 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     search: SV + '<circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.2-4.2"/></svg>',
     ext: SV + '<path d="M14 4h6v6M20 4l-8.5 8.5"/><path d="M18 14v4.5a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 4 18.5v-11A1.5 1.5 0 0 1 5.5 6H10"/></svg>',
     send: SV + '<path d="M4 12l16-8-6 16-2.5-6.5z"/></svg>',
-    chev: SV + '<path d="M9 6l6 6-6 6"/></svg>'
+    chev: SV + '<path d="M9 6l6 6-6 6"/></svg>',
+    dash: SV + '<path d="M7 12h10"/></svg>'
   };
   // 5단계 신호 → 색 분류(매수 계열 빨강 · 중립 회색 · 매도 계열 파랑, 국내 관례)
   var SIG_CLS = { "적극매수": "sb", "매수": "b", "중립": "n", "매도": "s", "적극매도": "ss" };
@@ -1631,7 +1655,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
       var html = fmtPrice(now, s.c);
       if (s.p != null && s.p > 0) {
         var d = (now - s.p) / s.p * 100;
-        html += '<div class="pv-chg ' + (d >= 0 ? "up" : "down") + '" title="그날 가격 대비 등락률">' + esc(fmtPct(d)) + "</div>";
+        html += '<div class="pv-chg ' + (Math.abs(d) < 0.05 ? "" : d > 0 ? "up" : "down") + '" title="그날 가격 대비 등락률">' + esc(fmtPct(d)) + "</div>";
       }
       return html;
     }
@@ -1928,7 +1952,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     h += '<div class="fresh-sec">' + CS.cycleDays + "일 회전 " + rotOk + "/" + CS.rotation.length + " — 가장 오래된 항목 기준</div>";
     CS.rotation.forEach(function (r) { h += row(r.label, r.fresh, r.total, r.unit || "", r.oldestDays, r.ok); });
     h += '<div class="fresh-note">' + (CS.ok
-      ? "전 항목 주기 안 — 모든 데이터가 최근 " + CS.cycleDays + "일 안에 갱신됐다."
+      ? "전 항목이 정해진 주기 안에 갱신됐다(회전 항목은 " + CS.cycleDays + "일, 값 없이 두 번 실패한 AI 적정가는 14일)."
       : "회전 항목은 " + CS.cycleDays + "일에 걸쳐 나눠 갱신한다. 숫자가 채워지는 중이면 정상, " +
         "며칠째 그대로면 자동 업데이트가 멈춘 것.") + "</div>";
     body.innerHTML = h;
@@ -1985,6 +2009,22 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
   window.addEventListener("resize", queueClamps);   // 폭이 바뀌면(회전 등) 잘림 여부도 바뀐다
   function clampCls(k, cl) { return OPEN[k] ? "" : " " + cl; }
 
+  // 글(시황·지수 대응·유동성 판단)이 어느 종가까지 반영했나 — ai-status.js daily.seen.items[항목].basis[kr|us](ai-daily 가 실행마다 적는다).
+  //   한국·미국 장이 따로 끝나므로 지역마다 본다: 그 지역 지수의 마지막 마감일보다 글의 기준이 앞이면 '미갱신 · M/D 종가 기준'.
+  //   2026-11-14 점검: 미국 글은 한국 마감 회차가 쓴 하루 전 내용인데 작성일(11/13)만 보여 '다우 0.36% 내렸다' 옆에 그날 종가 +0.10% 가 놓였다.
+  function noteStale(item, region) {
+    var A = window.AI_STATUS, it = A && A.daily && A.daily.seen && A.daily.seen.items && A.daily.seen.items[item];
+    var b = it && it.basis && it.basis[region === "us" ? "us" : "kr"];
+    // seen 기록은 Action 의 ai-daily 가 돌 때만 다시 적힌다 — 그 사이 세션이 문장을 새로 썼으면 기록의 지문이 지금 문장과 다르다(그땐 판단하지 않는다)
+    var pp = aiParts(item), pre = aiNorm(pp[0]).slice(0, 40), sg = it && typeof it.sig === "string" ? it.sig : "";
+    if (!sg || !pp[0] || (sg.indexOf("#") < 0 ? sg !== pre : sg !== pre + "#" + aiFp(pp[1]))) return null;
+    var T = window.INDEX_TA, key = region === "us" ? "nasdaq" : "kospi";
+    var x = T && (T.indices || []).filter(function (i) { return i.key === key; })[0], bar = x && idxBarDate(x);
+    return b && bar && b < bar ? { basis: b, bar: bar } : null;
+  }
+  function staleChip(st) {
+    return st ? ' <span class="tn-stale" title="' + esc(mdOf(st.bar) + " 종가는 아직 반영 전 — 다음 자동 분석 때 다시 쓴다.") + '">미갱신 · ' + esc(mdOf(st.basis)) + " 종가 기준</span>" : "";
+  }
   // 시황: 선택된 국가의 시황을 문단 단위로(국가 전환 시 갱신). 3줄만 보이고 탭하면 전문.
   // 국가별 시황(marketNoteUS·marketNoteKR)이 있으면 우선, 없으면 통합 marketNote 로 폴백.
   function renderMarketNote() {
@@ -1994,8 +2034,9 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     if (!parts.length) parts = [mn];
     // 접기 안이라 줄임 없이 전문 — 접힌 상태는 summary 의 첫 줄 미리보기
     document.getElementById("mktPrev").textContent = parts[0] || "";
+    var mst = noteStale("market", c);
     document.getElementById("marketNote").innerHTML = mn
-      ? '<div class="mn-body">' + parts.map(function (p, i) {
+      ? '<div class="mn-body">' + (mst ? '<p class="mn-p">' + staleChip(mst).trim() + "</p>" : "") + parts.map(function (p, i) {
           return '<p class="mn-p">' + (i === 0 && aiWrote("market") ? AI_TAG + " " : "") + esc(p) + "</p>";   // '시황' 이름표는 접기 제목과 겹쳐 뺀다
         }).join("") + "</div>"
       : "";
@@ -2236,6 +2277,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     if (!x) return "";
     if (x.turn) return x.turn;
     if (x.yoy == null) return "";
+    if (Math.abs(x.yoy) < 0.5) return "0%";   // '+0%'·'-0%' 대신
     return x.yoy >= 300 ? (x.yoy / 100 + 1).toFixed(1) + "배" : (x.yoy > 0 ? "+" : "") + x.yoy.toFixed(0) + "%";
   }
   function qLine(s, country) {
@@ -2243,7 +2285,8 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     if (!q) return "";
     var it = function (k, x) {
       if (!x || x.v == null) return "";
-      var c = chgTxt(x), cls = x.turn === "흑자전환" || (x.yoy != null && x.yoy > 0) ? "up" : (x.turn || (x.yoy != null && x.yoy < 0)) ? "down" : "";
+      var c = chgTxt(x), flat = !x.turn && x.yoy != null && Math.abs(x.yoy) < 0.5;   // '0%'로 보이는 변화엔 색을 넣지 않는다
+      var cls = flat ? "" : x.turn === "흑자전환" || (x.yoy != null && x.yoy > 0) ? "up" : (x.turn || (x.yoy != null && x.yoy < 0)) ? "down" : "";
       return k + " " + money(x.v, country) + (c ? '(<span class="' + cls + '">' + esc(c) + "</span>)" : "");
     };
     var parts = [it("매출", q.rev), it(q.opLabel === "EBIT" ? "EBIT" : "영업이익", q.op), it("순이익", q.np)].filter(Boolean);
@@ -3514,6 +3557,15 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
   var TP_HIT_TIP = "현재가가 증권사 컨센서스 목표가 이상. 결격·편출 사유는 아니고(목표가는 주가를 뒤따라 바뀌는 값) 논거·실적을 먼저 다시 확인하는 대상.";
   var PU_TIP = "최근 시세를 확인하지 못해 옛 가격 기준. 표시된 상승여력이 실제와 다를 수 있다.";
   var HOT_TIP = "외국인+기관 20일 순매수가 거래량의 6.3% 이상 — 2016~2026년 이 구간은 이후 1·3개월 지수보다 약했다.";
+  var WATCH_LEAD = "매일 자동 점검에서 이 주제의 기준에 못 미치는 조건이 나왔지만, 사업 악화가 아니라(주가·시가총액 변동에 따른 경계 이탈, 합병·일회성 회계 등) 형식적인 미달로 판정해 편성에 둔 상태. 다른 조건이 새로 걸리면 다시 점검한다.";
+  var WATCH_SOFT = "매일 자동 점검에서 급락·실적 발표·목표가 하향 신호가 떴고, 회사 고유의 결격은 아니라고 판정해 지켜보는 상태. 새 신호가 뜨면 다시 점검한다.";
+  var WATCH_TREND = "매일 자동 점검에서 단·중·장기 신호가 모두 하락세(추세 붕괴)로 나왔지만, 회사 고유의 결격은 아니라고 판정해 편성에 둔 상태. 추세가 풀렸다가 다시 무너지면 다시 점검한다.";
+  var WATCH_NONE = "매일 자동 점검 신호가 떠 있어 지켜보는 상태 — 판정은 '결격 없음'. 조건이 새로 걸리면 다시 점검한다.";
+  var WATCH_PLAIN = "자동 점검 신호를 판정해 지켜보는 상태. 새 신호가 뜨면 다시 점검한다.";
+  function watchLead(df, hard) {
+    if (hard.length) return df.verdict === "없음" ? WATCH_NONE : hard.some(function (f) { return f.k === "trend"; }) ? WATCH_TREND : WATCH_LEAD;
+    return (df.flags || []).length ? WATCH_SOFT : WATCH_PLAIN;
+  }
   var DUP_LEAD = "같은 종목이 정식 주제 두 곳 이상에 있어 한 곳에만 남긴다 — 회사 자체의 결격은 아니다. 이 자리는 검증을 통과한 다른 후보로 바꾼다.";
   function detailAlerts(s, c, e) {
     var out = [];
@@ -3522,9 +3574,18 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
       var why = [];
       if (df.note) why.push(df.note);
       (df.flags || []).forEach(function (f) { if (f.fresh || !df.note) why.push(f.msg); });
+      if (df.state === "결격" && df.since && df.age != null) why.push(mdOf(df.since) + "부터 " + df.age + "일째" + (df.long ? " — " + (df.long === 2 ? "스크린 기준을 통과한 후보로 교체 진행" : "대체 후보 범위를 넓혀 찾는 중") : ""));
       out.push({ warn: df.state === "결격" && !df.dup, k: df.dup ? "중복 편성 · 교체 대기" : df.state === "결격" ? "결격 · 교체 대기" : "결격 점검 중",
         lead: df.dup ? DUP_LEAD : df.state === "결격" ? "검증을 통과한 대체 후보가 생기면 바로 교체." : "매일 자동 점검에서 신호가 떠 다음 업데이트에서 실질 결격인지 판정.",
         why: why, at: df.judged, by: df.by });
+    } else if (df && df.state === "감시") {
+      // 자동 점검 신호가 떴지만 '형식'으로 판정해 편성에 둔 종목 — 어느 조건이 왜 떴고 어떻게 판정했는지 숨기지 않고 보인다
+      //   (2026-11-14: 정식 72자리 중 25자리가 감시, 그중 14자리가 주제 기준 미달인데 화면 어디에도 표시가 없었다). 경고색이 아니라 안내로.
+      var hard = (df.flags || []).filter(function (f) { return f.k === "theme" || f.k === "trend"; }), w2 = [];
+      hard.forEach(function (f) { w2.push(f.msg); });
+      if (df.note) w2.push((hard.length ? "판정: " : "") + df.note);
+      if (w2.length) out.push({ warn: false, k: (hard.some(function (f) { return f.k === "trend"; }) ? "추세 붕괴 신호 · 편성 유지" : hard.length ? "주제 기준 미달 · 편성 유지" : "감시 중 · 교체 대상 아님"),
+        lead: watchLead(df, hard), why: w2, at: df.judged, by: df.by });
     }
     if (e.upside != null && e.upside <= 0) out.push({ warn: true, k: "목표가 도달", lead: TP_HIT_TIP, why: [] });
     if (isValueTrap(s, e.upside)) out.push({ warn: true, k: "낙폭발 상승여력", lead: VT_TIP, why: [] });
@@ -3546,11 +3607,12 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
   }
   // 추천 이유 한 줄 — 투자 포인트(thesis) 첫 문장을 차트 바로 아래에(전문은 아래 '투자 포인트'). 상세를 열자마자 '왜 추천인가'가 보이게
   //   (2026-11-06 UI 점검: 투자 포인트 제목이 상세 맨 위에서 평균 2,100px 아래 — 휴대폰 세 화면). thesis 첫 문장에 핵심을 두는 규칙(§4-2)과 짝.
-  function thesisLead(s) {
+  function thesisLead(s, c) {
     var t = String(s.thesis || "").trim();
     if (!t) return "";
     var m = t.match(/^[\s\S]*?[.!?](?=\s|$)/), first = m ? m[0] : t, more = first.length < t.length - 1;
-    var k = isFormal(s.theme) ? "추천 이유" : isSpot(s.theme) ? "주목 이유" : "투자 포인트";
+    var df0 = isFormal(s.theme) ? defectOf(c || state.country, s.theme, s.ticker) : null;
+    var k = df0 && df0.state === "결격" && !df0.dup ? "편입 당시 논거" : isFormal(s.theme) ? "추천 이유" : isSpot(s.theme) ? "주목 이유" : "투자 포인트";
     return '<div class="dt-why"><span class="dt-why-k">' + k + "</span>" + esc(first) +
       (more ? ' <a class="dt-why-more" href="#dt-thesis" data-sec="dt-thesis">자세히</a>' : "") + "</div>";
   }
@@ -3578,6 +3640,47 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     return '<div class="kv">' + cells.join("") + "</div>" +
       '<p class="kv-note">ⓘ 를 누르면 계산 근거 · <button class="lnk" type="button" data-basis="' + esc(TP_REALITY) + '">목표가 현실 점검</button></p>';
   }
+  // ── 건강 점검(2026-11-14 — 사용자 '건강하고 좋은 주식, 오를 가능성이 높은 주식') ──
+  //   Top Pick 건강 조건(lib-picks unhealthy)을 이 종목에 그대로 적용한 결과를 항목별로 — data/pick-scores.js health(매일 자동).
+  //   그 전엔 1~3위만 보였고, 나머지 종목이 왜 Top Pick 후보에서 빠지는지·몇 위인지 화면 어디에도 없었다. 보유 종목도 같은 조건으로 보인다(순위는 없음).
+  var HC_KO = { trend: "추세", flow: "수급", tp: "목표가", defect: "결격", ni: "흑자", dil: "희석", ag: "자산 급증", sroa: "이익 변동", fin: "재무" };
+  var HC_TIP = "Top Pick 을 고를 때 쓰는 건강 조건을 이 종목에 그대로 적용한 결과(매일 자동). 하나라도 걸리면 Top Pick 후보에서 빠진다 — 추천 편성의 결격(교체 사유)과는 다른 기준이라, " +
+    "걸려도 편성에는 남을 수 있다. '판정 안 함'은 자료가 없거나 해당하지 않아 통과로 본 항목.\n\n" +
+    "조건: 단기·중기 강한 하락세·세 기간 모두 하락세가 아닐 것 · 순이익 흑자 · 주식 수 연 5% 넘게 늘지 않을 것 · 자산 급증(시장 상위 10%) 아닐 것 · 이익 변동(5년 ROA 표준편차, 시장 상위 10%) 크지 않을 것 · " +
+    "한국은 수급 과열·증권사 목표가 평균 3개월 10% 넘는 하향도 제외. 재무 값은 최근 결산 연도 기준이라 그 뒤 분기 실적은 '실적' 칸에서 본다.";
+  function healthOf(c, t) { var P = window.PICK_SCORES, x = P && P[c] && P[c].health; return (x && x[t]) || null; }
+  function pickRanked(c, t) {
+    var P = window.PICK_SCORES, r = P && P[c] && P[c].ranked, i;
+    if (Array.isArray(r)) for (i = 0; i < r.length; i++) if (r[i].ticker === t) return { x: r[i], n: r.length };
+    return null;
+  }
+  // 점수 재료 한 줄 — lib-picks partsLine 과 같은 표기(그 나라 재료만, 값이 있는 것만)
+  function pickParts(x, c) {
+    var a = [], sg = function (v) { return (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v); };
+    if (x.issCa) a.push("주식 수 변화 0 으로 봄(분할 등 자본 거래)"); else if (x.iss != null) a.push("주식 수 연 " + sg(x.iss) + "%");
+    if (c === "us") { if (x.shy != null) a.push("주주환원 수익률 " + x.shy + "%"); if (x.roic != null) a.push("ROIC " + x.roic + "%"); }
+    else if (x.dy != null) a.push("배당수익률 " + x.dy + "%");
+    return a.join(" · ");
+  }
+  function healthBody(s, c) {
+    var h = healthOf(c, s.ticker);
+    if (!h || !Array.isArray(h.c) || !h.c.length) return "";
+    var P = window.PICK_SCORES || {}, bad = !!h.w, rk = pickRanked(c, s.ticker), nat = c === "korea" ? "한국" : "미국";
+    var top = '<div class="hc-top"><span class="hc-st' + (bad ? " bad" : "") + '">' + (bad ? ICON.x + "건강 조건 미달" : ICON.check + "건강 조건 통과") + "</span>" +
+      (bad ? '<span class="hc-why">' + esc(h.w) + "</span>" : "") + "</div>";
+    var rank = h.hold ? "보유 종목은 Top Pick 후보가 아니라 순위를 매기지 않는다."
+      : bad ? "건강 조건에 걸려 상승 가능성 순위에서 제외."
+      : rk ? "상승 가능성 점수 " + nat + " 후보 " + rk.n + "종목 중 <b>" + rk.x.rank + "위</b>" + (rk.x.pick ? " · 오늘의 Top Pick " + rk.x.pick : "") +
+          (pickParts(rk.x, c) ? " — " + esc(pickParts(rk.x, c)) : "") + (rk.x.skip ? " · 같은 업종 종목이 이미 Top Pick 이라 건너뜀" : "")
+      : "점수 자료(주식 수" + (c === "us" ? "·주주환원·ROIC" : "·배당") + ")가 없어 순위 없음.";
+    var list = '<ul class="hc-list">' + h.c.map(function (k) {
+      var st = k[1] === 1 ? "ok" : k[1] === 0 ? "bad" : "na";
+      return '<li class="' + st + '"><i role="img" aria-label="' + (st === "ok" ? "통과" : st === "bad" ? "걸림" : "판정 안 함") + '">' +
+        (st === "ok" ? ICON.check : st === "bad" ? ICON.x : ICON.dash).replace(' aria-hidden="true"', "") + "</i><b>" + esc(HC_KO[k[0]] || k[0]) + "</b><span>" + esc(k[2]) + "</span></li>";
+    }).join("") + "</ul>";
+    return top + '<p class="hc-rank">' + rank + "</p>" + list +
+      '<p class="kv-note">' + (P.asOf ? esc(mdOf(P.asOf)) + " 기준 · " : "") + '<button class="lnk" type="button" data-basis="' + esc(HC_TIP + "\n\n" + pickBasis()) + '">기준·검증 보기</button></p>';
+  }
   function favAct(s, c, k) {
     var p = plist(k), on = inMyList(k, c, s.ticker);
     return '<button class="btn' + (on ? " on" : "") + '" type="button" data-fav="' + esc(k + "|" + c + "|" + s.ticker + "|" + s.name) + '"' +
@@ -3591,13 +3694,14 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     var badges = detailBadges(s, c, e), alerts = detailAlerts(s, c, e);
     var top = '<div class="dt-top"><div class="dt-pxl"><span class="dt-pv">' + esc(fmtPrice(e.price, c)) + "</span>" + chgHtml(e.chg, "dt-ch") + "</div>" +
       '<div class="dt-meta">' + meta + "</div>" + (badges ? '<div class="dt-bd">' + badges + "</div>" : "") + alerts + "</div>";
-    var why = it && it.why ? '<div class="dt-why"><span class="dt-why-k">Top Pick 선정 이유</span>' + esc(it.why) + "</div>" : thesisLead(s);
+    var why = it && it.why ? '<div class="dt-why"><span class="dt-why-k">Top Pick 선정 이유</span>' + esc(it.why) + "</div>" : thesisLead(s, c);
     var sig = (n.sigShort || n.sigMid || n.sigLong) ? '<div class="dt-sig">' + [["단기", n.sigShort, "일봉"], ["중기", n.sigMid, "주봉"], ["장기", n.sigLong, "월봉"]].map(function (p) {
         return '<div class="ds"><span class="ds-k">' + p[0] + " <i>" + p[2] + '</i></span><b class="ds-v t-' + (SIG_CLS[p[1]] || "x") + '">' + esc(sigWord(p[1])) + "</b></div>";
       }).join("") + "</div>" : "";
     var rg = rangeHeroHtml(s, e, c), mini = '<a class="mv-mini" href="#dt-trend" data-sec="dt-trend" hidden></a>';
     var sum = sig || rg ? '<div class="dt-sum">' + sig + rg + mini + "</div>" : '<div class="dt-sum mv-only">' + mini + "</div>";
     var secs = [["info", "투자정보", infoGrid(s, c, e)], ["trend", '현재 추세 <span class="md-as"></span>', '<div class="mv"><p class="mv-empty">불러오는 중…</p></div>']];
+    var hb = healthBody(s, c); if (hb) secs.push(["health", "건강 점검", hb]);
     if (s.thesis) secs.push(["thesis", "투자 포인트", '<p class="dt-txt">' + esc(s.thesis) + "</p>"]);
     var rb = rangeBody(s, c, e); if (rb) secs.push(["range", "변동 범위", rb]);
     var tb = techBody(s, c, e); if (tb) secs.push(["tech", "기술 대응" + (techStale(s) ? ' <span class="tn-stale">미갱신</span>' : ""), tb]);
@@ -3607,7 +3711,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     if (rk.length) secs.push(["risk", "리스크", '<ul class="risk-list">' + rk.map(function (r) { return "<li>" + esc(r) + "</li>"; }).join("") + "</ul>"]);
     secs.push(["ai", "AI에게 묻기", aiSectionHtml("s:" + c + ":" + s.ticker + ":" + s.theme, { kind: "stock", c: c, t: s.ticker, th: s.theme })]);
     // 위쪽 고정 탭은 짧은 이름(한 줄에 모두 보이게), 섹션 제목은 원래 이름
-    var NAV = { info: "투자정보", trend: "추세", thesis: "포인트", range: "범위", tech: "기술", fin: "실적", risk: "리스크", ai: "AI" };
+    var NAV = { info: "정보", trend: "추세", health: "건강", thesis: "포인트", range: "범위", tech: "기술", fin: "실적", risk: "리스크", ai: "AI" };
     var nav = '<nav class="dt-nav" aria-label="상세 항목">' + secs.map(function (x, i) {
       return '<a href="#dt-' + x[0] + '" data-sec="dt-' + x[0] + '"' + (i === 0 ? ' class="on"' : "") + ">" + NAV[x[0]] + "</a>";
     }).join("") + "</nav>";
@@ -3823,7 +3927,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     var line = function (k, v, g, lead) { return v ? '<div class="tn-line"><span class="tn-k">' + k + '</span><span class="tn-v">' + (lead || "") + (g ? sigBadge(g) : "") + esc(v) + "</span></div>" : ""; };
     var notes = n && (n.value || n.short || n.mid || n.long)
       ? '<section class="dt-sec"><h3>지수 대응' + (aiWrote("indexNotes") ? " " + AI_TAG : "") + (nAs ? ' <span class="md-as">작성 ' + esc(mdOf(nAs)) + "</span>" : "") +
-        (nAs && asOf && nAs < asOf ? ' <span class="tn-stale" title="오늘 데이터(' + esc(asOf) + ')로 아직 갱신 안 됨.">미갱신</span>' : "") + "</h3>" +
+        (nAs && asOf && nAs < asOf ? ' <span class="tn-stale" title="오늘 데이터(' + esc(asOf) + ')로 아직 갱신 안 됨.">미갱신</span>' : staleChip(noteStale("indexNotes", IDX_REGION[x.key] === "us" ? "us" : "korea"))) + "</h3>" +
         line("밸류", n.value, null, idxLiqChip(x.key)) + line("단기", n.short, n.sigShort) + line("중기", n.mid, n.sigMid) + line("장기", n.long, n.sigLong) + "</section>" : "";
     var acts = x.chartUrl ? '<div class="dt-act"><a class="btn" href="' + esc(safeUrl(x.chartUrl)) + '" target="_blank" rel="noopener" title="네이버 증권에서 보기">' + ICON.ext + " 네이버</a></div>" : "";
     return top + chartHtml("idx-" + x.key) + sig + idxFlowHtml(x) + notes +
@@ -4265,7 +4369,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     return head + (why.length ? "\n· " + why.join("\n· ") : "");
   }
   var CAND_CLS = { "검증 통과": "cs-ok", "보류": "cs-hold", "검증 대기": "cs-wait" };
-  var CAND_TIP = "후보 종목 — 시장 전체 스크린(주제 기준 통과, 점수순)과 세션 검증 결과.\n· 검증 통과: 실적·컨센서스·주제 적합성 확인을 마친 대체 1순위\n· 보류: 확인할 조건이 남은 후보(사유 표시)\n· 검증 대기: 스크린만 통과\n· 그룹·금융 상한: 같은 기업집단 5종목·금융 7종목을 넘겨, 같은 그룹 종목이 빠질 때만 편입할 수 있는 후보\n편성 종목은 결격(논거 훼손·역성장·지배구조·주제 이탈·추세 붕괴 — 목표가 도달은 결격 아님)이 생길 때만 교체 — 매일 자동 점검하고, 결격이 확인되면 검증 통과 후보로 바로 바꾼다. 매수 추천 아님.";
+  var CAND_TIP = "후보 종목 — 시장 전체 스크린(주제 기준 통과, 점수순)과 세션 검증 결과.\n· 검증 통과: 실적·컨센서스·주제 적합성 확인을 마친 대체 1순위\n· 보류: 확인할 조건이 남은 후보(사유 표시)\n· 검증 대기: 스크린만 통과\n· 근접 후보: 스크린 통과가 아니라 주제 조건 하나를 문턱 가까이에서 못 채운 종목(걸린 조건 표시) — 결격이 오래 남을 때 넓혀 보는 범위\n· 재무 자료 없음: 재무 팩터를 받지 못한 종목(대개 외국 ADR) — 적자·희석·자산 급증 같은 건전성 필터를 아직 판정하지 못했다\n· 그룹·금융 상한: 같은 기업집단 5종목·금융 7종목을 넘겨, 같은 그룹 종목이 빠질 때만 편입할 수 있는 후보\n편성 종목은 결격(논거 훼손·역성장·지배구조·주제 이탈·추세 붕괴 — 목표가 도달은 결격 아님)이 생길 때만 교체 — 매일 자동 점검하고, 결격이 확인되면 검증 통과 후보로 바로 바꾼다. 매수 추천 아님.";
   function candHtml(c, th) {
     var g = candGroup(c, th);
     if (!g || !g.list || !g.list.length) return "";
@@ -4277,8 +4381,9 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
       '<div class="cand-sub">' + esc(sub) + "</div>" +
       show.map(function (x) {
         var subl = '<span class="wtag ' + (CAND_CLS[x.status] || "cs-wait") + '">' + esc(x.status) + "</span><span>" + esc(x.ticker) +
-          (x.alsoIn ? " · " + esc(themeMeta(x.alsoIn).label) + " 편성" : "") + (x.cap ? " · " + esc(x.cap) : "") + (x.why ? ' · <span class="c-why">' + esc(x.why) + "</span>" : "") + "</span>";
-        var note = x.note || (x.near ? "근접 후보 — " + x.near : "");
+          (x.alsoIn ? " · " + esc(themeMeta(x.alsoIn).label) + " 편성" : "") + (x.cap ? " · " + esc(x.cap) : "") + (x.why ? ' · <span class="c-why">' + esc(x.why) + "</span>" : "") +
+          (x.nofx ? ' · <span class="c-why">재무 자료 없음 — 건전성 판정 전</span>' : "") + "</span>";
+        var note = x.note || (x.near ? (x.status === "근접 후보" ? "" : "근접 후보 — ") + x.near : "");
         return '<a class="row crow" href="' + esc(safeUrl(x.url)) + '" target="_blank" rel="noopener">' +
           '<div class="r-l"><div class="r-nm"><span class="r-name">' + esc(x.name) + "</span></div>" +
           '<div class="r-sub">' + subl + "</div>" + (note ? '<div class="c-note">' + esc(note) + "</div>" : "") + "</div>" +
@@ -4533,6 +4638,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     if (!rows.length) { box.style.display = "none"; return; }
     box.style.display = "";
     document.getElementById("picksList").innerHTML = rows.map(function (r, i) { return pickRow(r.s, cc, i + 1, r.reason); }).join("");
+    var pkExtra = renderPicksAll(cc, rows.map(function (r) { return r.s.ticker; })) || [];   // 펼친 전체 순위의 종목(실시간 시세도 함께 받는다)
     // 선정 기준은 제목 옆 ⓘ(누르면 설명), 기준일·미갱신·자동 선정 여부는 제목 오른쪽 한 줄로.
     //   큐레이션 3종목이 온전히 표시될 때만 큐레이션 문구·기준일·미갱신 표시를 붙인다.
     var taAsOf = window.STOCK_TA && window.STOCK_TA.asOf;
@@ -4549,9 +4655,54 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
       sub.textContent = "자동 선정";
     }
     renderPicksRec();
-    ensureLive(rows.map(function (r) { return r.s; }), refreshLive);
+    ensureLive(rows.map(function (r) { return r.s; }).concat(pkExtra), refreshLive);
     markActiveRow();
   }
+  // Top Pick 전체 순위(2026-11-14) — 위 1~3위 아래에 '전체 순위 보기': 건강 조건을 통과한 나머지 종목의 점수 순위와 점수 재료,
+  //   건강 조건에 걸려 빠진 종목과 그 사유, 점수 자료가 없는 종목. data/pick-scores.js(매일 자동) 그대로 — 그 전엔 3위 밖 순위와 제외 사유가 화면에 없었다.
+  var pkAllOpen = false;
+  function pickAllRow(s, cc, n, sub, warn) {
+    var e = effective(s);
+    return '<div class="row pk"' + openAttrs(cc, s.ticker, s.theme) + ">" + '<span class="pk-n">' + esc(n) + "</span>" +
+      '<div class="r-l"><div class="r-nm"><span class="r-name">' + esc(s.name) + '</span><span class="pk-th">' + esc(slotLabel(s)) + "</span></div>" +
+        '<div class="pk-why' + (warn ? " pk-x" : "") + '">' + esc(sub) + "</div></div>" +
+      '<div class="r-r"><div class="r-px">' + pxText(e.price, cc) + (e.live ? '<i class="live-dot" title="장중 시세(지연 가능)"></i>' : "") + "</div>" + chgHtml(e.chg, "r-ch") + "</div></div>";
+  }
+  function renderPicksAll(cc, shown) {
+    var host = document.getElementById("picksAll"), P = window.PICK_SCORES, x = P && P[cc];
+    if (!host) return [];
+    if (!x || !Array.isArray(x.ranked)) { host.innerHTML = ""; return []; }
+    var byT = pickByTicker(cc), nameOf = {};
+    x.ranked.forEach(function (y) { nameOf[y.ticker] = y.name; });
+    var rest = x.ranked.filter(function (y) { return shown.indexOf(y.ticker) < 0 && byT[y.ticker]; });
+    var exc = (x.excluded || []).filter(function (y) { return byT[y.ticker]; });
+    var uns = (x.unscored || []).filter(function (t) { return byT[t]; });
+    if (!rest.length && !exc.length && !uns.length) { host.innerHTML = ""; return []; }
+    var html = "";
+    if (pkAllOpen) {
+      html += '<div class="pk-all">';
+      if (rest.length) html += '<div class="pk-all-h">점수 순위 — 건강 조건 통과 ' + x.ranked.length + "종목" + (x.diversify ? " · 1~3위는 업종마다 한 종목" : "") + "</div>" +
+        rest.map(function (y) {
+          var sub = pickParts(y, cc) + (y.skip ? " · 같은 업종 " + (nameOf[y.skip] || y.skip) + " 가 Top Pick" : "");
+          return pickAllRow(byT[y.ticker], cc, y.rank, sub || "점수 " + y.score, false);
+        }).join("");
+      if (exc.length) html += '<div class="pk-all-h">건강 조건에 걸려 제외 ' + exc.length + "종목</div>" +
+        exc.map(function (y) { return pickAllRow(byT[y.ticker], cc, "–", y.why, true); }).join("");
+      if (uns.length) html += '<div class="pk-all-h">점수 자료 없음 ' + uns.length + "종목</div>" +
+        uns.map(function (t) { return pickAllRow(byT[t], cc, "–", "주식 수·" + (cc === "us" ? "주주환원·ROIC" : "배당") + " 자료 없음(외국 ADR 등) — 순위 없음", false); }).join("");
+      html += "</div>";
+    }
+    html += '<button class="cand-more" type="button" id="pkAllBtn" aria-expanded="' + (pkAllOpen ? "true" : "false") + '">' +
+      (pkAllOpen ? "접기" : "전체 순위 보기 · 통과 " + x.ranked.length + (exc.length ? " · 제외 " + exc.length : "")) + "</button>";
+    host.innerHTML = html;
+    if (!pkAllOpen) return [];
+    return rest.map(function (y) { return byT[y.ticker]; }).concat(exc.map(function (y) { return byT[y.ticker]; }), uns.map(function (t) { return byT[t]; }));
+  }
+  document.getElementById("picksAll").addEventListener("click", function (e) {
+    if (!e.target.closest("#pkAllBtn")) return;
+    e.stopPropagation();
+    pkAllOpen = !pkAllOpen; renderTopPicks();
+  });
   // Top Pick 지난 성적 한 줄 — 정식 편성과 같은 보유 기준(perf.json 의 picks 묶음: 그날 고른 3종목을 다음 기록일까지 같은 비중, 2026-07-31~).
   //   가장 눈에 띄는 추천이라 성적을 함께 보인다(2026-10-25 약점 점검). perf.json(압축 14KB)은 첫 화면이 뜬 뒤 받는다.
   function renderPicksRec() {
@@ -4643,7 +4794,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
   var PF_SIG_TIP = "하루하루 차이가 흔들리는 폭에 비해 평균 차이가 얼마나 큰지(t)로 본다. |t| < 2 면 우연으로도 자주 생기는 수준이라 '실력'이라 할 수 없다. 기록이 쌓이면 바뀔 수 있다.";
   // 우연 범위 칩 — t: 일간 차이의 t, days: 거래일 수
   function pfSig(t, days) {
-    if (days == null || days < 20 || t == null) return '<span class="pf-chip" data-basis="' + esc("기록이 20거래일 이상 쌓여야 우연과 구별할 수 있다. " + PF_SIG_TIP) + '">판단 이름</span>';
+    if (days == null || days < 20 || t == null) return '<span class="pf-chip" data-basis="' + esc("기록이 20거래일 이상 쌓여야 우연과 구별할 수 있다. " + PF_SIG_TIP) + '">기록 짧음</span>';
     var on = Math.abs(t) >= 2;
     return '<span class="pf-chip' + (on ? " on" : "") + '" data-basis="' + esc(PF_SIG_TIP + " 지금 t " + t.toFixed(1) + ".") + '">' + (on ? "의미 있는 차이" : "우연 범위") + "</span>";
   }
@@ -4708,7 +4859,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
       return sep + '<button class="chip chip-s' + (o[0] === sel ? " on" : "") + '" type="button" role="tab" aria-selected="' + (o[0] === sel) + '" data-pfsel="' + esc(o[0]) + '">' + esc(o[1]) + "</button>";
     }).join("") + "</div>";
     var cap = sel === "all" || cmp ? "" : '<p class="pf-cap"><b>' + esc(lbl) + "</b> " + fmtPct(ws.ret) + " · " + esc(bn) + " " + fmtPct(ws.bench) +
-      ' · 차이 <b class="' + sgnCls(ws.excess).trim() + '">' + fmtPp(ws.excess) + "</b>" + (ws.from && ws.from !== PERF.base ? " · " + esc(mdOf(ws.from)) + "부터" : "") + "</p>" +
+      ' · 차이 <b class="' + sgnCls(ws.excess).trim() + '">' + fmtPp(ws.excess) + "</b>" + (ws.from && ws.from !== pfBase(c) ? " · " + esc(mdOf(ws.from)) + "부터" : "") + "</p>" +
       // 고른 묶음도 우연 범위·시장 민감도를 함께 — 수익 차이만 보고 '잘 고른다'고 읽지 않게
       '<div class="pf-tags pf-cap-tags">' + pfSig(ws.tEx, ws.days) +
         (ws.beta != null ? '<span class="pf-chip" data-basis="' + esc(PF_BETA_TIP) + '">β ' + ws.beta.toFixed(2) +
@@ -4843,13 +4994,18 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     return pBlk("티어 검증", "T1이 가장 좋아야 정상",
       '<p class="pf-verdict">' + verdict + '</p><div class="pf-rows">' + ts.map(function (k) { return pfRowHtml(c, k, "T" + tierOfKey(k), C.groups[k].w.all, scale); }).join("") + "</div>");
   }
+  // 그 나라 성과 기록의 시작일 — 정식 전체 창의 시작(미국은 지수가 처음 적힌 07-07 이라 PERF.base 와 다르다)
+  function pfBase(c) {
+    var C = PERF && PERF[c], a = C && C.groups && C.groups.all && C.groups.all.w && C.groups.all.w.all;
+    return (a && a.from) || (PERF && PERF.base) || null;
+  }
   // 펼친 줄 — 묶음의 β·최근 1개월·종목별(지금 편성) + 최근 90일 편출
   function pfDetail(c, key) {
     var C = PERF[c], g = C.groups[key], s = g.w.all, m1 = g.w.m1;
     var facts = [];
     if (s.beta != null) facts.push('<span data-basis="' + esc(PF_BETA_TIP) + '" class="pf-k">시장 민감도 β ' + s.beta.toFixed(2) + " · 감안하면 " + fmtPp(s.betaAlpha) + "</span>");
     if (m1) facts.push('<span class="pf-k">최근 1개월 ' + fmtPct(m1.ret) + " (지수 대비 " + fmtPp(m1.excess) + ")</span>");
-    if (s.from && s.from !== PERF.base) facts.push('<span class="pf-k">' + esc(mdOf(s.from)) + "부터</span>");
+    if (s.from && s.from !== pfBase(c)) facts.push('<span class="pf-k">' + esc(mdOf(s.from)) + "부터</span>");
     var mine = (C.stocks || []).filter(function (r) { return LPinGroup(key, r); })
       .sort(function (a, b) { return (b.ret == null ? -1e9 : b.ret) - (a.ret == null ? -1e9 : a.ret); });
     var list = mine.map(function (r) {
@@ -6177,10 +6333,17 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
       (r.on >= 2 ? "⚠ 신용 경고" : r.on === 1 ? "신용 주의" : "신용 경고 없음") + ' <span>' + r.on + "/" + r.of + "</span>" +
       (r.on >= 2 ? " · 과거 3개월 안 −10% 급락 28%(평소 7%)" : "") + "</div>" : "";
     var ev = c === "us" ? "흐름 점수가 높을수록 다음 12개월 S&P500 이 나았다(검증)" : "예탁금·신용융자가 늘 때 다음 3개월 코스피가 나았다(검증)";
+    // 한국: 검증된 두 지표(예탁금·신용융자 3개월 변화)가 지금 어느 쪽인지 함께 적는다 — 종합 단계(5년 중 위치)와 엇갈릴 수 있다
+    //   (2026-11-14 점검: 단계는 '들어오는 중'인데 바로 아래 검증 문장의 두 지표는 모두 빠지는 중이었다)
+    if (c !== "us") {
+      var cst = {}; (o.comps || []).forEach(function (x) { cst[x.key] = x.state; });
+      if (cst.KDEP3 === "빠짐" && cst.KMRG3 === "빠짐") ev = "예탁금·신용융자는 지금 줄고 있다 — 늘 때 다음 3개월 코스피가 나았다(검증)" + (o.levelIdx >= 3 ? " · 종합 단계와 엇갈림" : "");
+      else if (cst.KDEP3 === "들어옴" && cst.KMRG3 === "들어옴") ev = "예탁금·신용융자가 지금 늘고 있다 — 늘 때 다음 3개월 코스피가 나았다(검증)" + (o.levelIdx <= 1 ? " · 종합 단계와 엇갈림" : "");
+    }
     return '<div class="fw-card" role="button" tabindex="0" data-liq="' + esc(c) + '" aria-label="돈의 흐름 자세히 보기">' +
       '<div class="fw-h"><span class="fw-k">돈의 흐름</span><button class="ic-tip" type="button" data-basis="' + esc(FW_TIP) + '" aria-label="돈의 흐름 설명">' + ICON.info + "</button>" +
       '<span class="fw-as">' + esc(mdOf(F.asOf)) + " 기준</span><span class=\"fw-go\" aria-hidden=\"true\">" + ICON.chev + "</span></div>" +
-      '<div class="fw-main">' + fwBar(o.levelIdx, true) + '<b class="fw-lv" style="color:var(--lq' + o.levelIdx + ')">' + esc(o.level) + "</b>" +
+      '<div class="fw-main">' + fwBar(o.levelIdx, true) + '<b class="fw-lv"><i style="background:var(--lq' + o.levelIdx + ')"></i>' + esc(o.level) + "</b>" +
       (top != null ? '<span class="fw-pct">최근 5년 중 상위 ' + top + "%</span>" : "") + "</div>" +
       '<div class="fw-ev">' + esc(ev) + "</div>" +
       '<div class="fw-cs">' + chips + "</div>" + risk + "</div>";
@@ -6211,7 +6374,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     var o = flowOf(c), F = window.LIQUIDITY_FLOW || {}, E = (F.evidence || {})[c === "us" ? "us" : "korea"] || {};
     if (!o) return '<div class="empty">돈의 흐름 자료 없음.</div>';
     var top = fwTop(c), cname = c === "us" ? "미국" : "한국";
-    var hero = '<div class="fw-hero"><b class="fw-lv big" style="color:var(--lq' + o.levelIdx + ')">' + esc(o.level) + "</b>" +
+    var hero = '<div class="fw-hero"><b class="fw-lv big"><i style="background:var(--lq' + o.levelIdx + ')"></i>' + esc(o.level) + "</b>" +
       '<div class="fw-xl" aria-hidden="true">' + [0, 1, 2, 3, 4].map(function (k) { return "<i" + (k === o.levelIdx ? ' class="on" style="background:var(--lq' + k + ')"' : ' style="background:var(--lq' + k + ')"') + "></i>"; }).join("") + "</div>" +
       '<div class="fw-scale" aria-hidden="true"><span>많이 빠짐</span><span>보통</span><span>많이 들어옴</span></div>' +
       '<div class="fw-meta">흐름 점수 ' + esc(fwSign(o.score, 2)) + (top != null ? " · 최근 5년 중 상위 " + top + "%" : "") + " · 구성 지표 " + o.n + "개 · " + esc(mdOf(F.asOf)) + " 기준</div></div>";
@@ -6251,7 +6414,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
       var srcs = hasL ? (L.sources || []).slice(0, 3).map(function (u, i) { return '<a href="' + esc(safeUrl(u)) + '" target="_blank" rel="noopener">출처' + (i + 1) + "</a>"; }).join("") : "";
       if (srcs) bits.push(srcs);
       var auto = A && A[c === "us" ? "us" : "korea"];
-      judge = '<section class="dt-sec" id="fw-jd"><h3>판단' + (hasL && aiWrote("liquidity") ? " " + AI_TAG : "") + '<span class="md-as">' + esc((hasL ? L.asOf : A.asOf) || "") + "</span></h3>" +
+      judge = '<section class="dt-sec" id="fw-jd"><h3>판단' + (hasL && aiWrote("liquidity") ? " " + AI_TAG : "") + '<span class="md-as">' + esc((hasL ? L.asOf : A.asOf) || "") + "</span>" + (hasL ? staleChip(noteStale("liquidity", c)) : "") + "</h3>" +
         (head ? '<div class="md-head">' + esc(head) + "</div>" : "") +
         ((s0.drivers || []).length ? '<ul class="liq-drivers">' + s0.drivers.map(function (d) { return "<li>" + esc(d) + "</li>"; }).join("") + "</ul>" : "") +
         '<div class="md-bits"><div>판단 단계 · 단기 ' + esc(s0.shortTerm || "–") + " · 중기 " + esc(s0.midTerm || "–") + (hasL ? "" : "(자동)") + "</div>" +

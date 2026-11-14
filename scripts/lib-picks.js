@@ -45,7 +45,8 @@ const REV = { korea: { months: 3, cutPct: -10 } };   // 위 ④ — 나라에 �
 const NOT_PICKABLE = new Set(["hold"]);   // 위 '후보' — 주목(spotlight)·관심(watch)은 후보, 보유(hold)는 아님
 const canPick = (theme) => !!theme && !NOT_PICKABLE.has(theme);
 const THEMES = ["core", "growth", "value", "dividend", "spotlight", "watch"];   // 같은 종목의 대표 자리 순서(정식 → 주목 → 관심)
-const PERSONAL_FX = new Set(["spotlight", "watch"]);   // 재무 값을 스크린 personal 에서 읽는 자리
+const FORMAL = new Set(["core", "growth", "value", "dividend"]);
+const PERSONAL_FX = new Set(["spotlight", "watch", "hold"]);   // 재무 값을 스크린 personal 에서 읽는 자리(보유는 건강 점검 표시용 — 순위 후보는 아니다)
 // 고정 문턱(%) — research/top-pick/README.md '라이브 문턱'. 한국 금융은 검증 때도 값이 30개 미만이라 이익 변동 문턱이 없었다.
 const CUTS = {
   us: { iss: 5, ag: 30.1, sroa: 7.6, sroaFin: 2.8 },
@@ -86,12 +87,17 @@ function finOf(DC, country, theme, ticker, fu) {
   const g = DC && DC.groups && DC.groups[country + "|" + theme];
   const inc = PERSONAL_FX.has(theme) ? ((DC && DC.personal && DC.personal[country]) || {})[ticker] : g && (g.incumbents || []).find((x) => x.ticker === ticker);
   if (!inc) return null;
-  const sh = fu && fu.sh, dy = fu && !fu.dyFlag && ok(fu.dy) ? fu.dy : null;
+  const sh = fu && fu.sh, dyKnown = fu && !fu.dyFlag && ok(fu.dy) ? fu.dy : null;
   const post = sh && ok(sh.chg) && Math.abs(sh.chg) > POST_CA ? sh : null;
   const iss = (v) => (!ok(v) ? null : v < ISS_CA || (post && post.chg < 0) ? 0 : v);
   const ca = (v) => (ok(v) && v < ISS_CA) || !!(post && post.chg < 0);
   const fx = inc.fx;
   if (!fx) return null;
+  // 무배당은 '값 없음'이 아니라 0 이다(2026-11-14 버그 수정): 네이버는 현금배당이 없는 회사의 배당수익률을 비워 주는데(fundamentals dy null),
+  //   검증 패널(lib-factors krFundamentals — 기업현황 현금DPS × 주식 수 ÷ 시총)에서는 무배당 회사가 배당수익률 0 으로 가장 낮은 순위였다.
+  //   비운 채로 두면 '값이 있는 것만 평균'이라 무배당 회사가 주식 수 감소 하나로만 점수를 받는다 — 메리츠금융지주(2025 결산 현금배당성향 0)가
+  //   점수 1.000 으로 한국 1위였다(0 으로 보면 0.5, 11위). 결산 현금배당성향이 0 으로 확인된 한국 종목만 0 으로 본다(자료가 없으면 그대로 비움).
+  const dy = dyKnown != null ? dyKnown : country === "korea" && !(fu && fu.dyFlag) && fx.payoutFy === 0 ? 0 : null;
   return { niPos: fx.niPos == null ? null : fx.niPos, iss: iss(fx.iss), issCa: ca(fx.iss), shy: ok(fx.shy) ? fx.shy : null, roic: ok(fx.roic) ? fx.roic : null,
     ag: ok(fx.ag) ? fx.ag : null, sroa: ok(fx.sroa) ? fx.sroa : null, dy, fin: !!inc.fin, post, src: "fx" };
 }
@@ -112,6 +118,38 @@ function unhealthy(country, s, sig, ev, defState, f, rv) {
   const sc = f.fin ? C.sroaFin : C.sroa;
   if (sc != null && ok(f.sroa) && f.sroa >= sc) return "이익 변동 큼(ROA 5년 표준편차 " + r1(f.sroa) + "%p)";
   return null;
+}
+
+// 건강 점검 목록(화면용, 2026-11-14 — 종목 상세 '건강 점검') — unhealthy() 의 조건을 항목별로 풀어 쓴다. 판정은 unhealthy 가 하고 여기는 설명만 한다
+//   (같은 입력으로 '걸린 항목이 있다 ⟺ unhealthy 가 사유를 낸다'를 scripts/test-picks.js 가 확인한다).
+//   st: 1 통과 · 0 걸림 · null 판정 안 함(자료 없음·해당 없음). t = 사실 한 줄(화면 문장 — 평서체). formal = 정식 추천 자리(결격 항목은 정식 자리만).
+const SIG_KO = { "적극매수": "강한 상승세", "매수": "상승세", "중립": "횡보", "매도": "하락세", "적극매도": "강한 하락세" };
+const sgn = (v) => { const r = r1(v); return (r > 0 ? "+" : r < 0 ? "−" : "") + Math.abs(r); };   // 반올림한 값으로 부호를 정한다('−0%' 방지)
+function healthChecks(country, sig, ev, defState, f, rv, formal) {
+  const out = [], add = (k, st, t) => out.push({ k, st, t }), C = CUTS[country];
+  const known = sig.some((v) => SIG_KO[v]), strong = sig[0] === "적극매도" || sig[1] === "적극매도", broken = sig.every((v) => /매도/.test(v));
+  add("trend", strong || broken ? 0 : known ? 1 : null, !known ? "신호 자료 없음" : "단·중·장 " + sig.map((v) => SIG_KO[v] || "–").join(" · ") +
+    (strong ? " — 단기·중기 강한 하락세면 제외" : broken ? " — 세 기간 모두 하락세 이하(추세 붕괴)" : ""));
+  if (country === "korea") {
+    const fl = ev && ev.flow, share = fl && ok(fl.fi20) ? "외국인+기관 20일 순매수 거래량의 " + sgn(fl.fi20 * 100) + "%" : null;
+    add("flow", fl && fl.hot ? 0 : fl ? 1 : null, !fl ? "수급 자료 없음" : fl.hot ? "수급 과열 — " + (share || "외국인+기관 20일 순매수") + "(6.3% 이상)" : (share || "과열 아님") + (share ? "(6.3% 이상이면 과열)" : ""));
+  }
+  if (REV[country]) {
+    const has = rv && ok(rv.chg), cut = REV[country].cutPct;
+    add("tp", has ? (rv.chg <= cut ? 0 : 1) : null, has ? "증권사 목표가 평균 " + REV[country].months + "개월 " + sgn(rv.chg) + "%(" + sgn(cut) + "% 이하면 제외)" : "증권사 리포트 2곳 미만 — 판정 안 함");
+  }
+  if (formal) add("defect", defState === "결격" ? 0 : 1, defState === "결격" ? "실질 결격 — 교체 대기" : defState === "점검 필요" ? "결격 신호 점검 중(실질 판정 전)" : "실질 결격 없음");
+  if (!f) { add("fin", null, "재무 자료 없음(스크린 유니버스 밖·외국 ADR 등) — 흑자·희석·자산 급증·이익 변동 판정 안 함"); return out; }
+  add("ni", f.niPos === 0 ? 0 : f.niPos == null ? null : 1, f.niPos === 0 ? "최근 결산 순이익 적자" : f.niPos == null ? "순이익 자료 없음" : "최근 결산 순이익 흑자");
+  const dilIss = ok(f.iss) && f.iss > C.iss, dilPost = !!(f.post && f.post.chg > POST_CA);
+  add("dil", dilIss || dilPost ? 0 : ok(f.iss) ? 1 : null,
+    dilPost && !dilIss ? "결산 뒤 주식 수 +" + Math.round(f.post.chg) + "%(합병·증자 등 — 20% 넘으면 제외)"
+      : !ok(f.iss) ? "주식 수 자료 없음" : f.issCa ? "주식 수 변화 0 으로 봄(분할 등 자본 거래)" : "주식 수 연 " + sgn(f.iss) + "%(+" + C.iss + "% 넘으면 제외)");
+  add("ag", ok(f.ag) ? (f.ag >= C.ag ? 0 : 1) : null, ok(f.ag) ? "자산 연 " + sgn(f.ag) + "%(" + C.ag + "% 이상이면 제외)" : "자산 증가율 자료 없음");
+  const sc = f.fin ? C.sroaFin : C.sroa;
+  add("sroa", sc != null && ok(f.sroa) ? (f.sroa >= sc ? 0 : 1) : null,
+    sc == null ? "금융 업종 — 이익 변동 문턱 없음(판정 안 함)" : ok(f.sroa) ? "ROA 5년 표준편차 " + r1(f.sroa) + "%p(" + sc + "%p 이상이면 제외)" : "이익 변동 자료 없음");
+  return out;
 }
 
 // 업종(분류표의 키 — 한국 WICS 섹터·미국 나스닥 섹터) — fundamentals.js 항목에서, 모르면 null
@@ -148,16 +186,21 @@ function rankPicks(S) {
     const rep = new Map();
     ((S.D && S.D[c]) || []).forEach((s) => {
       if (!canPick(s.theme) || dupSlot.has(c + "|" + s.theme + "|" + s.ticker)) return;
+      // 정식 밖 자리(주목·관심)는 tier 가 없다 — 예전 편성의 tier 가 카드에 남아 있어도 보지 않는다(2026-11-14: 관심 AAPL 에 남은 tier 1 이
+      //   우량 T2 자리를 밀어내 결격 상태를 관심 자리로 찾고 있었다 — 정식 자리의 실질 결격이 Top Pick 제외로 이어지지 않는 길)
+      const tierOf = (x) => (FORMAL.has(x.theme) ? x.tier || 9 : 9);
       const cur = rep.get(s.ticker);
-      if (!cur || (s.tier || 9) < (cur.tier || 9) || ((s.tier || 9) === (cur.tier || 9) && THEMES.indexOf(s.theme) < THEMES.indexOf(cur.theme))) rep.set(s.ticker, s);
+      if (!cur || tierOf(s) < tierOf(cur) || (tierOf(s) === tierOf(cur) && THEMES.indexOf(s.theme) < THEMES.indexOf(cur.theme))) rep.set(s.ticker, s);
     });
-    const healthy = [], excluded = [], unscored = [];
+    const healthy = [], excluded = [], unscored = [], health = {};
     rep.forEach((s) => {
       const x = ta[s.ticker] || {}, sig = ["short", "mid", "long"].map((k) => (x[k] && x[k].signal) || "–");
       const f = finOf(S.DC, c, s.theme, s.ticker, (S.FU || {})[s.ticker]);
       const rv = (S.RV || {})[s.ticker];
-      const why = unhealthy(c, s, sig, EV[s.ticker], defState[c + "|" + s.theme + "|" + s.ticker], f, rv);
-      const base = { ticker: s.ticker, name: s.name, theme: s.theme, tier: s.tier, tag: s.watchTag || undefined };
+      const ds = defState[c + "|" + s.theme + "|" + s.ticker];
+      const why = unhealthy(c, s, sig, EV[s.ticker], ds, f, rv);
+      health[s.ticker] = { why: why || undefined, checks: healthChecks(c, sig, EV[s.ticker], ds, f, rv, FORMAL.has(s.theme)) };
+      const base = { ticker: s.ticker, name: s.name, theme: s.theme, tier: FORMAL.has(s.theme) ? s.tier : undefined, tag: s.watchTag || undefined };   // 정식 밖 자리엔 tier 가 없다(카드에 남은 값은 싣지 않는다)
       if (why) excluded.push(Object.assign(base, { why }));
       else if (!f || !SCORE[c].some((k) => ok(f[k]))) unscored.push(Object.assign(base, { why: "점수 자료 없음(" + SCORE[c].map((k) => SCORE_KO[k]).join("·") + ")" }));
       else healthy.push({ s, f, base, sec: sectorOf(c, (S.FU || {})[s.ticker]), tp3: rv && ok(rv.chg) ? rv.chg : undefined });
@@ -174,7 +217,14 @@ function rankPicks(S) {
     ranked.sort((p, q) => (q.score - p.score) || ((p.tier || 9) - (q.tier || 9)) || (THEMES.indexOf(p.theme) - THEMES.indexOf(q.theme)) || String(p.name).localeCompare(String(q.name), "ko"));
     ranked.forEach((x, i) => { x.rank = i + 1; });
     const top = pickTop(ranked, DIVERSIFY[c]);
-    out[c] = { ranked, excluded, unscored, top, diversify: !!DIVERSIFY[c] };
+    // 보유만 있는 종목 — 순위 후보는 아니지만 건강 점검은 같은 조건으로 보인다(이미 산 종목의 건강이 더 궁금하다). hold: true
+    ((S.D && S.D[c]) || []).forEach((s) => {
+      if (canPick(s.theme) || health[s.ticker]) return;
+      const x = ta[s.ticker] || {}, sig = ["short", "mid", "long"].map((k) => (x[k] && x[k].signal) || "–");
+      const f = finOf(S.DC, c, s.theme, s.ticker, (S.FU || {})[s.ticker]), rv = (S.RV || {})[s.ticker];
+      health[s.ticker] = { why: unhealthy(c, s, sig, EV[s.ticker], undefined, f, rv) || undefined, checks: healthChecks(c, sig, EV[s.ticker], undefined, f, rv, false), hold: true };
+    });
+    out[c] = { ranked, excluded, unscored, top, diversify: !!DIVERSIFY[c], health };
   });
   return out;
 }
@@ -196,4 +246,40 @@ function partsLine(x, country) {
 const THEME_KO = { core: "우량", growth: "성장", value: "저평가", dividend: "배당", spotlight: "주목", watch: "관심" };
 const slotKo = (x) => (x.theme === "spotlight" ? "주목" + (x.tag ? "(" + x.tag + ")" : "") : x.theme === "watch" ? "관심" : (THEME_KO[x.theme] || x.theme) + " T" + x.tier);
 
-module.exports = { CUTS, SCORE, NOTE, EVIDENCE, DIVERSIFY, REV, rankPicks, finOf, partsLine, pickTop, canPick, slotKo };
+// Top Pick 고장 수리(2026-11-14) — 지금 Top Pick 가운데 검증 오류가 되는 종목(편성에서 빠졌거나, 엔진 단·중·장기가 모두 매도 이하 —
+//   validate-reco 가 오류로 막는다)이 있으면 그 나라 목록을 지금 순위 1~3위로 다시 세운다. 남는 종목의 이유는 그대로, 새로 들어온 종목은
+//   순위 재료(주식 수 감소·ROIC — 회사 수치)로 만든 사실 한 줄(다음 AI·세션 회차가 이유를 다시 쓴다).
+//   그 전엔 Top Pick 한 종목이 하루 사이 추세 붕괴가 되면 고칠 주체가 없었다: update-reco 의 전체 검증이 실패해 기술 대응 자동 생성(gen-technote)부터
+//   저장이 막히고, Action 의 그날 커밋이 통째로 멈췄다(다음 세션이 손으로 고칠 때까지). gen-technote 가 신호가 바뀐 그 실행에서 함께 고친다.
+//   R = rankPicks 결과, D = STOCK_DATA, TA = STOCK_TA. 고칠 것이 없으면 null, 있으면 { tp(새 topPicks), moved[설명] }.
+function autoReason(row, c) {
+  const iss = row && !row.issCa && row.iss != null && row.iss < 0 ? "주식 수가 연 " + Math.abs(row.iss) + "% 줄었" : null;
+  const roic = row && c === "us" && row.roic != null ? "ROIC 는 " + row.roic + "%다" : null;
+  return "건강 조건을 모두 통과했고 " + (iss && roic ? iss + "으며 " + roic : iss ? iss + "다" : roic || "상승 가능성 점수가 후보 가운데 " + (row ? row.rank : "상위") + "위다") + ".";
+}
+function repairTopPicks(tp, R, D, TA) {
+  if (!tp || !R || !D) return null;
+  const out = Object.assign({}, tp), moved = [], ta = (TA && TA.ta) || {};
+  const broken = (t) => { const x = ta[t]; return !!x && ["short", "mid", "long"].every((k) => x[k] && /매도/.test(x[k].signal || "")); };
+  ["korea", "us"].forEach((c) => {
+    const cur = Array.isArray(tp[c]) ? tp[c] : [], want = (R[c] && R[c].top) || [];
+    if (want.length !== 3 || !cur.length) return;
+    const pickable = new Set((D[c] || []).filter((x) => canPick(x.theme)).map((x) => x.ticker));
+    // 고를 수 없는 Top Pick = 편성 밖·추세 붕괴(검증 오류), 그리고 지금 건강 관문에 걸렸거나 점수 자료가 없어 순위에 없는 종목
+    //   (수급 과열·실질 결격·목표가 급락 … — 순위 1~3위에 다시 들 수 없으므로 누가 썼든 그 나라 목록을 순위대로 다시 세운다)
+    const out0 = new Set((R[c].excluded || []).concat(R[c].unscored || []).map((x) => x.ticker));
+    const bad = cur.filter((x) => !x || !pickable.has(x.ticker) || broken(x.ticker) || out0.has(x.ticker));
+    if (!bad.length) return;
+    out[c] = want.map((t, i) => {
+      const keep = cur.find((x) => x && x.ticker === t);
+      if (keep) return Object.assign({}, keep, { rank: i + 1 });
+      const row = (R[c].ranked || []).find((x) => x.ticker === t);
+      const card = (D[c] || []).find((x) => x.ticker === t && row && x.theme === row.theme) || (D[c] || []).find((x) => x.ticker === t) || {};
+      return { rank: i + 1, ticker: t, market: card.market, name: card.name, reason: autoReason(row, c) };
+    });
+    moved.push(c + " " + bad.map((x) => (x && x.ticker) || "?").join(",") + " 제외(편성 밖·건강 관문·추세 붕괴) → " + want.join(","));
+  });
+  return moved.length ? { tp: out, moved } : null;
+}
+
+module.exports = { CUTS, SCORE, NOTE, EVIDENCE, DIVERSIFY, REV, rankPicks, finOf, partsLine, pickTop, canPick, slotKo, unhealthy, healthChecks, repairTopPicks };

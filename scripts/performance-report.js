@@ -27,17 +27,23 @@ function load(file, key) {
 const JSON_MODE = process.argv.includes("--json");
 
 const D = load("recommendations.js", "STOCK_DATA");
-const H = load("history.js", "STOCK_HISTORY") || [];
+// 성과는 첫 정상 기록(lib-perf PERF_BASE — 2026-07-06)부터 잰다 — 그 앞 두 기록은 가격이 그날 종가가 아니다(perf-track.js 와 같은 기준)
+const H = require("./lib-perf").perfHistory(load("history.js", "STOCK_HISTORY") || []);
 const Q = (load("quotes.js", "STOCK_QUOTES") || {}).quotes || {};
 if (!D) { console.error("recommendations.js 로드 실패"); process.exit(1); }
 if (!H.length) { console.error("history.js 스냅샷 없음 — 성과 측정 불가"); process.exit(1); }
 
 // ── 종목별 기준선: 해당 종목이 처음 등장한 스냅샷의 가격 (그 날 추천을 따랐다고 가정) ──
 const baseline = {};   // country:ticker → {date, price}
+const LPB = require("./lib-perf");
+// 지수가 아직 적히지 않은 맨 앞 기록(미국 07-06)은 기준선으로 쓰지 않는다 — 종목은 그날, 지수는 다음 날부터 재면 짝이 어긋난다
+const IDX_BASE = { korea: LPB.baseOf(H, "korea"), us: LPB.baseOf(H, "us") };
 H.forEach((snap) => {
+  const pdBy = { korea: LPB.pdOf(snap, "korea"), us: LPB.pdOf(snap, "us") };
   (snap.stocks || []).forEach((s) => {
     const k = s.c + ":" + s.t;
-    if (!baseline[k] && typeof s.p === "number" && s.p > 0) {
+    // 낡은 가격으로 들어온 줄(편입 날 시세를 못 받음 — lib-perf staleRow)은 기준선으로 쓰지 않고, 그날 가격이 들어온 다음 기록부터 잰다
+    if (!baseline[k] && typeof s.p === "number" && s.p > 0 && !LPB.staleRow(s, pdBy[s.c]) && (!IDX_BASE[s.c] || snap.date >= IDX_BASE[s.c])) {
       baseline[k] = { date: snap.date, price: s.p, name: s.n, theme: s.th, tier: s.tier, tp: s.tp };
     }
   });

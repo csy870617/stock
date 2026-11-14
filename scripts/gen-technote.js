@@ -174,8 +174,20 @@ if (DRY) {
   process.exit(0);
 }
 if (!patch.length) { console.log("techNote 생성 대상 없음"); process.exit(0); }
+// Top Pick 고장 수리 — 새 신호로 Top Pick 종목이 추세 붕괴(단·중·장기 모두 매도 이하)가 되면 update-reco 의 전체 검증이 실패해
+//   이 저장(기술 대응)부터 막힌다. 같은 패치에서 그 나라 Top Pick 을 지금 순위 1~3위로 다시 세운다(lib-picks repairTopPicks — 2026-11-14).
+let tpFix = null;
+if (!ONLY.length) {
+  try {
+    const LP = require("./lib-picks");
+    const R = LP.rankPicks({ D, TA, EV, CA: load("data/candidates.js", "CANDIDATES") || { groups: {} }, DC: load("data/discovery-candidates.js", "DISCOVERY_CANDIDATES"),
+      FU: (load("data/fundamentals.js", "STOCK_FUND") || {}).items || {}, RV: (load("data/revisions.js", "STOCK_REVISIONS") || {}).items || {} });
+    tpFix = LP.repairTopPicks(D.topPicks, R, D, TA);
+    if (tpFix) console.log("Top Pick 수리: " + tpFix.moved.join(" / "));
+  } catch (e) { tpFix = null; console.log("Top Pick 수리 확인 실패(건너뜀): " + (e && e.message)); }
+}
 const tmp = path.join(require("os").tmpdir(), "gen-technote-" + process.pid + ".json");
-fs.writeFileSync(tmp, JSON.stringify({ stocks: patch }));
+fs.writeFileSync(tmp, JSON.stringify(Object.assign({ stocks: patch }, tpFix ? { topPicks: tpFix.tp } : {})));
 try {
   execFileSync(process.execPath, [path.join(__dirname, "update-reco.js"), tmp], { stdio: "inherit" });
 } finally { fs.unlinkSync(tmp); }

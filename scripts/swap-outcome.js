@@ -79,6 +79,15 @@ const pct = (v) => (v == null ? "   –  " : ((v >= 0 ? "+" : "") + (v * 100).to
 
 (async () => {
   const idx = { korea: await series("^KS11"), us: await series("^GSPC") };
+  // 지수 시세를 못 받으면 아래 표가 통째로 비어 '교체 0회'처럼 보인다(2026-11-14 점검 — 네트워크가 막힌 세션에서 실제로 그렇게 찍혔다).
+  //   회차 보고가 이 출력을 인용하므로(CLAUDE.md §3-6) 실패는 실패라고 적고 끝낸다. 같은 계산은 data/perf.json 의 swaps 에도 있다.
+  const noIdx = ["korea", "us"].filter((c) => !idx[c]);
+  if (noIdx.length === 2) {
+    console.error("교체 성과: 지수 시세(야후)를 받지 못함 — 결과 없음(교체 0회가 아니다). 네트워크를 확인하거나 data/perf.json 의 swaps 를 본다.");
+    process.exitCode = 1;
+    return;
+  }
+  const dropped = [];
   const groups = {};
   events.forEach((e) => {
     const key = e.d + "|" + e.k.split(":")[0];
@@ -95,7 +104,7 @@ const pct = (v) => (v == null ? "   –  " : ((v >= 0 ? "+" : "") + (v * 100).to
     const one = async (e) => {
       const m = await seriesOf(e.k);
       const p0 = m && at(m, d);
-      if (!p0) return null;
+      if (!p0) { dropped.push(d + " " + e.n); return null; }
       const p20 = after(m, d, 20);
       return { n: e.n, now: (last(m) / p0 - 1) - (iN / i0 - 1), d20: p20 && i20 ? (p20 / p0 - 1) - (i20 / i0 - 1) : null };
     };
@@ -108,7 +117,10 @@ const pct = (v) => (v == null ? "   –  " : ((v >= 0 ? "+" : "") + (v * 100).to
   rows.forEach((r) => console.log(r.d, r.c.padEnd(6), (r.A.length + "/" + r.R.length).padStart(5), " |",
     pct(r.addNow).padStart(7), "/", pct(r.remNow).padStart(7), " |", pct(r.add20).padStart(7), "/", pct(r.rem20).padStart(7),
     "  ", r.A.map((x) => x.n).join("·").slice(0, 36), "⇄", r.R.map((x) => x.n).join("·").slice(0, 36)));
+  if (noIdx.length) console.log("⚠ " + noIdx.join("·") + " 지수 시세를 받지 못해 그 나라 교체는 계산하지 못했다(0회가 아니다)");
+  if (dropped.length) console.log("⚠ 시세를 받지 못해 평균에서 빠진 종목 " + dropped.length + "개: " + dropped.slice(0, 12).join(", ") + (dropped.length > 12 ? " …" : ""));
   for (const c of ["korea", "us"]) {
+    if (!idx[c]) continue;
     const done = rows.filter((r) => r.c === c && r.add20 != null && r.rem20 != null);
     const wins = done.filter((r) => r.add20 > r.rem20).length;
     const mean = (f) => done.reduce((s, r) => s + r[f], 0) / (done.length || 1);

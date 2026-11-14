@@ -54,8 +54,12 @@ function capturedCloses() {
     delete require.cache[require.resolve(path.join(ROOT, "data", "quotes.js"))];
     require(path.join(ROOT, "data", "quotes.js"));
     const ix = (window.STOCK_QUOTES && window.STOCK_QUOTES.indices) || {};
-    const out = {};
-    Object.keys(MARKETS).forEach((k) => { const q = ix[MARKETS[k].idx]; out[k] = (q && q.closeDate) || null; });
+    const out = { fetched: {} };
+    Object.keys(MARKETS).forEach((k) => {
+      const q = ix[MARKETS[k].idx]; out[k] = (q && q.closeDate) || null;
+      // 이번 실행이 그 지수를 실제로 받았나 — update-quotes 가 받은 시각(at)을 적는다(3시간 안). at 이 없는 옛 파일은 등락률이 있으면 받은 것으로 본다
+      out.fetched[k] = !!q && (q.at ? Date.now() - Date.parse(q.at) < 3 * 3600 * 1000 : q.changePct != null);
+    });
     return out;
   } catch (e) { return {}; }
 }
@@ -78,7 +82,10 @@ if (process.argv.includes("--mark")) {
       next[k] = { expected: exp[k], captured: got[k], tries: prev.expected === exp[k] ? prev.tries || 0 : 0, done: false, prov: true };
       return;
     }
-    const tries = prev.expected === exp[k] ? (prev.tries || 0) + 1 : 1;
+    // 시도 횟수는 '지수를 받았는데 새 종가가 없을 때'만 센다 — 야후 장애로 못 받은 실행까지 세면 두 슬롯 장애가 '휴장'으로 처리돼
+    //   그 마감(과 AI 단계)이 통째로 건너뛰어진다(2026-11-14 점검)
+    const fetched = !(got.fetched && got.fetched[k] === false);
+    const tries = (prev.expected === exp[k] ? prev.tries || 0 : 0) + (captured || fetched ? 1 : 0);
     // 그날 종가를 잡았거나, 같은 마감을 MAX_TRIES 번 시도해도 안 나오면(휴장) 처리 완료 — 종가를 잡은 경우엔 휴장 규칙을 쓰지 않는다
     const done = captured || tries >= MAX_TRIES;
     next[k] = { expected: exp[k], captured: got[k] || null, tries: tries, done: !!done };

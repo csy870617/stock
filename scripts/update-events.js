@@ -193,9 +193,16 @@ async function us(ticker) {
     // 지난 일정은 '다음 실적'이 아니다 — 날짜가 오늘(UTC)보다 이르면 버리고, 한국은 '직전 발표(last)'로 남긴다
     // (결격 점검 'earn' 이 발표 뒤 10일 동안 보게 — 2026-11-07 점검: 다음 날 지워져 한국 실적 점검 창이 하루뿐이었다)
     if (v && v.next && v.next.date && v.next.date < today) { v = Object.assign({}, v); if (x.c === "korea") v.last = { date: v.next.date, title: v.next.title }; delete v.next; }
+    // 출처(네이버 irScheduleInfo)는 발표 당일 한국 자정 무렵 그 일정을 지운다 — 새 응답에 next 가 없고 이전 파일의 next 가 오늘(UTC) 이전이면 그것을 직전 발표로 남긴다
+    //   (2026-11-14 점검: 11-07 뒤 지난 일정 7건 — KT 11/10 · 메리츠금융·JYP 11/11 · 삼성화재·DB손해보험·NC·NAVER 11/12 — 이 모두 last 없이 사라졌다.
+    //   결격 점검 'earn' 창이 10일이 아니라 8시간 남짓이었고, 메리츠 3분기 순이익 급감은 '급락' 신호로만 판정됐다).
+    //   새 응답에 다른 날짜의 next 가 있으면(일정이 옮겨진 경우 — NC 11/11 → 11/12) 지난 것으로 적지 않는다.
+    const pn = x.c === "korea" && prev[x.t] && prev[x.t].next;
+    if (pn && pn.date && pn.date <= today && !(v && (v.next || v.last))) v = Object.assign({}, v || {}, { last: { date: pn.date, title: pn.title } });
     // 직전 발표는 출처가 다시 주지 않으므로 이전 값을 잇는다(40일 지나면 버림)
     const pl = prev[x.t] && prev[x.t].last;
-    if (v && !v.last && pl && pl.date && Date.parse(today) - Date.parse(pl.date) <= 40 * 864e5) v = Object.assign({}, v, { last: pl });
+    //   (새 응답이 통째로 비었어도 — 일정 없음 + 수급 조회 실패 — 직전 발표 기록은 잃지 않는다)
+    if (!(v && v.last) && pl && pl.date && Date.parse(today) - Date.parse(pl.date) <= 40 * 864e5 && (v || x.c === "korea")) v = Object.assign({}, v || {}, { last: pl });
     if (v && Object.keys(v).length) items[x.t] = v;
   });
   const E = {

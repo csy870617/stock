@@ -426,12 +426,17 @@ async function mapLimit(items, limit, fn) {
     //   유지 = 셋업 진행 중 · 졸업 = 목표를 달성해 태그 전환 검토 · 이탈 = 논리 훼손(교체 후보)
     let status = "확인 불가", note = "";
     if (w.tag === "턴어라운드") {
-      const intact = (a.stacked || a.nearStacked) && a.spread <= SPREAD_MAX * 1.6;
+      // 이탈 = 배열이 무너졌거나(5·20·60일선 정배열·근접이 아님), 정배열 근접 상태에서 이평이 다시 벌어진 경우.
+      //   정배열이 완성된 채 이평이 벌어지는 것(오르는 중)은 이탈이 아니다 — 2026-11-14 버그 수정: 예전엔 '(정배열 또는 근접) 그리고 수렴 8% 이내'라
+      //   정배열로 빠르게 오르는 종목이 52주 고점 2% 안(졸업)에 들기 전까지 '이탈'로 찍혔고, 회차가 그것을 뺐다
+      //   (MSCI 11/06 '수렴 11.2% · 고점대비 −2.7% · 정배열' → 편출, 그때 미국 Top Pick 2위; YUM 11/06 '수렴 8.8% · 정배열' → 편출.
+      //   편성 종목 차트로 흉내 낸 턴어라운드 183건 중 33건이 정배열을 유지한 채 이탈로 끝났다).
+      const intact = a.stacked || (a.nearStacked && a.spread <= SPREAD_MAX * 1.6);
       if (a.offHigh >= -2) status = "졸업";              // 52주 고점 회복 → 신고가 태그 전환 검토
       else if (intact) status = "유지";
-      else status = "이탈";                               // 배열 붕괴 + 수렴 확산
+      else status = "이탈";                               // 배열 붕괴, 또는 정배열 근접에서 수렴 확산
       note = "수렴 " + a.spread + "% · 고점대비 " + a.offHigh + "% · " +
-             (a.stacked ? "정배열" : a.nearStacked ? "정배열 근접" : "배열 흐트러짐");
+             (a.stacked ? (a.spread > SPREAD_MAX * 1.6 ? "정배열 확장(상승 진행)" : "정배열") : a.nearStacked ? "정배열 근접" : "배열 흐트러짐");
     } else if (w.tag === "신고가") {
       if (a.rel >= -8) status = "유지";                   // 고점권 유지
       else status = "이탈";                               // 돌파 실패·되돌림

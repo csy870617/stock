@@ -36,6 +36,13 @@ jobs:
       - name: Validate data (guardrail)
         run: node scripts/validate-reco.js
 
+      # 규칙 시험(네트워크 없이, 수 초) — Top Pick 관문·점수와 화면용 '건강 점검' 목록이 같은 말을 하는지, 무배당·대표 자리 처리,
+      # 발굴 스크린의 미달 진단이 판정과 같은지. 규칙 코드를 고치다 어긋나면 배포하지 않는다(2026-11-14~)
+      - name: Rule tests (offline)
+        run: |
+          node scripts/test-picks.js
+          node scripts/test-screen-why.js
+
       # 연기 시험 — 앱을 헤드리스 크롬으로 열어 홈·추천 종목(상세)·미국·내 종목·성과·과거 보기를 돌고, 앱 오류(예외·데이터 파일
       # 문법 오류·우리 파일 404)가 나면 배포하지 않는다(지난 정상 버전이 남는다). playwright-core 는 사이트 묶음에 섞이지 않게
       # 임시 폴더에 받고 러너에 설치된 Chrome 을 쓴다. 설치·실행 환경 문제는 경고만 하고 넘어간다(데이터 배포가 멈추지 않게).

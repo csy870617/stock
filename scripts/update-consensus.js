@@ -115,7 +115,12 @@ const daysSince = (d) => Math.round((Date.parse(today) - Date.parse(d)) / 864000
   const stocks = [], skipBig = [], stale = [], changed = [], single = [];
   targets.forEach((t) => {
     const k = t.c + ":" + t.s.ticker, it = items[k];
-    if (!it) return;
+    // 집계가 더는 오지 않는 종목(커버리지 중단·합병 등) — 카드 목표가는 옛 네이버 값인데 '낡음' 표시가 없어 최신처럼 보였다
+    //   (2026-11-14 점검: SK아이이테크놀로지 목표가 기준일 11-03 이후 집계 없음). 기준일이 30일을 넘기면 낡음으로 표시해 재검증 큐 앞으로 보낸다.
+    if (!it) {
+      if (t.s.tpSource === "naver" && t.s.tpAsOf && daysSince(t.s.tpAsOf) > STALE_DAYS && !t.s.tpStale) { stale.push(k + " (" + t.s.tpAsOf + ", 집계 없음)"); stocks.push({ country: t.c, ticker: t.s.ticker, tpStale: true }); }
+      return;
+    }
     const old = t.s.targetPrice;
     const isStale = !it.date || daysSince(it.date) > STALE_DAYS;
     const meta = { tpAsOf: it.date, tpHigh: it.high, tpLow: it.low };

@@ -261,6 +261,82 @@ const RULES = {
       ex: ["agTop", "dil", "payout", "revDown", "trend"], w: { sroa: 0.2, streak: 0.2, iss: 0.15, shy: 0.15, upside: 0.3 } },
   },
 };
+// ── 편성 종목의 '정체성 조건 미달' 진단(2026-11-14 — 출력만 더함, 판정은 위 RULES.ok·gate 그대로) ──
+//   예전엔 "정체성 조건 미달" 한 마디라 결격 판정(세션·ai-defects)이 어느 조건이 왜 미달인지 몰랐다
+//   ('어느 정체성 조건이 미달인지 확인 전까지 감시' 같은 형식 판정이 쌓였다). ok 의 각 조건을 같은 식으로 다시 적어 걸린 조건과 값을 보인다.
+//   WHY[나라][주제] = [[통과 조건, 미달일 때 문구, 기계용 키, (선택) 문턱에 가까운 미달인가], …] — 모든 조건의 AND 가 RULES.ok 와 같아야 한다
+//   (scripts/test-screen-why.js 가 무작위 입력으로 확인). 넷째 칸은 '근접 후보'용 — 숫자 문턱의 약 20~25% 안쪽 미달만 근접으로 본다(업종·흑자 같은 예/아니오 조건은 근접이 없다).
+//   어긋나면(조건을 고치고 여기를 안 고친 경우) whyNot 이 빈 목록을 내고 예전 문구로 돌아간다.
+const neg = (x) => String(x).replace(/^-/, "−");   // 화면 표기 — 음수 부호
+const p1 = (v) => (v == null || !isFinite(v) ? "자료 없음" : neg(Math.round(v * 1000) / 10) + "%");   // 비율(0.153) → 15.3%
+const n1 = (v, u) => (v == null || !isFinite(v) ? "자료 없음" : neg(Math.round(v * 10) / 10) + (u || ""));
+const rankIn = (n) => [(s) => s.rank <= n, (s) => "시총 순위 " + (s.rank ? s.rank + "위" : "밖(받은 순위 목록에 없음)") + " — 상위 " + n + " 안이어야 한다", "rank", (s) => s.rank <= n * 1.25];
+const W = {
+  opPos: [(s) => s.opPos, () => "영업이익 2년 연속 흑자가 아니다", "opPos"],
+  npPos: [(s) => s.npPos, () => "최근 결산 순이익 흑자가 아니다", "npPos"],
+  notFin: [(s) => !s.fin, () => "금융 업종(이 주제는 금융 제외)", "fin"],
+  ttmEbit: [(s) => s.ttmEbit > 0, () => "최근 4분기 EBIT 흑자가 아니다(또는 자료 없음)", "ttmEbit"],
+  ttmNi: [(s) => s.ttmNi > 0, () => "최근 4분기 순이익 흑자가 아니다(또는 자료 없음)", "ttmNi"],
+};
+const WHY = {
+  korea: {
+    core: [[(s) => s.market === "KOSPI", (s) => "KOSPI 상장이 아니다(" + (s.market || "시장 모름") + ")", "market"], rankIn(60), W.opPos,
+      [(s) => s.roe >= 7, (s) => "ROE " + n1(s.roe, "%") + " — 7% 이상이어야 한다", "roe", (s) => s.roe >= 5.6],
+      [(s) => s.fin || s.debt == null || s.debt <= 150, (s) => "부채비율 " + n1(s.debt, "%") + " — 150% 이하여야 한다", "debt", (s) => s.debt <= 180]],
+    growth: [rankIn(150), W.notFin,
+      [(s) => Math.max(g0(s.revE), g0(s.revG)) >= 0.15, (s) => "매출 성장률 올해 추정 " + p1(s.revE) + " · 최근 연도 " + p1(s.revG) + " — 둘 중 하나가 15% 이상이어야 한다", "revGrowth", (s) => Math.max(g0(s.revE), g0(s.revG)) >= 0.12], W.opPos],
+    value: [rankIn(200), W.npPos,
+      [(s) => g0(s.opE) > 0 || g0(s.qOpYoY) > 0, (s) => "이익 개선 없음 — 올해 추정 영업이익 " + p1(s.opE) + " · 최근 분기 영업이익 전년 대비 " + p1(s.qOpYoY) + "(둘 중 하나가 증가여야 한다)", "improve", (s) => Math.max(g0(s.opE), g0(s.qOpYoY)) >= -0.05]],
+    dividend: [rankIn(250), [(s) => s.divY >= 3.5, (s) => "배당수익률 " + n1(s.divY, "%") + " — 3.5% 이상이어야 한다", "divY", (s) => s.divY >= 2.8], W.npPos,
+      [(s) => s.payout == null || s.payout <= 0.9, (s) => "배당성향 " + p1(s.payout) + " — 90% 이하여야 한다", "payout", (s) => s.payout <= 1.03]],
+  },
+  us: {
+    core: [rankIn(120), W.ttmEbit,
+      [(s) => s.fin || s.ebitM >= 0.10, (s) => "EBIT 마진 " + p1(s.ebitM) + " — 10% 이상이어야 한다(비금융)", "ebitM", (s) => s.ebitM >= 0.08],
+      [(s) => s.fin || s.roa >= 5, (s) => "ROA " + n1(s.roa, "%") + " — 5% 이상이어야 한다(비금융)", "roa", (s) => s.roa >= 4]],
+    growth: [rankIn(300), W.notFin, [(s) => !s.cycl, () => "원자재 업종(금·광업·석유 탐사 — 성장 주제 제외)", "cycl"],
+      [(s) => Math.max(g0(s.qRevYoY), g0(s.revG)) >= 0.15, (s) => "매출 성장률 최근 분기 " + p1(s.qRevYoY) + " · 최근 연도 " + p1(s.revG) + " — 둘 중 하나가 15% 이상이어야 한다", "revGrowth", (s) => Math.max(g0(s.qRevYoY), g0(s.revG)) >= 0.12], W.ttmEbit],
+    value: [rankIn(400), W.ttmNi,
+      [(s) => g0(s.qRevYoY) > 0 || g0(s.ebitYoY) > 0, (s) => "매출·EBIT 모두 줄었다 — 최근 분기 매출 " + p1(s.qRevYoY) + " · EBIT " + p1(s.ebitYoY) + "(둘 중 하나가 증가여야 한다)", "improve", (s) => Math.max(g0(s.qRevYoY), g0(s.ebitYoY)) >= -0.05]],
+    dividend: [rankIn(450), [(s) => !s.lp, () => "합자회사(MLP)", "lp"], [(s) => s.divY >= 2.5, (s) => "배당수익률 " + n1(s.divY, "%") + " — 2.5% 이상이어야 한다", "divY", (s) => s.divY >= 2], W.ttmNi,
+      [(s) => s.payout == null || s.payout <= 1.0, (s) => "배당성향 " + p1(s.payout) + " — 100% 이하여야 한다", "payout", (s) => s.payout <= 1.15]],
+  },
+};
+// 걸린 정체성 조건 문구 목록 — ok 와 어긋나면(진단이 낡았으면) 빈 목록
+function whyNot(c, th, s, keys) {
+  try {
+    const parts = (WHY[c] || {})[th] || [], bad = parts.filter((p) => !p[0](s));
+    if (!!RULES[c][th].ok(s) !== !bad.length) return [];
+    return bad.map((p) => (keys ? "id:" + p[2] : p[1](s)));
+  } catch (_e) { return []; }
+}
+// 근접 미달인가 — 정체성 조건을 딱 하나 못 채웠고 그 조건이 문턱 가까이(넷째 칸)일 때만
+function nearOne(c, th, s) {
+  try {
+    const bad = ((WHY[c] || {})[th] || []).filter((p) => !p[0](s));
+    return bad.length === 1 && typeof bad[0][3] === "function" && !!bad[0][3](s) ? bad[0][1](s) : null;
+  } catch (_e) { return null; }
+}
+// 분포 문턱에 가까운가 — 우량: 3년 평균 ROIC 가 중앙값의 80% 이상, 저평가: EBIT/EV·FCF/시총이 문턱의 80% 이상(금융은 PER·PBR 상한의 120% 안)
+function gateNear(c, th, s, gi) {
+  const x = s.fx || {}, pc = (v) => (v == null || !isFinite(v) ? null : v * 100);
+  if (th === "core") return gi && gi.roic3Median != null && pc(x.ROIC3) != null && pc(x.ROIC3) >= gi.roic3Median * 0.8;
+  if (th === "value") {
+    if (s.fin) return (s.per > 0 && s.per <= (c === "korea" ? 12 : 16) * 1.2) || (s.pbr > 0 && s.pbr <= (c === "korea" ? 0.9 : 2) * 1.2);
+    return !!gi && ((gi.ebitevP70 != null && pc(x.EBITEV) != null && pc(x.EBITEV) >= gi.ebitevP70 * 0.8) || (gi.fcfpP70 != null && pc(x.FCFP) != null && pc(x.FCFP) >= gi.fcfpP70 * 0.8));
+  }
+  return false;
+}
+// 분포 문턱(gate)에 걸린 값 — 우량: 3년 평균 ROIC vs 적격 후보 중앙값, 저평가: EBIT/EV·FCF/시총 vs 70백분위(금융은 PER·PBR)
+function gateWhy(c, th, s, gi) {
+  try {
+    const x = s.fx || {};
+    if (th === "core") return "3년 평균 ROIC " + p1(x.ROIC3) + (gi && gi.roic3Median != null ? " — 적격 후보 중앙값 " + gi.roic3Median + "% 이상이어야 한다" : "");
+    if (th === "value") return s.fin ? "금융: PER " + n1(s.per, "배") + " · PBR " + n1(s.pbr, "배") + " — PER " + (c === "korea" ? 12 : 16) + "배 이하 또는 PBR " + (c === "korea" ? 0.9 : 2) + "배 이하여야 한다"
+      : "EBIT/EV " + p1(x.EBITEV) + " · FCF/시총 " + p1(x.FCFP) + (gi ? " — 둘 중 하나가 문턱(" + gi.ebitevP70 + "% · " + gi.fcfpP70 + "%) 이상이어야 한다" : "");
+  } catch (_e) { /* 진단 실패 — 예전 문구만 */ }
+  return "";
+}
 // 점수용 파생값(높을수록 좋게) — 주제 기준 연구에서 검증된 지표만
 function feat(s) {
   const x = s.fx || {};
@@ -387,12 +463,44 @@ function view(s, score) {
         const row = pool.find((s) => s.ticker === m.ticker);
         const v = row ? view(row, score(row)) : { ticker: m.ticker, name: m.name, score: null };
         // 편성 종목의 추세 붕괴는 엔진 세 신호(stock-ta.js)로 판정한다(CLAUDE.md §6) — 월봉 근사는 신호가 없는 후보용이라 여기선 뺀다
-        const fails = row ? (okAll(row) ? [] : [rule.ok(row) ? "정체성 조건 미달(" + (th === "core" ? "3년 평균 ROIC 상위 절반" : "EBIT/EV·FCF 수익률 상위 30%") + ")" : "정체성 조건 미달"]).concat(whyEx(row).filter((w0) => w0 !== EX.trend.label)) : null;
-        return Object.assign(v, { tier: m.tier, passesRule: row ? !fails.length : null }, fails && fails.length ? { fails } : {});
+        // 미달 문구 — 걸린 조건과 값을 함께 적는다(whyNot·gateWhy, 2026-11-14 — 판정은 그대로)
+        const idFail = (r) => { if (rule.ok(r)) { const g = gateWhy(c, th, r, gateInfo(c, th, base0, pool)); return "정체성 조건 미달(" + (th === "core" ? "3년 평균 ROIC 상위 절반" : "EBIT/EV·FCF 수익률 상위 30%") + ")" + (g ? ": " + g : ""); }
+          const w = whyNot(c, th, r); return "정체성 조건 미달" + (w.length ? ": " + w.join(" · ") : ""); };
+        const fails = row ? (okAll(row) ? [] : [idFail(row)]).concat(whyEx(row).filter((w0) => w0 !== EX.trend.label)) : null;
+        // 걸린 조건의 기계용 키(문구는 숫자가 매일 바뀐다) — 결격 점검이 '판정 뒤에 새로 걸린 조건'을 가려내는 데 쓴다(check-defects)
+        let failKeys = null;
+        if (fails && fails.length) {
+          try {
+            const idk = okAll(row) ? [] : rule.ok(row) ? ["gate"] : whyNot(c, th, row, true);
+            failKeys = (idk.length || okAll(row) ? idk : ["id"]).concat((rule.ex || []).filter((k) => k !== "trend" && whyEx(row).indexOf(EX[k].label) >= 0).map((k) => "ex:" + k));
+          } catch (_e) { failKeys = null; }
+        }
+        return Object.assign(v, { tier: m.tier, passesRule: row ? !fails.length : null }, fails && fails.length ? { fails } : {}, failKeys && failKeys.length ? { failKeys } : {});
       }).sort((a, b) => (a.score == null) - (b.score == null) || (a.score - b.score));
       const cutsPct = {}; Object.keys(whyEx.cuts || {}).forEach((k) => { const v = whyEx.cuts[k]; if (v != null) cutsPct[k] = Math.round(v * 1000) / 10; });
+      // 근접 후보(2026-11-14 — 출력만 더함): 건전성 필터는 모두 통과하고 정체성 조건을 딱 하나, 그것도 문턱 가까이에서 못 채운 종목
+      //   (예: 우량 '시총 상위 60'에 64위, 배당 '수익률 3.5%'에 3.1%, 저평가 EBIT/EV 문턱의 80% 이상). 적자·희석·자산 급증 같은 건전성 필터에 걸린 종목은 근접이 아니다.
+      //   결격이 14일 넘게 대체 없이 남으면 후보 범위를 '스크린 26~50위·근접 후보'로 넓히게 돼 있는데(CLAUDE.md §3-7) 이 목록을 낸 적이 없었다
+      //   (check-defects·deep-packets 는 nearMiss 를 읽기만 했다 — 한국 우량처럼 적격 후보가 4개뿐인 그룹은 넓힐 자료가 없었다).
+      //   후보(candidates)·편성 판정·점수는 그대로다. 그림자 편성(shadow-track)은 candidates·incumbents 만 읽어 영향 없음.
+      let nearMiss = [];
+      try {
+        const featOf = (s) => F.get(s) || feat(s);
+        const scoreAny = (s) => Object.keys(rule.w).reduce((acc, k) => acc + rule.w[k] * ((k in prFin ? (s.fin ? prFin[k] : prNon[k]) : pr[k])(featOf(s)[k])), 0);
+        const gi = gateInfo(c, th, base0, pool);
+        nearMiss = pool.filter((s) => !s.extra && !formalT.has(s.ticker) && !groupCos.has(coKey(s.name)) && !elig.includes(s)).map((s) => {
+          if (whyEx(s).length) return null;                                   // 건전성 필터(추세 포함)에 걸리면 근접 아님
+          let f = null;
+          if (!rule.ok(s)) { const w = nearOne(c, th, s); if (w && gate(s)) f = "정체성 조건 미달: " + w; }
+          else if (!gate(s) && gateNear(c, th, s, gi)) { const g = gateWhy(c, th, s, gi); f = "정체성 조건 미달(" + (th === "core" ? "3년 평균 ROIC 상위 절반" : "EBIT/EV·FCF 수익률 상위 30%") + ")" + (g ? ": " + g : ""); }
+          return f ? { s, f, sc: scoreAny(s) } : null;
+        }).filter(Boolean).sort((a, b) => b.sc - a.sc)
+          .filter(({ s }) => (seenCo.has(coKey(s.name)) ? false : seenCo.add(coKey(s.name)))).slice(0, 15)
+          .map(({ s, f, sc }) => Object.assign(view(s, sc), { fails: [f] }, otherTheme(s.ticker).length ? { alsoIn: otherTheme(s.ticker) } : {}));
+      } catch (e) { console.log("  근접 후보 계산 실패(" + key + ") — 건너뜀: " + (e && e.message)); nearMiss = []; }
       groups[key] = { rule: rule.label, weights: rule.w, eligible: elig.length, filtered: base.length - elig.length,
-        gateThresholds: gateInfo(c, th, base0, pool) || undefined, filterCuts: Object.keys(cutsPct).length ? cutsPct : undefined, incumbents: inc, candidates: cands };
+        gateThresholds: gateInfo(c, th, base0, pool) || undefined, filterCuts: Object.keys(cutsPct).length ? cutsPct : undefined, incumbents: inc, candidates: cands,
+        nearMiss: nearMiss.length ? nearMiss : undefined };
     });
   });
 
@@ -401,7 +509,8 @@ function view(s, score) {
   const noFx = (c, cap) => all.filter((s) => s.c === c && !s.extra && !s.fx && s.rank <= cap).sort((a, b) => a.rank - b.rank).map((s) => s.ticker + " " + s.name + " #" + s.rank);
   // 주목·관심 종목의 재무 값(같은 잣대) — Top Pick 후보에 주목·관심 편성 종목도 넣는다(2026-10-30 사용자 요청, lib-picks.js). 출력만 더한다(주제 후보·편성 판정 불변).
   const personal = { korea: {}, us: {} };
-  ["korea", "us"].forEach((c) => (D[c] || []).filter((m) => m.theme === "spotlight" || m.theme === "watch").forEach((m) => {
+  //   보유 종목도 같은 값을 남긴다(2026-11-14 — 종목 상세 '건강 점검' 표시용. 보유는 Top Pick 후보가 아니다 — lib-picks canPick)
+  ["korea", "us"].forEach((c) => (D[c] || []).filter((m) => m.theme === "spotlight" || m.theme === "watch" || m.theme === "hold").forEach((m) => {
     const row = all.find((s) => s.c === c && s.ticker === m.ticker);
     if (row && !personal[c][m.ticker]) personal[c][m.ticker] = view(row, null);
   }));

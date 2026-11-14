@@ -25,7 +25,11 @@ const RVD = load("revisions.js", "STOCK_REVISIONS");
 const R = LP.rankPicks({ D, TA, EV: (load("events.js", "STOCK_EVENTS") || {}).items || {}, CA: load("candidates.js", "CANDIDATES") || { groups: {} }, DC,
   FU: (load("fundamentals.js", "STOCK_FUND") || {}).items || {}, RV: (RVD && RVD.items) || {} });
 
-if (process.argv.includes("--json")) { console.log(JSON.stringify(R, null, 1)); process.exit(0); }
+// --json: 출력이 파이프 버퍼(64KB)를 넘으면 process.exit 이 남은 출력을 자른다 — 끝까지 쓰고 자연히 끝나게 한다
+const JSON_OUT = process.argv.includes("--json");
+if (JSON_OUT) console.log(JSON.stringify(R, null, 1));
+else report();
+function report() {
 
 console.log("Top Pick 순위 — 건강 관문 + 상승 가능성 점수 · T " + (TA.asOf || "–") + " · 스크린 " + ((DC && DC.asOf) || "없음") + " · 한국 목표가 3개월 변화 " + ((RVD && RVD.asOf) || "없음"));
 const tp = D.topPicks || {};
@@ -44,13 +48,17 @@ const tp = D.topPicks || {};
   if (cur.length && top.join() !== cur.join()) console.log("  ⚠ 지금 Top Pick 이 순위 1~3위(" + top.join(", ") + ")와 다르다 — topPicks 를 이 순서로 다시 쓴다(CLAUDE.md §4-6)");
 });
 
+}
 if (process.argv.includes("--emit")) {
   const keep = (x) => ({ rank: x.rank, ticker: x.ticker, name: x.name, theme: x.theme, tier: x.tier, tag: x.tag, score: x.score, iss: x.iss, shy: x.shy, roic: x.roic, dy: x.dy,
-    sec: x.secKo || undefined, tp3: x.tp3, pick: x.pick || undefined, skip: x.skip || undefined });
+    issCa: x.issCa || undefined, sec: x.secKo || undefined, tp3: x.tp3, pick: x.pick || undefined, skip: x.skip || undefined });
+  // 종목별 건강 점검(앱 종목 상세 '건강 점검') — {w 걸린 사유(없으면 통과), c: [[항목, 1 통과|0 걸림|null 판정 안 함, 사실 한 줄], …], hold: 보유만 있는 종목(순위 후보 아님)}
+  const healthOut = (h) => { const o = {}; Object.keys(h || {}).forEach((t) => { const x = h[t]; o[t] = { w: x.why || undefined, c: x.checks.map((k) => [k.k, k.st, k.t]), hold: x.hold ? 1 : undefined }; }); return o; };
   const doc = { asOf: TA.asOf || null, builtAt: new Date().toISOString().slice(0, 19) + "Z", screenAsOf: (DC && DC.asOf) || null, revAsOf: (RVD && RVD.asOf) || null,
     note: LP.NOTE, evidence: LP.EVIDENCE, cuts: LP.CUTS, rev: LP.REV };
-  ["korea", "us"].forEach((c) => { doc[c] = { top: R[c].top, diversify: R[c].diversify, ranked: R[c].ranked.map(keep), excluded: R[c].excluded.map((x) => ({ ticker: x.ticker, why: x.why })), unscored: R[c].unscored.map((x) => x.ticker) }; });
+  ["korea", "us"].forEach((c) => { doc[c] = { top: R[c].top, diversify: R[c].diversify, ranked: R[c].ranked.map(keep), excluded: R[c].excluded.map((x) => ({ ticker: x.ticker, why: x.why })), unscored: R[c].unscored.map((x) => x.ticker),
+    health: healthOut(R[c].health) }; });
   fs.writeFileSync(OUT, "// Top Pick 순위 — scripts/pick-score.js 가 매일 생성(토큰 0). 규칙: scripts/lib-picks.js · 검증: scripts/research/top-pick/\n" +
     "window.PICK_SCORES = " + JSON.stringify(doc) + ";\n");
-  console.log("\n→ data/pick-scores.js");
+  (JSON_OUT ? console.error : console.log)("\n→ data/pick-scores.js");   // --json 과 함께면 표준 출력은 JSON 만
 }

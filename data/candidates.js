@@ -1,5 +1,5 @@
 // 주제별 후보 종목 + 편성 결격 점검 — scripts/check-defects.js 가 생성(LLM 토큰 0). 앱 '추천 종목' 주제 화면의 T3 아래 '후보 종목'.
-// groups["<country>|<theme>"] = {defects 편성 결격(state 결격|점검 필요|감시), list 후보(status 검증 통과|보류|검증 대기)}
+// groups["<country>|<theme>"] = {defects 편성 결격(state 결격|점검 필요|감시), list 후보(status 검증 통과|보류|검증 대기|근접 후보)}
 // 세션 판정은 data/candidate-notes.json(CLAUDE.md §3-7) — 이 파일을 직접 고치지 않는다.
 window.CANDIDATES = {
  "asOf": "2026-11-14",
@@ -44,10 +44,31 @@ window.CANDIDATES = {
      "long": 1
     },
     {
+     "ticker": "064400",
+     "name": "LG씨엔에스",
+     "state": "점검 필요",
+     "flags": [
+      {
+       "k": "theme",
+       "msg": "주제 기준 미달 — 정체성 조건 미달",
+       "fresh": true
+      }
+     ],
+     "note": "2026.06 분기 영업이익은 -9.2%였지만 3분기 영업이익은 1,382억원으로 전년 대비 15.0% 늘었다. 어느 정체성 조건이 미달인지와 자사주 소각 이행 여부 확인 전까지 감시한다.",
+     "judged": "2026-11-06",
+     "verdict": "형식",
+     "by": "ai"
+    },
+    {
      "ticker": "000810",
      "name": "삼성화재",
      "state": "감시",
      "flags": [
+      {
+       "k": "earn",
+       "msg": "실적 발표(11/12) · 전년 대비 매출 -6.6% — 가이던스·논거 확인",
+       "fresh": false
+      },
       {
        "k": "drop",
        "msg": "5거래일 -12.4%(시장 중앙값 1.9%) 급락 — 원인 확인",
@@ -73,22 +94,6 @@ window.CANDIDATES = {
      "note": "11/5 반도체 업종 동반 급락 — 3분기 매출 +8.9%·영업이익 +33.9%(영업이익률 50%대)로 역성장이 아니고 추세 붕괴도 아니다.",
      "judged": "2026-11-05",
      "verdict": "형식"
-    },
-    {
-     "ticker": "064400",
-     "name": "LG씨엔에스",
-     "state": "감시",
-     "flags": [
-      {
-       "k": "theme",
-       "msg": "주제 기준 미달 — 정체성 조건 미달",
-       "fresh": false
-      }
-     ],
-     "note": "2026.06 분기 영업이익은 -9.2%였지만 3분기 영업이익은 1,382억원으로 전년 대비 15.0% 늘었다. 어느 정체성 조건이 미달인지와 자사주 소각 이행 여부 확인 전까지 감시한다.",
-     "judged": "2026-11-06",
-     "verdict": "형식",
-     "by": "ai"
     }
    ],
    "list": [
@@ -262,6 +267,21 @@ window.CANDIDATES = {
    "eligible": 57,
    "defects": [
     {
+     "ticker": "018260",
+     "name": "삼성에스디에스",
+     "state": "점검 필요",
+     "flags": [
+      {
+       "k": "theme",
+       "msg": "주제 기준 미달 — 정체성 조건 미달(EBIT/EV·FCF 수익률 상위 30%)",
+       "fresh": true
+      }
+     ],
+     "note": "10/29 실적 확정치는 검색에 아직 없고, 새로 확인된 악재는 없다. 주제 기준 미달은 숫자 순위 경계로 보고 발표 후 다시 본다.",
+     "judged": "2026-10-29",
+     "verdict": "형식"
+    },
+    {
      "ticker": "000270",
      "name": "기아",
      "state": "감시",
@@ -283,6 +303,26 @@ window.CANDIDATES = {
      "triedAt": "2026-10-30"
     },
     {
+     "ticker": "001120",
+     "name": "LX인터내셔널",
+     "state": "감시",
+     "flags": [
+      {
+       "k": "theme",
+       "msg": "주제 기준 미달 — 정체성 조건 미달",
+       "fresh": false
+      },
+      {
+       "k": "earn",
+       "msg": "실적 발표(11/05) — 가이던스·논거 확인",
+       "fresh": false
+      }
+     ],
+     "note": "3분기 매출과 영업이익이 크게 늘었고 누적 영업이익이 이미 지난해 연간을 넘었다. 석탄 가격·해상운임 상승에 따른 자원·물류 개선으로 이익 개선 논거가 확인됐다.",
+     "judged": "2026-11-07",
+     "verdict": "없음"
+    },
+    {
      "ticker": "267270",
      "name": "HD건설기계",
      "state": "감시",
@@ -302,6 +342,11 @@ window.CANDIDATES = {
      "name": "메리츠금융지주",
      "state": "감시",
      "flags": [
+      {
+       "k": "earn",
+       "msg": "실적 발표(11/11) — 가이던스·논거 확인",
+       "fresh": false
+      },
       {
        "k": "drop",
        "msg": "5거래일 -10.2%(시장 중앙값 1.9%) 급락 — 원인 확인",
@@ -332,21 +377,6 @@ window.CANDIDATES = {
      "judged": "2026-10-30",
      "verdict": "형식",
      "triedAt": "2026-10-30"
-    },
-    {
-     "ticker": "018260",
-     "name": "삼성에스디에스",
-     "state": "감시",
-     "flags": [
-      {
-       "k": "theme",
-       "msg": "주제 기준 미달 — 정체성 조건 미달(EBIT/EV·FCF 수익률 상위 30%)",
-       "fresh": false
-      }
-     ],
-     "note": "10/29 실적 확정치는 검색에 아직 없고, 새로 확인된 악재는 없다. 주제 기준 미달은 숫자 순위 경계로 보고 발표 후 다시 본다.",
-     "judged": "2026-10-29",
-     "verdict": "형식"
     }
    ],
    "list": [
@@ -479,7 +509,13 @@ window.CANDIDATES = {
      "ticker": "030200",
      "name": "KT",
      "state": "감시",
-     "flags": [],
+     "flags": [
+      {
+       "k": "earn",
+       "msg": "실적 발표(11/10) · 전년 대비 매출 -10.1%, 영업이익 -36.1% — 가이던스·논거 확인",
+       "fresh": false
+      }
+     ],
      "note": "11/10 발표된 3분기 영업이익은 5053억원으로 전년 대비 6.1% 감소에 그쳤고, 해킹 보상 영향이 컸으며 AX 매출은 9%대 성장했다. 2026년 최소 DPS 2,400원 방침은 유지되어 논거는 살아 있다.",
      "judged": "2026-11-10",
      "verdict": "형식",
@@ -635,6 +671,7 @@ window.CANDIDATES = {
      "note": "반도체 집중·β 때문에 최후순위",
      "asOf": "2026-10-12",
      "why": "매출 성장 15.6%",
+     "nofx": 1,
      "url": "https://m.stock.naver.com/worldstock/stock/ASML.O/total"
     },
     {
@@ -642,6 +679,7 @@ window.CANDIDATES = {
      "name": "Banco Santander S.A.",
      "status": "검증 대기",
      "why": "매출 성장 -9.8%",
+     "nofx": 1,
      "url": "https://m.stock.naver.com/worldstock/stock/SAN/total"
     },
     {
@@ -649,6 +687,7 @@ window.CANDIDATES = {
      "name": "Mitsubishi UFJ Financial",
      "status": "검증 대기",
      "why": "매출 성장 3%",
+     "nofx": 1,
      "url": "https://m.stock.naver.com/worldstock/stock/MUFG.K/total"
     },
     {
@@ -656,6 +695,7 @@ window.CANDIDATES = {
      "name": "UBS",
      "status": "검증 대기",
      "why": "매출 성장 -20.4%",
+     "nofx": 1,
      "url": "https://m.stock.naver.com/worldstock/stock/UBS/total"
     },
     {
@@ -663,6 +703,7 @@ window.CANDIDATES = {
      "name": "HSBC",
      "status": "검증 대기",
      "why": "매출 성장 -9.9%",
+     "nofx": 1,
      "url": "https://m.stock.naver.com/worldstock/stock/HSBC.K/total"
     },
     {
@@ -670,6 +711,7 @@ window.CANDIDATES = {
      "name": "Banco Bilbao Vizcaya Argentaria S.A.",
      "status": "검증 대기",
      "why": "매출 성장 -5.4%",
+     "nofx": 1,
      "url": "https://m.stock.naver.com/worldstock/stock/BBVA.K/total"
     },
     {
@@ -677,6 +719,7 @@ window.CANDIDATES = {
      "name": "Royal Bank of Canada",
      "status": "검증 대기",
      "why": "매출 성장 -1.1%",
+     "nofx": 1,
      "url": "https://m.stock.naver.com/worldstock/stock/RY/total"
     },
     {
@@ -691,6 +734,7 @@ window.CANDIDATES = {
      "name": "The Toronto-Dominion Bank",
      "status": "검증 대기",
      "why": "매출 성장 -6.2%",
+     "nofx": 1,
      "url": "https://m.stock.naver.com/worldstock/stock/TD/total"
     },
     {
@@ -705,6 +749,7 @@ window.CANDIDATES = {
      "name": "BHP",
      "status": "검증 대기",
      "why": "매출 성장 14.6%",
+     "nofx": 1,
      "url": "https://m.stock.naver.com/worldstock/stock/BHP/total"
     }
    ]
@@ -713,24 +758,14 @@ window.CANDIDATES = {
    "eligible": 68,
    "defects": [
     {
-     "ticker": "META",
-     "name": "Meta Platforms",
-     "state": "감시",
-     "flags": [],
-     "note": "3분기 실적 발표(10/21) 후 법적 비용 98.9억 달러와 capex 확대 계획, 비의결권 신규 주식 발표로 5거래일 -11.9% 하락했다. 매출 성장은 유지돼 비의결권 주식의 규모·용도와 희석 여부 확인 전까지 감시한다.",
-     "judged": "2026-10-22",
-     "verdict": "형식",
-     "by": "ai"
-    },
-    {
      "ticker": "UBER",
      "name": "Uber Technologies",
-     "state": "감시",
+     "state": "점검 필요",
      "flags": [
       {
        "k": "theme",
        "msg": "주제 기준 미달 — 이익 변동 큼(주제 안 상위 10%)",
-       "fresh": false
+       "fresh": true
       },
       {
        "k": "earn",
@@ -741,6 +776,16 @@ window.CANDIDATES = {
      "note": "3분기(11/4) 총거래액 +20%(고정환율)·조정 EPS +35%로 가이던스 상단. GAAP EPS 하회는 지분 투자 평가손실 때문 — 논거 훼손 아님. 인수 완료 시 자산 급증 가능.",
      "judged": "2026-11-05",
      "verdict": "형식"
+    },
+    {
+     "ticker": "META",
+     "name": "Meta Platforms",
+     "state": "감시",
+     "flags": [],
+     "note": "3분기 실적 발표(10/21) 후 법적 비용 98.9억 달러와 capex 확대 계획, 비의결권 신규 주식 발표로 5거래일 -11.9% 하락했다. 매출 성장은 유지돼 비의결권 주식의 규모·용도와 희석 여부 확인 전까지 감시한다.",
+     "judged": "2026-10-22",
+     "verdict": "형식",
+     "by": "ai"
     }
    ],
    "list": [
@@ -777,6 +822,7 @@ window.CANDIDATES = {
      "status": "보류",
      "note": "반도체 편성 결격 시에만",
      "asOf": "2026-10-12",
+     "nofx": 1,
      "url": "https://m.stock.naver.com/worldstock/stock/ASML.O/total"
     },
     {
@@ -798,12 +844,14 @@ window.CANDIDATES = {
      "ticker": "ASX",
      "name": "ASE Technology",
      "status": "검증 대기",
+     "nofx": 1,
      "url": "https://m.stock.naver.com/worldstock/stock/ASX/total"
     },
     {
      "ticker": "PBR",
      "name": "Petroleo Brasileiro Reptg 2",
      "status": "검증 대기",
+     "nofx": 1,
      "url": "https://m.stock.naver.com/worldstock/stock/PBR/total"
     },
     {
@@ -831,6 +879,7 @@ window.CANDIDATES = {
      "ticker": "BP",
      "name": "BP",
      "status": "검증 대기",
+     "nofx": 1,
      "url": "https://m.stock.naver.com/worldstock/stock/BP/total"
     }
    ]
@@ -841,12 +890,12 @@ window.CANDIDATES = {
     {
      "ticker": "GM",
      "name": "General Motors",
-     "state": "감시",
+     "state": "점검 필요",
      "flags": [
       {
        "k": "theme",
        "msg": "주제 기준 미달 — 정체성 조건 미달, 매출 역성장(가치 함정)",
-       "fresh": false
+       "fresh": true
       }
      ],
      "note": "10/20 3분기 EPS가 예상을 4.2% 웃돌았다 — 가이던스·GAAP 이익 확인 전까지 감시.",
@@ -944,6 +993,7 @@ window.CANDIDATES = {
      "note": "11-11 기한",
      "asOf": "2026-10-18",
      "why": "매출 성장 -1.7%",
+     "nofx": 1,
      "url": "https://m.stock.naver.com/worldstock/stock/LYG/total"
     },
     {
@@ -975,6 +1025,21 @@ window.CANDIDATES = {
    "eligible": 65,
    "defects": [
     {
+     "ticker": "LMT",
+     "name": "Lockheed Martin",
+     "state": "점검 필요",
+     "flags": [
+      {
+       "k": "theme",
+       "msg": "주제 기준 미달 — 정체성 조건 미달",
+       "fresh": true
+      }
+     ],
+     "note": "2분기 EBIT 감소로 주제 기준 미달 신호가 떴지만, 10월 22일 3분기 매출 +11%·EPS 7.97달러(전년 6.95달러)로 4개 부문이 모두 성장하고 수주잔고가 사상 최대로 늘었으며 연간 매출·EPS·잉여현금흐름 전망을 다시 올려 실질 결격은 아니다.",
+     "judged": "2026-10-23",
+     "verdict": "형식"
+    },
+    {
      "ticker": "KO",
      "name": "Coca-Cola",
      "state": "감시",
@@ -1003,21 +1068,6 @@ window.CANDIDATES = {
      ],
      "note": "주가 상승",
      "judged": "2026-10-18",
-     "verdict": "형식"
-    },
-    {
-     "ticker": "LMT",
-     "name": "Lockheed Martin",
-     "state": "감시",
-     "flags": [
-      {
-       "k": "theme",
-       "msg": "주제 기준 미달 — 정체성 조건 미달",
-       "fresh": false
-      }
-     ],
-     "note": "2분기 EBIT 감소로 주제 기준 미달 신호가 떴지만, 10월 22일 3분기 매출 +11%·EPS 7.97달러(전년 6.95달러)로 4개 부문이 모두 성장하고 수주잔고가 사상 최대로 늘었으며 연간 매출·EPS·잉여현금흐름 전망을 다시 올려 실질 결격은 아니다.",
-     "judged": "2026-10-23",
      "verdict": "형식"
     }
    ],
@@ -1050,6 +1100,7 @@ window.CANDIDATES = {
      "name": "Petroleo Brasileiro Reptg 2 Pref Shs",
      "status": "검증 대기",
      "why": "배당성향 4.5% · 배당 6.3%",
+     "nofx": 1,
      "url": "https://m.stock.naver.com/worldstock/stock/PBRa/total"
     },
     {
@@ -1057,6 +1108,7 @@ window.CANDIDATES = {
      "name": "Itau Unibanco SA",
      "status": "검증 대기",
      "why": "배당성향 11.5% · 배당 6.8%",
+     "nofx": 1,
      "url": "https://m.stock.naver.com/worldstock/stock/ITUB.K/total"
     },
     {
@@ -1064,6 +1116,7 @@ window.CANDIDATES = {
      "name": "Lloyds Banking",
      "status": "검증 대기",
      "why": "배당성향 68.8% · 배당 4.2%",
+     "nofx": 1,
      "url": "https://m.stock.naver.com/worldstock/stock/LYG/total"
     },
     {
@@ -1071,6 +1124,7 @@ window.CANDIDATES = {
      "name": "BP",
      "status": "검증 대기",
      "why": "배당성향 26.7% · 배당 4.5%",
+     "nofx": 1,
      "url": "https://m.stock.naver.com/worldstock/stock/BP/total"
     },
     {
@@ -1078,6 +1132,7 @@ window.CANDIDATES = {
      "name": "ING Groep N.V.",
      "status": "검증 대기",
      "why": "배당성향 62.3% · 배당 4.6%",
+     "nofx": 1,
      "url": "https://m.stock.naver.com/worldstock/stock/ING/total"
     },
     {
@@ -1092,6 +1147,7 @@ window.CANDIDATES = {
      "name": "ORIX CORPORATION",
      "status": "검증 대기",
      "why": "배당성향 0.2% · 배당 2.9%",
+     "nofx": 1,
      "url": "https://m.stock.naver.com/worldstock/stock/IX/total"
     },
     {
@@ -1099,6 +1155,7 @@ window.CANDIDATES = {
      "name": "Rio Tinto",
      "status": "검증 대기",
      "why": "배당성향 58.8% · 배당 5.6%",
+     "nofx": 1,
      "url": "https://m.stock.naver.com/worldstock/stock/RIO/total"
     },
     {
@@ -1111,10 +1168,99 @@ window.CANDIDATES = {
    ]
   }
  },
+ "hard": {
+  "korea|core|005930": {
+   "scheme": "text",
+   "theme": {
+    "정체성 조건 미달(#년 평균 ROIC 상위 절반)": "-"
+   }
+  },
+  "korea|core|278470": {
+   "trend": "-",
+   "scheme": "text",
+   "theme": {
+    "정체성 조건 미달": "-"
+   }
+  },
+  "korea|core|064400": {
+   "scheme": "text",
+   "theme": {
+    "정체성 조건 미달": "-"
+   }
+  },
+  "korea|value|000270": {
+   "scheme": "text",
+   "theme": {
+    "정체성 조건 미달": "-"
+   }
+  },
+  "korea|value|001120": {
+   "scheme": "text",
+   "theme": {
+    "정체성 조건 미달": "-"
+   }
+  },
+  "korea|value|267270": {
+   "scheme": "text",
+   "theme": {
+    "정체성 조건 미달(EBIT/EV·FCF 수익률 상위 #)": "-"
+   }
+  },
+  "korea|value|018260": {
+   "scheme": "text",
+   "theme": {
+    "정체성 조건 미달(EBIT/EV·FCF 수익률 상위 #)": "-"
+   }
+  },
+  "us|core|COST": {
+   "scheme": "text",
+   "theme": {
+    "정체성 조건 미달": "-"
+   }
+  },
+  "us|growth|NVDA": {
+   "scheme": "text",
+   "theme": {
+    "이익 변동 큼(주제 안 상위 #)": "-",
+    "자산 급증(주제 안 상위 #)": "-"
+   }
+  },
+  "us|growth|UBER": {
+   "scheme": "text",
+   "theme": {
+    "이익 변동 큼(주제 안 상위 #)": "-"
+   }
+  },
+  "us|value|GM": {
+   "scheme": "text",
+   "theme": {
+    "매출 역성장(가치 함정)": "-",
+    "정체성 조건 미달": "-"
+   }
+  },
+  "us|dividend|KO": {
+   "scheme": "text",
+   "theme": {
+    "정체성 조건 미달": "-"
+   }
+  },
+  "us|dividend|JNJ": {
+   "scheme": "text",
+   "theme": {
+    "정체성 조건 미달": "-"
+   }
+  },
+  "us|dividend|LMT": {
+   "scheme": "text",
+   "theme": {
+    "정체성 조건 미달": "-"
+   }
+  }
+ },
  "summary": {
-  "review": 0,
+  "review": 5,
   "defect": 1,
-  "watch": 25,
+  "watch": 21,
   "untried": 0,
   "dup": 0,
   "long": 1

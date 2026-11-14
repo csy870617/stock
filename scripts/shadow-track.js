@@ -158,6 +158,18 @@ async function main() {
         const b = basketRet(prevFormal, fNow, (it) => (it.th || []).includes(th));
         C.th[th] = { s: r6(C.th[th].s * (1 + (a || 0))), f: r6(C.th[th].f * (1 + (b || 0))) };
       });
+    } else if (last && dNow === last.d && C.series.length > 1 && C.idxClose > 0) {
+      // 같은 종가일의 재실행(2026-11-14 버그 수정) — 그날 첫 실행이 잠정 종가(한국 16:30 KST 전)로 점을 찍고 기준가를 잡았는데,
+      //   예전엔 재실행이 기준가만 확정 종가로 덮어 '잠정 → 확정' 차이가 연결에서 통째로 사라졌다(코스피 11/03 −0.40%·11/06 −0.19% 등 17일 중 4일,
+      //   한국 지수 −8.27% 로 기록 — 실제 −7.76%). 기준가를 덮기 전에 마지막 점을 같은 폭으로 고친다(첫 기록일은 기준만 맞춘다 — 시작점은 1).
+      const rs = basketRet(hold ? hold.items : [], sNow), rf = basketRet(prevFormal, fNow);
+      last.s = r6(last.s * (1 + (rs || 0))); last.f = r6(last.f * (1 + (rf || 0))); last.i = r6(last.i * (idx.close / C.idxClose));
+      if (c === "us" && last.e && rspOk && C.rspClose > 0) last.e = r6(last.e * (ix.rsp.close / C.rspClose));
+      THEMES.forEach((th) => {
+        const a = basketRet(hold ? hold.items : [], sNow, (it) => it.th === th);
+        const b = basketRet(prevFormal, fNow, (it) => (it.th || []).includes(th));
+        C.th[th] = { s: r6(C.th[th].s * (1 + (a || 0))), f: r6(C.th[th].f * (1 + (b || 0))) };
+      });
     } else if (!last) {
       C.series.push(Object.assign({ d: dNow, s: 1, f: 1, i: 1 }, c === "us" ? { e: 1 } : {}));
     }

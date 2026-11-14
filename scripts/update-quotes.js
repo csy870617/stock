@@ -147,8 +147,9 @@ async function mapLimit(items, limit, fn) {
         try { q = await oneQuote(sym); } catch (_e) { if (att < 2) await new Promise((r) => setTimeout(r, 400 * Math.pow(2, att))); }
       }
     }
-    if (q) indices[k] = Object.assign({ symbol: sym }, entryOf(q));
-    else if (prevIdx[k]) indices[k] = Object.assign({}, prevIdx[k], { changePct: null });
+    // at = 이 지수를 실제로 받은 시각 — close-gate.js 가 '받았는데 새 종가가 없다(휴장)'와 '받지 못했다(장애)'를 가린다(받지 못하면 이전 값을 두고 at 은 지운다)
+    if (q) indices[k] = Object.assign({ symbol: sym }, entryOf(q), { at: new Date().toISOString().slice(0, 19) + "Z" });
+    else if (prevIdx[k]) indices[k] = Object.assign({}, prevIdx[k], { changePct: null, at: null });   // 못 받음 — 이전 값을 두되 받은 시각은 지운다(close-gate 의 '이번 실행이 받았나' 판정)
   }
 
   const generatedAt = argVal("date") || new Date().toISOString().slice(0, 10);

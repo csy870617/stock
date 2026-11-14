@@ -15,6 +15,17 @@
 const LH = require("./lib-history");
 const PERSONAL = LH.PERSONAL;
 const MIN_DAYS = 20;   // β·t 를 계산하는 최소 거래일
+// 성과 기록의 시작(2026-11-14 점검) — 첫 두 기록(2026-07-03·07-04)은 시세 자동 갱신 전이라 가격이 그날 종가가 아니다: 한국 42종목 중 34종목의
+//   가격 기준일(pd)이 4~6월이고, 07-03 으로 적힌 값도 실제 종가와 10~18% 달랐다(KB금융 149,300 vs 170,100 · SK하이닉스 2,665,000 vs 2,425,000 —
+//   종목 차트 파일과 대조한 17종목 중 12종목). 그 가격에서 출발해 한국 첫 거래일이 −4.6%(코스피 −0.5%)로 잡혀 '전체' 기간 성적이 통째로 어긋났다
+//   (한국 정식 −23.5% → 07-06 부터 재면 −20.2%). 07-06 부터는 전 종목의 가격 기준일이 기록일과 같다. history.js 는 지우지 않고 성과 계산만 여기서 시작한다.
+const PERF_BASE = "2026-07-06";
+const perfHistory = (H) => (H || []).filter((h) => h.date >= PERF_BASE);
+// 낡은 가격으로 들어온 줄 — 그 줄의 가격 기준일이 그 기록일의 그 나라 기준일보다 5일 넘게 늦으면 구간의 출발 가격으로 쓰지 않는다
+//   (새로 편입한 날 시세를 못 받아 예전 가격이 적힌 줄: 파마리서치 07-10 편입에 06-05 가격 → 하루 +11.5%, iM금융지주 07-16 편입에 04-30 가격 → +5.2%.
+//   07-06 이후 5일 넘게 늦은 줄은 이 둘뿐이다). 다음 기록일에 그날 가격이 들어오면 그때부터 잰다.
+const STALE_PD_DAYS = 5;
+const staleRow = (e, snapPd) => !!(e && e.pd && snapPd && (Date.parse(snapPd) - Date.parse(e.pd)) / 864e5 > STALE_PD_DAYS);
 const HELD_DAYS = 90;  // '지금 편성'의 시장 민감도를 재는 최근 기록 창(달력일) — 결격 점검의 β 밴드·앱 '지금 비중 기준 β'
 
 // 정식 전체 비중(2026-10-25 사용자 결정 — CLAUDE.md §6): 코스피 시총의 절반이 삼성전자·SK하이닉스라 동일비중 편성은
@@ -50,6 +61,8 @@ function pdOf(snap, country) {
   return best || snap.date;
 }
 const idxKey = (country) => (country === "korea" ? "kospi" : "sp500");
+// 그 나라 성과 기록의 시작일 — 지수가 처음 적힌 기록(chain 이 거기서부터 잰다)
+const baseOf = (H, country) => { const h = (H || []).find((x) => x[idxKey(country)] != null) || (H || [])[0]; return h ? h.date : null; };
 
 // 보유 기준 일별 수익 — [{d, r, rb, re, eq, n}] (거래일만, 앞쪽 n=0 은 그 묶음이 아직 비어 있던 날)
 //   exitPx(country, ticker, i) → 기록일 i-1 에 있다가 i 에 없는 종목의 기록일 i 종가(없으면 null — 그 종목은 그날 빠진다)
@@ -61,10 +74,25 @@ function chain(H, country, sel, exitPx, anchorMode) {
   lv(H[0], bk); lv(H[0], "rsp");
   const days = [];
   let acc = null;   // 거래일이 아닌 기록(주말·휴장)의 수익을 다음 거래일에 합친다
+  // 그 묶음에 들어온 뒤 '그날 가격'이 한 번이라도 적힌 종목 — 낡은 가격 줄을 건너뛰는 것은 편입 때 시세를 못 받은 줄뿐이다.
+  //   보유 중인 종목이 거래정지·시세 실패로 5일 넘게 같은 가격에 머문 것까지 건너뛰면 정지 앞뒤의 움직임이 통째로 빠진다(2026-11-14 검토).
+  const fresh = {};
   for (let i = 1; i < H.length; i++) {
     const a = H[i - 1], b = H[i];
+    {
+      const pk0 = sel === "picks" ? (a.picks && a.picks[country]) || [] : null, pd0 = pdOf(a, country), mem = {};
+      (a.stocks || []).forEach((e) => {
+        if (e.c !== country || !e.p || (pk0 ? pk0.indexOf(e.t) < 0 : !inGroup(sel, e))) return;
+        mem[e.t] = 1;
+        if (!staleRow(e, pd0)) fresh[e.t] = 1;
+      });
+      Object.keys(fresh).forEach((t) => { if (!mem[t]) delete fresh[t]; });
+    }
     const b0 = prev[bk] || null, e0 = prev.rsp || null;
     const b1 = lv(b, bk), e1 = lv(b, "rsp");
+    // 지수 기준값을 아직 모르는 앞 구간(첫 기록에 지수가 비어 있을 때 — 미국 2026-07-06 기록)은 재지 않는다:
+    //   종목 수익만 잡히고 지수는 0% 로 남아 편성과 지수의 기간이 어긋난다. 지수가 처음 적힌 기록(baseOf)부터 잰다.
+    if (b0 == null) continue;
     const trade = b[bk] != null && b0 != null && b[bk] !== b0;
     const pb = {};
     (b.stocks || []).forEach((e) => { if (e.c === country && e.p) pb[e.t] = e.p; });
@@ -73,8 +101,10 @@ function chain(H, country, sel, exitPx, anchorMode) {
     // Top Pick 묶음 — 그 기록일에 고른 3종목을 다음 기록일까지 같은 비중으로(고른 날 종가부터 — 정식 편성과 같은 기준)
     const pk = sel === "picks" ? (a.picks && a.picks[country]) || [] : null;
     const wA = anchorsFor(country, sel, b.date, anchorMode);
+    const pdA = pdOf(a, country);
     (a.stocks || []).forEach((e) => {
       if (e.c !== country || seen[e.t] || !e.p || (pk ? pk.indexOf(e.t) < 0 : !inGroup(sel, e))) return;
+      if (staleRow(e, pdA) && !fresh[e.t]) return;   // 낡은 가격으로 들어온 줄에서 출발하지 않는다(위 STALE_PD_DAYS) — 그날 가격이 한 번 적힌 뒤엔 그대로 잰다
       let p1 = pb[e.t];
       if (!p1 && exitPx) p1 = exitPx(country, e.t, i);
       if (!p1) return;
@@ -167,4 +197,4 @@ function recentSnaps(H, days) {
   return H.filter((h) => h.date >= cut);
 }
 
-module.exports = { PERSONAL, MIN_DAYS, HELD_DAYS, ANCHORS, anchorsFor, inGroup, pdOf, idxKey, chain, stats, windows, recentSnaps, reg, tMean, r2 };
+module.exports = { PERSONAL, MIN_DAYS, HELD_DAYS, ANCHORS, PERF_BASE, perfHistory, STALE_PD_DAYS, staleRow, anchorsFor, inGroup, pdOf, idxKey, baseOf, chain, stats, windows, recentSnaps, reg, tMean, r2 };

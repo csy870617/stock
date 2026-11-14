@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// 배포 전 연기 시험 — 저장소를 정적 서버로 띄워 index.html 을 헤드리스 크롬으로 열고, 홈 → 추천 종목(종목 상세 하나 열기) →
+// 배포 전 연기 시험 — 저장소를 정적 서버로 띄워 index.html 을 헤드리스 크롬으로 열고, 홈(Top Pick 전체 순위·건강 점검) → 추천 종목(종목 상세 하나 열기) →
 // 미국 → 내 종목 → 성과 → 과거 보기를 차례로 돈다. 앱 오류(잡히지 않은 예외·데이터 파일 문법 오류·우리 파일 404)가 하나라도 나면
 // exit 1 → deploy-pages 가 배포하지 않는다(지난 정상 버전이 그대로 남는다). 2026-10-25 약점 점검: 그 전엔 validate-reco.js 만 봐서
 // index.html 이나 다른 데이터 파일이 깨져도 빈 화면이 그대로 배포됐다.
@@ -75,6 +75,24 @@ async function run(browser, base) {
     await page.waitForFunction(() => { const s = document.getElementById("sheet"), o = document.getElementById("dt-out"); return s && !s.hidden && o && !/불러오는 중/.test(o.textContent); }, null, T);
     await page.click("#shBack");
     await page.waitForFunction(() => document.getElementById("sheet").hidden, null, T);
+  });
+  await step("Top Pick 전체 순위·종목 상세 건강 점검", async () => {
+    if (!(await page.$("#pkAllBtn"))) return;   // 순위 파일(pick-scores.js)이 없으면 건너뛴다
+    await page.click("#pkAllBtn");
+    await page.waitForFunction(() => document.querySelectorAll("#picksAll .pk-all [data-open]").length > 0, null, T);
+    await page.click("#picksAll .pk-all [data-open]");
+    try {
+      // 건강 점검 섹션은 자료(pick-scores.js health)가 있을 때만 요구한다 — 옛 형식 파일이면 앱이 섹션을 빼고 그대로 동작한다
+      const hasHealth = await page.evaluate(() => { const P = window.PICK_SCORES; return !!(P && ((P.korea && P.korea.health) || (P.us && P.us.health))); });
+      await page.waitForFunction((need) => { const s = document.getElementById("sheet"), h = document.getElementById("dt-health"); return s && !s.hidden && (!need || (h && h.querySelectorAll(".hc-list li").length > 0)); }, hasHealth, T);
+    } finally {
+      // 실패해도 창을 닫는다 — 열린 채 두면 뒤 단계가 모두 누르기 시간 초과로 실패한다
+      if (await page.evaluate(() => { const s = document.getElementById("sheet"); return !!s && !s.hidden; })) {
+        await page.click("#shBack");
+        await page.waitForFunction(() => document.getElementById("sheet").hidden, null, T);
+      }
+    }
+    await page.click("#pkAllBtn");   // 접기
   });
   await step("오늘의 시장 섹터 쪽·섹터 상세", async () => {
     await page.click('#mkTabs [data-mkp="1"]');

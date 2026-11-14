@@ -44,7 +44,8 @@ function load(file, key) {
 function readJson(file) {
   try { return JSON.parse(fs.readFileSync(path.join(DATA, file), "utf8")); } catch (_e) { return null; }
 }
-const H = load("history.js", "STOCK_HISTORY") || [];
+// 성과는 첫 정상 기록(lib-perf PERF_BASE — 2026-07-06)부터 잰다. 그 앞 두 기록은 가격이 그날 종가가 아니다(history.js 는 그대로 둔다)
+const H = LP.perfHistory(load("history.js", "STOCK_HISTORY") || []);
 const D = load("recommendations.js", "STOCK_DATA") || {};
 const SH = readJson("shadow.json");
 const FR = readJson("rules-freeze.json");
@@ -116,7 +117,11 @@ async function main() {
   // ── 2. 야후 일봉 — 편출 종목(편출일 종가 보충·편출 후 성적)과 교체 종목, 지수 ──
   const maxD = {}; COUNTRIES.forEach((c) => { maxD[c] = LP.pdOf(last, c); });
   const need = {};
-  exits.forEach((x) => { if (!cache[x.c + ":" + x.t + "@" + x.d]) need[x.c + ":" + x.t] = 1; });
+  // 캐시가 낡았나 — 같은 날짜 스냅샷을 나중에 더 새 종가로 다시 찍으면(저녁 회차가 그날 미국 종가로 교체) 그 기록일의 가격 기준일(pd)이 앞으로 가는데,
+  //   예전엔 처음 채운 값(전날 종가)을 영영 써서 빠진 종목만 그날 수익이 0% 였다(2026-11-14 점검 — AMZN·NOW 11/05, MSCI 11/06 등 166건 중 7건,
+  //   미국 성장 묶음이 약 0.9%p 높게 잡힘). 기준일이 캐시보다 새로우면 다시 받는다(그날 봉을 못 받으면 옛 값을 그대로 둔다).
+  const staleExit = (x) => { const v = cache[x.c + ":" + x.t + "@" + x.d]; return !v || (v.d && v.d < LP.pdOf(H[x.i], x.c)); };
+  exits.forEach((x) => { if (staleExit(x)) need[x.c + ":" + x.t] = 1; });
   recentLeaves.forEach((x) => { need[x.c + ":" + x.t] = 1; });
   recentSwaps.forEach((s) => s.add.concat(s.rem).forEach((e) => { need[s.c + ":" + e.t] = 1; }));
   const earliest = [].concat(exits.map((x) => x.d), recentSwaps.map((s) => s.d)).sort()[0] || last.date;
@@ -145,7 +150,7 @@ async function main() {
   let filled = 0;
   exits.forEach((x) => {
     const key = x.c + ":" + x.t + "@" + x.d;
-    if (cache[key]) return;
+    if (!staleExit(x)) return;
     // 그날 봉이 정확히 있을 때만 — 아직 비어 있는 봉(막 끝난 장)을 전날 종가로 채워 영구 캐시하지 않게
     const pd = LP.pdOf(H[x.i], x.c), m = charts[x.c + ":" + x.t], p = m && m[pd];
     if (p) { cache[key] = { p: r4(p), d: pd }; filled++; }
@@ -158,6 +163,8 @@ async function main() {
     // ── 3. 묶음별 성적·누적 곡선(정식 전체의 거래일에 맞춘다) ──
     const daysAll = LP.chain(H, c, null, exitPx);
     if (!daysAll.length) continue;
+    // 이 나라의 기록 시작일 — 지수가 처음 적힌 기록(미국은 07-06 기록에 S&P500 이 비어 07-07). 창의 '…부터' 표시와 곡선 첫 점에 쓴다
+    const base = LP.baseOf(H, c) || H[0].date;
     const dates = [base].concat(daysAll.map((x) => x.d));
     const idxNav = [1], eqNav = c === "us" ? [1] : null;
     let vb = 1, ve = 1;
@@ -202,6 +209,7 @@ async function main() {
     }
 
     // ── 4. 종목별 — 지금 편성(갈래마다 연속 보유 시작일부터)과 최근 90일 편출(주제에서 빠진 종목) ──
+    // 기록일 i 의 지수 — 그날 비어 있으면 앞 기록, 맨 앞에도 없으면(첫 기록에 지수가 빈 나라) null — 아래 freshStart 가 지수가 처음 적힌 기록으로 옮긴다
     const ix = (i) => { for (let j = i; j >= 0; j--) if (H[j][LP.idxKey(c)]) return H[j][LP.idxKey(c)]; return null; };
     // 기록일 i 부터 거꾸로 같은 갈래(정식 편성·주목·관심·보유)로 이어진 첫 기록일 — 정식 안에서 주제만 옮긴 종목은 처음 추천한 날부터 센다
     const runStart = (i, t, k) => {
@@ -211,6 +219,9 @@ async function main() {
     };
     const rowIn = (i, t) => (H[i].stocks || []).find((x) => x.c === c && x.t === t) || null;
     const priceIn = (i, t) => { const e = rowIn(i, t); return e ? e.p : null; };
+    // 보유 시작 줄의 가격이 낡았으면(lib-perf staleRow — 편입 날 시세를 못 받은 줄) 그날 가격이 들어온 다음 기록일부터 잰다(묶음 성적 chain 과 같은 기준)
+    //   지수가 아직 적히지 않은 맨 앞 기록(미국 07-06)에서 시작한 종목도 지수가 처음 적힌 기록부터 잰다(지수 대비를 낼 수 있게)
+    const freshStart = (j, t, end) => { while (j < end && (ix(j) == null || LP.staleRow(rowIn(j, t), LP.pdOf(H[j], c)))) j++; return j; };
     const L = H.length - 1, ixL = ix(L);
     // 한 종목이 두 갈래에 있으면(예: 우량 + 관심) 갈래마다 한 줄 — 앱 묶음 화면이 그 갈래의 보유 시작일로 보인다. 정식 두 주제는 한 줄(ths)
     const stocks = [];
@@ -219,7 +230,7 @@ async function main() {
       ms.forEach((m) => { const k = LH.kindOf(m[0]); if (kinds.indexOf(k) < 0) kinds.push(k); });
       kinds.forEach((k) => {
         const mk = ms.filter((m) => LH.kindOf(m[0]) === k);
-        const j = runStart(L, e.t, k), p0 = priceIn(j, e.t), i0 = ix(j);
+        const j = freshStart(runStart(L, e.t, k), e.t, L), p0 = priceIn(j, e.t), i0 = ix(j);
         const ret = p0 && e.p ? (e.p / p0 - 1) * 100 : null, ir = i0 && ixL ? (ixL / i0 - 1) * 100 : null;
         const row = { t: e.t, n: e.n, th: mk[0][0], tier: mk[0][1], d0: H[j].date, ret: r2(ret), ex: ret != null && ir != null ? r2(ret - ir) : null };
         if (row.tier == null) delete row.tier;
@@ -232,7 +243,7 @@ async function main() {
     const removed = recentLeaves.filter((x) => x.c === c && !RETIRED.has(x.th) && !lastHas(x.t, x.th)).map((x) => {
       // 다른 주제에 남은 종목은 빠진 날 스냅샷 종가, 통째로 빠진 종목은 그날 야후 종가(없으면 전날 스냅샷 가격)
       const stayRow = x.stay ? rowIn(x.i, x.t) : null;
-      const j = runStart(x.i - 1, x.t, LH.kindOf(x.th)), p0 = priceIn(j, x.t);
+      const j = freshStart(runStart(x.i - 1, x.t, LH.kindOf(x.th)), x.t, x.i - 1), p0 = priceIn(j, x.t);
       const ex = stayRow && stayRow.p ? { p: stayRow.p, d: stayRow.pd } : cache[c + ":" + x.t + "@" + x.d];
       const px = ex ? ex.p : x.e.p, i0 = ix(j), i1 = ix(x.i);
       const ret = p0 && px ? (px / p0 - 1) * 100 : null, ir = i0 && i1 ? (i1 / i0 - 1) * 100 : null;

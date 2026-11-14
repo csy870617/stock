@@ -544,8 +544,15 @@ function writeOutputs(res, errors) {
       if (res.patch.marketNote) wrote.push("market");
       if (res.patch.topPicks) wrote.push("topPicks");
     } catch (e) {
-      if (errors) errors.push(e.message); else throw e;
-      console.error("ai-daily: " + e.message);
+      // Top Pick 이 가드레일(지금 순위와 다름 — rebase 뒤 다시 얹을 때 순위가 달라졌을 수 있다)에 막혀도 시황까지 잃지 않게, Top Pick 을 빼고 한 번 더 얹는다
+      const rest = Object.assign({}, res.patch); delete rest.topPicks;
+      let saved = false;
+      if (res.patch.topPicks && Object.keys(rest).length) {
+        try { applyReco(rest); saved = true; if (rest.marketNote) wrote.push("market"); } catch (e2) { console.error("ai-daily: " + e2.message); }
+      }
+      const msg = e.message + (saved ? " (Top Pick 만 빼고 반영)" : "");
+      if (errors) errors.push(msg); else if (!saved) throw e;
+      console.error("ai-daily: " + msg);
     }
   }
   return wrote;
@@ -566,10 +573,15 @@ function reorderPicks(tp, top) {
   });
   return moved.length ? { tp: out, moved } : null;
 }
+// Top Pick 고장 수리 — 편성에서 빠졌거나 추세 붕괴가 된 Top Pick 이 있으면 순위 1~3위로 다시 세운다(lib-picks repairTopPicks — 보통은 gen-technote 가
+//   신호가 바뀐 실행에서 먼저 고친다. 여기서는 편출 등 그 밖의 경우를 잡는다)
+const repairPicks = (tp, R, S) => LP.repairTopPicks(tp, R, S && S.D, S && S.TA);
 // 지수 대응 신호(sig*)는 indices.js 엔진 등급 그대로(§4-2) — 어긋나면 신호만 맞추고 문장은 그대로 둔다(AI 문장이면 plan 이 다시 쓰게 한다).
 //   2026-11-07 점검: 같은 asOf 아래 다우 단·중기·코스피 장기 배지가 엔진과 달랐다(잠정 종가 뒤 신호 변경·세션 수정).
-function tidy(S, st, top, write) {
-  const res = { sigDiff: indexSigDiff(S.IN, S.IX), picks: reorderPicks(S.D && S.D.topPicks, top), wrote: [], errors: [] };
+function tidy(S, st, top, write, R) {
+  // 수리(고를 수 없는 종목이 든 나라)와 순서 맞추기(같은 세 종목인데 순서만 다른 나라)를 한 번에 — 한 나라를 수리했다고 다른 나라의 순서 정리를 건너뛰지 않는다
+  const tp0 = S.D && S.D.topPicks, rp = repairPicks(tp0, R, S), ro = reorderPicks(rp ? rp.tp : tp0, top);
+  const res = { sigDiff: indexSigDiff(S.IN, S.IX), picks: ro ? { tp: ro.tp, moved: (rp ? rp.moved : []).concat(ro.moved) } : rp, wrote: [], errors: [] };
   if (!write) return res;
   if (res.sigDiff.length) {
     const IN = JSON.parse(JSON.stringify(S.IN));
@@ -591,7 +603,7 @@ function tidy(S, st, top, write) {
 const PER3 = ["단기", "중기", "장기"];
 const tidyLine = (t, preview) => "ai-daily: 결정적 정리" + (preview ? "(할 일)" : "") + " — " + ([
   t.sigDiff.length ? "지수 대응 신호 " + t.sigDiff.map((d) => d.key + " " + PER3.map((p, i) => (d.from[i] !== d.to[i] ? p + " " + (d.from[i] || "–") + "→" + d.to[i] : null)).filter(Boolean).join("·")).join(", ") : null,
-  t.picks ? "Top Pick 순서 " + t.picks.moved.join(" / ") : null,
+  t.picks ? "Top Pick " + t.picks.moved.join(" / ") : null,
 ].filter(Boolean).join(" · ") || "없음") + (t.errors.length ? " · 오류 " + t.errors.join(" / ") : "");
 
 // --reapply: 원격 최신 위에 이번 실행 결과를 다시 얹는다 — 원격이 같은 날 이후로 쓴 항목은 원격을 남긴다
@@ -615,7 +627,7 @@ function reapply() {
   console.log("ai-daily --reapply: " + (wrote.length ? wrote.join(", ") + " 다시 반영" : "원격이 최신 — 반영 없음") + (errs.length ? " · 오류 " + errs.join(" / ") : ""));
   // 결정적 정리도 원격 위에서 다시(API 없음) — 원격 세션의 지수 대응 신호·Top Pick 순서를 이번 실행의 indices.js·순위로
   const S2 = loadAll();
-  if (S2.D && S2.IX && S2.TA) { const t = tidy(S2, L.readStatus(), topOf(ranking(S2)), true); if (t.sigDiff.length || t.picks) console.log(tidyLine(t)); }
+  if (S2.D && S2.IX && S2.TA) { const R2 = ranking(S2), t = tidy(S2, L.readStatus(), topOf(R2), true, R2); if (t.sigDiff.length || t.picks) console.log(tidyLine(t)); }
 }
 
 async function main() {
@@ -624,7 +636,7 @@ async function main() {
   if (!S0.D || !S0.IX || !S0.TA) { console.log("ai-daily: 데이터 파일 부족 — 건너뜀"); return; }
   // ① 결정적 정리 — 키·API 없이 먼저(--who·--dry 는 할 일만 보인다). 여기서 실패해도 AI 단계는 막지 않는다
   let top0 = null, T0 = { sigDiff: [], picks: null, wrote: [], errors: [] };
-  try { top0 = topOf(ranking(S0)); T0 = tidy(S0, L.readStatus(), top0, !(WHO || DRY)); } catch (e) { T0.errors.push(L.describeError(e)); }
+  try { const R0 = ranking(S0); top0 = topOf(R0); T0 = tidy(S0, L.readStatus(), top0, !(WHO || DRY), R0); } catch (e) { T0.errors.push(L.describeError(e)); }
   if (WHO) { console.log(planLine(plan(S0, L.readStatus(), { top: top0, sigDiff: T0.sigDiff }))); console.log(tidyLine(T0, true)); return; }
   if (T0.sigDiff.length || T0.picks || T0.errors.length || SYNC || SEEN) console.log(tidyLine(T0, DRY));
   if (SEEN) {   // 세션이 방금 쓴 문장 — 지금 종가 기준으로 적는다(AI 기록이 없으면 다시 쓸 일도 없어 건너뜀)

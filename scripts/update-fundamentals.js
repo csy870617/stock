@@ -186,9 +186,15 @@ async function usIndustry(ticker) {
 
 // 배당수익률 정의 점검 — 출처 값이 카드(세션이 신뢰 출처 2곳으로 확인한 값)와 3배 넘게·0.3%p 넘게 다르면
 // 출처 쪽 오류 가능성이 커서(예: 네이버 NVDA 주당배당금 1.00달러 — 실제 연 0.04달러) 표시하지 않게 표시한다.
-function dyCheck(o, card) {
-  if (!o || o.dy == null) return;
+function dyCheck(o, card, country, price) {
+  if (!o) return;
+  delete o.dyFlag;   // 매번 다시 본다(조회 실패로 이전 값을 이어 쓸 때 옛 표시가 남지 않게)
+  if (o.dy == null) return;
   if (o.dy < 0 || o.dy > 25) { o.dyFlag = "범위 밖"; return; }
+  // 한국: 출처 값이 자기 주당배당금 ÷ 현재가와 맞으면(= 최근 결산 DPS 기준 — 순위 연구와 같은 정의) 출처 오류가 아니다. 카드 값은 세션이 고쳐 쓰는 값이라
+  //   특별배당을 더하면 3배 넘게 벌어질 수 있다 — 2026-11-14 점검: 삼성전자 출처 0.8%(DPS 1,668원 ÷ 주가)가 카드 2.6%(3분기 특별배당 포함)와 다르다는 이유로
+  //   '불일치' 표시가 붙어 Top Pick 점수에서 배당이 빠졌다. 미국은 출처의 주당배당금 자체가 틀린 사례(NVDA)가 있어 카드와 계속 견준다.
+  if (country === "korea" && o.dps > 0 && price > 0 && Math.abs(o.dy - o.dps / price * 100) <= 0.3) return;
   if (card != null && card >= 0) {
     const a = Math.max(o.dy, card), b = Math.min(o.dy, card);
     if (Math.abs(o.dy - card) > 0.3 && (b === 0 ? a > 0.3 : a / b > 3)) o.dyFlag = "카드 값(" + card + "%)과 불일치";
@@ -223,9 +229,9 @@ function dyCheck(o, card) {
       if (s) { v.ind = s.ind; v.sec = s.sec; v.secAt = day; secNew++; }
       else if (pv && pv.secAt) { v.ind = pv.ind; v.sec = pv.sec; v.secAt = pv.secAt; }
     }
-    dyCheck(v, x.card);
-    // 선행 PER(미국) — 현재가 ÷ 12개월 선행 EPS(양수일 때만)
     const q = QT.quotes && QT.quotes[x.t];
+    dyCheck(v, x.card, x.c, q && q.price);
+    // 선행 PER(미국) — 현재가 ÷ 12개월 선행 EPS(양수일 때만)
     if (x.c === "us" && v.feps > 0 && q && q.price > 0) v.fper = ratioOk(q.price / v.feps);
     // 버크셔 B 주는 네이버가 A 주 EPS 를 줘 PER 0.01 이 나왔다(2026-11-07 점검) — A 주 1주 = B 주 1,500주로 바꿔 B 주 가격으로 다시 잰다
     if (x.c === "us" && /^BRK[.-]B$/.test(x.t) && v.eps > 1000) { v.eps = r2(v.eps / 1500); v.per = q && q.price > 0 ? ratioOk(q.price / v.eps) : null; }

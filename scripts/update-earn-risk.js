@@ -205,19 +205,26 @@ async function krReports(code, T) {
     // 종목 일봉(차트 파일, 260개) × S&P 500 종가 — 차트가 기준일까지 오지 않았거나 지수를 못 받았으면 weak·prev 를 비운다
     const ch = readJ(path.join(DATA, "chart", x.t.replace(/[^A-Za-z0-9.\-]/g, "_") + ".json")), spx = await spxCloses();
     const kT = +T.replace(/-/g, "");
-    const bars = ch && Array.isArray(ch.d) && ch.d.length && ch.d[ch.d.length - 1][0] >= kT && spx.size
+    // 기준일 T 는 전 종목 공통(stock-ta asOf)이라 한국 장이 먼저 끝나면 미국 마지막 봉보다 하루 앞선다 — 예전엔 '차트가 T 까지 왔나'를 그대로 물어
+    //   한국 마감 ~ 미국 마감 사이의 모든 실행에서 미국 종목의 weak·prev 가 통째로 비었다(신호가 많아야 2개라 '실적 주의'가 뜰 수 없음 — 2026-11-14 점검:
+    //   11-07 뒤 커밋된 13판 중 한국 마감 뒤 8판이 미국 weak 0/49, 01시 UTC 판은 GOOGL·NVDA·IREN·TJX 표시 → 15시 판은 0종목).
+    //   차트는 '마지막으로 끝난 미국 장'(S&P 500 마지막 봉 — 미국 휴장일이 끼어도 맞다)까지 와 있으면 쓴다. 한 종목만 차트가 늦으면 그 종목만 비운다.
+    const spxKeys = Array.from(spx.keys());
+    const usT = spxKeys.length ? Math.min(kT, Math.max.apply(null, spxKeys)) : kT;
+    const bars = ch && Array.isArray(ch.d) && ch.d.length && ch.d[ch.d.length - 1][0] >= usT && spx.size
       ? ch.d.map((r) => [r[0], r[4], spx.get(r[0]) || null]) : [];
     const idxOn = (iso) => { const k = +iso.replace(/-/g, ""); return bars.findIndex((b) => b[0] >= k); };
     const sig = {};
     // weak — 60거래일 지수 대비
     { let i = -1; const k = +T.replace(/-/g, ""); bars.forEach((b, j) => { if (b[0] <= k) i = j; });
-      if (i >= 60 && bars[i - 60][2] > 0) sig.weak = (bars[i][1] / bars[i - 60][1] - 1) - (bars[i][2] / bars[i - 60][2] - 1); }
+      // 지수 값이 빈 봉(지수가 차트보다 한 봉 늦을 때)으로 계산하면 지수 수익이 −100% 로 잡힌다 — 양쪽 다 있을 때만
+      if (i >= 60 && bars[i][2] > 0 && bars[i - 60][2] > 0) sig.weak = (bars[i][1] / bars[i - 60][1] - 1) - (bars[i][2] / bars[i - 60][2] - 1); }
     // prev — 직전 발표 반응
     const ref = x.date || T;   // 다음 발표일(모르면 기준일)
     const pd = ((EV[x.t] && EV[x.t].hist) || []).map((h) => h.date).filter((d) => d && d < ref && d <= T).sort().pop() || null;
     if (pd && Date.parse(ref) - Date.parse(pd) <= 200 * 864e5) {
       const i = idxOn(pd);
-      if (i >= 1 && i + 1 < bars.length && bars[i - 1][2] > 0) sig.prev = { d: pd, ar: (bars[i + 1][1] / bars[i - 1][1] - 1) - (bars[i + 1][2] / bars[i - 1][2] - 1) };
+      if (i >= 1 && i + 1 < bars.length && bars[i - 1][2] > 0 && bars[i + 1][2] > 0) sig.prev = { d: pd, ar: (bars[i + 1][1] / bars[i - 1][1] - 1) - (bars[i + 1][2] / bars[i - 1][2] - 1) };
     }
     // tp·pre — 증권사
     const h = await yahooHistory(x.t);

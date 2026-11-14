@@ -40,6 +40,12 @@
 //   5) thesis·valueNote·risks·earnings·topPicks 이유에 가격 의존 수치(상승여력·목표가·AI적정가·PER·PBR·배당수익률) → 거부
 //      (다음 날부터 카드 상단 자동 값과 어긋나고 상승여력 착시를 키운다 — 2026-10-16, validate-reco.js priceNumberIn)
 //   6) techNote 는 gen-technote.js(auto:true)만 쓴다 — 세션이 쓴 techNote 패치는 거부(신규 편입 add 의 techNote 는 버린다)
+//   7) 교체 원칙(CLAUDE.md §5·§6 — 2026-11-14 점검: 문서에만 있고 코드가 막지 않았다):
+//      · 정식 추천 종목(우량·성장·저평가·배당)의 제외는 그 자리에 '실질' 결격 판정(data/candidate-notes.json)이나 중복 편성(data/candidates.js dup)이
+//        있을 때만 — '더 좋아 보여서' 바꾸는 교체와 지수 대표 종목 제외를 막는다. 사용자가 직접 빼 달라고 한 경우 등은 --allow-remove "<사유>"(레저에 기록).
+//      · 엔진 단·중·장기 신호가 모두 매도 이하(추세 붕괴)인 종목은 정식 주제에 편입할 수 없다(신호가 아직 없는 새 종목은 편입 뒤 확인 — §6).
+//      · topPicks 의 종목·순서를 바꾸는 패치는 지금 순위(scripts/lib-picks.js rankPicks 의 1~3위)와 같아야 한다(§4-6 — 종목은 규칙이 고른다).
+//        종목·순서를 그대로 둔 나라는 다시 보지 않는다(이유·날짜만 고치는 패치, 다른 나라만 고치는 수리 — 순위와 달라진 목록은 coverage·validate 가 알린다).
 
 const fs = require("fs");
 const path = require("path");
@@ -50,7 +56,7 @@ const RECO = path.join(ROOT, "data", "recommendations.js");
 
 const patchPath = process.argv[2];
 if (!patchPath || patchPath.startsWith("--")) {
-  console.error("사용법: node scripts/update-reco.js <patch.json> [--out <경로>] [--force]");
+  console.error("사용법: node scripts/update-reco.js <patch.json> [--out <경로>] [--force] [--allow-remove \"<사유>\"]");
   process.exit(1);
 }
 const outIdx = process.argv.indexOf("--out");
@@ -60,6 +66,11 @@ const OUT = outIdx >= 0 ? path.resolve(process.argv[outIdx + 1]) : RECO;
 const IS_REAL_SAVE = OUT === path.resolve(RECO);
 const FORCE = process.argv.includes("--force");
 const CONSENSUS = process.argv.includes("--consensus");
+// --allow-remove "<사유>" — 결격 판정 없이 정식 추천 종목을 빼는 예외(사용자 '편성 제외 요청' 등)를 사유와 함께 남긴다(아래 가드레일 7)
+const arIdx = process.argv.indexOf("--allow-remove");
+const ALLOW_REMOVE = arIdx >= 0 ? String(process.argv[arIdx + 1] || "").trim() : "";
+if (arIdx >= 0 && (!ALLOW_REMOVE || ALLOW_REMOVE.startsWith("--"))) { console.error("✗ --allow-remove 뒤에 사유를 적는다(예: --allow-remove \"편성 제외 요청 #123\")"); process.exit(1); }
+const FORMAL = new Set(["core", "growth", "value", "dividend"]);
 const NAVER_PAGE = /^https:\/\/m\.stock\.naver\.com\/(domestic|worldstock)\/stock\/[^/]+\/total$/;
 
 const patch = JSON.parse(fs.readFileSync(patchPath, "utf8"));
@@ -75,11 +86,13 @@ let ledgerOps = 0;
 // 오늘 처음 목표가를 바꾸기 전의 원본값(기준선). ±50% 급변 검사를 이 기준선에 대해 하면
 // 실행을 나눠 +49%×2 로 체이닝하는 우회가 막힌다(하루 누적 상한과 같은 원리).
 let ledgerTp = {};
+let ledgerAllow = [];   // 오늘 결격 판정 없이 뺀 정식 종목 기록(--allow-remove)
 try {
   const lj = JSON.parse(fs.readFileSync(LEDGER, "utf8"));
   if (lj && lj.date === todayUTC) {
     if (typeof lj.ops === "number" && lj.ops >= 0) ledgerOps = lj.ops;
     if (lj.tp && typeof lj.tp === "object") ledgerTp = lj.tp;
+    if (Array.isArray(lj.allow)) ledgerAllow = lj.allow;
   }
 } catch (_e) { /* 레저 없음/손상 → 0 부터 */ }
 const ops = (patch.add || []).length + (patch.remove || []).length;
@@ -94,9 +107,11 @@ require(RECO);
 const D = global.window.STOCK_DATA;
 if (!D) { console.error("recommendations.js 로드 실패"); process.exit(1); }
 const CONC_BEFORE = concentration(D);   // 분산 가드레일 — 적용 뒤와 비교해 '더 나빠지는' 편입을 거부한다
+const TP_BEFORE = JSON.parse(JSON.stringify(D.topPicks || {}));   // 패치 전 Top Pick — 이번 패치가 바꾸지 않는 나라는 순위 검사에서 뺀다
 D.korea = D.korea || [];
 D.us = D.us || [];
 
+const TA_NOW = loadTa();   // 엔진 신호(stock-ta.js) — 편입 가드(추세 붕괴)
 const warnings = [];
 let merged = 0, added = 0, removed = 0;
 const removedCards = [];   // 이번 패치로 빠진 카드 — 저장 뒤 data/removed.json 에 남긴다
@@ -235,6 +250,30 @@ const origTp = {};
   merged += matches.length;
 });
 
+// ── 가드레일 7: 정식 추천 종목은 결격이 있을 때만 뺀다 ──
+const allowedRemoves = [];
+{
+  let notes = null, cands = null;
+  try { notes = JSON.parse(fs.readFileSync(path.join(ROOT, "data", "candidate-notes.json"), "utf8")); } catch (_e) { notes = null; }
+  try { const cw = {}; new Function("window", fs.readFileSync(path.join(ROOT, "data", "candidates.js"), "utf8"))(cw); cands = cw.CANDIDATES || null; } catch (_e) { cands = null; }
+  const hasDefect = (c, th, t) => {
+    const v = notes && notes.defects && notes.defects[c + "|" + th] && notes.defects[c + "|" + th][t];
+    if (v && v.verdict === "실질") return true;
+    const d = cands && cands.groups && cands.groups[c + "|" + th] && (cands.groups[c + "|" + th].defects || []).find((x) => x.ticker === t);
+    return !!(d && (d.dup || (d.state === "결격" && d.verdict === "실질")));
+  };
+  (patch.remove || []).forEach((r) => {
+    if (!r || !r.country || !D[r.country] || !r.ticker) return;
+    D[r.country].filter((x) => x.ticker === r.ticker && (r.theme == null || x.theme === r.theme) && FORMAL.has(x.theme)).forEach((x) => {
+      if (hasDefect(r.country, x.theme, x.ticker)) return;
+      // 같은 패치가 같은 자리(나라·종목·주제)에 카드를 다시 넣으면 '카드 교체'지 제외가 아니다
+      if ((patch.add || []).some((a) => a && a.country === r.country && a.ticker === x.ticker && a.theme === x.theme)) return;
+      if (ALLOW_REMOVE || FORCE) { allowedRemoves.push(r.country + ":" + x.ticker + "/" + x.theme); return; }
+      guardErrors.push("remove " + r.country + ":" + x.ticker + "/" + x.theme + " (" + x.name + ") — 정식 추천 종목은 '실질' 결격 판정(candidate-notes.json)이나 중복 편성이 있을 때만 뺀다(§5 ④ — '더 좋아 보인다'만으로는 교체하지 않는다). " +
+        "결격을 먼저 판정해 기록하거나, 사용자가 직접 빼 달라고 한 경우 등은 --allow-remove \"<사유>\" 로 다시 실행");
+    });
+  });
+}
 // ── 종목 추가 ──
 // ── 종목 제거 (add 보다 먼저 — 같은 패치에서 동일 티커 '카드 교체' 시 신규분이 지워지지 않도록) ──
 (patch.remove || []).forEach((r) => {
@@ -302,6 +341,16 @@ const origTp = {};
     }
   }
 
+  // 가드레일 7: 추세가 무너진 종목(엔진 단·중·장기 모두 매도 이하)은 정식 주제에 편입하지 않는다(§6) — 신호가 아직 없는 새 종목은 편입 뒤 확인
+  if (FORMAL.has(obj.theme) && !FORCE) {
+    const tx = (TA_NOW && TA_NOW.ta && TA_NOW.ta[obj.ticker]) || null;
+    const sg = tx ? ["short", "mid", "long"].map((k) => tx[k] && tx[k].signal) : null;
+    if (sg && sg.every((v) => v === "매도" || v === "적극매도")) {
+      guardErrors.push("add " + country + ":" + obj.ticker + " — 엔진 단·중·장기 신호가 모두 매도 이하(추세 붕괴: " + sg.join("·") + ") — 정식 주제에 편입할 수 없다(§6)");
+      return;
+    }
+  }
+
   D[country].push(obj);
   added++;
 });
@@ -315,6 +364,25 @@ if ((patch.add || []).length && !FORCE) {
     if (a > b && a > GROUP_CAP) guardErrors.push("분산: 한국 " + g + "그룹이 " + b + " → " + a + "종목(상한 " + GROUP_CAP + ") — 다른 그룹 후보로");
   });
   if (A.fin.korea > B.fin.korea && A.fin.korea > FIN_CAP) guardErrors.push("분산: 한국 금융 업종이 " + B.fin.korea + " → " + A.fin.korea + "종목(상한 " + FIN_CAP + ") — 다른 업종 후보로");
+}
+// 가드레일 7: topPicks 는 지금 순위 1~3위와 같아야 한다 — 패치 적용 뒤 편성으로 다시 매긴 순위(lib-picks)와 비교
+if (patch.topPicks && typeof patch.topPicks === "object" && !FORCE) {
+  try {
+    const win = (f, k) => { const p = path.join(ROOT, "data", f); if (!fs.existsSync(p)) return null; const w = {}; new Function("window", fs.readFileSync(p, "utf8"))(w); return w[k] || null; };
+    const DC = win("discovery-candidates.js", "DISCOVERY_CANDIDATES");
+    if (DC && TA_NOW) {
+      const R = require("./lib-picks").rankPicks({ D, TA: TA_NOW, EV: (win("events.js", "STOCK_EVENTS") || {}).items || {}, CA: win("candidates.js", "CANDIDATES") || { groups: {} }, DC,
+        FU: (win("fundamentals.js", "STOCK_FUND") || {}).items || {}, RV: (win("revisions.js", "STOCK_REVISIONS") || {}).items || {} });
+      ["korea", "us"].forEach((c) => {
+        if (!Array.isArray(patch.topPicks[c])) return;
+        const want = R[c].top, got = patch.topPicks[c].map((x) => x && x.ticker);
+        // 이번 패치가 그 나라 종목·순서를 바꾸지 않으면 보지 않는다(다른 나라만 고치는 패치·이유만 다듬는 패치가 막히지 않게 — 어긋남은 validate·coverage 가 알린다)
+        if ((TP_BEFORE[c] || []).map((x) => x && x.ticker).join() === got.join()) return;
+        if (want.length === 3 && want.join() !== got.join()) guardErrors.push("topPicks." + c + " — 지금 순위 1~3위는 " + want.join(", ") + " 인데 패치는 " + (got.join(", ") || "없음") +
+          " — 종목과 순서는 규칙이 고른다(§4-6): node scripts/pick-score.js 의 ★ Top Pick 순서 그대로 쓰고 이유만 쓴다");
+      });
+    }
+  } catch (e) { warnings.push("Top Pick 순위 확인 실패(건너뜀): " + e.message); }
 }
 if (guardErrors.length) {
   console.error("✗ 가드레일 위반 " + guardErrors.length + "건 — 저장 취소:");
@@ -450,8 +518,13 @@ fs.writeFileSync(OUT, out);
 const realOps = added + removed;
 if (IS_REAL_SAVE && (realOps > 0 || Object.keys(tpChanged).length)) {
   const tp = Object.assign({}, ledgerTp, tpChanged);
-  fs.writeFileSync(LEDGER, JSON.stringify({ date: todayUTC, ops: ledgerOps + realOps, tp: tp }) + "\n");
+  const led = { date: todayUTC, ops: ledgerOps + realOps, tp: tp };
+  // 결격 판정 없이 뺀 정식 종목(--allow-remove·--force) — 무엇을 왜 뺐는지 그날 레저에 남긴다
+  const allow = ledgerAllow.concat(allowedRemoves.length ? [{ items: allowedRemoves, reason: ALLOW_REMOVE || "(--force)" }] : []);
+  if (allow.length) led.allow = allow;
+  fs.writeFileSync(LEDGER, JSON.stringify(led) + "\n");
 }
+if (allowedRemoves.length) console.log("  결격 판정 없는 정식 종목 제외 " + allowedRemoves.length + "건 허용 — " + allowedRemoves.join(", ") + " · 사유: " + (ALLOW_REMOVE || "(--force)"));
 
 // 편출 카드 보관(data/removed.json) — 실제 저장이고 편입·편출이 있을 때만(시세·컨센서스만 바꾸는 Action 실행은 이 파일을 건드리지 않는다).
 //   사유 = 패치의 remove.reason → 지금 candidate-notes.json 의 결격 판정 메모 → candidates.js 의 결격 신호. 다시 편입된 종목은 보관에서 뺀다.

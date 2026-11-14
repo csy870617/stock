@@ -198,6 +198,19 @@ else {
   [["korea", tp.korea], ["us", tp.us]].forEach(([n, arr]) => {
     if (!Array.isArray(arr) || arr.length !== 3) missTop.push(n + " " + ((arr || []).length) + "/3");
   });
+  // 종목·순서가 지금 순위(lib-picks 1~3위)와 같은가 — 날짜와 개수만 보면 순위와 다른 Top Pick 도 '완료'로 읽혔다(2026-11-14 점검). §4-6
+  try {
+    const win = (f, k) => { const p = path.join(ROOT, "data", f); if (!fs.existsSync(p)) return null; const w = {}; new Function("window", fs.readFileSync(p, "utf8"))(w); return w[k] || null; };
+    const DC = win("discovery-candidates.js", "DISCOVERY_CANDIDATES"), TA0 = win("stock-ta.js", "STOCK_TA");
+    if (DC && TA0) {
+      const R = require("./lib-picks").rankPicks({ D, TA: TA0, EV: (win("events.js", "STOCK_EVENTS") || {}).items || {}, CA: win("candidates.js", "CANDIDATES") || { groups: {} }, DC,
+        FU: (win("fundamentals.js", "STOCK_FUND") || {}).items || {}, RV: (win("revisions.js", "STOCK_REVISIONS") || {}).items || {} });
+      ["korea", "us"].forEach((c) => {
+        const want = R[c].top, got = (tp[c] || []).map((x) => x && x.ticker);
+        if (want.length === 3 && want.join() !== got.join()) missTop.push(c + " 순위 1~3위(" + want.join(", ") + ")와 다름(" + got.join(", ") + ") — node scripts/pick-score.js 순서로 다시 쓴다");
+      });
+    }
+  } catch (e) { missTop.push("순위 확인 실패: " + (e && e.message)); }
 }
 
 const missLiq = [];
