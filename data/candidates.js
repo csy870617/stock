@@ -35,49 +35,13 @@ window.CANDIDATES = {
        "fresh": false
       }
      ],
-     "note": "추세 붕괴(단·중·장기 모두 하락세) — 3분기 영업이익이 원화 강세에 따른 외화 평가손실로 컨센서스를 밑돌고 이익률이 낮아졌다. 코스피 시총 상위 60 중 편성 밖이면서 우량 정체성을 채우는 후보는 SK스퀘어(하이닉스 지분법 이익 왜곡·노출 중복으로 기각)·삼성E&A(삼성그룹 상한)·미래에셋증권·기업은행(금융 상한)뿐이라 대체 후보가 없다.",
+     "note": "추세 붕괴(단·중·장기 모두 하락세) — 3분기 영업이익이 원화 강세에 따른 외화 평가손실로 컨센서스를 밑돌고 이익률이 낮아졌다. 11-15 근접 후보 HD현대마린솔루션은 편입 직후 엔진 신호가 모두 하락세(추세 붕괴)로 나와 취소했고, SK스퀘어는 지분법 이익 왜곡·하이닉스 노출 중복으로 기각, 삼성E&A는 삼성 상한, 금융 후보는 금융 상한이다. 인접 주제에도 시총 상위 70·3년 ROIC 8% 이상·비금융·비삼성·β 0.35 이상 후보가 없다.",
      "judged": "2026-11-11",
      "verdict": "실질",
-     "triedAt": "2026-11-13",
+     "triedAt": "2026-11-15",
      "since": "2026-10-21",
      "age": 23,
      "long": 1
-    },
-    {
-     "ticker": "000810",
-     "name": "삼성화재",
-     "state": "감시",
-     "flags": [
-      {
-       "k": "earn",
-       "msg": "실적 발표(11/12) · 전년 대비 매출 -6.6% — 가이던스·논거 확인",
-       "fresh": false
-      },
-      {
-       "k": "drop",
-       "msg": "5거래일 -12.4%(시장 중앙값 1.9%) 급락 — 원인 확인",
-       "fresh": false
-      }
-     ],
-     "note": "3분기 지배주주순이익 4,932억원(-8.3%)으로 감익했으나 카드 전망 범위 안이다. 1~9월 누적 1조8,655억원(+4.6%), 3분기 보험손익 191억원 흑자 전환으로 본업은 유지돼 매출 -6.6% 산식 확인 전까지 감시한다.",
-     "judged": "2026-11-12",
-     "verdict": "형식",
-     "by": "ai"
-    },
-    {
-     "ticker": "042700",
-     "name": "한미반도체",
-     "state": "감시",
-     "flags": [
-      {
-       "k": "earn",
-       "msg": "실적 발표(11/05) — 가이던스·논거 확인",
-       "fresh": false
-      }
-     ],
-     "note": "11/5 반도체 업종 동반 급락 — 3분기 매출 +8.9%·영업이익 +33.9%(영업이익률 50%대)로 역성장이 아니고 추세 붕괴도 아니다.",
-     "judged": "2026-11-05",
-     "verdict": "형식"
     },
     {
      "ticker": "064400",
@@ -125,14 +89,6 @@ window.CANDIDATES = {
      "url": "https://m.stock.naver.com/domestic/stock/033780/total"
     },
     {
-     "ticker": "443060",
-     "name": "HD현대마린솔루션",
-     "status": "근접 후보",
-     "why": "3년 평균 ROIC 33.3% · 매출 성장 13.6% · 주식 수 연 0%",
-     "near": "정체성 조건 미달: 시총 순위 72위 — 상위 60 안이어야 한다",
-     "url": "https://m.stock.naver.com/domestic/stock/443060/total"
-    },
-    {
      "ticker": "005940",
      "name": "NH투자증권",
      "status": "근접 후보",
@@ -158,25 +114,6 @@ window.CANDIDATES = {
       }
      ],
      "note": "3분기 영업이익 감소는 폴란드 K9 2차 물량 등 수익성 높은 수출 인도가 4분기로 밀리고 일회성 비용이 반영된 탓이다. 지상방산 수주잔고는 약 35조원이고 회사는 4분기 폴란드 천무 인도 목표를 높여 수출 성장 논거는 유지된다.",
-     "judged": "2026-11-07",
-     "verdict": "형식"
-    },
-    {
-     "ticker": "103590",
-     "name": "일진전기",
-     "state": "감시",
-     "flags": [],
-     "note": "5거래일 -12.5%로 시장 중앙값 +0.4%와 달리 급락했고, 11월 5일 효성중공업 10%대 급락 등 전력기기주가 일제히 약세였다. 일진전기 고유 악재는 확인되지 않아 원인 확인 전까지 감시한다.",
-     "judged": "2026-11-05",
-     "verdict": "형식",
-     "by": "ai"
-    },
-    {
-     "ticker": "095340",
-     "name": "ISC",
-     "state": "감시",
-     "flags": [],
-     "note": "3분기 매출과 영업이익이 모두 전년보다 늘어 성장은 이어졌다. 생산능력 제약으로 일부 납품이 4분기로 밀려 매출이 기대에 못 미쳤지만 논거인 AI 테스트 소켓 수요는 그대로다.",
      "judged": "2026-11-07",
      "verdict": "형식"
     }
@@ -312,8 +249,8 @@ window.CANDIDATES = {
        "fresh": false
       }
      ],
-     "note": "3분기 영업이익은 관세율 인하 효과로 전년보다 늘어 이익 붕괴는 아니다. 전기차 인센티브·원재료 부담으로 컨센서스를 크게 밑돌고 누적 영업이익은 줄었지만 저평가 논거는 남아 있다.",
-     "judged": "2026-11-07",
+     "note": "이익 개선 없음(올해 추정 영업이익 −6.2%·스크린 분기 값은 2분기 −4.9%) — 확정 3분기 영업이익이 전년보다 24.3% 늘어 '둘 중 하나 증가' 조건을 채우는 회복이 확인됐다. 증가분 상당 부분은 관세율 인하 기저효과이고 1~3분기 누적은 −8.1%라, 4분기 감소나 연간 감소가 확정되면 실질로 다시 본다.",
+     "judged": "2026-11-15",
      "verdict": "형식",
      "triedAt": "2026-10-30"
     },
@@ -333,9 +270,9 @@ window.CANDIDATES = {
        "fresh": false
       }
      ],
-     "note": "3분기 매출과 영업이익이 크게 늘었고 누적 영업이익이 이미 지난해 연간을 넘었다. 석탄 가격·해상운임 상승에 따른 자원·물류 개선으로 이익 개선 논거가 확인됐다.",
-     "judged": "2026-11-07",
-     "verdict": "없음"
+     "note": "시총 순위 247위 — 상위 200 미달은 4월 뒤 주가 하락(약 −34%)에서 생긴 경계 이탈이다. 3분기 영업이익 +120.8%, 1~3분기 누적이 이미 지난해 연간을 넘어 사업은 좋아졌다. EBIT/EV 가 문턱과 같아 다음 스크린에서 다시 본다.",
+     "judged": "2026-11-15",
+     "verdict": "형식"
     },
     {
      "ticker": "267270",
@@ -348,8 +285,8 @@ window.CANDIDATES = {
        "fresh": false
       }
      ],
-     "note": "합병 뒤 첫 분기 영업이익은 합산 전년보다 늘었고 순이익 감소는 외화채권 환산 손실 때문이다. 증권사 목표가 하향은 급락한 주가와 합병 효과 재산정이 겹친 조정이라 논거 훼손은 아니다.",
-     "judged": "2026-11-02",
+     "note": "EBIT/EV·FCF/시총 미달 — 2026-01 HD현대인프라코어 흡수합병으로 주식 수가 약 2.7배가 됐는데 분자는 합병 전 단독 2025 결산이라 생긴 합병 회계 왜곡이다. 합병 뒤 3분기 영업이익은 합산 전년보다 23.9% 늘었다. 합병 회사 2026 결산이 반영되는 2027-03 뒤 다시 본다.",
+     "judged": "2026-11-15",
      "verdict": "형식"
     },
     {
@@ -372,26 +309,6 @@ window.CANDIDATES = {
      "judged": "2026-11-12",
      "verdict": "형식",
      "by": "ai"
-    },
-    {
-     "ticker": "066570",
-     "name": "LG전자",
-     "state": "감시",
-     "flags": [],
-     "note": "3분기 영업이익은 7,818억원(전년비 +13.5%)이고 1~3분기 누적 4조원을 처음 넘어 이익 붕괴는 아니다. 주제 기준 미달 원인은 확인 전까지 감시한다.",
-     "judged": "2026-11-09",
-     "verdict": "형식",
-     "by": "ai"
-    },
-    {
-     "ticker": "086280",
-     "name": "현대글로비스",
-     "state": "감시",
-     "flags": [],
-     "note": "실적 발표 당일(10/30) 확정치 미확인 — 영업이익 감소는 유가·운임 요인으로 논거는 유지",
-     "judged": "2026-10-30",
-     "verdict": "형식",
-     "triedAt": "2026-10-30"
     },
     {
      "ticker": "018260",
@@ -668,16 +585,6 @@ window.CANDIDATES = {
    "eligible": 54,
    "defects": [
     {
-     "ticker": "V",
-     "name": "Visa",
-     "state": "감시",
-     "flags": [],
-     "note": "2026.09 분기 순매출 121억 달러(+13%), GAAP 순이익 60억 달러(+18%)로 대형·흑자 조건은 유지됐다. 신호 발동 원인인 3년 평균 ROIC 순위는 확인 전까지 감시한다.",
-     "judged": "2026-11-02",
-     "verdict": "형식",
-     "by": "ai"
-    },
-    {
      "ticker": "GOOGL",
      "name": "Alphabet",
      "state": "감시",
@@ -685,33 +592,9 @@ window.CANDIDATES = {
      "note": "10/28 실적 뒤 급락은 투자 평가손과 AI 설비투자 대비 잉여현금흐름 적자 우려 때문이다. 매출 +25%·클라우드 매출 두 배 성장·연간 capex 가이던스 유지로 사업 논거는 그대로라 형식 판정, 현금흐름 추이를 감시한다.",
      "judged": "2026-10-29",
      "verdict": "형식"
-    },
-    {
-     "ticker": "COST",
-     "name": "Costco Wholesale",
-     "state": "감시",
-     "flags": [
-      {
-       "k": "theme",
-       "msg": "주제 기준 미달 — 정체성 조건 미달: EBIT 마진 3.9% — 10% 이상이어야 한다(비금융)",
-       "fresh": false
-      }
-     ],
-     "note": "EBIT 마진 예전 조건만",
-     "judged": "2026-10-18",
-     "verdict": "형식"
     }
    ],
    "list": [
-    {
-     "ticker": "ETN",
-     "name": "Eaton",
-     "status": "검증 통과",
-     "note": "3분기 매출 28% 증가(유기적 19%, 가이던스 상단 초과)·부문 이익률 최고치, 연간 유기 성장 가이던스 상향. 데이터센터 수주 쏠림과 인수(Boyd Thermal·COL Group) 통합이 리스크다.",
-     "asOf": "2026-11-04",
-     "why": "매출 성장 10.3% · 주식 수 연 -2.1%",
-     "url": "https://m.stock.naver.com/worldstock/stock/ETN/total"
-    },
     {
      "ticker": "ASML",
      "name": "ASML N.V.",
@@ -723,6 +606,33 @@ window.CANDIDATES = {
      "url": "https://m.stock.naver.com/worldstock/stock/ASML.O/total"
     },
     {
+     "ticker": "KLAC",
+     "name": "KLA",
+     "status": "보류",
+     "note": "영업이익률·자본효율은 최상위지만 반도체 장비 사이클 업종이라 이익 변동이 크고 β 가 높아(일간 약 2.9) 미국 편성 β 를 크게 올린다.",
+     "asOf": "2026-11-15",
+     "why": "매출 성장 23.9% · 주식 수 연 -1.8%",
+     "url": "https://m.stock.naver.com/worldstock/stock/KLAC.O/total"
+    },
+    {
+     "ticker": "ETN",
+     "name": "Eaton",
+     "status": "보류",
+     "note": "3분기 데이터센터 수요로 사상 최대 실적이지만 3년 평균 ROIC 자료가 없어 우량 정체성을 판정할 수 없고 시총 순위가 상위 120 경계다. 성장 주제에 더 맞다.",
+     "asOf": "2026-11-15",
+     "why": "매출 성장 10.3% · 주식 수 연 -2.1%",
+     "url": "https://m.stock.naver.com/worldstock/stock/ETN/total"
+    },
+    {
+     "ticker": "VRTX",
+     "name": "Vertex Pharmaceuticals Incorporated",
+     "status": "보류",
+     "note": "낭포성 섬유증 독점·3년 평균 ROIC 약 24%·순현금으로 우량 품질은 최상위이지만 시총 순위가 상위 120 경계(118위)라 편입 직후 주제 기준 미달이 될 수 있다. 3분기 비GAAP EPS 컨센서스 하회, 매출 약 95%가 CF.",
+     "asOf": "2026-11-15",
+     "why": "3년 평균 ROIC 24.1% · 매출 성장 8.9% · 주식 수 연 0%",
+     "url": "https://m.stock.naver.com/worldstock/stock/VRTX.O/total"
+    },
+    {
      "ticker": "XOM",
      "name": "Exxonmobil",
      "status": "검증 대기",
@@ -730,25 +640,11 @@ window.CANDIDATES = {
      "url": "https://m.stock.naver.com/worldstock/stock/XOM/total"
     },
     {
-     "ticker": "CSCO",
-     "name": "Cisco Systems",
-     "status": "검증 대기",
-     "why": "3년 평균 ROIC 25.7% · 매출 성장 5.3% · 주식 수 연 -1.6%",
-     "url": "https://m.stock.naver.com/worldstock/stock/CSCO.O/total"
-    },
-    {
      "ticker": "PLTR",
      "name": "Palantir Technologies",
      "status": "검증 대기",
      "why": "매출 성장 56.2% · 주식 수 연 4.7%",
      "url": "https://m.stock.naver.com/worldstock/stock/PLTR.O/total"
-    },
-    {
-     "ticker": "MRK",
-     "name": "Merck &",
-     "status": "검증 대기",
-     "why": "매출 성장 1.3% · 주식 수 연 -1.3%",
-     "url": "https://m.stock.naver.com/worldstock/stock/MRK/total"
     },
     {
      "ticker": "MS",
@@ -779,18 +675,18 @@ window.CANDIDATES = {
      "url": "https://m.stock.naver.com/worldstock/stock/COP/total"
     },
     {
-     "ticker": "VRTX",
-     "name": "Vertex Pharmaceuticals Incorporated",
-     "status": "검증 대기",
-     "why": "3년 평균 ROIC 24.1% · 매출 성장 8.9% · 주식 수 연 0%",
-     "url": "https://m.stock.naver.com/worldstock/stock/VRTX.O/total"
-    },
-    {
      "ticker": "BRK.A",
      "name": "Berkshire Hathaway Class A",
      "status": "검증 대기",
      "why": "매출 성장 -1%",
      "url": "https://m.stock.naver.com/worldstock/stock/BRKa/total"
+    },
+    {
+     "ticker": "PGR",
+     "name": "The Progressive",
+     "status": "검증 대기",
+     "why": "매출 성장 16.3% · 주식 수 연 0.1%",
+     "url": "https://m.stock.naver.com/worldstock/stock/PGR/total"
     }
    ]
   },
@@ -941,16 +837,6 @@ window.CANDIDATES = {
      "note": "매출 역성장 필터(2025년 결산 매출 감소)에 걸렸다 — 2026년 2·3분기 매출이 각각 1.9%·2.9% 늘어 역성장이 이어지지 않았고 3분기 조정 EBIT도 21.6% 늘었다. 최근 분기 성장·4분기 순이익 조건은 분기 자료가 없어 잴 수 없다(3분기 순이익 흑자).",
      "judged": "2026-11-14",
      "verdict": "형식"
-    },
-    {
-     "ticker": "AMP",
-     "name": "Ameriprise Financial",
-     "state": "감시",
-     "flags": [],
-     "note": "10/29 3분기 EPS가 시장 예상을 4.1% 웃돌았고 순이익도 +5%였으나 EBIT는 전년 대비 -1%였다. 가이던스 훼손과 회사 고유 악재는 확인되지 않아 EBIT 감소 원인과 Comerica 자산 유출 영향 확인 전까지 감시한다.",
-     "judged": "2026-10-30",
-     "verdict": "형식",
-     "by": "ai"
     }
    ],
    "list": [
@@ -1074,10 +960,9 @@ window.CANDIDATES = {
        "fresh": false
       }
      ],
-     "note": "10/27 3분기 순매출 +7%, 판매량 +5%, 조정 EPS +11%로 EPS 서프라이즈 4.6%를 냈고 연간 조정 EPS 성장률 가이던스를 11% 이상으로 상향했다. 배당 논거는 유지돼 숫자 신호만 뜬 것으로 본다.",
-     "judged": "2026-10-28",
-     "verdict": "형식",
-     "by": "ai"
+     "note": "배당수익률 2.2% — 하한 2.5% 미달은 주가 상승 몫이다. 2026-02 분기 배당을 0.51→0.53달러로 올려 64년 연속 증액했고 증액 당시 수익률은 하한 위였다. 3분기 유기적 매출 +7%·조정 EPS +11%로 사업 악화는 없다.",
+     "judged": "2026-11-15",
+     "verdict": "형식"
     },
     {
      "ticker": "JNJ",
@@ -1090,8 +975,8 @@ window.CANDIDATES = {
        "fresh": false
       }
      ],
-     "note": "주가 상승",
-     "judged": "2026-10-18",
+     "note": "배당수익률 1.9% — 하한 2.5% 미달은 주가 상승 몫이다. 2026-04 분기 배당을 1.30→1.34달러로 올려 64년 연속 증액했고 배당성향은 약 50%다. 하한 회복엔 주가가 약 25% 내려야 해 형식 상태가 길어질 수 있다.",
+     "judged": "2026-11-15",
      "verdict": "형식"
     },
     {
@@ -1208,10 +1093,14 @@ window.CANDIDATES = {
    }
   },
   "korea|core|278470": {
-   "trend": "-",
+   "trend": "2026-11-13",
+   "tvf": "pahvbu",
    "scheme": "keys",
    "theme": {
-    "id:rank": "-"
+    "id:rank": "2026-11-13"
+   },
+   "vf": {
+    "id:rank": "1k1zbz9"
    }
   },
   "korea|core|064400": {
@@ -1242,12 +1131,6 @@ window.CANDIDATES = {
    "scheme": "keys",
    "theme": {
     "gate": "-"
-   }
-  },
-  "us|core|COST": {
-   "scheme": "keys",
-   "theme": {
-    "id:ebitM": "-"
    }
   },
   "us|growth|NVDA": {
@@ -1294,7 +1177,7 @@ window.CANDIDATES = {
  "summary": {
   "review": 0,
   "defect": 1,
-  "watch": 26,
+  "watch": 17,
   "untried": 0,
   "dup": 0,
   "long": 1
