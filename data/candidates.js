@@ -686,11 +686,6 @@ window.CANDIDATES = {
        "fresh": false
       },
       {
-       "k": "drop",
-       "msg": "5거래일 -12.6%(시장 중앙값 0.1%) 급락 — 원인 확인",
-       "fresh": false
-      },
-      {
        "k": "tpcut",
        "msg": "컨센서스 목표가 14일 새 -12.8% 하향 — 논거 확인",
        "fresh": false
