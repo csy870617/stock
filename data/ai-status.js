@@ -2,7 +2,7 @@
 // 앱 'AI 연결' 창이 '매일 자동 분석' 칸에 보여 준다. 비용은 토큰 기준 추정(웹 검색은 횟수만 — 검색당 요금 별도).
 window.AI_STATUS = {
  "defects": {
-  "at": "2026-11-16T16:25:13.891Z",
+  "at": "2026-11-17T03:01:16.196Z",
   "model": "claude-sonnet-5-5",
   "ok": true,
   "pending": 0,
@@ -18,57 +18,57 @@ window.AI_STATUS = {
   }
  },
  "news": {
-  "at": "2026-11-16T16:26:25.041Z",
+  "at": "2026-11-17T03:05:38.355Z",
   "model": "claude-haiku-5-5",
   "ok": true,
   "stocks": 97,
   "fetched": 97,
-  "called": 91,
-  "lines": 72,
+  "called": 79,
+  "lines": 70,
   "usage": {
-   "calls": 91,
-   "input": 134369,
-   "output": 5562,
+   "calls": 79,
+   "input": 122306,
+   "output": 4679,
    "cacheRead": 0,
    "searches": 0,
-   "usd": 0.016
+   "usd": 0.015
   }
  },
  "daily": {
-  "at": "2026-11-14T00:58:47.217Z",
-  "T": "2026-11-13",
+  "at": "2026-11-17T03:02:36.221Z",
+  "T": "2026-11-16",
   "basis": {
-   "kr": "2026-11-13",
-   "us": "2026-11-13"
+   "kr": "2026-11-16",
+   "us": "2026-11-16"
   },
   "model": "claude-opus-5-5",
   "ok": true,
   "seen": {
-   "at": "2026-11-16T16:26:24.917Z",
+   "at": "2026-11-17T03:05:38.214Z",
    "basis": {
     "kr": "2026-11-16",
-    "us": "2026-11-13"
+    "us": "2026-11-16"
    },
    "items": {
     "market": {
-     "sig": "11/16 코스피는 반도체 대형주 매도와 외국인·연기금 순매도로 -3.5#18uut07",
+     "sig": "엔비디아 급락과 미국의 대중국 AI 칩 규제 강화가 겹치며 16일 미국·#uittd3",
      "basis": {
       "kr": "2026-11-16",
-      "us": "2026-11-13"
+      "us": "2026-11-16"
      }
     },
     "liquidity": {
-     "sig": "미국은 돈이 들어오는 흐름이지만 12월 인상 기대와 10년물 5.15%가#d59pzm",
+     "sig": "미국은 돈이 들어오는 흐름이지만 12월 인상 기대와 10년물 5%대가 겹#1n6pm3g",
      "basis": {
       "kr": "2026-11-16",
-      "us": "2026-11-13"
+      "us": "2026-11-16"
      }
     },
     "indexNotes": {
-     "sig": "하락세 — 일봉 구름 아래·전환선<기준선, RSI 35.5 과매도 근접,#w6ezc1",
+     "sig": "하락세(매도) — 일봉 구름 아래·전환선<기준선, RSI 35.5로 과매#1948lr3",
      "basis": {
       "kr": "2026-11-16",
-      "us": "2026-11-13"
+      "us": "2026-11-16"
      }
     },
     "topPicks": {
@@ -81,32 +81,29 @@ window.AI_STATUS = {
    }
   },
   "inputs": {
-   "market": "3zcp1s",
-   "indexNotes": "1cbc9ns"
+   "market": "1atgd5e",
+   "indexNotes": "1yf5hny"
   },
   "wrote": [
    "liquidity",
    "indexNotes",
-   "market",
-   "topPicks"
+   "market"
   ],
   "sig": {
-   "liquidity": "미국은 돈이 들어오는 흐름이지만 연준 인상 기대와 10년물 5.15%가 #1fe3j7e",
-   "indexNotes": "하락세 — 일봉 구름 아래·전환선<기준선, RSI 38.9 과매도 근접,#hd0dn",
-   "market": "엔비디아 젠슨 황 CEO 사임 여파로 반도체주가 다시 밀리며 11/13 #1dy48km",
+   "liquidity": "미국은 돈이 들어오는 흐름이지만 12월 인상 기대와 10년물 5%대가 겹#1n6pm3g",
+   "indexNotes": "하락세(매도) — 일봉 구름 아래·전환선<기준선, RSI 35.5로 과매#1948lr3",
+   "market": "엔비디아 급락과 미국의 대중국 AI 칩 규제 강화가 겹치며 16일 미국·#uittd3",
    "topPicks": "순이익의 50% 이상을 배당과 자사주 매입·소각으로 돌려주는 원칙으로 2#181anqq"
   },
   "sources": 40,
   "usage": {
    "calls": 2,
-   "input": 240348,
-   "output": 16003,
+   "input": 361159,
+   "output": 15792,
    "cacheRead": 0,
    "searches": 6,
-   "usd": 1.281
+   "usd": 1.76
   },
-  "note": "새 종가로 세션 문장 갱신: market, indexNotes",
-  "checkedAt": "2026-11-16T16:26:24.917Z",
-  "skipped": "오늘(2026-11-16) 몫이 이미 최신 — 루틴 세션이 작성"
+  "note": "새 종가로 세션 문장 갱신: market, liquidity, indexNotes"
  }
 };
