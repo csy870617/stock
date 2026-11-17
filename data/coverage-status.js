@@ -72,9 +72,9 @@ window.COVERAGE_STATUS = {
   {
    "key": "defects",
    "label": "결격 점검",
-   "done": 0,
+   "done": 1,
    "total": 1,
-   "ok": false
+   "ok": true
   }
  ],
  "rotation": [
@@ -122,7 +122,7 @@ window.COVERAGE_STATUS = {
    "ok": true
   }
  ],
- "ok": false,
+ "ok": true,
  "overdue": [],
- "dataHash": "678c225d6b55"
+ "dataHash": "558432be7721"
 };

@@ -91,6 +91,13 @@ window.STOCK_QUOTES = {
    "close": 231000,
    "closeDate": "2026-11-17"
   },
+  "282330": {
+   "price": 140800,
+   "date": "2026-11-17",
+   "changePct": -1.4,
+   "close": 140800,
+   "closeDate": "2026-11-17"
+  },
   "298040": {
    "price": 1646000,
    "date": "2026-11-17",
@@ -313,13 +320,6 @@ window.STOCK_QUOTES = {
    "date": "2026-11-17",
    "changePct": -1.3,
    "close": 48900,
-   "closeDate": "2026-11-17"
-  },
-  "030190": {
-   "price": 16260,
-   "date": "2026-11-17",
-   "changePct": -4,
-   "close": 16260,
    "closeDate": "2026-11-17"
   },
   "042700": {
@@ -695,7 +695,7 @@ window.STOCK_QUOTES = {
    "changePct": -2.6,
    "close": 4968.48,
    "closeDate": "2026-11-17",
-   "at": "2026-11-17T07:55:35Z"
+   "at": "2026-11-17T09:15:49Z"
   },
   "sp500": {
    "symbol": "^GSPC",
@@ -704,7 +704,7 @@ window.STOCK_QUOTES = {
    "changePct": -1.9,
    "close": 7416.59,
    "closeDate": "2026-11-16",
-   "at": "2026-11-17T07:55:35Z"
+   "at": "2026-11-17T09:15:49Z"
   },
   "rsp": {
    "symbol": "RSP",
@@ -713,7 +713,7 @@ window.STOCK_QUOTES = {
    "changePct": -1,
    "close": 218.93,
    "closeDate": "2026-11-16",
-   "at": "2026-11-17T07:55:35Z"
+   "at": "2026-11-17T09:15:49Z"
   }
  }
 };

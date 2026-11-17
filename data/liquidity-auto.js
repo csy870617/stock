@@ -42,56 +42,56 @@ window.LIQUIDITY_AUTO = {
   "meetings": [
    {
     "date": "2026-12-09",
-    "rate": 4.134,
-    "stepBp": 25.4,
-    "cumBp": 25.4,
+    "rate": 4.141,
+    "stepBp": 26.1,
+    "cumBp": 26.1,
     "outcomes": [
      {
       "n": 1,
-      "p": 98
+      "p": 96
      },
      {
       "n": 2,
-      "p": 2
+      "p": 4
      }
     ]
    },
    {
     "date": "2027-01-27",
-    "rate": 4.31,
-    "stepBp": 17.6,
-    "cumBp": 43,
+    "rate": 4.315,
+    "stepBp": 17.4,
+    "cumBp": 43.5,
     "outcomes": [
      {
       "n": 2,
-      "p": 72
+      "p": 74
      },
      {
       "n": 1,
-      "p": 28
+      "p": 26
      }
     ]
    },
    {
     "date": "2027-03-17",
-    "rate": 4.476,
+    "rate": 4.481,
     "stepBp": 16.6,
-    "cumBp": 59.6,
+    "cumBp": 60.1,
     "outcomes": [
      {
       "n": 2,
-      "p": 62
+      "p": 60
      },
      {
       "n": 3,
-      "p": 38
+      "p": 40
      }
     ]
    },
    {
     "date": "2027-04-28",
     "rate": 4.55,
-    "stepBp": 7.4,
+    "stepBp": 6.9,
     "cumBp": 67,
     "outcomes": [
      {
