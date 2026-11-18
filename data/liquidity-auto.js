@@ -6,10 +6,10 @@ window.LIQUIDITY_AUTO = {
  "note": "Yahoo 시장지표 기반 자동 baseline(금리·일드커브·VIX·HY신용·달러·원달러·코스피). 거시 이벤트·내러티브는 미반영 — 온디맨드 유동성이 보정.",
  "inputs": {
   "us10y": "5.10",
-  "curve": "0.96",
+  "curve": "0.97",
   "vix": "25.5",
   "hyg20": "0.3",
-  "dxy": "103.6",
+  "dxy": "103.5",
   "usdkrw": "1336"
  },
  "us": {
@@ -106,49 +106,45 @@ window.LIQUIDITY_AUTO = {
    },
    {
     "date": "2027-06-09",
-    "rate": 4.636,
-    "stepBp": 8.6,
-    "cumBp": 75.6,
+    "rate": 4.629,
+    "stepBp": 7.9,
+    "cumBp": 74.9,
     "outcomes": [
      {
       "n": 3,
-      "p": 98
-     },
-     {
-      "n": 4,
-      "p": 2
+      "p": 100
      }
     ]
    },
    {
     "date": "2027-07-28",
-    "rate": 4.655,
-    "stepBp": 1.9,
-    "cumBp": 77.5,
+    "rate": 4.65,
+    "stepBp": 2.1,
+    "cumBp": 77,
     "outcomes": [
      {
       "n": 3,
-      "p": 90
+      "p": 92
      },
      {
       "n": 4,
-      "p": 10
+      "p": 8
      }
     ]
    },
    {
     "date": "2027-09-15",
-    "rate": 4.675,
-    "stepBp": 2,
-    "cumBp": 79.5,
+    "rate": 4.68,
+    "stepBp": 3,
+    "cumBp": 80,
     "outcomes": [
      {
       "n": 3,
-      "p": 82
+      "p": 80
      },
      {
       "n": 4,
-      "p": 18
+      "p": 20
      }
     ]
    }
@@ -158,11 +154,11 @@ window.LIQUIDITY_AUTO = {
  "bok": {
   "asOf": "2026-11-17",
   "base": 3,
-  "call": 3.083,
+  "call": 3.065,
   "cd91": 3.38,
   "y1": 3.644,
-  "y2": 3.727,
-  "y3": 3.723,
+  "y2": 3.736,
+  "y3": 3.746,
   "exp3m": {
    "rate": 3.2,
    "chg": 0.2,

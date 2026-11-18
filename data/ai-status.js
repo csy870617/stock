@@ -2,87 +2,100 @@
 // 앱 'AI 연결' 창이 '매일 자동 분석' 칸에 보여 준다. 비용은 토큰 기준 추정(웹 검색은 횟수만 — 검색당 요금 별도).
 window.AI_STATUS = {
  "defects": {
-  "at": "2026-11-18T02:33:17.613Z",
+  "at": "2026-11-18T07:31:56.398Z",
   "model": "claude-sonnet-5-5",
   "ok": true,
-  "pending": 0,
-  "judged": 0,
-  "items": [],
+  "pending": 2,
+  "judged": 2,
+  "items": [
+   {
+    "g": "korea|core",
+    "t": "207940",
+    "name": "삼성바이오로직스",
+    "verdict": "형식"
+   },
+   {
+    "g": "korea|dividend",
+    "t": "005850",
+    "name": "에스엘",
+    "verdict": "형식"
+   }
+  ],
   "usage": {
-   "calls": 0,
-   "input": 0,
-   "output": 0,
+   "calls": 4,
+   "input": 53468,
+   "output": 2727,
    "cacheRead": 0,
-   "searches": 0,
-   "usd": 0
+   "searches": 6,
+   "usd": 0.134
   }
  },
  "news": {
-  "at": "2026-11-18T02:37:38.981Z",
+  "at": "2026-11-18T07:37:09.548Z",
   "model": "claude-haiku-5-5",
   "ok": true,
   "stocks": 97,
   "fetched": 97,
-  "called": 90,
-  "lines": 75,
+  "called": 61,
+  "lines": 81,
   "usage": {
-   "calls": 90,
-   "input": 138559,
-   "output": 6251,
+   "calls": 61,
+   "input": 104908,
+   "output": 4885,
    "cacheRead": 0,
    "searches": 0,
-   "usd": 0.017
+   "usd": 0.013
   }
  },
  "daily": {
-  "at": "2026-11-18T02:34:53.651Z",
-  "T": "2026-11-17",
+  "at": "2026-11-18T07:34:08.331Z",
+  "T": "2026-11-18",
   "basis": {
-   "kr": "2026-11-17",
+   "kr": "2026-11-18",
    "us": "2026-11-17"
   },
   "model": "claude-opus-5-5",
   "ok": true,
   "seen": {
-   "at": "2026-11-18T02:37:38.880Z",
+   "at": "2026-11-18T07:37:09.415Z",
    "basis": {
-    "kr": "2026-11-17",
+    "kr": "2026-11-18",
     "us": "2026-11-17"
    },
    "items": {
     "market": {
-     "sig": "미국·한국 증시가 함께 밀렸고 낙폭은 한국이 더 컸다. 다우 -1.64%#bkdj5m",
+     "sig": "미국은 엔비디아 실적 경계와 금리 인상 우려로 11/17 다우가 1.64#11fk77g",
      "basis": {
-      "kr": "2026-11-17",
+      "kr": "2026-11-18",
       "us": "2026-11-17"
      }
     },
     "liquidity": {
-     "sig": "미국은 돈이 들어오는 흐름에 연준 인상 경로가 겹친 신중 국면이고, 한국#n8g78o",
+     "sig": "미국은 돈이 들어오는 흐름에 연준 인상 경로와 극도의 공포가 겹친 신중 #11dzkvl",
      "basis": {
-      "kr": "2026-11-17",
+      "kr": "2026-11-18",
       "us": "2026-11-17"
      }
     },
     "indexNotes": {
-     "sig": "하락세. 일목 구름 아래에 있고 RSI(14)는 33.2다. 위쪽에 거래#9wq8z9",
+     "sig": "하락세 — 일봉 구름 아래, 전환선<기준선, RSI 36.5다. 이번 상#109w3r4",
      "basis": {
-      "kr": "2026-11-17",
+      "kr": "2026-11-18",
       "us": "2026-11-17"
      }
     },
     "topPicks": {
-     "sig": "300억원 자사주 매입을 마쳐 밸류업 계획 이후 유통주식수 누적 감소율이#l1b2q7",
+     "sig": "300억원 자사주 매입을 마쳐 밸류업 계획 이후 유통주식수가 약 7.4%#1ldlqpb",
      "basis": {
-      "kr": "2026-11-17",
+      "kr": "2026-11-18",
       "us": "2026-11-17"
      }
     }
    }
   },
   "inputs": {
-   "market": "1hwpzey",
-   "indexNotes": "13j6liy"
+   "market": "b2z09j",
+   "indexNotes": "mt14fp"
   },
   "wrote": [
    "liquidity",
@@ -91,20 +104,19 @@ window.AI_STATUS = {
    "topPicks"
   ],
   "sig": {
-   "liquidity": "미국은 돈이 들어오는 흐름에 연준 인상 경로가 겹친 신중 국면이고, 한국#n8g78o",
-   "indexNotes": "하락세. 일목 구름 아래에 있고 RSI(14)는 33.2다. 위쪽에 거래#9wq8z9",
-   "market": "미국·한국 증시가 함께 밀렸고 낙폭은 한국이 더 컸다. 다우 -1.64%#bkdj5m",
-   "topPicks": "300억원 자사주 매입을 마쳐 밸류업 계획 이후 유통주식수 누적 감소율이#l1b2q7"
+   "liquidity": "미국은 돈이 들어오는 흐름에 연준 인상 경로와 극도의 공포가 겹친 신중 #11dzkvl",
+   "indexNotes": "하락세 — 일봉 구름 아래, 전환선<기준선, RSI 36.5다. 이번 상#109w3r4",
+   "market": "미국은 엔비디아 실적 경계와 금리 인상 우려로 11/17 다우가 1.64#11fk77g",
+   "topPicks": "300억원 자사주 매입을 마쳐 밸류업 계획 이후 유통주식수가 약 7.4%#1ldlqpb"
   },
   "sources": 40,
   "usage": {
    "calls": 2,
-   "input": 356905,
-   "output": 15318,
+   "input": 445578,
+   "output": 15200,
    "cacheRead": 0,
    "searches": 6,
-   "usd": 1.734
-  },
-  "note": "새 종가로 세션 문장 갱신: market, liquidity, indexNotes"
+   "usd": 2.086
+  }
  }
 };

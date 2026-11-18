@@ -3,7 +3,7 @@
 // 세션 판정은 data/candidate-notes.json(CLAUDE.md §3-7) — 이 파일을 직접 고치지 않는다.
 window.CANDIDATES = {
  "asOf": "2026-11-18",
- "T": "2026-11-17",
+ "T": "2026-11-18",
  "screenAsOf": "2026-11-18",
  "screenFresh": true,
  "beta": {
@@ -35,8 +35,24 @@ window.CANDIDATES = {
      "verdict": "실질",
      "triedAt": "2026-11-17",
      "since": "2026-10-21",
-     "age": 27,
-     "long": 1
+     "age": 28,
+     "long": 2
+    },
+    {
+     "ticker": "207940",
+     "name": "삼성바이오로직스",
+     "state": "감시",
+     "flags": [
+      {
+       "k": "trend",
+       "msg": "추세 붕괴(단·중·장기 모두 매도 이하)",
+       "fresh": false
+      }
+     ],
+     "note": "추세 붕괴 신호는 떴지만 회사 고유 악재로 확인된 것은 없다. 최근 분기(2026.06) 매출 +30.2%, 영업이익 +22.9%로 실적은 견조하고 하락 원인은 확인 전까지 감시한다.",
+     "judged": "2026-11-18",
+     "verdict": "형식",
+     "by": "ai"
     },
     {
      "ticker": "064400",
@@ -433,6 +449,22 @@ window.CANDIDATES = {
      "note": "3분기 누적 순이익은 판관비 증가로 소폭 줄었지만 이자이익이 늘고 보통주자본비율이 역대 최고다. 배당 삭감 발표는 없고 회사는 주주환원을 자사주 매입·소각 중심으로 늘리는 방향을 밝혔다.",
      "judged": "2026-11-07",
      "verdict": "형식"
+    },
+    {
+     "ticker": "005850",
+     "name": "에스엘",
+     "state": "감시",
+     "flags": [
+      {
+       "k": "drop",
+       "msg": "5거래일 -15.7%(시장 중앙값 -1.9%) 급락 — 원인 확인",
+       "fresh": false
+      }
+     ],
+     "note": "5거래일 -15.7% 급락의 원인은 3분기 영업이익이 시장 예상을 밑돈 데다 원재료 부담으로 증권사 목표가가 내려간 것이다. 가이던스 훼손이나 지배구조 사건은 확인되지 않아 실적 추이 확인 전까지 감시한다.",
+     "judged": "2026-11-18",
+     "verdict": "형식",
+     "by": "ai"
     },
     {
      "ticker": "030200",
@@ -1087,6 +1119,10 @@ window.CANDIDATES = {
     "gate": "-"
    }
   },
+  "korea|core|207940": {
+   "trend": "2026-11-18",
+   "tvf": ""
+  },
   "korea|core|278470": {
    "trend": "2026-11-13",
    "tvf": "pahvbu",
@@ -1172,8 +1208,8 @@ window.CANDIDATES = {
  "summary": {
   "review": 0,
   "defect": 1,
-  "watch": 18,
-  "untried": 0,
+  "watch": 20,
+  "untried": 1,
   "dup": 0,
   "long": 1
  }

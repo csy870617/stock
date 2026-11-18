@@ -2,7 +2,7 @@
 // 앱 상단 '데이터 신선도' 패널이 읽는다. 직접 수정하지 말 것.
 window.COVERAGE_STATUS = {
  "asOf": "2026-11-18",
- "T": "2026-11-17",
+ "T": "2026-11-18",
  "total": 100,
  "cycleDays": 7,
  "daily": [
@@ -51,9 +51,9 @@ window.COVERAGE_STATUS = {
   {
    "key": "backbone",
    "label": "지표 재생성",
-   "done": 2,
+   "done": 0,
    "total": 2,
-   "ok": true
+   "ok": false
   },
   {
    "key": "flows",
@@ -72,9 +72,9 @@ window.COVERAGE_STATUS = {
   {
    "key": "defects",
    "label": "결격 점검",
-   "done": 1,
+   "done": 0,
    "total": 1,
-   "ok": true
+   "ok": false
   }
  ],
  "rotation": [
@@ -130,5 +130,5 @@ window.COVERAGE_STATUS = {
    "days": 15
   }
  ],
- "dataHash": "c902f81f6efa"
+ "dataHash": "7d86c37a4149"
 };
