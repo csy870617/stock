@@ -1370,7 +1370,7 @@ body.sheet-open .toast { bottom: calc(88px + env(safe-area-inset-bottom)); }
 
   <footer class="foot" id="foot">
     <p><b>투자 권유가 아닌 참고 정보.</b> 단·중·장 추세 상태(강한 상승세~강한 하락세)는 이미 일어난 움직임의 요약이지 매수·매도 시점이 아니다.</p>
-    <p><span id="routineTime">매일 한국시간 오전 7시·오후 6시</span> 정기 분석 · 시세·지표는 장 마감 직후 자동 갱신 · 가격 옆 점(●)은 장중 시세(최대 20분가량 지연 가능) — 장이 닫히면 마지막 종가</p>
+    <p><span id="routineTime">매일 한국시간 오전 7시·오후 6시</span> 정기 분석 · 시세·지표는 장 마감 직후 자동 갱신 · 가격 옆 점(●)은 장중 시세(상세 화면에 몇 시 기준인지 표시) — 장이 닫히면 마지막 종가</p>
     <details class="foot-more" data-sk="foot-more">
       <summary>안내 · 신호·범위·목표가를 읽는 법</summary>
       <p id="disclaimer"></p>
@@ -1693,7 +1693,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
       todo.forEach(function (s) {
         candidates(s.t).forEach(function (sym) { symbols.push(sym); owner[sym] = s.t; });
       });
-      var url = QUOTES_API + (QUOTES_API.indexOf("?") >= 0 ? "&" : "?") + "symbols=" + encodeURIComponent(symbols.join(","));
+      var url = liveUrl(symbols);
       var ctrl = new AbortController();
       var to = setTimeout(function () { ctrl.abort(); }, 9000);
       fetch(url, { signal: ctrl.signal, cache: "no-store" })
@@ -2306,6 +2306,12 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
   // 5분마다 다시 받는다(2026-10-29 사용자 '종목 시세도 5분마다 자동 갱신') — 받은 시각과, 한 번이라도 화면에 나온 종목
   var LIVE_MS = 300000, liveAt = {}, liveSeen = {};
   var liveSupported = typeof window.fetch === "function" && typeof AbortController === "function" && !!QUOTES_API;
+  // 지금 시세 주소 — 끝에 요청 시각(_)을 붙인다. 시세 서버 앞단(Cloudflare)이 같은 주소의 응답을 60초 재사용해서
+  //   새로고침해도·1분마다 다시 받아도 같은 값이 돌아왔다(2026-11-18 점검: cf-cache-status HIT, age 4~8초). 주소가 매번 달라 늘 새로 받는다.
+  //   과거 시계열(history=1)은 하루 단위라 그대로 30분 재사용한다.
+  function liveUrl(symbols) {
+    return QUOTES_API + (QUOTES_API.indexOf("?") >= 0 ? "&" : "?") + "symbols=" + encodeURIComponent(symbols.join(",")) + "&_=" + Date.now();
+  }
 
   function symbolFor(s) {
     if (s.market === "KOSPI") return s.ticker + ".KS";
@@ -2331,7 +2337,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     }
     todo.forEach(function (s) { liveInflight[s.ticker] = 1; });
     var symbols = todo.map(symbolFor);
-    var url = QUOTES_API + (QUOTES_API.indexOf("?") >= 0 ? "&" : "?") + "symbols=" + encodeURIComponent(symbols.join(","));
+    var url = liveUrl(symbols);
     var ctrl = new AbortController();
     var to = setTimeout(function () { ctrl.abort(); }, 9000);
     fetch(url, { signal: ctrl.signal, cache: "no-store" })
@@ -2344,7 +2350,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
           liveAt[s.ticker] = Date.now();
           if (v && typeof v.price === "number" && isFinite(v.price)) {
             liveCache[s.ticker] = { price: v.price, date: v.date, chg: typeof v.changePct === "number" && isFinite(v.changePct) ? v.changePct : null,
-              o: numOr(v.open), h: numOr(v.high), l: numOr(v.low), vol: numOr(v.volume) };   // 그날 시가·고가·저가·거래량(시세 서버가 주면 — 상세 차트 장중 봉)
+              o: numOr(v.open), h: numOr(v.high), l: numOr(v.low), vol: numOr(v.volume), t: numOr(v.time) };   // t = 시세 서버가 준 체결 시각(초 — 없으면 null)   // 그날 시가·고가·저가·거래량(시세 서버가 주면 — 상세 차트 장중 봉)
             any = true;
           }
           else if (!liveCache[s.ticker]) { liveCache[s.ticker] = null; }   // 응답에 없으면 받아 둔 값·스냅샷 유지
@@ -2360,6 +2366,18 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
   }
 
   function numOr(v) { return typeof v === "number" && isFinite(v) ? v : null; }
+  // 장중 표시 — 시세 서버가 체결 시각(time)을 주면 '장중 09:44'처럼 그 시각(이 기기 시계 기준)을 붙이고, 3분 넘게 묵은 값이면 몇 분 전인지 적는다.
+  //   시각을 주지 않는 예전 시세 서버면 예전 안내 그대로(야후의 한국 시세는 20분 늦다). 2026-11-18 사용자 '실시간 데이터가 최대한 최신으로'.
+  function hhmm(t) { var d = new Date(t * 1000); return ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2); }
+  function liveNote(t) {
+    if (!t) return "최대 20분가량 늦을 수 있음";
+    var lag = Math.round((Date.now() / 1000 - t) / 60);
+    return hhmm(t) + " 기준" + (lag >= 3 ? "(약 " + lag + "분 전 값)" : "");
+  }
+  function liveTag(word, t) {
+    var lag = t ? Math.round((Date.now() / 1000 - t) / 60) : 0;
+    return '<span class="live-tx" title="' + esc(word + " 시세 — " + liveNote(t)) + '"><i class="live-dot"></i>' + esc(word) + (t ? " " + hhmm(t) + (lag >= 3 ? "(" + lag + "분 전)" : "") : "") + "</span>";
+  }
   // 실시간 값의 날짜가 너무 오래됐는지 — 거래정지·심볼 변경 시 Yahoo 가 옛 시세를 얼려
   // 반환하는데, 날짜가 8일 초과로 오래되면 실시간 값을 버리고 스냅샷으로 폴백한다.
   function liveFresh(dateStr) {
@@ -2404,7 +2422,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     var lv = liveCache[s.ticker];
     if (lv && lv.price != null && liveFresh(lv.date)) {
       var up = (s.targetPrice != null && lv.price) ? (s.targetPrice - lv.price) / lv.price * 100 : s.upside;
-      return { price: lv.price, priceDate: lv.date || s.priceDate, upside: up, live: inSession(isKrStock(s), lv.date), fetched: true, chg: liveChg(s, lv) };
+      return { price: lv.price, priceDate: lv.date || s.priceDate, upside: up, live: inSession(isKrStock(s), lv.date), fetched: true, chg: liveChg(s, lv), t: lv.t };
     }
     // 시세 서버가 없을 때의 스냅샷 — Action 이 장중에 받았으면 price 는 장중가(priceDate > 마지막 종가일)라 '종가'로 적지 않는다
     var intra = !!(s._closeDate && s.priceDate && s.priceDate > s._closeDate);
@@ -3688,7 +3706,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
   }
   function detailHtml(s, c, it) {
     var e = effective(s), n = s.techNote || {}, sd = staleDays(s);
-    var meta = (e.live ? '<span class="live-tx" title="장중 시세 — 거래소·시세 서버 사정으로 최대 20분가량 늦을 수 있음"><i class="live-dot"></i>장중</span>'
+    var meta = (e.live ? liveTag("장중", e.t)
       : e.intra ? '<span title="자동 갱신 시점의 장중 가격 — 실시간 시세를 받지 못함">' + esc(e.priceDate) + " 장중 시세(갱신 시점)</span>"
       : esc(e.priceDate || D.generatedAt) + " 종가" + (sd >= 7 ? " (" + sd + "일 전)" : "")) + " · 전일 대비";
     var badges = detailBadges(s, c, e), alerts = detailAlerts(s, c, e);
@@ -3917,7 +3935,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     var q = idxQuote(x), dir = q.ch == null ? "flat" : (q.ch > 0 ? "up" : q.ch < 0 ? "down" : "flat");
     var asOf = window.INDEX_TA && window.INDEX_TA.asOf;
     var top = '<div class="dt-top"><div class="dt-pxl"><span class="dt-pv">' + esc(q.lv) + '</span><div class="dt-ch ' + dir + '">' + esc(q.chTxt) + "</div></div>" +
-      '<div class="dt-meta">' + (q.live ? '<span class="live-tx" title="장중 실시간 — 최대 20분가량 늦을 수 있음"><i class="live-dot"></i>장중</span>' : q.date ? esc(mdOf(q.date)) + " 종가" : "") +
+      '<div class="dt-meta">' + (q.live ? liveTag("장중", q.t) : q.date ? esc(mdOf(q.date)) + " 종가" : "") +
       " · 전일 대비" + (q.fresh && idxBarDate(x) && q.date > idxBarDate(x) ? ' · <span title="차트는 장중 값까지, 아래 신호·수급은 ' + esc(mdOf(idxBarDate(x))) + ' 마감까지(매일 장 마감 뒤 자동 갱신)">신호·수급 ' + esc(mdOf(idxBarDate(x))) + " 마감</span>" : "") + "</div></div>";
     var sig = '<div class="dt-sum"><div class="dt-sig">' + [["단기", x.short, "일봉"], ["중기", x.mid, "주봉"], ["장기", x.long, "월봉"]].map(function (p) {
       var g = p[1] && p[1].signal;
@@ -3959,7 +3977,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     }[m.key] || ["", ""];
     var srcTip = SRC[1];
     var top = '<div class="dt-top"><div class="dt-pxl"><span class="dt-pv">' + esc(q.lv) + (m.unit ? '<small class="dt-u">' + esc(m.unit) + "</small>" : "") + "</span>" + chgHtml(q.ch, "dt-ch") + "</div>" +
-      '<div class="dt-meta">' + (q.live ? '<span class="live-tx" title="실시간 시세 — 최대 20분가량 늦을 수 있음"><i class="live-dot"></i>실시간</span>' : esc(mdOf(q.date || m.asOf)) + " 마감") +
+      '<div class="dt-meta">' + (q.live ? liveTag("실시간", q.t) : esc(mdOf(q.date || m.asOf)) + " 마감") +
       ' · 전일 대비' + (SRC[0] ? ' · <span title="' + esc(srcTip) + '">' + esc(SRC[0]) + "</span>" : "") + "</div></div>";
     var sig = '<div class="dt-sum"><div class="dt-sig">' + [["단기", m.short, "일봉"], ["중기", m.mid, "주봉"], ["장기", m.long, "월봉"]].map(function (p) {
       var g = p[1] && p[1].signal;
@@ -4022,7 +4040,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     if (d === undefined || d === "loading") top = '<div class="dt-top"><div class="dt-meta">시세 불러오는 중…</div></div>';
     else if (d === null) top = '<div class="dt-top"><div class="dt-meta">시세 불러오기 실패 — 코드·시장(한국/미국) 확인 필요.</div></div>';
     else top = '<div class="dt-top"><div class="dt-pxl"><span class="dt-pv">' + esc(fmtPrice(d.price, c)) + "</span>" + chgHtml((d.chg != null ? d.chg : chgNum(d.ta && d.ta.change)), "dt-ch") + "</div>" +
-      '<div class="dt-meta">' + (inSession(c === "korea", d.date) ? '<span class="live-tx" title="장중 시세 — 최대 20분가량 늦을 수 있음"><i class="live-dot"></i>장중</span>'
+      '<div class="dt-meta">' + (inSession(c === "korea", d.date) ? liveTag("장중", d.t)
         : esc(d.date || "최근") + " 종가") + " · 전일 대비</div>" +
       '<div class="dt-bd"><span class="bd">' + esc(pm.badge) + '</span><span class="bd">분석 전</span></div></div>';
     var reqTag = req ? (req.state === "open"
@@ -4090,7 +4108,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     var nm = (g && g.n) || it.n || t, asTag = outD ? ' <span class="md-as">' + esc(mdOf(outD)) + " 제외 당시</span>" : "";
     var bds = '<span class="bd bd-gone">편성 제외</span>' + (outD ? '<span class="bd">' + esc(mdOf(outD)) + " 제외 · " + esc(goneSlot(th, g ? g.tier : null, cd.watchTag)) + "</span>" : "");
     var px = ok ? '<div class="dt-pxl"><span class="dt-pv">' + esc(fmtPrice(d.price, c)) + "</span>" + chgHtml(d.chg != null ? d.chg : chgNum(d.ta && d.ta.change), "dt-ch") + "</div>" : "";
-    var meta = ok ? (inSession(c === "korea", d.date) ? '<span class="live-tx" title="장중 시세 — 최대 20분가량 늦을 수 있음"><i class="live-dot"></i>장중</span>' : esc(d.date || "최근") + " 종가") + " · 전일 대비"
+    var meta = ok ? (inSession(c === "korea", d.date) ? liveTag("장중", d.t) : esc(d.date || "최근") + " 종가") + " · 전일 대비"
       : d === null ? "지금 시세 불러오기 실패" : "시세 불러오는 중…";
     var top = '<div class="dt-top">' + px + '<div class="dt-meta">' + meta + '</div><div class="dt-bd">' + bds + "</div></div>";
     // 요약 — 제외 뒤 등락(빠질 때 카드의 가격 → 지금), 성과 탭을 받아 뒀으면 편성 중 성적
@@ -5186,10 +5204,17 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     }
     if (SH.open) renderSheet(true);
   }
-  // 5분마다(화면이 보일 때만) 한 번이라도 나온 종목과 지수·환율·원자재 시세를 다시 받는다. 다른 탭에 있다 돌아오면 5분이 지났을 때 바로 받는다.
-  function liveTick() {
+  // 5분마다(화면이 보일 때만) 한 번이라도 나온 종목과 지수·환율·원자재 시세를 다시 받는다.
+  //   back = 화면에 돌아왔을 때(다른 앱·탭에서 돌아옴, 홈 화면 앱을 다시 엶 — 아이폰 홈 화면 앱은 새로고침 단추가 없다): 장이 열린 시장의 종목과
+  //   지수·환율·섹터는 1분만 지나도 바로 다시 받는다(2026-11-18 사용자 '실시간 데이터가 최대한 최신으로' — 전엔 종목은 5분이 지나야 받았다).
+  function liveTick(back) {
     if (document.hidden) return;
     var list = Object.keys(liveSeen).map(function (t) { return liveSeen[t]; });
+    if (back) {
+      list.forEach(function (s) { if (mktOpen(isKrStock(s)) && Date.now() - (liveAt[s.ticker] || 0) >= 60000 && !liveInflight[s.ticker]) liveAt[s.ticker] = 0; });
+      if (Date.now() - macroLiveAt >= 60000) macroLiveAt = 0;
+      Object.keys(SXL.at).forEach(function (c) { if (Date.now() - SXL.at[c] >= 60000) SXL.at[c] = 0; });
+    }
     if (list.length) ensureLive(list, refreshLive);
     if (typeof ensureMacroLive === "function") ensureMacroLive();
     var cur = SH.open && SH.ctx[SH.idx];
@@ -5202,7 +5227,9 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     }
   }
   setInterval(liveTick, 60000);
-  document.addEventListener("visibilitychange", function () { if (!document.hidden) { liveTick(); checkNewData(); } });
+  document.addEventListener("visibilitychange", function () { if (!document.hidden) { liveTick(true); checkNewData(); } });
+  // 뒤로·앞으로 가기나 다시 연 탭이 저장해 둔 화면(bfcache)으로 돌아오면 스크립트가 멈췄던 사이의 시세를 바로 받는다
+  window.addEventListener("pageshow", function (ev) { if (ev.persisted) { liveTick(true); checkNewData(); } });
   // 새 분석 알림(2026-11-06 UI 점검): 앱을 켜 둔 채 지내면(아이폰 홈 화면 앱은 새로고침 단추도 없다) 아침 분석·신호가 저녁까지 남는다.
   //   화면에 돌아올 때와 15분마다 data/coverage-status.js(2KB — 갱신마다 다시 쓰인다)를 받아 지금 화면을 그린 것과 다르면 '새 분석' 단추를 띄운다.
   var ndAt = Date.now();
@@ -5402,7 +5429,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
       if (i >= syms.length) { wlCache[key] = null; if (onDone) onDone(); return; }
       var sym = syms[i];
       var hUrl = QUOTES_API + (QUOTES_API.indexOf("?") >= 0 ? "&" : "?") + "history=1&range=" + HIST_RANGE + "&symbols=" + encodeURIComponent(sym);
-      var pUrl = QUOTES_API + (QUOTES_API.indexOf("?") >= 0 ? "&" : "?") + "symbols=" + encodeURIComponent(sym);
+      var pUrl = liveUrl([sym]);
       // 시한을 둔다 — 시세 서버가 응답 없이 멈추면 행이 세션 내내 '불러오는 중…'에 갇힌다.
       function getJson(url, opt, ms) {
         var ctrl = new AbortController();
@@ -5432,7 +5459,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
         var date = pv && pv.date ? pv.date : (dates.length ? dates[dates.length - 1] : "");
         // closes·dates 는 상세의 종가 선 차트가 쓴다(시세만 있는 종목 — 시·고·저가 없다)
         wlCache[key] = { sym: sym, price: price, date: date, ta: ta, closes: closes, dates: dates,
-          chg: pv && typeof pv.changePct === "number" && isFinite(pv.changePct) ? pv.changePct : null };   // 시세 서버의 전일 대비(장중 기준)
+          chg: pv && typeof pv.changePct === "number" && isFinite(pv.changePct) ? pv.changePct : null, t: pv ? numOr(pv.time) : null };   // 시세 서버의 전일 대비(장중 기준)
         if (onDone) onDone();
       }).catch(function () { tryIdx(i + 1); });
     })(0);
@@ -5825,7 +5852,10 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     if (s && it.sec && !keep) jumpToSec(it.sec);
     spySync();
     markActiveRow();
-    if (s) ensureLive([s], refreshLive);
+    if (s) {
+      if (mktOpen(isKrStock(s)) && Date.now() - (liveAt[s.ticker] || 0) >= 55000 && !liveInflight[s.ticker]) liveAt[s.ticker] = 0;   // 장중엔 1분 넘은 값이면 열자마자 다시 받는다
+      ensureLive([s], refreshLive);
+    }
     else if (it.light) fetchWatchOne({ c: it.c, t: it.t, n: it.n, k: it.k }, function () { lightRepaint({ c: it.c, t: it.t, n: it.n, k: it.k }); });
     else {
       var gc = it.c, gt = it.t, again = function () { goneRepaint(gc, gt); };
@@ -6708,7 +6738,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
       var q = idxQuote(x), chDir = q.ch == null ? "flat" : (q.ch > 0 ? "up" : q.ch < 0 ? "down" : "flat");
       var inner = '<div class="ix-top"><span class="ix-nm">' + esc(x.name) + "</span>" +
         sigStrip({ sigShort: x.short && x.short.signal, sigMid: x.mid && x.mid.signal, sigLong: x.long && x.long.signal }) + "</div>" +
-        '<div class="ix-lv">' + esc(q.lv) + '</div><div class="ix-ch ' + chDir + '">' + esc(q.chTxt) + (q.live ? '<i class="live-dot" title="장중 실시간(최대 20분가량 늦을 수 있음)"></i>' : "") + "</div>";
+        '<div class="ix-lv">' + esc(q.lv) + '</div><div class="ix-ch ' + chDir + '">' + esc(q.chTxt) + (q.live ? '<i class="live-dot" title="' + esc("장중 시세 — " + liveNote(q.t)) + '"></i>' : "") + "</div>";
       // 누르면 지수 상세(캔들 차트·신호·지수 대응)가 종목 상세와 같은 화면으로 열린다 — 네이버 링크는 상세 아래 버튼
       return '<div class="ix" role="button" tabindex="0" data-open="1" data-idx="' + esc(x.key) + '" data-c="' + esc(IDX_REGION[x.key] || "us") +
         '" data-t="idx-' + esc(x.key) + '" data-th="idx" title="' + esc(x.name + (q.live ? " · 장중 실시간" : q.date ? " · " + mdOf(q.date) + " 종가" : "")) + ' — 차트 보기">' + inner + "</div>";
@@ -6719,7 +6749,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
       var inner = '<div class="ix-top"><span class="ix-nm">' + esc(m.name) + "</span>" +
         sigStrip({ sigShort: m.short && m.short.signal, sigMid: m.mid && m.mid.signal, sigLong: m.long && m.long.signal }) + "</div>" +
         '<div class="ix-lv">' + esc(q.lv) + (m.unit ? '<span class="ix-u">' + esc(m.unit) + "</span>" : "") + "</div>" +
-        '<div class="ix-ch ' + dir + '">' + esc(q.chTxt) + (q.live ? '<i class="live-dot" title="실시간 시세(최대 20분가량 늦을 수 있음)"></i>' : "") + "</div>";
+        '<div class="ix-ch ' + dir + '">' + esc(q.chTxt) + (q.live ? '<i class="live-dot" title="' + esc("실시간 시세 — " + liveNote(q.t)) + '"></i>' : "") + "</div>";
       return '<div class="ix" role="button" tabindex="0" data-open="1" data-idx="' + esc(m.key) + '" data-c="' + esc(state.country) +
         '" data-t="idx-' + esc(m.key) + '" data-th="idx" title="' + esc(m.name + " · " + m.sub + (q.live ? " · 실시간" : " · " + mdOf(q.date || m.asOf) + " 마감")) + ' — 차트 보기">' + inner + "</div>";
     }
@@ -6739,15 +6769,24 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     if (MK.cur === 1) {
       var S = window.SECTOR_TA, a = S && S.asOf && S.asOf[state.country], kr = state.country === "korea", ld = "";
       var ls = sectorList(state.country).map(sxLive).filter(Boolean);
-      if (ls.some(function (L) { return inSession(kr, L.date); })) return "장중 실시간 · 지연 가능";
+      var lsOn = ls.filter(function (L) { return inSession(kr, L.date); });
+      if (lsOn.length) return liveHead(lsOn);
       ls.forEach(function (L) { if (L.date > ld) ld = L.date; });
       return ld && (!a || ld > a) ? mdOf(ld) + " 종가 기준" : a ? mdOf(a) + " 종가 기준" : "";
     }
     var T = window.INDEX_TA; if (!T) return "";
     var qs = (T.indices || []).filter(function (x) { return IDX_REGION[x.key] === state.country; }).map(idxQuote);
-    if (qs.some(function (q) { return q.live; })) return "장중 실시간 · 지연 가능";
+    var qsOn = qs.filter(function (q) { return q.live; });
+    if (qsOn.length) return liveHead(qsOn);
     var d = qs.reduce(function (m, q) { return q.date && q.date > m ? q.date : m; }, "");
     return d ? mdOf(d) + " 종가 기준" : T.asOf ? mdOf(T.asOf) + " 종가 기준" : "";
+  }
+  // 장중 머리 문구 — 받은 시세가 모두 체결 시각을 가지면 가장 이른 시각을 '기준'으로, 아니면(예전 시세 서버) '지연 가능'
+  function liveHead(arr) {
+    var ts = arr.map(function (x) { return x.t; });
+    if (ts.some(function (t) { return !t; })) return "장중 실시간 · 지연 가능";
+    var t0 = Math.min.apply(null, ts), lag = Math.round((Date.now() / 1000 - t0) / 60);
+    return lag >= 3 ? "장중 · " + hhmm(t0) + " 기준(" + lag + "분 전)" : "장중 실시간 · " + hhmm(t0) + " 기준";   // 좁은 화면 한 줄에 들어가게 — 묵은 값이면 '실시간'을 뺀다
   }
   function mkSync() {
     var pages = mkPg.querySelectorAll(".mk-page"), p = pages[MK.cur];
@@ -6851,7 +6890,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     if (Date.now() - (SXL.at[c] || 0) < every) return;
     SXL.busy[c] = true;
     var syms = list.map(function (x) { return x.symbol; }).concat(c === "us" ? ["^GSPC"] : []);
-    var url = QUOTES_API + (QUOTES_API.indexOf("?") >= 0 ? "&" : "?") + "symbols=" + encodeURIComponent(syms.join(","));
+    var url = liveUrl(syms);
     var ctrl = new AbortController(), to = setTimeout(function () { ctrl.abort(); }, 9000);
     fetch(url, { signal: ctrl.signal, cache: "no-store" })
       .then(function (r) { if (!r.ok) throw new Error("http " + r.status); return r.json(); })
@@ -6860,7 +6899,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
         syms.forEach(function (sym) {
           var v = map && map[sym];
           if (!(v && typeof v.price === "number" && isFinite(v.price) && liveFresh(v.date))) return;
-          var o = SECTOR_LIVE[sym], n = { price: v.price, date: v.date, chg: numOr(v.changePct), o: numOr(v.open), h: numOr(v.high), l: numOr(v.low), vol: numOr(v.volume) };
+          var o = SECTOR_LIVE[sym], n = { price: v.price, date: v.date, chg: numOr(v.changePct), o: numOr(v.open), h: numOr(v.high), l: numOr(v.low), vol: numOr(v.volume), t: numOr(v.time) };
           if (!o || o.price !== n.price || o.chg !== n.chg || o.date !== n.date) changed = true;
           SECTOR_LIVE[sym] = n;
         });
@@ -6901,7 +6940,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
   function pct1(v) { return v == null || !isFinite(v) ? "–" : (v > 0 ? "+" : "") + Number(v).toFixed(1) + "%"; }
   function sxTip(c) {
     return "업종 ETF 가격으로 본 섹터 — " + (c === "korea" ? "KODEX·TIGER 업종 ETF" : "SPDR 섹터 ETF(S&P 500 11개 섹터)와 반도체 ETF(SOXX)") + ". 신호는 매일 장 마감 뒤 자동 계산, " +
-      "등락은 장중이면 지금 값(점 표시, 최대 20분가량 늦을 수 있음)으로 모든 기간을 다시 잰다.\n\n" +
+      "등락은 장중이면 지금 값(점 표시 — 몇 시 기준인지는 상세 화면)으로 모든 기간을 다시 잰다.\n\n" +
       "칸 색 = 고른 기간 등락(빨강 상승·파랑 하락, 진할수록 큼). 작은 숫자(%p) = 같은 기간 " + sxBench(c).name + " 등락과의 차이. " +
       "앞 세 칸은 단기(일봉)·중기(주봉)·장기(월봉) 추세 상태 — 지금까지 움직임의 요약이지 예측이 아니다. 칸을 누르면 차트·기간별 시장 대비·관련 종목.";
   }
@@ -6911,7 +6950,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     return '<div class="sx' + (lv && dir !== "flat" ? (dir === "up" ? " hu" : " hd") + lv : "") + '" role="button" tabindex="0" data-open="1" data-sx="' + esc(x.key) +
       '" data-c="' + esc(c) + '" data-t="idx-sec-' + esc(x.key) + '" data-th="sec" data-n="' + esc(x.name) + '" title="' + esc(x.name + " · " + x.etf + " — 차트 보기") + '">' +
       '<div class="sx-r1"><span class="sx-nm">' + esc(x.name) + "</span>" + sigStrip({ sigShort: x.short && x.short.signal, sigMid: x.mid && x.mid.signal, sigLong: x.long && x.long.signal }) + "</div>" +
-      '<div class="sx-r2"><span class="sx-ch ' + dir + '">' + esc(pct1(v)) + (r.live && inSession(c === "korea", r.live.date) ? '<i class="live-dot" title="장중 실시간(최대 20분가량 늦을 수 있음)"></i>' : "") + "</span>" + (rs != null ? '<span class="sx-rs" title="' + esc("같은 기간 " + sxBench(c).name + " 대비") + '">' + esc(fmtPp(rs)) + "</span>" : "") + "</div></div>";
+      '<div class="sx-r2"><span class="sx-ch ' + dir + '">' + esc(pct1(v)) + (r.live && inSession(c === "korea", r.live.date) ? '<i class="live-dot" title="' + esc("장중 시세 — " + liveNote(r.live.t)) + '"></i>' : "") + "</span>" + (rs != null ? '<span class="sx-rs" title="' + esc("같은 기간 " + sxBench(c).name + " 대비") + '">' + esc(fmtPp(rs)) + "</span>" : "") + "</div></div>";
   }
   function renderSectors() {
     var host = document.getElementById("secBody");
@@ -6954,7 +6993,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
   function sectorDetailHtml(x, c) {
     var f = x.facts || {}, b = sxBench(c), v = sxPer(x, c, "d1").v, L = sxLive(x), lvP = L && L.date > x.asOf && f.nb ? L : null;
     var lvTxt = L ? (c === "korea" ? Math.round(L.price).toLocaleString("ko-KR") : num2(L.price)) : x.level;
-    var when = L ? (inSession(c === "korea", L.date) ? '<span class="live-tx" title="장중 실시간 — 최대 20분가량 늦을 수 있음"><i class="live-dot"></i>장중</span>' : esc(mdOf(L.date)) + " 종가") : esc(mdOf(x.asOf)) + " 종가";
+    var when = L ? (inSession(c === "korea", L.date) ? liveTag("장중", L.t) : esc(mdOf(L.date)) + " 종가") : esc(mdOf(x.asOf)) + " 종가";
     var top = '<div class="dt-top"><div class="dt-pxl"><span class="dt-pv">' + esc(lvTxt) + '<small class="dt-u">' + (c === "korea" ? "원" : "달러") + "</small></span>" + chgHtml(v, "dt-ch") + "</div>" +
       '<div class="dt-meta">' + when + " · 전일 대비 · " + esc(x.etf) + " ETF" + (L && L.date > x.asOf ? ' · <span title="' + (lvP ? "차트·기간 등락" : "차트") + "는 지금 값까지, 신호" + (lvP ? "" : "·기간 등락") + "는 " + esc(mdOf(x.asOf)) + ' 마감까지">신호 ' + esc(mdOf(x.asOf)) + " 마감</span>" : "") + "</div></div>";
     var sig = '<div class="dt-sum"><div class="dt-sig">' + [["단기", x.short, "일봉"], ["중기", x.mid, "주봉"], ["장기", x.long, "월봉"]].map(function (p) {
@@ -7017,7 +7056,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     var every = mktOpen(true) || mktOpen(false) ? 55000 : 300000;
     if (!liveSupported || !ms.length || macroLiveBusy || Date.now() - macroLiveAt < every) return;
     macroLiveBusy = true;
-    var url = QUOTES_API + (QUOTES_API.indexOf("?") >= 0 ? "&" : "?") + "symbols=" + encodeURIComponent(ms.map(function (m) { return m.sym; }).join(","));
+    var url = liveUrl(ms.map(function (m) { return m.sym; }));
     var ctrl = new AbortController(), to = setTimeout(function () { ctrl.abort(); }, 9000);
     fetch(url, { signal: ctrl.signal, cache: "no-store" })
       .then(function (r) { if (!r.ok) throw new Error("http " + r.status); return r.json(); })
@@ -7027,8 +7066,8 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
           var v = map && map[m.sym];
           if (v && typeof v.price === "number" && isFinite(v.price) && liveFresh(v.date)) {
             var o = MACRO_LIVE[m.key], n = { price: v.price, date: v.date, chg: typeof v.changePct === "number" && isFinite(v.changePct) ? v.changePct : null,
-              o: numOr(v.open), h: numOr(v.high), l: numOr(v.low), vol: numOr(v.volume) };
-            if (!o || o.price !== n.price || o.chg !== n.chg || o.date !== n.date) changed = true;
+              o: numOr(v.open), h: numOr(v.high), l: numOr(v.low), vol: numOr(v.volume), t: numOr(v.time) };
+            if (!o || o.price !== n.price || o.chg !== n.chg || o.date !== n.date || o.t !== n.t) changed = true;
             MACRO_LIVE[m.key] = n;
           }
         });
@@ -7063,7 +7102,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
   // 시세 서버 값이 마지막 마감(indices.js asOf — 거래소 현지 날짜) 이후(또는 같은 날)면 그것, 아니면 마감값. 거래 중일 때만 live(점·'실시간')
   function macroQuote(m) {
     var L = MACRO_LIVE[m.key];
-    if (L && (!m.asOf || !L.date || L.date >= m.asOf)) return { lv: num2(L.price), ch: L.chg, chTxt: pct2(L.chg), live: macroOpen(m.key, L.date), date: L.date || m.asOf };
+    if (L && (!m.asOf || !L.date || L.date >= m.asOf)) return { lv: num2(L.price), ch: L.chg, chTxt: pct2(L.chg), live: macroOpen(m.key, L.date), date: L.date || m.asOf, t: L.t };
     var ch = chgNum(m.change);
     return { lv: m.level, ch: ch, chTxt: ch == null ? "–" : pct2(ch), live: false, date: m.asOf };
   }
@@ -7079,7 +7118,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
   function idxQuote(x) {
     var L = MACRO_LIVE[x.key], bar = idxBarDate(x), kr = IDX_REGION[x.key] === "korea";
     if (L && L.price != null && (!bar || !L.date || L.date >= bar))
-      return { lv: num2(L.price), ch: L.chg, chTxt: pct2(L.chg), live: inSession(kr, L.date), fresh: true, date: L.date || bar };
+      return { lv: num2(L.price), ch: L.chg, chTxt: pct2(L.chg), live: inSession(kr, L.date), fresh: true, date: L.date || bar, t: L.t };
     var ch = chgNum(x.change);
     return { lv: x.level, ch: ch, chTxt: !x.change || x.change === "–" ? "–" : x.change, live: false, fresh: false, date: bar };
   }

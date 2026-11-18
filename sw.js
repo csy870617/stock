@@ -1,5 +1,5 @@
 // 서비스워커 — 앱 설치(PWA) 및 오프라인 대비 캐시
-// 전략: 네트워크 우선(항상 최신 데이터를 먼저 시도), 실패 시에만 캐시 사용.
+// 전략: 네트워크 우선(항상 최신 데이터를 먼저 시도 — 브라우저 HTTP 캐시도 건너뛰고 서버에 확인), 실패 시에만 캐시 사용.
 // 데이터 정확성이 최우선이므로 캐시가 최신 데이터를 가리는 일이 없도록 한다.
 var CACHE = "mystock-v111";
 // index.html 이 로드하는 스크립트 전부를 프리캐시해야 오프라인에서 앱이 온전히 뜬다
@@ -58,8 +58,13 @@ self.addEventListener("activate", function (e) {
 
 self.addEventListener("fetch", function (e) {
   if (e.request.method !== "GET" || new URL(e.request.url).origin !== location.origin) return;
+  // 페이지가 캐시 방식을 따로 정하지 않은 요청(데이터 스크립트·차트 파일 등)은 브라우저 저장본을 그대로 쓰지 않고 서버에 바뀌었는지 묻는다
+  // (cache: "no-cache" — 그대로면 304 로 몇 바이트만 오간다). GitHub Pages 가 파일을 10분(max-age=600) 재사용하게 보내서,
+  // 분석·시세 파일이 막 올라온 뒤 새로고침해도 최대 10분 동안 옛 파일이 나왔다(2026-11-18 사용자 '새로고침 했을 때 최대한 최신으로').
+  // 페이지 이동(화면 자체)은 그대로 둔다 — 새로고침이면 브라우저가 이미 서버에 묻고, 요청을 새로 만들면 주소 이동(리디렉트) 처리가 깨질 수 있다.
+  var req = e.request.mode !== "navigate" && e.request.cache === "default" ? new Request(e.request, { cache: "no-cache" }) : e.request;
   e.respondWith(
-    fetch(e.request).then(function (res) {
+    fetch(req).then(function (res) {
       // 정상 응답(2xx, 기본 타입)만 캐시 — 404/500 등 오류 응답이 오프라인 캐시를 오염시키지 않도록
       if (res && res.ok && res.type === "basic") {
         var copy = res.clone();
@@ -67,6 +72,13 @@ self.addEventListener("fetch", function (e) {
         // 오프라인 폴백은 ignoreSearch 로 찾으므로 그대로 맞는다.
         var key = e.request.url.split("?")[0];
         caches.open(CACHE).then(function (c) { c.put(key, copy); });
+        // 페이지에 넘기는 응답은 '매번 확인'(no-cache)으로 바꿔 단다 — 크롬은 새로고침 때 메모리에 남은 스크립트를 서비스워커에 묻지도 않고
+        // 그대로 다시 쓰는데(GitHub Pages 의 max-age=600 동안), 이 표시가 있으면 다음 새로고침에 반드시 다시 묻는다(2026-11-18 시험으로 확인).
+        if (req !== e.request) {
+          var h = new Headers(res.headers);
+          h.set("Cache-Control", "no-cache");
+          return new Response(res.body, { status: res.status, statusText: res.statusText, headers: h });
+        }
       }
       return res;
     }).catch(function () {
