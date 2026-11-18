@@ -572,11 +572,6 @@
       }
     },
     "us|value": {
-      "TEL": {
-        "status": "검증 통과",
-        "note": "정체성 두 문턱 충족·FQ3 매출 +14% — β 가 높아 β 를 낮추는 교체와 짝일 때 편입",
-        "asOf": "2026-10-18"
-      },
       "COR": {
         "status": "보류",
         "note": "EBIT/EV 문턱 미달(FCF 로만 통과)·오피오이드 소송",
@@ -1276,16 +1271,17 @@
       },
       "NVDA": {
         "verdict": "보호",
-        "note": "컨센서스 목표가 하향은 11/11 Baird 투자의견 하향(중국 판매 제한·AI 투자 둔화 위험, CEO 거취 불확실)과 Wells Fargo 하향이 이끌었다 — 64곳 중 59곳은 매수 의견 유지. 5거래일 급락은 11/12 젠슨 황 CEO·이사직 사임과 이사회 독립위원회의 외국 정보활동 의혹 조사라는 회사 고유 지배구조 사건에서 나왔다. 지수 대표 대형주 — 사업 논거(데이터센터 실적)는 11/17 3분기 실적으로 확인한다.",
-        "asOf": "2026-11-16",
+        "note": "11/17 3분기(FY27) 매출 1,158억달러(+103%)·데이터센터 1,076억달러(+110%)로 자체 전망을 웃돌았고 4분기 매출 가이던스 1,300억달러(±3%, 중국 데이터센터 매출 제외)는 시장 예상을 넘었다 — 연간 성장 전망도 75%로 올렸다. 4분기 매출총이익률 가이던스가 낮아진 점과 젠슨 황 사임 뒤 지배구조 조사는 감시한다. 지수 대표 대형주.",
+        "asOf": "2026-11-18",
         "flags": [
           "theme",
           "drop",
-          "tpcut"
+          "tpcut",
+          "earn"
         ],
         "sources": [
-          "https://www.sec.gov/Archives/edgar/data/0001045810/000104581026000082/nvidiaannouncesceotransiti.htm",
-          "https://www.cnbc.com/2026/11/12/nvidia-jensen-huang-ceo-live-updates.html"
+          "https://nvidianews.nvidia.com/news/nvidia-announces-financial-results-for-third-quarter-fiscal-2027",
+          "https://www.cnbc.com/2026/11/17/nvidia-nvda-earnings-report-q3-2027.html"
         ]
       },
       "TSM": {
@@ -1375,14 +1371,6 @@
       "C": {
         "verdict": "없음",
         "note": "3분기 매출 +8%·순이익 약 +40%, 순이자이익·ROTCE 목표 상향",
-        "asOf": "2026-10-18",
-        "flags": [
-          "earn"
-        ]
-      },
-      "UNH": {
-        "verdict": "없음",
-        "note": "3분기 의료비율 개선·기대 상회, 2026년 조정 EPS 가이던스 상향",
         "asOf": "2026-10-18",
         "flags": [
           "earn"

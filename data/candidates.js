@@ -8,7 +8,7 @@ window.CANDIDATES = {
  "screenFresh": true,
  "beta": {
   "korea": 0.72,
-  "us": 0.92
+  "us": 0.93
  },
  "groups": {
   "korea|core": {
@@ -691,13 +691,18 @@ window.CANDIDATES = {
        "fresh": false
       },
       {
+       "k": "earn",
+       "msg": "실적 발표(11/17) · EPS 서프라이즈 8.5% — 가이던스·논거 확인",
+       "fresh": false
+      },
+      {
        "k": "tpcut",
        "msg": "컨센서스 목표가 14일 새 -12.8% 하향 — 논거 확인",
        "fresh": false
       }
      ],
-     "note": "컨센서스 목표가 하향은 11/11 Baird 투자의견 하향(중국 판매 제한·AI 투자 둔화 위험, CEO 거취 불확실)과 Wells Fargo 하향이 이끌었다 — 64곳 중 59곳은 매수 의견 유지. 5거래일 급락은 11/12 젠슨 황 CEO·이사직 사임과 이사회 독립위원회의 외국 정보활동 의혹 조사라는 회사 고유 지배구조 사건에서 나왔다. 지수 대표 대형주 — 사업 논거(데이터센터 실적)는 11/17 3분기 실적으로 확인한다.",
-     "judged": "2026-11-16",
+     "note": "11/17 3분기(FY27) 매출 1,158억달러(+103%)·데이터센터 1,076억달러(+110%)로 자체 전망을 웃돌았고 4분기 매출 가이던스 1,300억달러(±3%, 중국 데이터센터 매출 제외)는 시장 예상을 넘었다 — 연간 성장 전망도 75%로 올렸다. 4분기 매출총이익률 가이던스가 낮아진 점과 젠슨 황 사임 뒤 지배구조 조사는 감시한다. 지수 대표 대형주.",
+     "judged": "2026-11-18",
      "verdict": "보호"
     },
     {
@@ -843,15 +848,6 @@ window.CANDIDATES = {
    ],
    "list": [
     {
-     "ticker": "TEL",
-     "name": "TE Connectivity",
-     "status": "검증 통과",
-     "note": "정체성 두 문턱 충족·FQ3 매출 +14% — β 가 높아 β 를 낮추는 교체와 짝일 때 편입",
-     "asOf": "2026-10-18",
-     "why": "EBIT/EV 4.9% · FCF/시총 5.3% · 매출 성장 8.9%",
-     "url": "https://m.stock.naver.com/worldstock/stock/TEL/total"
-    },
-    {
      "ticker": "NTAP",
      "name": "NetApp",
      "status": "검증 통과",
@@ -945,6 +941,13 @@ window.CANDIDATES = {
      "status": "검증 대기",
      "why": "매출 성장 -3.8%",
      "url": "https://m.stock.naver.com/worldstock/stock/WFC/total"
+    },
+    {
+     "ticker": "CRM",
+     "name": "Salesforce",
+     "status": "검증 대기",
+     "why": "EBIT/EV 5% · FCF/시총 9% · 매출 성장 9.6%",
+     "url": "https://m.stock.naver.com/worldstock/stock/CRM/total"
     }
    ]
   },
