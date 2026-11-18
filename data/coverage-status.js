@@ -51,9 +51,9 @@ window.COVERAGE_STATUS = {
   {
    "key": "backbone",
    "label": "지표 재생성",
-   "done": 0,
+   "done": 2,
    "total": 2,
-   "ok": false
+   "ok": true
   },
   {
    "key": "flows",
@@ -72,9 +72,9 @@ window.COVERAGE_STATUS = {
   {
    "key": "defects",
    "label": "결격 점검",
-   "done": 0,
+   "done": 1,
    "total": 1,
-   "ok": false
+   "ok": true
   }
  ],
  "rotation": [
@@ -107,10 +107,10 @@ window.COVERAGE_STATUS = {
   {
    "key": "aiTarget",
    "label": "AI 적정가 재시도",
-   "fresh": 99,
+   "fresh": 100,
    "total": 100,
-   "oldestDays": 15,
-   "ok": false
+   "oldestDays": 9,
+   "ok": true
   },
   {
    "key": "tier",
@@ -122,13 +122,7 @@ window.COVERAGE_STATUS = {
    "ok": true
   }
  ],
- "ok": false,
- "overdue": [
-  {
-   "key": "aiTarget",
-   "label": "AI 적정가 재시도",
-   "days": 15
-  }
- ],
- "dataHash": "7d86c37a4149"
+ "ok": true,
+ "overdue": [],
+ "dataHash": "892460eeb510"
 };
