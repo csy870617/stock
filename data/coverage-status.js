@@ -9,9 +9,9 @@ window.COVERAGE_STATUS = {
   {
    "key": "techNote",
    "label": "기술 대응",
-   "done": 100,
+   "done": 99,
    "total": 100,
-   "ok": true
+   "ok": false
   },
   {
    "key": "valueNote",
@@ -51,9 +51,9 @@ window.COVERAGE_STATUS = {
   {
    "key": "backbone",
    "label": "지표 재생성",
-   "done": 0,
+   "done": 2,
    "total": 2,
-   "ok": false
+   "ok": true
   },
   {
    "key": "flows",
@@ -65,9 +65,9 @@ window.COVERAGE_STATUS = {
   {
    "key": "trend",
    "label": "현재 추세",
-   "done": 97,
+   "done": 96,
    "total": 97,
-   "ok": true
+   "ok": false
   },
   {
    "key": "defects",
@@ -124,5 +124,5 @@ window.COVERAGE_STATUS = {
  ],
  "ok": false,
  "overdue": [],
- "dataHash": "2133c83f1f6e"
+ "dataHash": "3de7de747880"
 };
