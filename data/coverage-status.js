@@ -9,9 +9,9 @@ window.COVERAGE_STATUS = {
   {
    "key": "techNote",
    "label": "기술 대응",
-   "done": 100,
+   "done": 101,
    "total": 101,
-   "ok": false
+   "ok": true
   },
   {
    "key": "valueNote",
@@ -65,9 +65,9 @@ window.COVERAGE_STATUS = {
   {
    "key": "trend",
    "label": "현재 추세",
-   "done": 97,
+   "done": 98,
    "total": 98,
-   "ok": false
+   "ok": true
   },
   {
    "key": "defects",
@@ -122,7 +122,7 @@ window.COVERAGE_STATUS = {
    "ok": true
   }
  ],
- "ok": false,
+ "ok": true,
  "overdue": [],
- "dataHash": "ddcb83735055"
+ "dataHash": "14abe39b2ef2"
 };
