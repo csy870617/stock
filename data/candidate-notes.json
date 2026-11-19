@@ -1145,16 +1145,17 @@
       },
       "005850": {
         "verdict": "형식",
-        "note": "5거래일 -15.7% 급락의 원인은 3분기 영업이익이 시장 예상을 밑돈 데다 원재료 부담으로 증권사 목표가가 내려간 것이다. 가이던스 훼손이나 지배구조 사건은 확인되지 않아 실적 추이 확인 전까지 감시한다.",
-        "asOf": "2026-11-18",
+        "note": "3분기 영업이익이 시장 예상을 밑돌고 판관비·환손실이 늘어 NH증권 등이 전자 소재·원재료 가격 부담으로 목표가를 낮췄다. 가이던스·배당 방침 훼손은 확인되지 않아 4분기 실적 확인 전까지 감시한다.",
+        "asOf": "2026-11-19",
         "flags": [
-          "drop"
+          "drop",
+          "tpcut"
         ],
         "by": "ai",
         "sources": [
-          "https://www.businesspost.co.kr/BP?command=article_view&num=452163",
-          "https://supple.kr/news/cmwld77kw5yuijkunjqxedudy",
-          "https://m.news.nate.com/view/20261118n04618"
+          "https://www.bloter.net/news/articleView.html?idxno=678765",
+          "https://www.ajunews.com/view/20261118085019012",
+          "https://www.businesspost.co.kr/BP?command=article_view&num=452163"
         ]
       }
     },
