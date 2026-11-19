@@ -2,7 +2,7 @@
 // Yahoo 시장지표(금리·일드커브·VIX·HY신용·달러·원달러·코스피)의 가중 합성 → 5단계.
 // 온디맨드 유동성(data/liquidity.js)이 있으면 그것을 우선 표시하고, 이 baseline 을 함께 보여준다.
 window.LIQUIDITY_AUTO = {
- "asOf": "2026-11-18",
+ "asOf": "2026-11-19",
  "note": "Yahoo 시장지표 기반 자동 baseline(금리·일드커브·VIX·HY신용·달러·원달러·코스피). 거시 이벤트·내러티브는 미반영 — 온디맨드 유동성이 보정.",
  "inputs": {
   "us10y": "5.07",
@@ -10,7 +10,7 @@ window.LIQUIDITY_AUTO = {
   "vix": "24.6",
   "hyg20": "0.1",
   "dxy": "103.5",
-  "usdkrw": "1336"
+  "usdkrw": "1333"
  },
  "us": {
   "shortTerm": "신중",
@@ -37,7 +37,7 @@ window.LIQUIDITY_AUTO = {
   ]
  },
  "fed": {
-  "asOf": "2026-11-18",
+  "asOf": "2026-11-19",
   "current": 3.88,
   "meetings": [
    {
@@ -90,65 +90,65 @@ window.LIQUIDITY_AUTO = {
    },
    {
     "date": "2027-04-28",
-    "rate": 4.565,
-    "stepBp": 6.9,
-    "cumBp": 68.5,
+    "rate": 4.56,
+    "stepBp": 6.4,
+    "cumBp": 68,
     "outcomes": [
      {
       "n": 3,
-      "p": 74
+      "p": 72
      },
      {
       "n": 2,
-      "p": 26
+      "p": 28
      }
     ]
    },
    {
     "date": "2027-06-09",
-    "rate": 4.658,
-    "stepBp": 9.3,
-    "cumBp": 77.8,
+    "rate": 4.646,
+    "stepBp": 8.6,
+    "cumBp": 76.6,
     "outcomes": [
      {
       "n": 3,
-      "p": 89
+      "p": 94
      },
      {
       "n": 4,
-      "p": 11
+      "p": 6
      }
     ]
    },
    {
     "date": "2027-07-28",
-    "rate": 4.675,
-    "stepBp": 1.7,
-    "cumBp": 79.5,
+    "rate": 4.67,
+    "stepBp": 2.4,
+    "cumBp": 79,
     "outcomes": [
      {
       "n": 3,
-      "p": 82
+      "p": 84
      },
      {
       "n": 4,
-      "p": 18
+      "p": 16
      }
     ]
    },
    {
     "date": "2027-09-15",
-    "rate": 4.695,
-    "stepBp": 2,
-    "cumBp": 81.5,
+    "rate": 4.7,
+    "stepBp": 3,
+    "cumBp": 82,
     "outcomes": [
      {
       "n": 3,
-      "p": 74
+      "p": 72
      },
      {
       "n": 4,
-      "p": 26
+      "p": 28
      }
     ]
    }
@@ -161,8 +161,8 @@ window.LIQUIDITY_AUTO = {
   "call": 3.065,
   "cd91": 3.38,
   "y1": 3.642,
-  "y2": 3.736,
-  "y3": 3.746,
+  "y2": 3.739,
+  "y3": 3.734,
   "exp3m": {
    "rate": 3.2,
    "chg": 0.2,

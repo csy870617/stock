@@ -1,47 +1,47 @@
 // 유동성 판단(온디맨드) — 시장지표 baseline(data/liquidity-auto.js, 매일 자동)을 거시 이벤트·내러티브로 보정/덮어쓰기.
 // 앱은 이 파일이 있으면 우선 표시하고 baseline 을 병기, 없으면 baseline 을 게이지로 쓴다.
 window.LIQUIDITY_DATA = {
- "asOf": "2026-11-18",
- "headline": "미국은 돈이 들어오는 흐름에 연준 인상 경로와 극도의 공포가 겹친 신중 국면이고, 한국은 예탁금·신용융자 감소와 외국인 이탈이 이어지는 부정 국면이다.",
- "headlineUS": "흐름 점수는 최근 5년 중 70% 위치로 돈이 들어오는 쪽이지만, 12월 인상이 96% 반영되고 금융여건지수가 3개월 새 나빠져 단기·중기 모두 신중이다.",
- "headlineKR": "투자자예탁금 3개월 -17.3%, 신용융자 -15.3%로 국내 자금이 빠지고 외국인 순매도가 이어져 단기·중기 모두 부정이다.",
+ "asOf": "2026-11-19",
+ "headline": "미국은 돈이 들어오는 흐름이지만 연준 인상 경로와 극도의 공포가 겹친 신중 국면, 한국은 예탁금·신용융자 감소와 외국인 이탈이 이어지는 부정 국면이다.",
+ "headlineUS": "흐름 점수가 최근 5년 중 68% 위치로 돈은 들어오는 쪽이다. 다만 12월 인상 확률 90%의 금리 경로와 극도의 공포(14.9)가 단기 부담이다.",
+ "headlineKR": "투자자예탁금(3개월 -17.3%)과 신용융자(3개월 -15.3%)가 함께 줄고 외국인 순매도가 이어져 개인·해외 자금 모두 빠지는 흐름이다.",
  "us": {
   "shortTerm": "신중",
   "midTerm": "신중",
   "drivers": [
-   "흐름 점수 0.03(최근 5년 하위부터 70%)로 들어오는 중이고, 신용 스프레드 1.5%p는 3개월 새 19bp 좁아졌다.",
-   "금융여건지수 -0.462는 3개월 새 0.082 나빠져 신용 경고 1/4가 켜졌고, 달러인덱스는 3개월 +4.9%다.",
-   "연방기금 선물은 12월 +25bp 96%, 2027년 4월 기대 4.55%로 인상 경로를 반영하고, 10년물은 5.10%다.",
-   "중기를 baseline(부정)보다 높게 둔 근거는 흐름 점수 70% 위치로, 과거 중간~상위 3분의 1 구간의 다음 12개월 초과수익 평균이 +13.6~14.6%였다는 점이다(미국 심리 15.8 극도의 공포 구간 뒤 3개월 안 10% 넘는 추가 하락은 31%였다)."
+   "흐름 점수 0.01로 최근 5년 중 68% 위치이고, 이 점수는 다음 12개월 초과수익과 같은 방향이었다(상위 3분의 1 평균 +14.6%) — baseline 중기 부정보다 한 단계 높게 본 근거다.",
+   "신용 스프레드 1.53%p로 3개월 새 15bp 좁아졌고 신용 경고는 4개 중 1개(금융여건 3개월 변화)만 켜져 있다.",
+   "연준 순유동성 5.84조 달러(3개월 +0.8%)는 보통이고, 달러인덱스 3개월 +5%와 금융여건지수 악화가 빠지는 쪽 요인이다.",
+   "연방기금 선물은 12월 +25bp 90%, 2027년 4월까지 누적 +75bp 72%를 반영해 금리 부담이 이어진다."
   ]
  },
  "korea": {
   "shortTerm": "부정",
   "midTerm": "부정",
   "drivers": [
-   "투자자예탁금 86.6조원(3개월 -17.3%), 신용융자 26.3조원(3개월 -15.3%)으로 줄어, 과거 예탁금 감소 하위 3분의 1 구간 다음 3개월 코스피 초과수익 평균은 -1.9%였다.",
-   "외국인 순매수는 -64.1조원이고 코스피 20일 외국인 순매도는 142,402억원이다.",
-   "원/달러 1,333원(3개월 -5.7%)과 회사채 스프레드 0.69%p는 우호~보통이지만 흐름 점수 -0.12(하위부터 45%)를 끌어올리지 못했다.",
-   "기준금리 3%에서 금리 시장은 3개월 기대 3.2%로 인상 쪽에 기울어 있다."
+   "투자자예탁금 86.6조원으로 3개월 새 17.3% 줄었고, 예탁금 감소 하위 3분의 1 구간은 다음 3개월 코스피 초과수익 평균 -1.9%였다.",
+   "신용융자 26.3조원으로 3개월 -15.3%, 같은 방향 지표다.",
+   "외국인 순매수 -64조원으로 빠지는 쪽이고, 코스피 20일 외국인 순매도 14조1,731억원이다.",
+   "원/달러 3개월 -4.1%는 들어오는 쪽이고 회사채 스프레드 0.69%p는 보통이다."
   ]
  },
- "nextCheck": "엔비디아 실적 뒤 나스닥 지지 23,989·코스피 지지 4,911 유지 여부, 투자자예탁금 증감, 12월 8~9일 FOMC 인상 폭.",
+ "nextCheck": "12월 8~9일 FOMC 인상 폭, 코스피 4,911·나스닥 23,989 지지 여부, 투자자예탁금·신용융자의 감소 둔화 여부.",
  "sources": [
-  "https://theweekendspread.substack.com/p/the-close-tuesday-november-17-2026",
-  "https://finance.yahoo.com/markets/live/stock-market-today-tuesday-november-17-dow-sp-500-nasdaq-nvidia-earnings-retail-sales-143848454.html",
-  "https://www.fnnews.com/news/202611181541225731",
-  "https://www.newspim.com/news/view/20261118001065"
+  "https://www.fool.com/coverage/stock-market-today/2026/11/18/stock-market-today-nov-18-s-and-p-500-breaks-key-support-as-fed-minutes-signal-more-rate-hikes-ahead/",
+  "https://pro.thestreet.com/stock-market-today/2026-11-18",
+  "https://uk.finance.yahoo.com/news/fed-waller-says-fed-consider-125331533.html",
+  "https://bankingjournal.aba.com/2026/11/fomc-minutes-show-close-call-over-possible-rate-hike/"
  ],
  "policyNews": {
-  "asOf": "2026-11-18",
+  "asOf": "2026-11-19",
   "us": {
    "stance": "매파",
-   "note": "무살렘 세인트루이스 연은 총재는 곧 금리를 올리고 봄 전에 여러 차례 더 올려야 한다고 했고, 윌리엄스 뉴욕 연은 총재는 추가 인상 필요성은 인정하면서 12월 50bp 인상론에는 선을 그었다. 연방기금 선물의 12월 인상 확률은 90%를 넘는다.",
+   "note": "10월 FOMC 의사록에서 거의 모든 참석자가 추가 인상에 동의했고 일부는 25bp 넘는 인상에도 열려 있었다. 월러 이사는 근원물가 전월 대비 0.3% 상승을 근거로 12월 50bp 인상 검토를 주장했고, 윌리엄스 뉴욕연은 총재는 극적인 조치가 필요한 상황은 아니라고 했다.",
    "sources": [
-    "https://finance.yahoo.com/economy/policy/article/st-louis-feds-musalem-calls-for-interest-rate-hikes-soon-132554806.html",
-    "https://www.bloomberg.com/news/articles/2026-11-17/fed-s-williams-says-no-need-for-dramatic-rate-move",
-    "https://www.investing.com/news/economy-news/feds-williams-says-more-rate-hikes-likely-needed-amid-inflation-5033876",
-    "https://www.bloomberg.com/news/articles/2026-11-17/fed-s-musalem-says-several-rate-hikes-likely-needed-by-spring"
+    "https://uk.finance.yahoo.com/news/fed-waller-says-fed-consider-125331533.html",
+    "https://www.bloomberg.com/news/articles/2026-11-18/fed-s-waller-says-fed-should-consider-half-point-rate-hike",
+    "https://bankingjournal.aba.com/2026/11/fomc-minutes-show-close-call-over-possible-rate-hike/",
+    "https://www.cnbc.com/2026/11/18/federal-reserve-governor-christopher-waller.html"
    ]
   },
   "korea": {

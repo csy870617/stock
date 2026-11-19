@@ -2,86 +2,92 @@
 // 앱 'AI 연결' 창이 '매일 자동 분석' 칸에 보여 준다. 비용은 토큰 기준 추정(웹 검색은 횟수만 — 검색당 요금 별도).
 window.AI_STATUS = {
  "defects": {
-  "at": "2026-11-18T07:31:56.398Z",
+  "at": "2026-11-19T04:17:25.261Z",
   "model": "claude-sonnet-5-5",
   "ok": true,
-  "pending": 2,
-  "judged": 2,
+  "pending": 3,
+  "judged": 3,
   "items": [
    {
-    "g": "korea|core",
-    "t": "207940",
-    "name": "삼성바이오로직스",
+    "g": "korea|value",
+    "t": "241560",
+    "name": "두산밥캣",
     "verdict": "형식"
    },
    {
-    "g": "korea|dividend",
-    "t": "005850",
-    "name": "에스엘",
+    "g": "korea|value",
+    "t": "066570",
+    "name": "LG전자",
+    "verdict": "형식"
+   },
+   {
+    "g": "korea|value",
+    "t": "086280",
+    "name": "현대글로비스",
     "verdict": "형식"
    }
   ],
   "usage": {
-   "calls": 4,
-   "input": 53468,
-   "output": 2727,
+   "calls": 6,
+   "input": 103336,
+   "output": 4522,
    "cacheRead": 0,
-   "searches": 6,
-   "usd": 0.134
+   "searches": 9,
+   "usd": 0.252
   }
  },
  "news": {
-  "at": "2026-11-18T07:37:09.548Z",
+  "at": "2026-11-19T04:22:40.556Z",
   "model": "claude-haiku-5-5",
   "ok": true,
   "stocks": 97,
   "fetched": 97,
-  "called": 61,
-  "lines": 81,
+  "called": 90,
+  "lines": 76,
   "usage": {
-   "calls": 61,
-   "input": 104908,
-   "output": 4885,
+   "calls": 90,
+   "input": 141403,
+   "output": 6409,
    "cacheRead": 0,
    "searches": 0,
-   "usd": 0.013
+   "usd": 0.017
   }
  },
  "daily": {
-  "at": "2026-11-18T07:34:08.331Z",
+  "at": "2026-11-19T04:20:14.326Z",
   "T": "2026-11-18",
   "basis": {
    "kr": "2026-11-18",
-   "us": "2026-11-17"
+   "us": "2026-11-18"
   },
   "model": "claude-opus-5-5",
   "ok": true,
   "seen": {
-   "at": "2026-11-18T07:37:09.415Z",
+   "at": "2026-11-19T04:22:40.478Z",
    "basis": {
     "kr": "2026-11-18",
-    "us": "2026-11-17"
+    "us": "2026-11-18"
    },
    "items": {
     "market": {
-     "sig": "미국은 엔비디아 실적 경계와 금리 인상 우려로 11/17 다우가 1.64#11fk77g",
+     "sig": "미국은 연준 추가 인상 기대에 S&P500이 5거래일 연속 내렸고, 한국#1vov2eq",
      "basis": {
       "kr": "2026-11-18",
-      "us": "2026-11-17"
+      "us": "2026-11-18"
      }
     },
     "liquidity": {
-     "sig": "미국은 돈이 들어오는 흐름에 연준 인상 경로와 극도의 공포가 겹친 신중 #11dzkvl",
+     "sig": "미국은 돈이 들어오는 흐름이지만 연준 인상 경로와 극도의 공포가 겹친 신#givhqj",
      "basis": {
       "kr": "2026-11-18",
-      "us": "2026-11-17"
+      "us": "2026-11-18"
      }
     },
     "indexNotes": {
-     "sig": "하락세 — 일봉 구름 아래, 전환선<기준선, RSI 36.5다. 이번 상#109w3r4",
+     "sig": "하락세 — 일봉 구름 아래, 전환선<기준선, RSI 36.5로 과매도 근#okk2s4",
      "basis": {
       "kr": "2026-11-18",
-      "us": "2026-11-17"
+      "us": "2026-11-18"
      }
     },
     "topPicks": {
@@ -94,29 +100,29 @@ window.AI_STATUS = {
    }
   },
   "inputs": {
-   "market": "b2z09j",
-   "indexNotes": "mt14fp"
+   "market": "1ryqoo9",
+   "indexNotes": "g533nf"
   },
   "wrote": [
    "liquidity",
    "indexNotes",
-   "market",
-   "topPicks"
+   "market"
   ],
   "sig": {
-   "liquidity": "미국은 돈이 들어오는 흐름에 연준 인상 경로와 극도의 공포가 겹친 신중 #11dzkvl",
-   "indexNotes": "하락세 — 일봉 구름 아래, 전환선<기준선, RSI 36.5다. 이번 상#109w3r4",
-   "market": "미국은 엔비디아 실적 경계와 금리 인상 우려로 11/17 다우가 1.64#11fk77g",
+   "liquidity": "미국은 돈이 들어오는 흐름이지만 연준 인상 경로와 극도의 공포가 겹친 신#givhqj",
+   "indexNotes": "하락세 — 일봉 구름 아래, 전환선<기준선, RSI 36.5로 과매도 근#okk2s4",
+   "market": "미국은 연준 추가 인상 기대에 S&P500이 5거래일 연속 내렸고, 한국#1vov2eq",
    "topPicks": "300억원 자사주 매입을 마쳐 밸류업 계획 이후 유통주식수가 약 7.4%#1ldlqpb"
   },
   "sources": 40,
   "usage": {
    "calls": 2,
-   "input": 445578,
-   "output": 15200,
+   "input": 326668,
+   "output": 13434,
    "cacheRead": 0,
    "searches": 6,
-   "usd": 2.086
-  }
+   "usd": 1.575
+  },
+  "note": "새 종가로 세션 문장 갱신: market, indexNotes"
  }
 };

@@ -945,14 +945,16 @@
         ]
       },
       "241560": {
-        "verdict": "없음",
-        "note": "10/29 실적 확정치는 검색에 아직 없고, 직전 2분기 영업이익이 전년보다 늘어 논거 훼손 근거가 없다. 발표 후 다음 회차에 다시 본다.",
-        "asOf": "2026-10-29",
+        "verdict": "형식",
+        "note": "EBIT/EV·FCF/시총 값이 자료 없음이라 정체성 조건을 잴 수 없다. 2026년 3분기 영업이익이 1674억원으로 전년 대비 25.3% 늘어 이익 개선이 이어지고 있다.",
+        "asOf": "2026-11-19",
         "flags": [
-          "earn"
+          "theme"
         ],
+        "by": "ai",
         "sources": [
-          "https://www.smarttoday.co.kr/ko-kr/articles/109759"
+          "https://www.enewstoday.co.kr/news/articleView.html?idxno=2486259",
+          "https://www.businesskorea.co.kr/news/articleView.html?idxno=280002"
         ]
       },
       "267270": {
@@ -1000,17 +1002,16 @@
         "triedAt": "2026-10-30"
       },
       "086280": {
-        "verdict": "없음",
-        "note": "3분기 매출 +23.1%·영업이익 +8.1%로 분기 최대이고 지금 스크린에서 주제 기준 미달 항목이 없다.",
-        "asOf": "2026-11-15",
+        "verdict": "형식",
+        "note": "EBIT/EV·FCF/시총 값이 '자료 없음'이라 조건을 잴 수 없는 경우다. 2026년 3분기 매출 9조536억원, 영업이익 5,665억원으로 분기 최대 실적을 내 사업 악화 근거는 없다.",
+        "asOf": "2026-11-19",
         "flags": [
-          "theme",
-          "earn"
+          "theme"
         ],
+        "by": "ai",
         "sources": [
-          "https://view.asiae.co.kr/article/2026072315294174055",
-          "https://www.dailian.co.kr/news/view/1670172/%ED%98%84%EB%8C%80%EA%B8%80%EB%A1%9C%EB%B9%84%EC%8A%A4-2%EB%B6%84%EA%B8%B0-%EC%98%81%EC%97%85%EC%9D%B5-4950%EC%96%B5-2026",
-          "http://www.haesanews.com/news/articleView.html?idxno=149524"
+          "https://www.seoul.co.kr/news/economy/industry/2026/10/30/20261030500146",
+          "https://www.newspim.com/news/view/20261030000511"
         ],
         "triedAt": "2026-10-30"
       },
@@ -1037,15 +1038,16 @@
         ]
       },
       "066570": {
-        "verdict": "없음",
-        "note": "3분기 영업이익 +13.5%·1~3분기 누적 +55.9%이고 지금 스크린에서 주제 기준 미달 항목이 없다(FCF/시총이 문턱과 같은 경계).",
-        "asOf": "2026-11-15",
+        "verdict": "형식",
+        "note": "EBIT/EV·FCF/시총 상위 30% 조건은 값이 '자료 없음'이라 잴 수 없다. 3분기 영업이익 7,818억원(전년비 +13.5%)으로 이익 개선이 이어져 사업 악화 근거는 없다.",
+        "asOf": "2026-11-19",
         "flags": [
           "theme"
         ],
+        "by": "ai",
         "sources": [
-          "https://m.datanews.co.kr/m/m_article.html?no=146823",
-          "https://www.seoul.co.kr/news/economy/industry/2026/10/07/20261007500123",
+          "https://kr.investing.com/news/transcripts/article-93CH-2145027",
+          "https://www.lge.co.kr/story/newsroom/236203",
           "https://www.businessplus.kr/news/articleView.html?idxno=117814"
         ]
       }
