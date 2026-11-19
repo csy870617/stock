@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// 배포 전 연기 시험 — 저장소를 정적 서버로 띄워 index.html 을 헤드리스 크롬으로 열고, 홈(Top Pick 전체 순위·건강 점검) → 추천 종목(종목 상세 하나 열기) →
+// 배포 전 연기 시험 — 저장소를 정적 서버로 띄워 index.html 을 헤드리스 크롬으로 열고, 홈(Top Pick 전체 순위·건강 점검·돈의 흐름 지표 상세) → 추천 종목(종목 상세 하나 열기) →
 // 미국 → 내 종목 → 성과 → 과거 보기를 차례로 돈다. 앱 오류(잡히지 않은 예외·데이터 파일 문법 오류·우리 파일 404)가 하나라도 나면
 // exit 1 → deploy-pages 가 배포하지 않는다(지난 정상 버전이 그대로 남는다). 2026-10-25 약점 점검: 그 전엔 validate-reco.js 만 봐서
 // index.html 이나 다른 데이터 파일이 깨져도 빈 화면이 그대로 배포됐다.
@@ -108,6 +108,20 @@ async function run(browser, base) {
     if (!(await page.$("[data-se]"))) return;   // 심리 자료가 없으면 건너뛴다
     await page.click("[data-se]");
     await page.waitForFunction(() => { const s = document.getElementById("sheet"); return s && !s.hidden && document.querySelector("#se-sc svg"); }, null, T);
+    await page.click("#shBack");
+    await page.waitForFunction(() => document.getElementById("sheet").hidden, null, T);
+  });
+  await step("돈의 흐름 지표 칸·지표 상세", async () => {
+    if (!(await page.$("button.fw-c[data-fi]"))) return;   // 돈의 흐름 자료가 없으면 건너뛴다
+    await page.click("button.fw-c[data-fi]");
+    // 지표 상세 — 긴 추이(data/liquidity-ind.json)를 받아 3단 그래프와 검증 목록을 그린다(2026-11-19)
+    await page.waitForFunction(() => { const s = document.getElementById("sheet"); return s && !s.hidden && document.querySelector('#fi-ch [data-fic="sig"] svg') && document.querySelector("#fi-ev li"); }, null, T);
+    await page.click("#shNext");   // 같은 나라의 다음 지표
+    await page.waitForFunction(() => /^2\//.test(document.getElementById("shPos").textContent) && document.querySelector("#fi-ch svg"), null, T);
+    await page.click(".fi-back");   // 돈의 흐름 전체로
+    await page.waitForFunction(() => document.querySelector("#fw-sc svg") && document.querySelector("#shBody .fw-row[data-fi]"), null, T);
+    await page.click("#shBody .fw-row[data-fi]");   // 상세의 지표 줄 → 지표 상세
+    await page.waitForFunction(() => document.querySelector("#fi-ch svg"), null, T);
     await page.click("#shBack");
     await page.waitForFunction(() => document.getElementById("sheet").hidden, null, T);
   });

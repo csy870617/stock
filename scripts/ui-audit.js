@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// 화면 점검 — 저장소를 정적 서버로 띄워 index.html 을 헤드리스 크롬으로 열고 화면마다(홈·섹터 쪽·지수/돈의 흐름/시장 심리 상세·
+// 화면 점검 — 저장소를 정적 서버로 띄워 index.html 을 헤드리스 크롬으로 열고 화면마다(홈·섹터 쪽·지수/돈의 흐름/돈의 흐름 지표/시장 심리 상세·
 // 추천 종목·종목 상세·내 종목·성과) ①가로 넘침 ②누르는 범위(24px 미만 = 실패, 36px 미만 = 주의) ③11px 미만 글자
 // ④글자 대비(WCAG — 보통 글자 4.5:1, 큰 글자 3:1) ⑤말줄임으로 잘린 글자 ⑥화면보다 넓은 요소를 센다(2026-11-06 UI 점검에서 만듦).
 // 배포 게이트가 아니다 — index.html 화면을 고친 뒤 숫자가 나빠지지 않았는지 보는 참고 도구다. 상승·하락 숫자의 빨강·파랑
@@ -125,6 +125,7 @@ function auditIn(rootSel) {
   await page.evaluate(() => { const b = document.querySelector('#mkTabs [data-mkp="0"]'); if (b) b.click(); });
   await openSheet("#idxGrid [data-open]"); await audit("idx-detail", "#sheet"); await closeSheet();
   await openSheet("[data-liq]"); await audit("flow-detail", "#sheet"); await closeSheet();
+  await openSheet("button.fw-c[data-fi]"); await audit("ind-detail", "#sheet"); await closeSheet();   // 돈의 흐름 지표 상세(2026-11-19)
   await openSheet("[data-se]"); await audit("senti-detail", "#sheet"); await closeSheet();
   await tab("reco"); await audit("reco");
   await openSheet("#recoList [data-open]"); await audit("stock-detail", "#sheet"); await closeSheet();

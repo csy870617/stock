@@ -30,11 +30,8 @@ const ECOS_KEY = process.env.ECOS_KEY || "sample";
 const REBUILD = process.argv.includes("--rebuild");
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const curl = (args) => new Promise((res) => execFile("curl", ["-s", "--max-time", "60"].concat(args), { maxBuffer: 256 << 20 }, (e, out) => res(e ? null : String(out))));
-const ok = (v) => v != null && isFinite(v);
-const mean = (a) => { const x = a.filter(ok); return x.length ? x.reduce((s, v) => s + v, 0) / x.length : null; };
-const sd = (a) => { const x = a.filter(ok); if (x.length < 3) return null; const m = mean(x); return Math.sqrt(x.reduce((s, v) => s + (v - m) ** 2, 0) / (x.length - 1)); };
-const rnd = (v, d) => (ok(v) ? Math.round(v * Math.pow(10, d)) / Math.pow(10, d) : null);
-const addM = (ym, k) => { const [y, m] = ym.split("-").map(Number); return new Date(Date.UTC(y, m - 1 + k, 1)).toISOString().slice(0, 7); };
+// 월말 신호·z·흐름 점수의 식은 공용 모듈(lib-liqflow.js — 앱 지표 상세의 긴 추이 build-liquidity-ind.js 와 같은 식)
+const { ok, mean, sd, rnd, addM, DIRN, COMP, RISK_P, signals } = require("./lib-liqflow");
 const endOf = (ym) => { const [y, m] = ym.split("-").map(Number); return new Date(Date.UTC(y, m, 0)).toISOString().slice(0, 10); };
 const minusD = (iso, d) => new Date(Date.parse(iso + "T00:00:00Z") - d * 864e5).toISOString().slice(0, 10);
 const today = new Date().toISOString().slice(0, 10);
@@ -53,8 +50,6 @@ const EVIDENCE = {
   },
   gauge: "지금 시장 여건 게이지(금리 수준·VIX·하이일드 채권·달러·코스피 모멘텀)는 이후 수익·급락을 가르지 못했다 — 그래서 전망이 아니라 지금 상태로만 본다.",
 };
-// 신용 경고 신호별 과거 확률(S&P500 다음 3개월 −10% 하락 — 비우호 3분위 vs 나머지)
-const RISK_P = { CS: [30.0, 10.1], CS3: [26.9, 8.0], FCI: [28.6, 8.0], FCI3: [23.4, 9.9] };
 
 // ── 받기 ──
 async function fred(id) {
@@ -174,37 +169,8 @@ const monthlyOf = (map) => { const o = {}; Object.keys(map || {}).forEach((d) =>
     Object.keys(ffm).forEach((ym) => { if (ym < thisM && H.months[ym]) H.months[ym].FF = ffm[ym]; });
   }
 
-  // ── 월말 신호 → z → 흐름 점수(연구와 같은 식) ──
-  const MS = Object.keys(H.months).sort();
-  const h = (ym, k) => { const o = H.months[ym]; return o && ok(o[k]) ? o[k] : null; };
-  const pchg = (a, b) => (ok(a) && ok(b) && b !== 0 ? a / b - 1 : null);
-  const dif = (a, b) => (ok(a) && ok(b) ? a - b : null);
-  const SIG = {}, DIRN = { NL3: 1, CS3: -1, FCI3: -1, USD3: -1, M2R: 1, KDEP3: 1, KMRG3: 1, KCS3: -1, KRW3: -1, KFF3: 1, CS: -1, FCI: -1 };
-  Object.keys(DIRN).forEach((k) => { SIG[k] = {}; });
-  MS.forEach((ym, i) => {
-    const p3 = addM(ym, -3), p12 = addM(ym, -12);
-    SIG.NL3[ym] = pchg(h(ym, "NL"), h(p3, "NL"));
-    SIG.CS[ym] = h(ym, "CS"); SIG.CS3[ym] = dif(h(ym, "CS"), h(p3, "CS"));
-    SIG.FCI[ym] = h(ym, "FCI"); SIG.FCI3[ym] = dif(h(ym, "FCI"), h(p3, "FCI"));
-    SIG.USD3[ym] = pchg(h(ym, "DXY"), h(p3, "DXY"));
-    const m2y = pchg(h(ym, "M2"), h(p12, "M2")), cpy = pchg(h(ym, "CPI"), h(p12, "CPI"));
-    SIG.M2R[ym] = ok(m2y) && ok(cpy) ? m2y - cpy : null;
-    SIG.KDEP3[ym] = pchg(h(ym, "DEP"), h(p3, "DEP")); SIG.KMRG3[ym] = pchg(h(ym, "MRG"), h(p3, "MRG"));
-    SIG.KCS3[ym] = dif(h(ym, "KCS"), h(p3, "KCS")); SIG.KRW3[ym] = pchg(h(ym, "KRW"), h(p3, "KRW"));
-    // 외국인 3개월 합 ÷ 직전 36개월(최소 24) 3개월 합 표준편차
-    const s3 = (j) => { const a = [0, 1, 2].map((d) => (j - d >= 0 ? h(MS[j - d], "FF") : null)); return a.every(ok) ? a.reduce((x, y) => x + y, 0) : null; };
-    const hist = []; for (let j = i - 36; j < i; j++) if (j >= 2) { const v = s3(j); if (ok(v)) hist.push(v); }
-    const s = hist.length >= 24 ? sd(hist) : null, cur = s3(i);
-    SIG.KFF3[ym] = ok(cur) && ok(s) && s > 0 ? cur / s : null;
-  });
-  const histOf = (k, i) => { const a = []; for (let j = Math.max(0, i - 60); j < i; j++) { const v = SIG[k][MS[j]]; if (ok(v)) a.push(v); } return a; };
-  const zOf = (k, v, hist) => { if (!ok(v) || hist.length < 36) return null; const s = sd(hist); return s > 0 ? DIRN[k] * (v - mean(hist)) / s : null; };
-  const COMP = { us: ["NL3", "CS3", "FCI3", "USD3", "M2R"], korea: ["KDEP3", "KCS3", "KRW3", "KFF3", "NL3"] };
-  const SCORE = { us: {}, korea: {} };
-  MS.forEach((ym, i) => ["us", "korea"].forEach((c) => {
-    const z = COMP[c].map((k) => zOf(k, SIG[k][ym], histOf(k, i))).filter(ok);
-    SCORE[c][ym] = z.length >= 3 ? mean(z) : null;
-  }));
+  // ── 월말 신호 → z → 흐름 점수(연구와 같은 식 — lib-liqflow.js) ──
+  const { MS, h, pchg, dif, SIG, histOf, zOf, SCORE } = signals(H);
 
   // ── 오늘 값(지금 공개된 마지막 값 — 3개월 전은 91일 전 값) ──
   const L = (k) => (S[k] ? lastOf(S[k]) : null);
@@ -303,4 +269,10 @@ const monthlyOf = (map) => { const o = {}; Object.keys(map || {}).forEach((d) =>
   console.log("liquidity-flow.js 갱신 (" + today + ") — " + line("us") + " · " + line("korea") + " · 미국 신용 경고 " + out.us.risk.on + "/" + out.us.risk.of +
     (miss.length ? " · 못 받음: " + miss.join(", ") + "(누적 자료 사용)" : ""));
   if (miss.length > 3) console.log("::warning::update-liquidity-flow: 자료 " + miss.length + "개를 받지 못했다(" + miss.join(", ") + ") — 누적 파일로 계산");
+  // 지표 상세(앱 — 돈의 흐름 지표 칸·줄을 누르면 열림)의 긴 월별 추이 — 방금 쓴 누적 원자료로, 같은 식(lib-liqflow.js)
+  try {
+    const ind = require("./build-liquidity-ind").build();
+    console.log("liquidity-ind.json 갱신 — " + Math.round(ind.bytes / 1024) + "KB");
+    ind.warn.forEach((w) => console.log("::warning::build-liquidity-ind: " + w));
+  } catch (e) { console.log("::warning::build-liquidity-ind 실패 — " + (e && e.message)); }
 })().catch((e) => { console.error("update-liquidity-flow 실패:", e && e.message); process.exit(1); });

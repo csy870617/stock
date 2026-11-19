@@ -540,6 +540,63 @@ body:not(.ready) #foot, body:not(.ready) #mktFold { visibility: hidden; }   /* �
 .fw-evp { margin-top: 8px; font-size: 13.5px; line-height: 1.65; color: var(--ink2); }
 .fw-evk { display: inline-block; margin-right: 6px; padding: 0 6px; border-radius: 4px; font-size: 11.5px; font-weight: 700; line-height: 19px; color: var(--ink2); background: var(--sf3); vertical-align: 1px; }
 .fw-foot { margin: 14px 0 4px; font-size: 11.5px; line-height: 1.6; color: var(--mut); }
+/* 돈의 흐름 — 지표 칸·줄을 누르면 그 지표 상세(2026-11-19). 칸은 버튼이라 누르는 범위를 음수 여백으로 넓힌다(자리는 그대로) */
+button.fw-c { margin: -8px -6px; padding: 8px 6px; min-height: 36px; align-items: center; border: 0; border-radius: 8px; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+button.fw-c:hover, button.fw-c:active { background: var(--sf3); }
+button.fw-c:focus-visible, .fw-link:focus-visible, .fi-zr[role="button"]:focus-visible { outline: 2px solid var(--acc); outline-offset: 1px; }
+.fw-link { cursor: pointer; margin: 0 -10px; padding-left: 10px; padding-right: 6px; border-radius: 10px; -webkit-tap-highlight-color: transparent; }
+.fw-link:hover, .fw-link:active { background: var(--sf2); }
+.fw-rgo { flex: none; display: inline-flex; color: var(--mut); }
+.fw-rgo svg { width: 14px; height: 14px; }
+.fi-top { padding: 10px 14px 0; }
+.fi-back { display: inline-flex; align-items: center; gap: 4px; min-height: 36px; padding: 4px 10px 4px 6px; border: 0; border-radius: 999px; background: var(--sf3); font: inherit; font-size: 13px; font-weight: 700; color: var(--ink2); cursor: pointer; }
+.fi-back svg { width: 14px; height: 14px; transform: scaleX(-1); }
+.fi-back:hover { color: var(--ink); }
+.fi-hero { padding: 12px 20px 18px; }
+.fi-sub { font-size: 13px; line-height: 1.5; color: var(--mut); }
+.fi-vrow { display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 10px; margin-top: 4px; }
+.fi-big { font-size: 28px; font-weight: 800; letter-spacing: -0.5px; font-variant-numeric: tabular-nums; }
+.fi-d { font-size: 12.5px; color: var(--mut); }
+.fi-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.fi-st, .fi-ch { display: inline-flex; align-items: center; gap: 4px; padding: 3px 10px; border-radius: 999px; font-size: 13px; font-weight: 700; background: var(--sf3); color: var(--ink2); font-variant-numeric: tabular-nums; }
+.fi-st .fw-ar { width: auto; color: inherit; }
+.fi-st-up { background: var(--acc-soft); color: var(--acc-ink); }
+.fi-st-down { background: var(--warn-soft); color: var(--warn-ink); }
+.fi-why { margin-top: 10px; font-size: 14px; line-height: 1.65; color: var(--ink2); }
+.fi-rg { display: inline-flex; gap: 2px; margin-bottom: 10px; padding: 2px; border-radius: 10px; background: var(--sf3); }
+.fi-rg button { min-width: 52px; min-height: 34px; padding: 0 10px; border: 0; border-radius: 8px; background: none; font: inherit; font-size: 13px; font-weight: 600; color: var(--ink2); cursor: pointer; }
+.fi-rg button[aria-pressed="true"] { background: var(--sf); color: var(--ink); font-weight: 700; box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
+.fi-lg { margin-left: 6px; font-weight: 500; color: var(--mut); white-space: nowrap; }
+.fi-sw { display: inline-block; width: 9px; height: 9px; margin: 0 3px 0 7px; border-radius: 2px; vertical-align: -1px; }
+.fi-sw.in { background: var(--lq4); } .fi-sw.out { background: var(--lq0); } .fi-sw.flat { background: var(--lq2); opacity: 0.55; }
+.fi-dl { display: grid; grid-template-columns: auto 1fr; gap: 8px 14px; font-size: 14px; line-height: 1.6; }
+.fi-dl dt { font-weight: 700; color: var(--mut); white-space: nowrap; }
+.fi-dl dd { margin: 0; color: var(--ink2); }
+.fi-ev { list-style: none; margin: 0; padding: 0; }
+.fi-ev li { padding: 9px 0; border-top: 1px solid var(--line2); font-size: 14px; line-height: 1.65; color: var(--ink2); }
+.fi-ev li:first-child { border-top: 0; padding-top: 0; }
+.fi-evk { display: inline-block; margin-right: 6px; padding: 0 7px; border-radius: 4px; font-size: 11.5px; font-weight: 700; line-height: 19px; vertical-align: 1px; white-space: nowrap; }
+.fi-ok { color: var(--acc-ink); background: var(--acc-soft); }
+.fi-no { color: var(--ink2); background: var(--sf3); }
+.fi-rf { color: var(--mut); background: transparent; box-shadow: inset 0 0 0 1px var(--line); }
+.fi-rr { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid var(--line2); }
+.fi-rr:first-of-type { border-top: 0; }
+.fi-rrl { flex: 1; min-width: 0; display: grid; gap: 2px; font-size: 14px; }
+.fi-rrl span { font-size: 12.5px; color: var(--mut); font-variant-numeric: tabular-nums; }
+.fi-rrp { flex: none; text-align: right; font-size: 12px; line-height: 1.5; color: var(--mut); }
+.fi-rrp b { font-size: 14px; color: var(--ink); }
+.fi-sh { font-size: 14px; line-height: 1.65; color: var(--ink2); }
+.fi-zs { margin-top: 10px; }
+.fi-zr { display: grid; grid-template-columns: 112px 1fr 62px; align-items: center; gap: 8px; min-height: 36px; padding: 0 6px; border-radius: 8px; font-size: 13px; }
+.fi-zr[role="button"] { cursor: pointer; }
+.fi-zr[role="button"]:hover { background: var(--sf2); }
+.fi-zr.me { background: var(--sf3); font-weight: 700; }
+.fi-zn { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink2); }
+.fi-zr.me .fi-zn { color: var(--ink); }
+.fi-zt { position: relative; height: 10px; border-radius: 3px; background: linear-gradient(var(--line), var(--line)) center / 1px 100% no-repeat; }
+.fi-zb { position: absolute; top: 1px; bottom: 1px; border-radius: 2px; }
+.fi-zb.in { background: var(--lq4); } .fi-zb.out { background: var(--lq0); } .fi-zb.flat { background: var(--lq2); opacity: 0.55; }
+.fi-zv { text-align: right; font-variant-numeric: tabular-nums; color: var(--ink2); }
 @media (max-width: 339px) { .fw-cs { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 379px) { .fw-bar.big i { width: 16px; } }
 /* 시장 심리 온도계 — 홈 카드와 상세(data/sentiment.js, 2026-11-06). 0 극도의 공포(파랑) ~ 100 극도의 환호(빨강), 가운데 회색 */
@@ -5785,6 +5842,21 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
       shBody.scrollTop = top;
       return;
     }
+    if (it.fi) {   // 돈의 흐름 지표 상세 — 카드의 지표 칸·상세의 지표 줄·신용 경고 줄(위·아래 버튼 = 같은 나라의 다음 지표)
+      var fx = fiComp(it.c, it.fi);
+      document.getElementById("shName").textContent = fx ? fx.name : (it.n || it.fi);
+      document.getElementById("shCode").textContent = (it.c === "us" ? "미국" : "한국") + " · 돈의 흐름 지표";
+      document.getElementById("shPos").textContent = SH.ctx.length > 1 ? (SH.idx + 1) + "/" + SH.ctx.length : "";
+      document.getElementById("shPrev").disabled = SH.idx <= 0;
+      document.getElementById("shNext").disabled = SH.idx >= SH.ctx.length - 1;
+      shBody.innerHTML = indDetailHtml(it.c, it.fi);
+      mountIndCharts(it.c, it.fi);
+      shBody.scrollTop = top;
+      var fsec = it.fsec; it.fsec = null;
+      if (fsec && !keep) jumpToSec(fsec);
+      spySync();
+      return;
+    }
     if (it.liq) {   // 돈의 흐름 상세 — 오늘의 시장 '돈의 흐름' 카드
       document.getElementById("shName").textContent = "돈의 흐름";
       document.getElementById("shCode").textContent = (it.liq === "us" ? "미국" : "한국") + " · 유동성";
@@ -6207,6 +6279,8 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
       return;
     }
     if (t.closest("#mineEdit")) { state.mineEdit = !state.mineEdit; renderMine(); return; }
+    var fiEl = t.closest("[data-fi]");
+    if (fiEl && !t.closest(".ic-tip")) { openInd(fiEl.getAttribute("data-fic"), fiEl.getAttribute("data-fi"), fiEl, fiEl.getAttribute("data-fisec") || ""); return; }
     var seEl = t.closest("[data-se]");
     if (seEl && !t.closest(".ic-tip")) { openSheet([{ se: seEl.getAttribute("data-se"), c: seEl.getAttribute("data-se"), t: "se", th: "se", n: "", why: "", idx: "", light: false, k: "" }], 0, seEl); return; }
     var fw = t.closest("[data-liq]");
@@ -6220,7 +6294,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
   // role=button 행·칩은 네이티브 버튼과 달리 Enter/Space 가 click 을 만들지 않는다 — 위임으로 보완
   document.addEventListener("keydown", function (e) {
     if (e.key !== "Enter" && e.key !== " ") return;
-    var fwk = e.target.closest && e.target.closest('[data-liq][role="button"], [data-se][role="button"]');
+    var fwk = e.target.closest && e.target.closest('[data-liq][role="button"], [data-se][role="button"], [data-fi][role="button"]');
     if (fwk && e.target === fwk) { e.preventDefault(); fwk.click(); return; }
     var el = e.target.closest && e.target.closest('[data-open][role="button"]');
     if (!el || e.target !== el) return;
@@ -6359,13 +6433,14 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     "흐름 점수 = 아래 지표들의 최근 3개월 변화가 지난 5년 평소보다 얼마나 '돈이 들어오는 쪽'인지의 평균. 미국은 연준 순유동성·신용 스프레드·금융여건·달러·실질 통화량, " +
     "한국은 투자자예탁금·회사채 스프레드·원/달러·외국인 순매수·미국 순유동성. 단계 = 지금 점수가 최근 5년 중 어디쯤인지(20%씩 5단계).\n\n" +
     "검증(미국 2003~·한국 2005~2026, 결과를 보기 전에 기준을 정한 시험): 미국은 흐름 점수가 높을수록 다음 12개월 S&P500 이 나았고, 한국은 투자자예탁금·신용융자가 늘 때 다음 3개월 코스피가 나았다. " +
-    "미국은 신용 스프레드·금융여건이 나빠질 때 3개월 안 −10% 급락이 3배 잦았다. 확실한 예측이 아니라 확률을 조금 기울이는 크기 — 누르면 자세히.";
+    "미국은 신용 스프레드·금융여건이 나빠질 때 3개월 안 −10% 급락이 3배 잦았다. 확실한 예측이 아니라 확률을 조금 기울이는 크기 — 카드를 누르면 자세히, 지표 칸을 누르면 그 지표의 긴 추이·검증.";
   function flowCardHtml(c) {
     var o = flowOf(c); if (!o) return "";
     var F = window.LIQUIDITY_FLOW, top = fwTop(c);
     var pick = (o.comps || []).slice(0, 4);
     var chips = pick.map(function (x) {
-      return '<span class="fw-c">' + fwArrow(x.state) + '<span class="fw-cn">' + esc(FW_SHORT[x.key] || x.name) + '</span><span class="fw-cv">' + esc(fwChg(x)) + "</span></span>";
+      return '<button type="button" class="fw-c" data-fi="' + esc(x.key) + '" data-fic="' + esc(c) + '" aria-label="' + esc(x.name + " " + fwChg(x) + " — 자세히 보기") + '">' + fwArrow(x.state) +
+        '<span class="fw-cn">' + esc(FW_SHORT[x.key] || x.name) + '</span><span class="fw-cv">' + esc(fwChg(x)) + "</span></button>";
     }).join("");
     var r = o.risk, risk = r ? '<div class="fw-risk fw-r' + (r.on >= 2 ? "2" : r.on === 1 ? "1" : "0") + '">' +
       (r.on >= 2 ? "⚠ 신용 경고" : r.on === 1 ? "신용 주의" : "신용 경고 없음") + ' <span>' + r.on + "/" + r.of + "</span>" +
@@ -6422,21 +6497,24 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
       '<p class="fw-note">점수 0 = 지난 5년 평소, 위로 갈수록 돈이 들어오는 쪽. 두 그래프는 같은 달끼리 세로로 맞췄다.</p></section>';
     var rows = (o.comps || []).map(function (x) {
       var vd = x.valid ? '<span class="fw-vd" title="결과를 보기 전에 기준을 정한 과거 검증을 통과한 쓰임">✓ ' + esc(x.valid) + "</span>" : "";
-      return '<div class="fw-row"><div class="fw-rl"><div class="fw-rn">' + fwArrow(x.state) + esc(x.name) + "</div>" +
+      return '<div class="fw-row fw-link" role="button" tabindex="0" data-fi="' + esc(x.key) + '" data-fic="' + esc(c) + '" aria-label="' + esc(x.name + " 자세히 보기") + '"><div class="fw-rl"><div class="fw-rn">' + fwArrow(x.state) + esc(x.name) + "</div>" +
         '<div class="fw-rs">' + esc(x.sub || "") + (x.d ? " · " + esc(String(x.d).length > 7 ? mdOf(x.d) : x.d.replace("-", "년 ") + "월") : "") + "</div>" + vd + "</div>" +
         '<div class="fw-rr"><div class="fw-rv">' + esc(fwValTxt(x)) + "</div>" +
-        '<div class="fw-rc">' + (x.chg != null ? "3개월 " + esc(fwChg(x)) : x.z != null ? "평소 대비 " + esc(fwSign(x.z, 1)) + "σ" : "") + "</div>" + fwSpark(x.spark, x.sparkKind) + "</div></div>";
+        '<div class="fw-rc">' + (x.chg != null ? "3개월 " + esc(fwChg(x)) : x.z != null ? "평소 대비 " + esc(fwSign(x.z, 1)) + "σ" : "") + "</div>" + fwSpark(x.spark, x.sparkKind) + "</div>" +
+        '<span class="fw-rgo" aria-hidden="true">' + ICON.chev + "</span></div>";
     }).join("");
     var comps = '<section class="dt-sec" id="fw-cp"><h3>지금 흐름</h3><p class="fw-lg">' + fwArrow("들어옴") + " 돈이 들어오는 쪽 " + fwArrow("빠짐") + " 빠지는 쪽 " + fwArrow("보통") +
-      " 평소 수준 — 최근 3개월 변화를 지난 5년 평소와 비교 · 오른쪽 작은 선은 최근 3년 월말</p>" + rows + "</section>";
+      " 평소 수준 — 최근 3개월 변화를 지난 5년 평소와 비교 · 오른쪽 작은 선은 최근 3년 월말 · 줄을 누르면 그 지표의 긴 추이·검증</p>" + rows + "</section>";
     var risk = "";
     if (o.risk) {
       var r = o.risk;
       risk = '<section class="dt-sec" id="fw-rk"><h3>급락 위험(신용) <span class="md-as">' + r.on + "/" + r.of + " 켜짐</span></h3>" +
         '<div class="fw-risk fw-r' + (r.on >= 2 ? "2" : r.on === 1 ? "1" : "0") + '">' + esc(r.on >= 2 ? "⚠ 신용 경고" : r.on === 1 ? "신용 주의" : "신용 경고 없음") + " — " + esc(r.note) + "</div>" +
         r.items.map(function (x) {
-          return '<div class="fw-ri"><span class="fw-rd ' + (x.on ? "on" : "") + '" aria-hidden="true"></span><span class="fw-rin">' + esc(x.name) + "</span>" +
-            '<span class="fw-rip">' + (x.on == null ? "자료 부족" : (x.on ? "켜짐" : "꺼짐") + " · 켜졌을 때 " + x.p + "% / 평소 " + x.base + "%") + "</span></div>";
+          var rkey = x.key.indexOf("CS") === 0 ? "CS3" : "FCI3";
+          return '<div class="fw-ri fw-link" role="button" tabindex="0" data-fi="' + rkey + '" data-fic="' + esc(c) + '" data-fisec="fi-rk" aria-label="' + esc(x.name + " 자세히 보기") + '"><span class="fw-rd ' + (x.on ? "on" : "") + '" aria-hidden="true"></span><span class="fw-rin">' + esc(x.name) + "</span>" +
+            '<span class="fw-rip">' + (x.on == null ? "자료 부족" : (x.on ? "켜짐" : "꺼짐") + " · 켜졌을 때 " + x.p + "% / 평소 " + x.base + "%") + "</span>" +
+            '<span class="fw-rgo" aria-hidden="true">' + ICON.chev + "</span></div>";
         }).join("") + '<p class="fw-note">켜짐 = 지난 5년 중 나쁜 3분의 1. 확률 = 2003~2026년 S&P500 이 다음 3개월 안 −10% 이상 내린 적이 있는 비율(코스피엔 뚜렷하지 않았다).</p></section>';
     }
     var ev = '<section class="dt-sec" id="fw-ev"><h3>무엇이 검증됐나</h3>' +
@@ -6527,6 +6605,313 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     show(months.length - 1);
   }
   window.addEventListener("resize", function () { var st = FWC.cur; if (st && st.sec.isConnected) { clearTimeout(st.t); st.t = setTimeout(function () { fwPaint(st); }, 150); } });
+
+  // ══ 돈의 흐름 — 지표 상세 ══
+  //   2026-11-19 사용자 '자금 흐름의 하위 내용을 눌렀을 때, 해당 되는 주제의 상세 화면을 만들어주고, 볼 수 있게 해줘'.
+  //   홈 카드의 지표 칸 · 돈의 흐름 상세의 지표 줄 · 신용 경고 줄을 누르면 그 지표의 상세가 열린다(위·아래 버튼으로 같은 나라의 다음 지표).
+  //   지금 값·방향(들어옴/빠짐)은 data/liquidity-flow.js, 월말 긴 추이·평소 기준·급락 신호 기준선은 data/liquidity-ind.json
+  //   (scripts/build-liquidity-ind.js — 흐름 점수와 같은 식 lib-liqflow.js)을 이 화면을 열 때만 받는다.
+  //   검증 문장은 scripts/research/liquidity/README.md 의 사전 등록 시험 결과 그대로다 — 통과·미달·참고(그달 같이 움직임)를 나눠 보인다.
+  var FW_SCORE = { us: ["NL3", "CS3", "FCI3", "USD3", "M2R"], korea: ["KDEP3", "KCS3", "KRW3", "KFF3", "NL3"] };   // 흐름 점수 구성(lib-liqflow.js COMP 와 같다)
+  var FI_U = { NL3: ["조 달러", 2, "%", 1], CS3: ["%p", 2, "bp", 0], FCI3: ["", 3, "", 3], USD3: ["", 2, "%", 1], M2R: ["조 달러", 2, "%", 1],
+    KDEP3: ["조원", 1, "%", 1], KMRG3: ["조원", 1, "%", 1], KFF3: ["조원", 1, "조원", 1], KRW3: ["원", 0, "%", 1], KCS3: ["%p", 2, "bp", 0] };   // [수준 단위, 소수, 신호 단위, 소수]
+  var FI_SCORE_EV = { us: "흐름 점수가 높을수록 다음 12개월 S&P500 이 나았다(t 3.21, 전·후반 모두, 표본 밖 R² +7.6%).",
+    korea: "흐름 점수가 높을수록 다음 12개월 코스피가 나았다(t 2.36, 전·후반 모두, 표본 밖 R² +1.3%)." };
+  var FI_INFO = {
+    us: {
+      NL3: { lv: "연준 순유동성 · 조 달러", sig: "3개월 변화율 · %",
+        what: "연준이 풀어 놓은 돈(자산)에서 정부 계좌(재무부 일반계정)와 역레포에 묶인 돈을 뺀 값. 은행·시장에서 실제로 도는 달러의 양에 가깝다.",
+        dir: "3개월 새 늘면 돈이 들어오는 쪽, 줄면 빠지는 쪽.", src: "연준 대차대조표·재무부 계좌·역레포(FRED) — 매주, 이틀 늦게 반영",
+        ev: [["ok", "미국 흐름 점수의 구성 — 흐름 점수는 다음 12개월 S&P500 과 같은 방향이었다."],
+          ["no", "단독으로는 다음 12개월 S&P500 을 가르는 힘이 기준에 조금 못 미쳤다(t 1.99, 기준 2)."],
+          ["ok", "3개월 새 늘수록 다음 12개월 코스피가 나았다(t 2.96, 전·후반 모두, 표본 밖 R² +1.3%) — 한국 흐름 점수에도 넣는다."],
+          ["ref", "그달 S&P500 과는 일관되게 같이 움직이지 않았다(상관 −0.10 — 전반 −0.30·후반 +0.17)."]] },
+      CS3: { lv: "신용 스프레드 · %p", sig: "3개월 변화 · bp",
+        what: "신용등급 Baa 회사채 금리에서 국채 10년 금리를 뺀 값. 기업이 돈을 빌리기 어려워질수록 벌어진다.",
+        dir: "3개월 새 좁아지면 돈이 들어오는 쪽, 벌어지면 빠지는 쪽.", src: "무디스 Baa 회사채 − 국채 10년(FRED) — 매일",
+        ev: [["ok", "수준이 최근 5년 중 높은 3분의 1이면 다음 3개월 안 S&P500 −10% 하락이 30.0%였다(나머지 10.1%, t 2.16)."],
+          ["ok", "3개월 새 최근 5년 중 크게 벌어진 3분의 1이면 26.9%였다(나머지 8.0%, t 3.35)."],
+          ["ref", "그달 S&P500 과 가장 같이 움직인 지표다(상관 0.55)."],
+          ["no", "수준으로 다음 수익을 예측하는 힘과 코스피 급락 확률(22~26% vs 17~19%)은 기준 미달."]] },
+      FCI3: { lv: "금융여건지수(NFCI)", sig: "3개월 변화",
+        what: "시카고 연은이 금리·신용·주식·자금시장 지표 100여 개로 만든 미국 금융여건 지수. 0 = 평소, 0보다 낮으면 돈 빌리기·투자하기가 평소보다 쉽다.",
+        dir: "3개월 새 내려가면(느슨해지면) 돈이 들어오는 쪽, 올라가면 빠지는 쪽.", src: "시카고 연은 NFCI(FRED) — 매주, 닷새 늦게 반영",
+        ev: [["ok", "수준이 최근 5년 중 나쁜 3분의 1이면 다음 3개월 안 S&P500 −10% 하락이 28.6%였다(나머지 8.0%, t 2.64)."],
+          ["ok", "3개월 변화가 나쁜 3분의 1이면 23.4%였다(나머지 9.9%, t 2.39)."],
+          ["no", "3개월 변화로 다음 3개월 수익을 예측하는 힘은 후반에 방향이 뒤집혀 미달."],
+          ["ref", "그달 S&P500 과 같이 움직였다(상관 0.50)."]] },
+      USD3: { lv: "달러인덱스", sig: "3개월 변화율 · %",
+        what: "유로·엔·파운드 등 6개 주요 통화에 견준 달러 가치(ICE 달러인덱스).",
+        dir: "3개월 새 달러가 약해지면 세계로 돈이 풀리는 쪽 — 돈이 들어오는 쪽으로 센다.", src: "ICE 달러인덱스(야후) — 매일",
+        ev: [["ok", "미국 흐름 점수의 구성 — 흐름 점수는 다음 12개월 S&P500 과 같은 방향이었다."],
+          ["ref", "그달 S&P500 과 같이 움직였다(달러 약세 쪽, 상관 0.37)."]] },
+      M2R: { lv: "M2 통화량(명목) · 조 달러", sig: "실질 증가율(M2 − 물가, 전년 대비) · %",
+        what: "시중 통화량(M2) 증가율에서 물가 상승률을 뺀 값 — 물가를 넘어 늘어난 돈의 양.",
+        dir: "높을수록 돈이 들어오는 쪽. 3개월 변화가 아니라 이 증가율 자체를 지난 5년 평소와 견준다.", src: "M2·소비자물가(FRED) — 매월, 한 달 늦게 반영",
+        ev: [["ok", "미국 흐름 점수의 구성 — 흐름 점수는 다음 12개월 S&P500 과 같은 방향이었다."],
+          ["no", "단독으로 다음 3개월 S&P500 은 과거 구간에선 같은 방향(t 2.85)이었지만 표본 밖에서 과거 평균보다 못해(R² −17%) 미달."],
+          ["ref", "그달 주가와는 거의 같이 움직이지 않았다(상관 0.06)."]] }
+    },
+    korea: {
+      KDEP3: { lv: "투자자예탁금 · 조원", sig: "3개월 변화율 · %",
+        what: "주식을 사려고 증권 계좌에 넣어 둔 대기 자금.",
+        dir: "3개월 새 늘면 돈이 들어오는 쪽, 줄면 빠지는 쪽.", src: "금융투자협회 증시자금 — 매일, 하루 늦게 반영",
+        ev: [["ok", "3개월 새 늘수록 다음 3개월 코스피 초과수익이 높았다(t 3.07, 전·후반 모두, 표본 밖 R² +11.4%) — 하위·중간·상위 3분의 1 평균 −1.9%·+1.7%·+5.1%."],
+          ["ok", "지수 추세를 함께 넣어도(t 2.93), 2020~21년 코로나 유동성 장을 빼도(t 2.31) 유지."],
+          ["no", "코스피 −10% 급락 확률은 가르지 못했다 — 개인 자금이 몰리는 국면은 과열과 같이 오기도 한다."],
+          ["ref", "그달 코스피와 같이 움직였다(상관 0.43)."]] },
+      KMRG3: { lv: "신용융자 잔고 · 조원", sig: "3개월 변화율 · %",
+        what: "증권사에서 돈을 빌려 산 주식의 잔고(신용거래융자).",
+        dir: "3개월 새 늘면 돈이 들어오는 쪽 — 빚을 내서라도 사려는 돈.", src: "금융투자협회 신용공여 — 매일, 하루 늦게 반영",
+        ev: [["ok", "3개월 새 늘수록 다음 3개월 코스피가 나았다(t 2.88, 전·후반 모두, 표본 밖 R² +1.5%) — 하위·중간·상위 3분의 1 평균 −0.7%·−0.8%·+7.5%."],
+          ["ok", "지수 추세를 넣어도(t 2.08), 코로나 유동성 장을 빼도(t 2.96) 유지."],
+          ["no", "코스피 −10% 급락 확률은 가르지 못했다."],
+          ["ref", "그달 코스피와 같이 움직였다(상관 0.43)."]] },
+      KFF3: { lv: "외국인 순매수(월 합) · 조원", sig: "3개월 합 · 조원",
+        what: "외국인이 코스피에서 산 금액에서 판 금액을 뺀 값. 지금 값은 최근 63거래일(약 3개월) 합.",
+        dir: "3개월 합이 평소보다 크면 돈이 들어오는 쪽 — 직전 3년 3개월 합이 흔들린 폭으로 나눠 잰다.", src: "한국거래소 집계(다음 금융) — 매일",
+        ev: [["ok", "한국 흐름 점수의 구성 — 흐름 점수는 다음 12개월 코스피와 같은 방향이었다."],
+          ["no", "단독으로 다음 수익·급락을 가르는 힘은 기준 미달."],
+          ["ref", "그달 코스피와 같이 움직인 정도가 약했다(2016년 이후 상관 0.09)."]] },
+      KRW3: { lv: "원/달러 · 원", sig: "3개월 변화율 · %",
+        what: "1달러를 사는 데 드는 원화.",
+        dir: "3개월 새 원화가 강해지면(환율이 내리면) 외국인 돈이 들어오기 쉬운 쪽.", src: "원/달러 환율(야후) — 매일",
+        ev: [["ok", "한국 흐름 점수의 구성 — 흐름 점수는 다음 12개월 코스피와 같은 방향이었다."],
+          ["no", "단독으로 다음 수익을 가르는 힘은 기준 미달."],
+          ["ref", "그달 코스피와 같이 움직였다(원화 강세 쪽, 상관 0.35)."]] },
+      KCS3: { lv: "회사채 스프레드 · %p", sig: "3개월 변화 · bp",
+        what: "신용등급 AA− 회사채 3년 금리에서 국고채 3년 금리를 뺀 값(월평균). 기업 자금 사정이 나빠지면 벌어진다.",
+        dir: "3개월 새 좁아지면 돈이 들어오는 쪽, 벌어지면 빠지는 쪽.", src: "한국은행 경제통계(ECOS) — 매월, 그달 평균",
+        ev: [["ok", "한국 흐름 점수의 구성 — 흐름 점수는 다음 12개월 코스피와 같은 방향이었다."],
+          ["no", "단독으로 다음 수익·급락을 가르는 힘은 기준 미달."]] },
+      NL3: { lv: "미국 연준 순유동성 · 조 달러", sig: "3개월 변화율 · %",
+        what: "연준이 풀어 놓은 돈에서 정부 계좌·역레포에 묶인 돈을 뺀 값 — 세계로 풀린 달러의 양에 가깝다.",
+        dir: "3개월 새 늘면 돈이 들어오는 쪽, 줄면 빠지는 쪽.", src: "연준 대차대조표·재무부 계좌·역레포(FRED) — 매주, 이틀 늦게 반영",
+        ev: [["ok", "3개월 새 늘수록 다음 12개월 코스피가 나았다(t 2.96, 전·후반 모두, 표본 밖 R² +1.3%) — 지수 추세를 함께 넣어도 t 3.70, 코로나 유동성 장을 빼도 t 2.99."],
+          ["ok", "12개월 변화로 본 다음 3개월 코스피도 겨우 기준을 넘었다(t 2.03, 표본 밖 R² +0.2%) — 코로나 유동성 장을 빼면 약해진다(t 1.13)."],
+          ["ok", "한국 흐름 점수의 구성 — 흐름 점수는 다음 12개월 코스피와 같은 방향이었다."]] }
+    }
+  };
+  var FI_EV = { ok: ["fi-ok", "검증 통과"], no: ["fi-no", "미달"], ref: ["fi-rf", "참고"] };
+  var FI_RANGES = [["3", "3년"], ["5", "5년"], ["10", "10년"], ["all", "전체"]];
+  var FI = { data: null, err: false, errAt: 0, wait: null, range: "10" }, FIC = { cur: null };
+  function fiCk(c) { return c === "us" ? "us" : "korea"; }
+  function fiComp(c, k) { var o = flowOf(c); return o ? (o.comps || []).filter(function (x) { return x.key === k; })[0] || null : null; }
+  function fiInfo(c, k) { return (FI_INFO[fiCk(c)] || {})[k] || null; }
+  function fiNum(v, d) { return v == null || !isFinite(v) ? "–" : Number(v).toLocaleString("en-US", { minimumFractionDigits: d, maximumFractionDigits: d }); }
+  function fiWithU(s, u) { return u ? (u === "%" || u === "%p" || u === "bp" ? s + u : s + " " + u) : s; }
+  function fiLv(k, v) { var u = FI_U[k] || ["", 2]; return v == null ? "–" : fiWithU(fiNum(v, u[1]), u[0]); }
+  function fiSig(k, v) { var u = FI_U[k] || ["", 2, "", 2]; return v == null ? "–" : fiWithU(fwSign(v, u[3]), u[2]); }
+  function fiJosa(w, a, b) { var ch = String(w).charCodeAt(String(w).length - 1); return w + (ch >= 0xAC00 && ch <= 0xD7A3 && (ch - 0xAC00) % 28 !== 0 ? a : b); }
+  function fiState(z) { return z == null || !isFinite(z) ? null : z >= 0.5 ? "들어옴" : z <= -0.5 ? "빠짐" : "보통"; }
+  function fiDate(d) { return !d ? "" : String(d).length > 7 ? mdOf(d) : String(d).replace("-", "년 ").replace(/년 0?/, "년 ") + "월"; }
+  // 미국 신용 경고 4개 중 이 지표에 딸린 것(신용 스프레드 → CS·CS3, 금융여건 → FCI·FCI3)
+  function fiRiskItems(c, k) {
+    var o = flowOf(c), want = k === "CS3" ? ["CS", "CS3"] : k === "FCI3" ? ["FCI", "FCI3"] : [];
+    return o && o.risk && want.length ? o.risk.items.filter(function (x) { return want.indexOf(x.key) >= 0; }) : [];
+  }
+  function openInd(c, k, opener, sec) {
+    var o = flowOf(c); if (!o) return;
+    var list = (o.comps || []).map(function (x) { return { fi: x.key, c: c, t: "fi:" + x.key, th: "fi", n: x.name, why: "", idx: "", light: false, k: "" }; });
+    var i = list.map(function (it) { return it.fi; }).indexOf(k);
+    if (i < 0) return;
+    if (sec) list[i].fsec = sec;
+    openSheet(list, i, opener);
+  }
+  function loadFlowInd(cb) {
+    if (FI.data) { cb(); return; }
+    if (FI.wait) { FI.wait.push(cb); return; }
+    FI.wait = [cb];
+    var F = window.LIQUIDITY_FLOW || {}, v = F.builtAt || F.asOf || "";
+    fetch("data/liquidity-ind.json" + (v ? "?v=" + encodeURIComponent(v) : ""))
+      .then(function (r) { if (!r.ok) throw new Error("http " + r.status); return r.json(); })
+      .then(function (j) { if (j && Array.isArray(j.months) && j.series) { FI.data = j; FI.err = false; } else { FI.err = true; FI.errAt = Date.now(); } })
+      .catch(function () { FI.err = true; FI.errAt = Date.now(); })
+      .then(function () { var q = FI.wait || []; FI.wait = null; q.forEach(function (f) { f(); }); });
+  }
+  // 왜 지금 이 방향인가 — 지금 값을 직전 5년 같은 신호의 평균·흔들림과 견준 결과
+  function fiWhy(c, k, x) {
+    var D = FI.data, b = D && D.base ? D.base[k] : null, z = x.z;
+    var what = k === "M2R" ? "실질 증가율" : k === "KFF3" ? "최근 3개월 순매수 합" : k === "NL3" && c !== "us" ? "3개월 변화율" : "최근 3개월 변화";
+    var noun = k === "M2R" ? "실질 증가율" : k === "KFF3" ? "3개월 합" : k === "NL3" && c !== "us" ? "3개월 변화율" : "3개월 변화";
+    if (z == null || !isFinite(z)) return "평소와 견줄 자료가 아직 모자라다.";
+    var az = Math.abs(z).toFixed(1), s = z >= 0.5 ? fiJosa(what, "이", "가") + " 지난 5년 평소보다 돈이 들어오는 쪽으로 " + az + " 표준편차 벗어났다 — 0.5 넘게 벗어나 '들어옴'."
+      : z <= -0.5 ? fiJosa(what, "이", "가") + " 지난 5년 평소보다 돈이 빠지는 쪽으로 " + az + " 표준편차 벗어났다 — 0.5 넘게 벗어나 '빠짐'."
+      : fiJosa(what, "이", "가") + " 지난 5년 평소 범위(±0.5 표준편차) 안이다 — '보통'.";
+    if (b && b.sd > 0) {
+      var u = FI_U[k] || ["", 2, "", 2], d = u[3];
+      s += " 지난 5년(" + fiDate(b.from) + "~" + fiDate(b.to) + ") 월말 " + noun + " 평균 " + fiWithU(fwSign(b.mean, d), u[2]) + ", 보통 범위 " +
+        fiWithU(fwSign(b.mean - b.sd / 2, d), u[2]) + " ~ " + fiWithU(fwSign(b.mean + b.sd / 2, d), u[2]) + ".";
+    }
+    return s;
+  }
+  function indDetailHtml(c, k) {
+    var o = flowOf(c), x = fiComp(c, k), inf = fiInfo(c, k), D = FI.data, ck = fiCk(c);
+    if (!o || !x || !inf) return '<div class="empty">지표 자료 없음.</div>';
+    var cn = c === "us" ? "미국" : "한국", st = FW_ST[x.state] || FW_ST["보통"], rk = fiRiskItems(c, k);
+    var keys = (D && D.comp && D.comp[ck]) || FW_SCORE[ck], inScore = keys.indexOf(k) >= 0;
+    var top = '<div class="fi-top"><button type="button" class="fi-back" data-liq="' + esc(c) + '">' + ICON.chev + "돈의 흐름 전체 · " + esc(cn) + "</button></div>";
+    var hero = '<div class="fi-hero"><div class="fi-sub">' + esc(x.sub || "") + "</div>" +
+      '<div class="fi-vrow"><b class="fi-big">' + esc(fwValTxt(x)) + "</b>" + (x.d ? '<span class="fi-d">' + esc(fiDate(x.d)) + " 기준</span>" : "") + "</div>" +
+      '<div class="fi-chips"><span class="fi-st fi-st-' + st[0] + '">' + fwArrow(x.state) + esc(st[2]) + "</span>" +
+      (x.chg != null ? '<span class="fi-ch">3개월 ' + esc(fwChg(x)) + "</span>" : "") +
+      (x.z != null ? '<span class="fi-ch">평소 대비 ' + esc(fwSign(x.z, 1)) + "σ</span>" : "") + "</div>" +
+      '<p class="fi-why">' + esc(fiWhy(c, k, x)) + "</p></div>";
+    var nav = '<nav class="dt-nav" aria-label="지표 항목">' + [["fi-ch", "추이"], ["fi-rd", "읽는 법"], ["fi-ev", "검증"]].concat(rk.length ? [["fi-rk", "급락 신호"]] : [], [["fi-sc", "점수 몫"], ["fi-ai", "AI"]])
+      .map(function (p) { return '<a href="#' + p[0] + '" data-sec="' + p[0] + '">' + p[1] + "</a>"; }).join("") + "</nav>";
+    // 추이 — 수준 · 3개월 변화(막대 색 = 그달 방향) · 지수, 같은 달 축의 세 그래프(이중 축 대신)
+    var rg = D ? '<div class="fi-rg" role="group" aria-label="기간">' + FI_RANGES.map(function (r) {
+      return '<button type="button" data-firg="' + r[0] + '" aria-pressed="' + (FI.range === r[0] ? "true" : "false") + '">' + r[1] + "</button>";
+    }).join("") + "</div>" : "";
+    var thrNote = rk.length ? " 주황 점선 = 급락 신호 기준선(그달 앞 5년 값 중 나쁜 쪽 3분의 1 경계 — 넘으면 켜짐)." : "";
+    var chart = '<section class="dt-sec" id="fi-ch"><h3>추이 <span class="md-as">월말</span></h3>' + rg +
+      '<div class="fw-read" id="fiRead">' + (D ? "그래프를 누르면 그 달 값" : FI.err ? "긴 추이를 불러오지 못했다 — 최근 3년 월말만 보인다" : "긴 추이 불러오는 중… 먼저 최근 3년") + "</div>" +
+      '<div class="fw-ct">' + esc(D ? inf.lv : "최근 3년 월말" + (x.unit ? " · " + x.unit : "")) + '</div><div class="fw-chart" data-fic="lv"></div>' +
+      (D ? '<div class="fw-ct">' + esc(inf.sig) + ' <span class="fi-lg" aria-hidden="true"><i class="fi-sw in"></i>들어옴<i class="fi-sw out"></i>빠짐<i class="fi-sw flat"></i>보통</span></div><div class="fw-chart" data-fic="sig"></div>' +
+        '<div class="fw-ct">' + esc((D.idx && D.idx[ck] && D.idx[ck].name) || "") + '</div><div class="fw-chart sm" data-fic="idx"></div>' : "") +
+      '<p class="fw-note">' + (D ? "막대 색 = 그달 " + fiJosa(k === "M2R" ? "실질 증가율" : k === "KFF3" ? "3개월 합" : "3개월 변화", "이", "가") + " 그달 앞 5년 평소보다 돈이 들어오는 쪽(초록)·빠지는 쪽(주황)으로 0.5 표준편차 넘게 벗어났는지(회색 = 보통)." + thrNote + " 세 그래프는 같은 달끼리 세로로 맞췄다." : "") + "</p></section>";
+    var read = '<section class="dt-sec" id="fi-rd"><h3>어떻게 읽나</h3><dl class="fi-dl">' +
+      "<dt>무엇</dt><dd>" + esc(inf.what) + "</dd><dt>방향</dt><dd>" + esc(inf.dir) + "</dd>" +
+      "<dt>판정</dt><dd>지금 값을 직전 5년(60개월) 같은 신호의 평균·표준편차와 견준 값(z)이 +0.5 이상이면 들어옴, −0.5 이하면 빠짐, 그 사이는 보통.</dd>" +
+      "<dt>자료</dt><dd>" + esc(inf.src) + "</dd></dl></section>";
+    var ev = '<section class="dt-sec" id="fi-ev"><h3>무엇이 검증됐나</h3><ul class="fi-ev">' + inf.ev.map(function (e) {
+      var m = FI_EV[e[0]] || FI_EV.ref; return '<li><span class="fi-evk ' + m[0] + '">' + m[1] + "</span>" + esc(e[1]) + "</li>";
+    }).join("") + '</ul><p class="fw-note">검증 = 결과를 보기 전에 기준을 정한 과거 시험(미국 2003~·한국 2005~2026, 월말). 통과해도 확실한 예측이 아니라 확률을 조금 기울이는 크기다.</p></section>';
+    var risk = "";
+    if (rk.length) {
+      var R = D && D.risk ? D.risk : {};
+      risk = '<section class="dt-sec" id="fi-rk"><h3>급락 신호 <span class="md-as">미국 신용 경고 ' + o.risk.on + "/" + o.risk.of + " 켜짐</span></h3>" + rk.map(function (it) {
+        var lvl = it.key === "CS" || it.key === "FCI", now = lvl ? x.value : x.chg, r = R[it.key];
+        var nowTxt = lvl ? fiLv(k, now) : fiSig(k, now), thrTxt = r && r.now != null ? (lvl ? fiLv(k, r.now) : fiSig(k, r.now)) : "–";
+        return '<div class="fi-rr"><span class="fw-rd ' + (it.on ? "on" : "") + '" aria-hidden="true"></span><div class="fi-rrl"><b>' + esc(it.name) + "</b>" +
+          '<span>' + (it.on == null ? "자료 부족" : (it.on ? "켜짐" : "꺼짐") + " · 지금 " + esc(nowTxt) + " · 기준선 " + esc(thrTxt)) + "</span></div>" +
+          '<div class="fi-rrp">켜졌을 때 <b>' + it.p + "%</b><br>나머지 " + it.base + "%</div></div>";
+      }).join("") + '<p class="fw-note">기준선 = 그달 앞 5년(60개월) 값 중 나쁜 쪽 3분의 1 경계 — 매달 다시 잰다. 확률 = 2003~2026년에 신호가 켜졌을 때와 나머지 때 다음 3개월 안 S&P500 이 −10% 넘게 내린 적이 있는 비율. 4개 중 2개 이상이 켜지면 28%(그 밖 7%). 코스피 급락 확률은 가르지 못했다.</p></section>';
+    }
+    // 흐름 점수에서의 몫 — 구성 지표의 평소 대비 값(z)을 한 줄씩(이 지표 강조, 누르면 그 지표로)
+    var comps = (o.comps || []).filter(function (y) { return keys.indexOf(y.key) >= 0 && y.z != null; });
+    var zmax = Math.max(2, Math.max.apply(null, comps.map(function (y) { return Math.abs(y.z); }).concat([0])));
+    var bars = comps.map(function (y) {
+      var w = Math.min(50, Math.abs(y.z) / zmax * 50), cl = y.z >= 0.5 ? "in" : y.z <= -0.5 ? "out" : "flat";
+      return '<div class="fi-zr' + (y.key === k ? " me" : "") + '"' + (y.key === k ? "" : ' role="button" tabindex="0" data-fi="' + esc(y.key) + '" data-fic="' + esc(c) + '"') + ">" +
+        '<span class="fi-zn">' + esc(FW_SHORT[y.key] || y.name) + '</span><span class="fi-zt"><i class="fi-zb ' + cl + '" style="' + (y.z >= 0 ? "left:50%" : "right:50%") + ";width:" + w.toFixed(1) + '%"></i></span>' +
+        '<span class="fi-zv">' + esc(fwSign(y.z, 2)) + "σ</span></div>";
+    }).join("");
+    var share = inScore && x.z != null && o.n ? "흐름 점수 " + fwSign(o.score, 2) + " = 구성 지표 " + o.n + "개의 평소 대비 값(z) 평균. 이 지표는 " + fwSign(x.z, 2) + "σ라 점수에 " + fwSign(x.z / o.n, 2) + "만큼 보탠다."
+      : inScore ? "흐름 점수의 구성 지표다." : "흐름 점수엔 넣지 않는다 — 다음 3개월 코스피와의 관계가 검증된 신호라 따로 보인다.";
+    var scoreSec = '<section class="dt-sec" id="fi-sc"><h3>흐름 점수에서의 몫</h3><p class="fi-sh">' + esc(share) + "</p>" +
+      (bars ? '<div class="fi-zs">' + bars + "</div>" : "") + '<p class="fw-note">' + esc(FI_SCORE_EV[ck]) + " 단계 = 지금 점수가 최근 5년 월말 점수 중 어디인가(20%씩 5단계).</p></section>";
+    return top + hero + nav + chart + read + ev + risk + scoreSec +
+      '<section class="dt-sec" id="fi-ai"><h3>AI에게 묻기</h3>' + aiSectionHtml("m:" + c, { kind: "market", c: c }) + "</section>" +
+      '<p class="fw-foot">' + esc(cn) + " 자료: " + esc(inf.src) + ". 위쪽 지금 값은 매일 자동 계산(공개가 늦는 자료는 공개된 마지막 값), 추이 그래프는 월말 값.</p>";
+  }
+  function mountIndCharts(c, k) {
+    FIC.cur = null;
+    var sec = shBody.querySelector("#fi-ch"); if (!sec) return;
+    if (!FI.data && !FI.wait && (!FI.err || Date.now() - FI.errAt > 20000)) {
+      FI.err = false;
+      loadFlowInd(function () { var it = SH.open && SH.ctx[SH.idx]; if (it && it.fi === k && it.c === c) renderSheet(true); });
+    }
+    var st = { c: c, k: k, sec: sec };
+    FIC.cur = st;
+    fiPaint(st);
+  }
+  function fiNice(mn, mx, n) {
+    var step = Math.pow(10, Math.floor(Math.log10((mx - mn) / n || 1))), r = (mx - mn) / n / step;
+    step *= r > 5 ? 10 : r > 2 ? 5 : r > 1 ? 2 : 1;
+    var out = []; for (var t = Math.ceil(mn / step) * step; t <= mx + step * 1e-9; t += step) out.push(Math.abs(t) < step * 1e-9 ? 0 : t);
+    return { ticks: out, step: step };
+  }
+  function fiPaint(st) {
+    var D = FI.data, c = st.c, k = st.k, x = fiComp(c, k), ck = fiCk(c);
+    var els = st.sec.querySelectorAll("[data-fic]"); if (!els.length || !x) return;
+    var months, lv, sig = null, zs = null, ix = null, thrLv = null, thrSig = null, idxName = "";
+    if (D && D.series && D.series[k]) {
+      var S = D.series[k], n = D.months.length, first = 0;
+      while (first < n && S.lv[first] == null && S.sig[first] == null) first++;
+      var span = FI.range === "all" ? n : Math.min(n, (+FI.range || 10) * 12), from = Math.max(first, n - span);
+      months = D.months.slice(from); lv = S.lv.slice(from); sig = S.sig.slice(from); zs = S.z.slice(from);
+      if (D.idx && D.idx[ck]) { ix = D.idx[ck].v.slice(from); idxName = D.idx[ck].short || D.idx[ck].name; }
+      Object.keys(D.risk || {}).forEach(function (rk) { var r = D.risk[rk]; if (r.ind !== k) return; if (r.on === "lv") thrLv = r.thr.slice(from); else thrSig = r.thr.slice(from); });
+    } else {
+      var sp = x.spark || []; months = sp.map(function (p) { return p[0]; }); lv = sp.map(function (p) { return p[1]; });
+    }
+    if (!months || months.length < 2) return;
+    var W = Math.max(240, els[0].clientWidth || 320), yrs = months.length / 12, ystep = yrs <= 6 ? 1 : yrs <= 12 ? 2 : 5;
+    function draw(el, vals, opt) {
+      var H = opt.h, pl = 6, pr = 46, pt = 8, pb = opt.axis ? 18 : 6;
+      var all = vals.concat(opt.thr || []).filter(function (v) { return v != null && isFinite(v); });
+      if (!all.length) { el.innerHTML = ""; el._fw = null; return; }
+      var mn = Math.min.apply(null, all.concat(opt.zero ? [0] : [])), mx = Math.max.apply(null, all.concat(opt.zero ? [0] : [])), pad = (mx - mn) * 0.08 || Math.abs(mx) * 0.05 || 1;
+      mn -= pad; mx += pad;
+      var nN = vals.length, X = function (i) { return pl + (nN > 1 ? i / (nN - 1) : 0.5) * (W - pl - pr); }, Y = function (y) { return pt + (1 - (y - mn) / (mx - mn)) * (H - pt - pb); };
+      var g = "", nz = fiNice(mn, mx, opt.nt || 3), dd = nz.step >= 1 ? 0 : nz.step >= 0.1 ? 1 : nz.step >= 0.01 ? 2 : 3;
+      nz.ticks.forEach(function (t) {
+        g += '<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + Y(t).toFixed(1) + '" y2="' + Y(t).toFixed(1) + '" stroke="var(--line)" stroke-width="1"' + (opt.zero && t === 0 ? "" : ' stroke-dasharray="2 3"') + "/>" +
+          '<text x="' + (W - pr + 6) + '" y="' + (Y(t) + 4).toFixed(1) + '" class="fw-tk">' + esc((opt.signed && t > 0 ? "+" : "") + fiNum(t, dd)) + "</text>";
+      });
+      if (opt.axis) months.forEach(function (m, i) { if (m.slice(5) === "01" && +m.slice(0, 4) % ystep === 0) g += '<text x="' + X(i).toFixed(1) + '" y="' + (H - 4) + '" class="fw-tk" text-anchor="middle">' + m.slice(0, 4) + "</text>"; });
+      var marks = "";
+      if (opt.bars) {
+        var y0 = Y(Math.max(mn, Math.min(mx, 0))), bw = Math.max(1, (W - pl - pr) / nN - (nN > 90 ? 0.4 : 1.2));
+        vals.forEach(function (v, i) {
+          if (v == null || !isFinite(v)) return;
+          var z = opt.zs ? opt.zs[i] : null, cl = z == null ? "var(--track)" : z >= 0.5 ? "var(--lq4)" : z <= -0.5 ? "var(--lq0)" : "var(--lq2)", y1 = Y(v);
+          marks += '<rect x="' + (X(i) - bw / 2).toFixed(1) + '" y="' + Math.min(y1, y0).toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + Math.max(0.8, Math.abs(y0 - y1)).toFixed(1) + '" fill="' + cl + '"' + (z != null && z > -0.5 && z < 0.5 ? ' fill-opacity="0.55"' : "") + "/>";
+        });
+      } else {
+        var d = "", on = false;
+        vals.forEach(function (y, i) { if (y == null || !isFinite(y)) { on = false; return; } d += (on ? "L" : "M") + X(i).toFixed(1) + " " + Y(y).toFixed(1); on = true; });
+        marks = '<path d="' + d + '" fill="none" stroke="' + opt.color + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+      }
+      if (opt.thr) {
+        var td = "", ton = false;
+        opt.thr.forEach(function (y, i) { if (y == null || !isFinite(y)) { ton = false; return; } td += (ton ? "L" : "M") + X(i).toFixed(1) + " " + Y(y).toFixed(1); ton = true; });
+        marks += '<path d="' + td + '" fill="none" stroke="var(--warn)" stroke-width="1.5" stroke-dasharray="4 3"/>';
+      }
+      el.innerHTML = '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="' + esc(opt.label) + '">' + g + marks +
+        '<line class="fw-x" x1="0" x2="0" y1="' + pt + '" y2="' + (H - pb) + '" stroke="var(--ink2)" stroke-width="1" visibility="hidden"/>' +
+        '<circle class="fw-dot" r="3.5" fill="' + (opt.bars ? "var(--ink2)" : opt.color) + '" stroke="var(--sf)" stroke-width="2" visibility="hidden"/></svg>';
+      el._fw = { X: X, Y: Y, vals: vals, W: W, pl: pl, pr: pr };
+    }
+    var inf = fiInfo(c, k) || {};
+    draw(els[0], lv, { h: 140, color: "var(--ink)", axis: !sig, thr: thrLv, label: (inf.lv || x.name) + " 월말 추이" });
+    var sigEl = st.sec.querySelector('[data-fic="sig"]'), ixEl = st.sec.querySelector('[data-fic="idx"]');
+    if (sigEl && sig) draw(sigEl, sig, { h: 110, bars: true, zs: zs, zero: true, signed: true, thr: thrSig, label: (inf.sig || "3개월 변화") + " 월별" });
+    if (ixEl && ix) draw(ixEl, ix, { h: 92, color: "var(--mut)", axis: true, nt: 2, label: idxName + " 월말 추이" });
+    var read = st.sec.querySelector("#fiRead"), panels = [els[0], sigEl, ixEl].filter(function (e) { return e && e._fw; });
+    function show(i) {
+      panels.forEach(function (el) {
+        var g = el._fw, svg = el.querySelector("svg"); if (!g || !svg) return;
+        var ln = svg.querySelector(".fw-x"), dot = svg.querySelector(".fw-dot"), y = g.vals[i], xx = g.X(i);
+        ln.setAttribute("x1", xx); ln.setAttribute("x2", xx); ln.setAttribute("visibility", "visible");
+        if (y != null && isFinite(y)) { dot.setAttribute("cx", xx); dot.setAttribute("cy", g.Y(y)); dot.setAttribute("visibility", "visible"); } else dot.setAttribute("visibility", "hidden");
+      });
+      if (!read) return;
+      var m = months[i], bits = ["<b>" + esc(fiDate(m)) + " 말</b>", esc(FW_SHORT[k] || x.name) + " <b>" + esc(fiLv(k, lv[i])) + "</b>"];
+      if (sig) { var s0 = fiState(zs && zs[i]); bits.push((k === "M2R" ? "실질 " : k === "KFF3" ? "3개월 합 " : "3개월 ") + "<b>" + esc(fiSig(k, sig[i])) + "</b>" + (s0 ? "(" + esc(s0) + ")" : "")); }
+      if (thrLv && thrLv[i] != null) bits.push("기준선 " + esc(fiLv(k, thrLv[i])));
+      if (thrSig && thrSig[i] != null) bits.push("변화 기준선 " + esc(fiSig(k, thrSig[i])));
+      if (ix && ix[i] != null) bits.push(esc(idxName) + " <b>" + esc(Number(ix[i]).toLocaleString("en-US", { maximumFractionDigits: 0 })) + "</b>");
+      read.innerHTML = bits.join(" · ");
+    }
+    function onMove(e) {
+      var el = e.currentTarget, g = el._fw; if (!g) return;
+      var r = el.getBoundingClientRect(), px = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+      var i = Math.round((px - g.pl) / (g.W - g.pl - g.pr) * (g.vals.length - 1));
+      show(Math.max(0, Math.min(g.vals.length - 1, i)));
+    }
+    panels.forEach(function (el) { el.onpointermove = onMove; el.onpointerdown = onMove; });
+    if (D) show(months.length - 1);
+  }
+  window.addEventListener("resize", function () { var st = FIC.cur; if (st && st.sec.isConnected) { clearTimeout(st.t); st.t = setTimeout(function () { fiPaint(st); }, 150); } });
+  // 기간 버튼(3년·5년·10년·전체)
+  shBody.addEventListener("click", function (e) {
+    var b = e.target.closest && e.target.closest("[data-firg]"); if (!b) return;
+    FI.range = b.getAttribute("data-firg");
+    Array.prototype.forEach.call(shBody.querySelectorAll("[data-firg]"), function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
+    if (FIC.cur && FIC.cur.sec.isConnected) fiPaint(FIC.cur);
+  });
 
   // ══ 시장 심리 온도계 — data/sentiment.js(scripts/update-sentiment.js, 매일 자동·토큰 0) ══
   //   2026-11-06 사용자 '공포와 환호 등 대중의 심리까지 함께 분석되면 좋겠다' → 사전 등록 시험(scripts/research/sentiment/README.md).
