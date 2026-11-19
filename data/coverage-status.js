@@ -83,7 +83,7 @@ window.COVERAGE_STATUS = {
    "label": "목표가 재검증",
    "fresh": 101,
    "total": 101,
-   "oldestDays": 4,
+   "oldestDays": 3,
    "ok": true
   },
   {
@@ -124,5 +124,5 @@ window.COVERAGE_STATUS = {
  ],
  "ok": true,
  "overdue": [],
- "dataHash": "14abe39b2ef2"
+ "dataHash": "cefa23c7127f"
 };

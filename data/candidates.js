@@ -8,7 +8,7 @@ window.CANDIDATES = {
  "screenFresh": true,
  "beta": {
   "korea": 0.72,
-  "us": 0.92
+  "us": 0.93
  },
  "groups": {
   "korea|core": {
@@ -882,6 +882,21 @@ window.CANDIDATES = {
      "note": "매출 역성장 필터(2025년 결산 매출 감소)에 걸렸다 — 2026년 2·3분기 매출이 각각 1.9%·2.9% 늘어 역성장이 이어지지 않았고 3분기 조정 EBIT도 21.6% 늘었다. 최근 분기 성장·4분기 순이익 조건은 분기 자료가 없어 잴 수 없다(3분기 순이익 흑자).",
      "judged": "2026-11-14",
      "verdict": "형식"
+    },
+    {
+     "ticker": "CI",
+     "name": "Cigna",
+     "state": "감시",
+     "flags": [
+      {
+       "k": "trend",
+       "msg": "추세 붕괴(단·중·장기 모두 매도 이하)",
+       "fresh": false
+      }
+     ],
+     "note": "추세 붕괴는 11/16 CMS 부정 방지 규칙안(CRUSH — 메디케어 어드밴티지·메디케이드 관리의료 감독 강화)과 대형 보험사 분할 요구가 겹친 관리의료 업종 동반 매도(S&P 500 6거래일 연속 하락 속)다. 3분기 조정 EPS 가 예상을 웃돌아 11/5 연간 가이던스를 올린 뒤 바뀐 실적·가이던스가 없고 11/19 RBC 가 목표가를 올렸다. 규칙안 확정 범위와 PBM 규제 논의는 감시한다.",
+     "judged": "2026-11-19",
+     "verdict": "형식"
     }
    ],
    "list": [
@@ -1226,6 +1241,10 @@ window.CANDIDATES = {
     "id:ttmNi": "-"
    }
   },
+  "us|value|CI": {
+   "trend": "2026-11-19",
+   "tvf": "1a9bima"
+  },
   "us|dividend|KO": {
    "scheme": "keys",
    "theme": {
@@ -1249,7 +1268,7 @@ window.CANDIDATES = {
  "summary": {
   "review": 0,
   "defect": 0,
-  "watch": 23,
+  "watch": 24,
   "untried": 0,
   "dup": 0,
   "long": 0

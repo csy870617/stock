@@ -1256,6 +1256,18 @@
         "sources": [
           "https://www.sec.gov/Archives/edgar/data/0000858877/000085887726000170/exhibit991pressrelease-q1f.htm"
         ]
+      },
+      "TJX": {
+        "verdict": "없음",
+        "note": "3Q FY27(11/18) 순매출 +6%·기존점 +4%로 계획에 맞았고 조정 EPS 가 컨센서스를 조금 웃돌았다. 연간 조정 EPS 가이던스를 올리고 4분기 기존점 +2~3%를 제시했다 — 논거 유지.",
+        "asOf": "2026-11-19",
+        "flags": [
+          "earn"
+        ],
+        "sources": [
+          "https://finance.yahoo.com/markets/stocks/articles/tjx-companies-inc-reports-q3-123000877.html",
+          "https://m.stock.naver.com/worldstock/stock/TJX/total"
+        ]
       }
     },
     "us|growth": {
@@ -1440,15 +1452,17 @@
         ]
       },
       "CI": {
-        "verdict": "없음",
-        "note": "3분기 조정 EPS 7.98달러(+6%)로 예상을 웃돌고 연간 조정 EPS 가이던스를 최소 30.60달러로 올렸다. Evernorth 연간 세전 조정이익 최소 69억달러 전망 유지.",
-        "asOf": "2026-11-06",
+        "verdict": "형식",
+        "note": "추세 붕괴는 11/16 CMS 부정 방지 규칙안(CRUSH — 메디케어 어드밴티지·메디케이드 관리의료 감독 강화)과 대형 보험사 분할 요구가 겹친 관리의료 업종 동반 매도(S&P 500 6거래일 연속 하락 속)다. 3분기 조정 EPS 가 예상을 웃돌아 11/5 연간 가이던스를 올린 뒤 바뀐 실적·가이던스가 없고 11/19 RBC 가 목표가를 올렸다. 규칙안 확정 범위와 PBM 규제 논의는 감시한다.",
+        "asOf": "2026-11-19",
         "flags": [
+          "trend",
           "earn"
         ],
         "sources": [
-          "https://www.sec.gov/Archives/edgar/data/1739940/000114036126003768/ef20064751_ex99-1.htm",
-          "https://www.healthcarefinancenews.com/news/cigna-raises-financial-outlook-aca-exit-nears"
+          "https://uk.investing.com/news/stock-market-news/why-is-cigna-stock-sliding-today-93CH-4994166",
+          "https://www.fiercehealthcare.com/regulatory/cms-proposes-sweeping-medicare-integrity-rule-it-says-will-save-90b",
+          "https://www.marketbeat.com/instant-alerts/analyst-cigna-group-nyse-ci-stock-price-expected-to-rise-royal-bank-of-canada-analyst-says-2026-11-19/"
         ]
       }
     },
