@@ -1,16 +1,15 @@
 {
-  "updatedAt": "2026-11-20T07:25:55Z",
+  "updatedAt": "2026-11-20T15:46:36Z",
   "kr": {
     "expected": "2026-11-20",
     "captured": "2026-11-20",
-    "tries": 0,
-    "done": false,
-    "prov": true
+    "tries": 1,
+    "done": true
   },
   "us": {
     "expected": "2026-11-19",
     "captured": "2026-11-19",
-    "tries": 2,
+    "tries": 3,
     "done": true
   }
 }

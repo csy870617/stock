@@ -42,113 +42,113 @@ window.LIQUIDITY_AUTO = {
   "meetings": [
    {
     "date": "2026-12-09",
-    "rate": 4.127,
-    "stepBp": 24.7,
-    "cumBp": 24.7,
+    "rate": 4.12,
+    "stepBp": 24,
+    "cumBp": 24,
     "outcomes": [
      {
       "n": 1,
-      "p": 99
+      "p": 96
      },
      {
       "n": 0,
-      "p": 1
+      "p": 4
      }
     ]
    },
    {
     "date": "2027-01-27",
-    "rate": 4.29,
-    "stepBp": 16.3,
-    "cumBp": 41,
+    "rate": 4.27,
+    "stepBp": 15,
+    "cumBp": 39,
     "outcomes": [
      {
       "n": 2,
-      "p": 64
+      "p": 56
      },
      {
       "n": 1,
-      "p": 36
+      "p": 44
      }
     ]
    },
    {
     "date": "2027-03-17",
-    "rate": 4.445,
-    "stepBp": 15.5,
-    "cumBp": 56.5,
+    "rate": 4.414,
+    "stepBp": 14.4,
+    "cumBp": 53.4,
     "outcomes": [
      {
       "n": 2,
-      "p": 74
+      "p": 86
      },
      {
       "n": 3,
-      "p": 26
+      "p": 14
      }
     ]
    },
    {
     "date": "2027-04-28",
-    "rate": 4.495,
-    "stepBp": 5,
-    "cumBp": 61.5,
+    "rate": 4.45,
+    "stepBp": 3.6,
+    "cumBp": 57,
     "outcomes": [
      {
       "n": 2,
-      "p": 54
+      "p": 72
      },
      {
       "n": 3,
-      "p": 46
+      "p": 28
      }
     ]
    },
    {
     "date": "2027-06-09",
-    "rate": 4.574,
-    "stepBp": 7.9,
-    "cumBp": 69.4,
+    "rate": 4.507,
+    "stepBp": 5.7,
+    "cumBp": 62.7,
     "outcomes": [
      {
       "n": 3,
-      "p": 78
+      "p": 51
      },
      {
       "n": 2,
-      "p": 22
+      "p": 49
      }
     ]
    },
    {
     "date": "2027-07-28",
-    "rate": 4.585,
-    "stepBp": 1.1,
-    "cumBp": 70.5,
+    "rate": 4.51,
+    "stepBp": 0.3,
+    "cumBp": 63,
     "outcomes": [
      {
       "n": 3,
-      "p": 82
+      "p": 52
      },
      {
       "n": 2,
-      "p": 18
+      "p": 48
      }
     ]
    },
    {
     "date": "2027-09-15",
-    "rate": 4.605,
-    "stepBp": 2,
-    "cumBp": 72.5,
+    "rate": 4.52,
+    "stepBp": 1,
+    "cumBp": 64,
     "outcomes": [
      {
       "n": 3,
-      "p": 90
+      "p": 56
      },
      {
       "n": 2,
-      "p": 10
+      "p": 44
      }
     ]
    }
