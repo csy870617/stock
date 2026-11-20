@@ -665,13 +665,6 @@ window.STOCK_QUOTES = {
    "close": 280.73,
    "closeDate": "2026-11-19"
   },
-  "NTES": {
-   "price": 104.94,
-   "date": "2026-11-19",
-   "changePct": -11.4,
-   "close": 104.94,
-   "closeDate": "2026-11-19"
-  },
   "CSCO": {
    "price": 94.7,
    "date": "2026-11-19",
@@ -692,6 +685,13 @@ window.STOCK_QUOTES = {
    "changePct": -1.4,
    "close": 99.55,
    "closeDate": "2026-11-19"
+  },
+  "RMD": {
+   "price": 236.88,
+   "date": "2026-11-19",
+   "changePct": -2.4,
+   "close": 236.88,
+   "closeDate": "2026-11-19"
   }
  },
  "indices": {
@@ -702,7 +702,7 @@ window.STOCK_QUOTES = {
    "changePct": -5.2,
    "close": 4869.96,
    "closeDate": "2026-11-20",
-   "at": "2026-11-20T09:09:42Z"
+   "at": "2026-11-20T09:18:43Z"
   },
   "sp500": {
    "symbol": "^GSPC",
@@ -711,7 +711,7 @@ window.STOCK_QUOTES = {
    "changePct": -2,
    "close": 7175.83,
    "closeDate": "2026-11-19",
-   "at": "2026-11-20T09:09:42Z"
+   "at": "2026-11-20T09:18:44Z"
   },
   "rsp": {
    "symbol": "RSP",
@@ -720,7 +720,7 @@ window.STOCK_QUOTES = {
    "changePct": -1.8,
    "close": 211.63,
    "closeDate": "2026-11-19",
-   "at": "2026-11-20T09:09:42Z"
+   "at": "2026-11-20T09:18:44Z"
   }
  }
 };
