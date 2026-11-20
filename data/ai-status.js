@@ -2,108 +2,115 @@
 // 앱 'AI 연결' 창이 '매일 자동 분석' 칸에 보여 준다. 비용은 토큰 기준 추정(웹 검색은 횟수만 — 검색당 요금 별도).
 window.AI_STATUS = {
  "defects": {
-  "at": "2026-11-20T01:50:57.994Z",
+  "at": "2026-11-20T07:21:11.005Z",
   "model": "claude-sonnet-5-5",
   "ok": true,
-  "pending": 0,
-  "judged": 0,
-  "items": [],
+  "pending": 1,
+  "judged": 1,
+  "items": [
+   {
+    "g": "korea|core",
+    "t": "402340",
+    "name": "SK스퀘어",
+    "verdict": "형식"
+   }
+  ],
   "usage": {
-   "calls": 0,
-   "input": 0,
-   "output": 0,
+   "calls": 2,
+   "input": 37192,
+   "output": 1861,
    "cacheRead": 0,
-   "searches": 0,
-   "usd": 0
+   "searches": 3,
+   "usd": 0.093
   }
  },
  "news": {
-  "at": "2026-11-20T01:54:59.149Z",
+  "at": "2026-11-20T07:25:21.244Z",
   "model": "claude-haiku-5-5",
   "ok": true,
   "stocks": 98,
   "fetched": 98,
-  "called": 90,
-  "lines": 77,
+  "called": 58,
+  "lines": 75,
   "usage": {
-   "calls": 90,
-   "input": 140988,
-   "output": 5700,
+   "calls": 58,
+   "input": 106631,
+   "output": 4526,
    "cacheRead": 0,
    "searches": 0,
-   "usd": 0.017
+   "usd": 0.013
   }
  },
  "daily": {
-  "at": "2026-11-20T01:52:44.780Z",
-  "T": "2026-11-19",
+  "at": "2026-11-20T07:22:53.490Z",
+  "T": "2026-11-20",
   "basis": {
-   "kr": "2026-11-19",
+   "kr": "2026-11-20",
    "us": "2026-11-19"
   },
   "model": "claude-opus-5-5",
   "ok": true,
   "seen": {
-   "at": "2026-11-20T01:54:59.012Z",
+   "at": "2026-11-20T07:25:21.163Z",
    "basis": {
-    "kr": "2026-11-19",
+    "kr": "2026-11-20",
     "us": "2026-11-19"
    },
    "items": {
     "market": {
-     "sig": "미국은 AI 붐 종료 우려로 다우 -2.19%, 나스닥 -2.25%가 동#1d3nxr8",
+     "sig": "미국 증시가 6거래일 연속 하락한 뒤 한국 증시는 매도 사이드카가 발동되#1n2g96h",
      "basis": {
-      "kr": "2026-11-19",
+      "kr": "2026-11-20",
       "us": "2026-11-19"
      }
     },
     "liquidity": {
-     "sig": "미국은 돈이 들어오는 흐름이지만 연준 인상 경로와 극도의 공포가 겹친 신#1vlyyat",
+     "sig": "미국은 돈이 들어오는 흐름이지만 연준 인상 경로와 극도의 공포가 겹친 신#nleijn",
      "basis": {
-      "kr": "2026-11-19",
+      "kr": "2026-11-20",
       "us": "2026-11-19"
      }
     },
     "indexNotes": {
-     "sig": "하락세. 일봉 구름 아래이고, MACD는 시그널을 상회했다. 지지 5,1#bgmxlv",
+     "sig": "하락세: 구름 아래, 머리위 매물 86%, RSI 33.8로 과매도 근접#1xkuc3u",
      "basis": {
-      "kr": "2026-11-19",
+      "kr": "2026-11-20",
       "us": "2026-11-19"
      }
     },
     "topPicks": {
-     "sig": "300억원 자사주 매입을 마쳐 밸류업 계획 이후 유통주식수가 약 7.4%#quvvil",
+     "sig": "7월 300억원 자사주 매입을 마쳐 밸류업 계획 이후 유통주식수가 누적 #3xc4hj",
      "basis": {
-      "kr": "2026-11-19",
-      "us": "2026-11-18"
+      "kr": "2026-11-20",
+      "us": "2026-11-19"
      }
     }
    }
   },
   "inputs": {
-   "market": "1lpb0jo",
-   "indexNotes": "kjz3u6"
+   "market": "1ezu7vp",
+   "indexNotes": "pu0lx7"
   },
   "wrote": [
    "liquidity",
    "indexNotes",
-   "market"
+   "market",
+   "topPicks"
   ],
   "sig": {
-   "liquidity": "미국은 돈이 들어오는 흐름이지만 연준 인상 경로와 극도의 공포가 겹친 신#1vlyyat",
-   "indexNotes": "하락세. 일봉 구름 아래이고, MACD는 시그널을 상회했다. 지지 5,1#bgmxlv",
-   "market": "미국은 AI 붐 종료 우려로 다우 -2.19%, 나스닥 -2.25%가 동#1d3nxr8",
-   "topPicks": "300억원 자사주 매입을 마쳐 밸류업 계획 이후 유통주식수가 약 7.4%#1ldlqpb"
+   "liquidity": "미국은 돈이 들어오는 흐름이지만 연준 인상 경로와 극도의 공포가 겹친 신#nleijn",
+   "indexNotes": "하락세: 구름 아래, 머리위 매물 86%, RSI 33.8로 과매도 근접#1xkuc3u",
+   "market": "미국 증시가 6거래일 연속 하락한 뒤 한국 증시는 매도 사이드카가 발동되#1n2g96h",
+   "topPicks": "7월 300억원 자사주 매입을 마쳐 밸류업 계획 이후 유통주식수가 누적 #3xc4hj"
   },
   "sources": 40,
   "usage": {
    "calls": 2,
-   "input": 219890,
-   "output": 13236,
+   "input": 322624,
+   "output": 14356,
    "cacheRead": 0,
    "searches": 6,
-   "usd": 1.144
-  },
-  "note": "새 종가로 세션 문장 갱신: market, indexNotes"
+   "usd": 1.578
+  }
  }
 };
