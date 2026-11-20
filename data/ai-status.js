@@ -2,94 +2,87 @@
 // 앱 'AI 연결' 창이 '매일 자동 분석' 칸에 보여 준다. 비용은 토큰 기준 추정(웹 검색은 횟수만 — 검색당 요금 별도).
 window.AI_STATUS = {
  "defects": {
-  "at": "2026-11-19T07:39:45.973Z",
+  "at": "2026-11-20T01:50:57.994Z",
   "model": "claude-sonnet-5-5",
   "ok": true,
-  "pending": 1,
-  "judged": 1,
-  "items": [
-   {
-    "g": "korea|dividend",
-    "t": "005850",
-    "name": "에스엘",
-    "verdict": "형식"
-   }
-  ],
+  "pending": 0,
+  "judged": 0,
+  "items": [],
   "usage": {
-   "calls": 2,
-   "input": 40961,
-   "output": 2309,
+   "calls": 0,
+   "input": 0,
+   "output": 0,
    "cacheRead": 0,
-   "searches": 3,
-   "usd": 0.105
+   "searches": 0,
+   "usd": 0
   }
  },
  "news": {
-  "at": "2026-11-19T07:44:15.757Z",
+  "at": "2026-11-20T01:54:59.149Z",
   "model": "claude-haiku-5-5",
   "ok": true,
-  "stocks": 97,
-  "fetched": 97,
-  "called": 52,
-  "lines": 76,
+  "stocks": 98,
+  "fetched": 98,
+  "called": 90,
+  "lines": 77,
   "usage": {
-   "calls": 52,
-   "input": 98254,
-   "output": 3844,
+   "calls": 90,
+   "input": 140988,
+   "output": 5700,
    "cacheRead": 0,
    "searches": 0,
-   "usd": 0.012
+   "usd": 0.017
   }
  },
  "daily": {
-  "at": "2026-11-19T07:41:40.686Z",
+  "at": "2026-11-20T01:52:44.780Z",
   "T": "2026-11-19",
   "basis": {
    "kr": "2026-11-19",
-   "us": "2026-11-18"
+   "us": "2026-11-19"
   },
   "model": "claude-opus-5-5",
   "ok": true,
   "seen": {
-   "at": "2026-11-19T07:44:15.608Z",
+   "at": "2026-11-20T01:54:59.012Z",
    "basis": {
     "kr": "2026-11-19",
-    "us": "2026-11-18"
+    "us": "2026-11-19"
    },
    "items": {
     "market": {
-     "sig": "미국은 연준 의사록이 추가 인상을 시사하며 S&P500이 5거래일 연속 #1whv7mr",
+     "sig": "미국은 AI 붐 종료 우려로 다우 -2.19%, 나스닥 -2.25%가 동#1d3nxr8",
      "basis": {
       "kr": "2026-11-19",
-      "us": "2026-11-18"
+      "us": "2026-11-19"
      }
     },
     "liquidity": {
-     "sig": "미국은 돈이 들어오는 흐름이지만 연준 인상 경로와 극도의 공포가 겹친 신#1yjkfzy",
+     "sig": "미국은 돈이 들어오는 흐름이지만 연준 인상 경로와 극도의 공포가 겹친 신#1vlyyat",
      "basis": {
       "kr": "2026-11-19",
-      "us": "2026-11-18"
+      "us": "2026-11-19"
      }
     },
     "indexNotes": {
-     "sig": "하락세 — 일봉 구름 아래·전환선<기준선, RSI 38.0이며 머리 위 #dcez35",
+     "sig": "하락세. 일봉 구름 아래이고, MACD는 시그널을 상회했다. 지지 5,1#bgmxlv",
      "basis": {
       "kr": "2026-11-19",
-      "us": "2026-11-18"
+      "us": "2026-11-19"
      }
     },
     "topPicks": {
-     "sig": "300억원 자사주 매입을 마쳐 밸류업 계획 이후 유통주식수가 약 7.4%#1ldlqpb",
+     "sig": "300억원 자사주 매입을 마쳐 밸류업 계획 이후 유통주식수가 약 7.4%#quvvil",
      "basis": {
-      "kr": "2026-11-18",
-      "us": "2026-11-17"
+      "kr": "2026-11-19",
+      "us": "2026-11-18"
      }
     }
    }
   },
   "inputs": {
-   "market": "d8n17a",
-   "indexNotes": "1vee7iu"
+   "market": "1lpb0jo",
+   "indexNotes": "kjz3u6"
   },
   "wrote": [
    "liquidity",
@@ -97,19 +90,20 @@ window.AI_STATUS = {
    "market"
   ],
   "sig": {
-   "liquidity": "미국은 돈이 들어오는 흐름이지만 연준 인상 경로와 극도의 공포가 겹친 신#1yjkfzy",
-   "indexNotes": "하락세 — 일봉 구름 아래·전환선<기준선, RSI 38.0이며 머리 위 #dcez35",
-   "market": "미국은 연준 의사록이 추가 인상을 시사하며 S&P500이 5거래일 연속 #1whv7mr",
+   "liquidity": "미국은 돈이 들어오는 흐름이지만 연준 인상 경로와 극도의 공포가 겹친 신#1vlyyat",
+   "indexNotes": "하락세. 일봉 구름 아래이고, MACD는 시그널을 상회했다. 지지 5,1#bgmxlv",
+   "market": "미국은 AI 붐 종료 우려로 다우 -2.19%, 나스닥 -2.25%가 동#1d3nxr8",
    "topPicks": "300억원 자사주 매입을 마쳐 밸류업 계획 이후 유통주식수가 약 7.4%#1ldlqpb"
   },
   "sources": 40,
   "usage": {
    "calls": 2,
-   "input": 372666,
-   "output": 13755,
+   "input": 219890,
+   "output": 13236,
    "cacheRead": 0,
    "searches": 6,
-   "usd": 1.766
-  }
+   "usd": 1.144
+  },
+  "note": "새 종가로 세션 문장 갱신: market, indexNotes"
  }
 };
