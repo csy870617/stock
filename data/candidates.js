@@ -8,7 +8,7 @@ window.CANDIDATES = {
  "screenFresh": true,
  "beta": {
   "korea": 0.73,
-  "us": 0.93
+  "us": 0.92
  },
  "groups": {
   "korea|core": {
@@ -752,6 +752,11 @@ window.CANDIDATES = {
       {
        "k": "earn",
        "msg": "실적 발표(11/17) · EPS 서프라이즈 8.5% — 가이던스·논거 확인",
+       "fresh": false
+      },
+      {
+       "k": "drop",
+       "msg": "5거래일 -22.9%(시장 중앙값 -5.8%) 급락 — 원인 확인",
        "fresh": false
       },
       {
