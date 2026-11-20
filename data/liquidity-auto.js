@@ -38,33 +38,37 @@ window.LIQUIDITY_AUTO = {
  },
  "fed": {
   "asOf": "2026-11-20",
-  "current": 3.882,
+  "current": 3.88,
   "meetings": [
    {
     "date": "2026-12-09",
-    "rate": 4.133,
-    "stepBp": 25,
-    "cumBp": 25,
+    "rate": 4.127,
+    "stepBp": 24.7,
+    "cumBp": 24.7,
     "outcomes": [
      {
       "n": 1,
-      "p": 100
+      "p": 99
+     },
+     {
+      "n": 0,
+      "p": 1
      }
     ]
    },
    {
     "date": "2027-01-27",
     "rate": 4.29,
-    "stepBp": 15.7,
-    "cumBp": 40.8,
+    "stepBp": 16.3,
+    "cumBp": 41,
     "outcomes": [
      {
       "n": 2,
-      "p": 63
+      "p": 64
      },
      {
       "n": 1,
-      "p": 37
+      "p": 36
      }
     ]
    },
@@ -72,15 +76,15 @@ window.LIQUIDITY_AUTO = {
     "date": "2027-03-17",
     "rate": 4.445,
     "stepBp": 15.5,
-    "cumBp": 56.3,
+    "cumBp": 56.5,
     "outcomes": [
      {
       "n": 2,
-      "p": 75
+      "p": 74
      },
      {
       "n": 3,
-      "p": 25
+      "p": 26
      }
     ]
    },
@@ -88,63 +92,63 @@ window.LIQUIDITY_AUTO = {
     "date": "2027-04-28",
     "rate": 4.495,
     "stepBp": 5,
-    "cumBp": 61.3,
+    "cumBp": 61.5,
     "outcomes": [
      {
       "n": 2,
-      "p": 55
+      "p": 54
      },
      {
       "n": 3,
-      "p": 45
+      "p": 46
      }
     ]
    },
    {
     "date": "2027-06-09",
-    "rate": 4.566,
-    "stepBp": 7.1,
-    "cumBp": 68.4,
+    "rate": 4.574,
+    "stepBp": 7.9,
+    "cumBp": 69.4,
     "outcomes": [
      {
       "n": 3,
-      "p": 74
+      "p": 78
      },
      {
       "n": 2,
-      "p": 26
+      "p": 22
      }
     ]
    },
    {
     "date": "2027-07-28",
-    "rate": 4.59,
-    "stepBp": 2.4,
-    "cumBp": 70.7,
+    "rate": 4.585,
+    "stepBp": 1.1,
+    "cumBp": 70.5,
     "outcomes": [
      {
       "n": 3,
-      "p": 83
+      "p": 82
      },
      {
       "n": 2,
-      "p": 17
+      "p": 18
      }
     ]
    },
    {
     "date": "2027-09-15",
-    "rate": 4.6,
-    "stepBp": 1,
-    "cumBp": 71.8,
+    "rate": 4.605,
+    "stepBp": 2,
+    "cumBp": 72.5,
     "outcomes": [
      {
       "n": 3,
-      "p": 87
+      "p": 90
      },
      {
       "n": 2,
-      "p": 13
+      "p": 10
      }
     ]
    }
@@ -158,7 +162,7 @@ window.LIQUIDITY_AUTO = {
   "cd91": 3.38,
   "y1": 3.598,
   "y2": 3.69,
-  "y3": 3.667,
+  "y3": 3.642,
   "exp3m": {
    "rate": 3.2,
    "chg": 0.2,
