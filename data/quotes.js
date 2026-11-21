@@ -5,7 +5,7 @@
 //   price·date 는 조회 시각의 현재가(장중이면 장중가), close·closeDate 는 마지막으로 끝난 정규장 종가(스냅샷 기록용)
 // indices: 성과 기준 지수(kospi ^KS11·sp500 ^GSPC·rsp RSP) — 같은 형식, snapshot.js 가 종목 종가와 짝지어 기록
 window.STOCK_QUOTES = {
- "generatedAt": "2026-11-20",
+ "generatedAt": "2026-11-21",
  "quotes": {
   "103590": {
    "price": 53700,
@@ -702,7 +702,7 @@ window.STOCK_QUOTES = {
    "changePct": -5.2,
    "close": 4869.96,
    "closeDate": "2026-11-20",
-   "at": "2026-11-20T22:14:18Z"
+   "at": "2026-11-21T01:36:49Z"
   },
   "sp500": {
    "symbol": "^GSPC",
@@ -711,7 +711,7 @@ window.STOCK_QUOTES = {
    "changePct": -3.7,
    "close": 6910.39,
    "closeDate": "2026-11-20",
-   "at": "2026-11-20T22:14:18Z"
+   "at": "2026-11-21T01:36:49Z"
   },
   "rsp": {
    "symbol": "RSP",
@@ -720,7 +720,7 @@ window.STOCK_QUOTES = {
    "changePct": -2,
    "close": 207.44,
    "closeDate": "2026-11-20",
-   "at": "2026-11-20T22:14:18Z"
+   "at": "2026-11-21T01:36:49Z"
   }
  }
 };
