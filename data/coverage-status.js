@@ -92,7 +92,7 @@ window.COVERAGE_STATUS = {
    "fresh": 8,
    "total": 8,
    "unit": "그룹",
-   "oldestDays": 7,
+   "oldestDays": 0,
    "ok": true
   },
   {
@@ -101,7 +101,7 @@ window.COVERAGE_STATUS = {
    "fresh": 1,
    "total": 1,
    "unit": "회",
-   "oldestDays": 7,
+   "oldestDays": 0,
    "ok": true
   },
   {
@@ -118,11 +118,11 @@ window.COVERAGE_STATUS = {
    "fresh": 8,
    "total": 8,
    "unit": "그룹",
-   "oldestDays": 3,
+   "oldestDays": 0,
    "ok": true
   }
  ],
  "ok": true,
  "overdue": [],
- "dataHash": "646d6edd4e5a"
+ "dataHash": "d6f6931d642c"
 };
