@@ -7,7 +7,7 @@ window.LIQUIDITY_AUTO = {
  "inputs": {
   "us10y": "4.91",
   "curve": "0.79",
-  "vix": "30.7",
+  "vix": "35.9",
   "hyg20": "-0.4",
   "dxy": "103.8",
   "usdkrw": "1335"
@@ -18,7 +18,7 @@ window.LIQUIDITY_AUTO = {
   "shortScore": -0.21,
   "midScore": -1.27,
   "drivers": [
-   "VIX 30.7 (−2)",
+   "VIX 35.9 (−2)",
    "10Y 추세 (+1)",
    "달러 추세 (−1)",
    "일드커브 (+1)"
@@ -42,113 +42,113 @@ window.LIQUIDITY_AUTO = {
   "meetings": [
    {
     "date": "2026-12-09",
-    "rate": 4.12,
-    "stepBp": 24,
-    "cumBp": 24,
+    "rate": 4.141,
+    "stepBp": 26.1,
+    "cumBp": 26.1,
     "outcomes": [
      {
       "n": 1,
       "p": 96
      },
      {
-      "n": 0,
+      "n": 2,
       "p": 4
      }
     ]
    },
    {
     "date": "2027-01-27",
-    "rate": 4.285,
-    "stepBp": 16.5,
-    "cumBp": 40.5,
+    "rate": 4.31,
+    "stepBp": 16.9,
+    "cumBp": 43,
     "outcomes": [
      {
       "n": 2,
-      "p": 62
+      "p": 72
      },
      {
       "n": 1,
-      "p": 38
+      "p": 28
      }
     ]
    },
    {
     "date": "2027-03-17",
-    "rate": 4.44,
+    "rate": 4.465,
     "stepBp": 15.5,
-    "cumBp": 56,
+    "cumBp": 58.5,
     "outcomes": [
      {
       "n": 2,
-      "p": 76
-     },
-     {
-      "n": 3,
-      "p": 24
-     }
-    ]
-   },
-   {
-    "date": "2027-04-28",
-    "rate": 4.48,
-    "stepBp": 4,
-    "cumBp": 60,
-    "outcomes": [
-     {
-      "n": 2,
-      "p": 60
-     },
-     {
-      "n": 3,
-      "p": 40
-     }
-    ]
-   },
-   {
-    "date": "2027-06-09",
-    "rate": 4.544,
-    "stepBp": 6.4,
-    "cumBp": 66.4,
-    "outcomes": [
-     {
-      "n": 3,
       "p": 66
      },
      {
-      "n": 2,
+      "n": 3,
       "p": 34
      }
     ]
    },
    {
-    "date": "2027-07-28",
-    "rate": 4.555,
-    "stepBp": 1.1,
-    "cumBp": 67.5,
+    "date": "2027-04-28",
+    "rate": 4.515,
+    "stepBp": 5,
+    "cumBp": 63.5,
     "outcomes": [
      {
       "n": 3,
-      "p": 70
+      "p": 54
      },
      {
       "n": 2,
-      "p": 30
+      "p": 46
+     }
+    ]
+   },
+   {
+    "date": "2027-06-09",
+    "rate": 4.579,
+    "stepBp": 6.4,
+    "cumBp": 69.9,
+    "outcomes": [
+     {
+      "n": 3,
+      "p": 80
+     },
+     {
+      "n": 2,
+      "p": 20
+     }
+    ]
+   },
+   {
+    "date": "2027-07-28",
+    "rate": 4.58,
+    "stepBp": 0.1,
+    "cumBp": 70,
+    "outcomes": [
+     {
+      "n": 3,
+      "p": 80
+     },
+     {
+      "n": 2,
+      "p": 20
      }
     ]
    },
    {
     "date": "2027-09-15",
-    "rate": 4.555,
-    "stepBp": 0,
-    "cumBp": 67.5,
+    "rate": 4.59,
+    "stepBp": 1,
+    "cumBp": 71,
     "outcomes": [
      {
       "n": 3,
-      "p": 70
+      "p": 84
      },
      {
       "n": 2,
-      "p": 30
+      "p": 16
      }
     ]
    }
