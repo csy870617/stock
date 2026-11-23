@@ -8,7 +8,7 @@ window.CANDIDATES = {
  "screenFresh": true,
  "beta": {
   "korea": 0.74,
-  "us": 0.92
+  "us": 0.9
  },
  "groups": {
   "korea|core": {
@@ -248,6 +248,11 @@ window.CANDIDATES = {
      "name": "기아",
      "state": "감시",
      "flags": [
+      {
+       "k": "trend",
+       "msg": "추세 붕괴(단·중·장기 모두 매도 이하)",
+       "fresh": false
+      },
       {
        "k": "theme",
        "msg": "주제 기준 미달 — 정체성 조건 미달: 이익 개선 없음 — 올해 추정 영업이익 −6.2% · 최근 분기 영업이익 전년 대비 −4.9%(둘 중 하나가 증가여야 한다)",
@@ -718,11 +723,6 @@ window.CANDIDATES = {
        "fresh": false
       },
       {
-       "k": "drop",
-       "msg": "5거래일 -22.9%(시장 중앙값 -5.8%) 급락 — 원인 확인",
-       "fresh": false
-      },
-      {
        "k": "tpcut",
        "msg": "컨센서스 목표가 14일 새 -25.1% 하향 — 논거 확인",
        "fresh": false
@@ -1138,17 +1138,11 @@ window.CANDIDATES = {
    }
   },
   "korea|value|000270": {
+   "trend": "2026-11-23",
+   "tvf": "1mi8h6k",
    "scheme": "keys",
    "theme": {
     "id:improve": "-"
-   },
-   "gone": {
-    "trend": [
-     "2026-11-23",
-     "2026-11-23",
-     "1mi8h6k",
-     0
-    ]
    }
   },
   "korea|value|001120": {
