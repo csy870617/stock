@@ -2,7 +2,7 @@
 // 앱 'AI 연결' 창이 '매일 자동 분석' 칸에 보여 준다. 비용은 토큰 기준 추정(웹 검색은 횟수만 — 검색당 요금 별도).
 window.AI_STATUS = {
  "defects": {
-  "at": "2026-11-23T18:47:04.392Z",
+  "at": "2026-11-23T21:33:32.906Z",
   "model": "claude-sonnet-5-5",
   "ok": true,
   "pending": 0,
@@ -18,20 +18,20 @@ window.AI_STATUS = {
   }
  },
  "news": {
-  "at": "2026-11-23T18:48:35.884Z",
+  "at": "2026-11-23T21:34:40.657Z",
   "model": "claude-haiku-5-5",
   "ok": true,
   "stocks": 99,
   "fetched": 99,
-  "called": 90,
-  "lines": 67,
+  "called": 57,
+  "lines": 69,
   "usage": {
-   "calls": 90,
-   "input": 132659,
-   "output": 5810,
+   "calls": 57,
+   "input": 93711,
+   "output": 3539,
    "cacheRead": 0,
    "searches": 0,
-   "usd": 0.016
+   "usd": 0.011
   }
  },
  "daily": {
@@ -44,7 +44,7 @@ window.AI_STATUS = {
   "model": "claude-opus-5-5",
   "ok": true,
   "seen": {
-   "at": "2026-11-23T18:48:35.798Z",
+   "at": "2026-11-23T21:34:40.545Z",
    "basis": {
     "kr": "2026-11-23",
     "us": "2026-11-20"
@@ -106,7 +106,7 @@ window.AI_STATUS = {
    "usd": 1.833
   },
   "note": "새 종가로 세션 문장 갱신: market, indexNotes",
-  "checkedAt": "2026-11-23T18:48:35.798Z",
+  "checkedAt": "2026-11-23T21:34:40.545Z",
   "skipped": "오늘(2026-11-23) 몫이 이미 최신 — 루틴 세션이 작성"
  }
 };
