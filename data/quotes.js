@@ -665,13 +665,6 @@ window.STOCK_QUOTES = {
    "close": 186.35,
    "closeDate": "2026-11-23"
   },
-  "WAB": {
-   "price": 284.01,
-   "date": "2026-11-23",
-   "changePct": 5.5,
-   "close": 284.01,
-   "closeDate": "2026-11-23"
-  },
   "CSCO": {
    "price": 96.8,
    "date": "2026-11-23",
@@ -709,7 +702,7 @@ window.STOCK_QUOTES = {
    "changePct": 6.3,
    "close": 5006.03,
    "closeDate": "2026-11-24",
-   "at": "2026-11-24T09:08:22Z"
+   "at": "2026-11-24T09:55:16Z"
   },
   "sp500": {
    "symbol": "^GSPC",
@@ -718,7 +711,7 @@ window.STOCK_QUOTES = {
    "changePct": 4.7,
    "close": 7237.17,
    "closeDate": "2026-11-23",
-   "at": "2026-11-24T09:08:22Z"
+   "at": "2026-11-24T09:55:16Z"
   },
   "rsp": {
    "symbol": "RSP",
@@ -727,7 +720,7 @@ window.STOCK_QUOTES = {
    "changePct": 2.6,
    "close": 212.82,
    "closeDate": "2026-11-23",
-   "at": "2026-11-24T09:08:22Z"
+   "at": "2026-11-24T09:55:16Z"
   }
  }
 };
