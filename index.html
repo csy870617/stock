@@ -2912,11 +2912,24 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     var box = el.querySelector(".ch-box");
     if (window.ResizeObserver) { CH.ro = new ResizeObserver(function () { if (CH.cur === st && st.src) drawChart(st); }); CH.ro.observe(box); }
     bindChart(st);
-    if (it.light || it.gone) {   // 시세만 있는 종목·편성에서 빠진 종목 — 시세 서버 2년 종가 선(빠진 종목의 data/chart/ 파일은 지워진다)
+    // 시세만 있는 종목 — 시세 서버 2년 종가 선(시·고·저가가 없다)
+    function closeLine() {
       var d = wlCache[it.c + ":" + it.t];
       if (d && d !== "loading" && d.closes) setChartSrc(st, barsFromCloses(d.closes, d.dates), true, d.dates && d.dates.length ? d.dates[d.dates.length - 1] : null);
       else if (d === null) chartMsg(st, "차트 불러오기 실패");
-      return;   // 불러오는 중이면 시세가 도착할 때 상세가 다시 그려진다(lightRepaint)
+      // 불러오는 중이면 시세가 도착할 때 상세가 다시 그려진다(lightRepaint)
+    }
+    if (it.light) { closeLine(); return; }
+    // 편성에서 빠진 종목도 update-stock-ta.js 가 차트 파일을 계속 만든다(data/removed.json 보관 종목, 2026-11-24 사용자 '제외된 종목 차트도 캔들로') — 파일이 없을 때만 종가 선
+    if (it.gone) {
+      loadChartData(it.t, function (j) {
+        if (CH.cur !== st) return;
+        if (!j) { closeLine(); return; }
+        var src = { d: toBars(j.d), w: toBars(j.w), m: toBars(j.m) }, lb = chartLive(it);
+        if (lb) src = withLiveBar(src, lb);
+        setChartSrc(st, src, false, j.asOf, src.live ? lb : null);
+      });
+      return;
     }
     loadChartData(it.t, function (j) {
       if (CH.cur !== st) return;
@@ -2932,7 +2945,8 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     var L = null, kr = it.c === "korea";
     if (it.sx) { var sx = sectorOf(it.c, it.sx); L = sx ? SECTOR_LIVE[sx.symbol] : null; }
     else if (it.idx) { L = MACRO_LIVE[it.idx]; kr = IDX_REGION[it.idx] ? IDX_REGION[it.idx] === "korea" : null; }   // 환율·원자재(kr == null)는 macroOpen — 뉴욕 시각 거래 시간
-    else if (!it.light && !it.gone) { var s = findStock(it.c, it.t, it.th); L = s ? liveCache[s.ticker] : null; if (s) kr = isKrStock(s); }
+    else if (it.gone) { var gw = wlCache[it.c + ":" + it.t]; L = gw && gw !== "loading" ? { price: gw.price, date: gw.date } : null; }   // 편성에서 빠진 종목 — 시세 서버 지금 값(시·고·저가 없음)
+    else if (!it.light) { var s = findStock(it.c, it.t, it.th); L = s ? liveCache[s.ticker] : null; if (s) kr = isKrStock(s); }
     if (!L || L.price == null || !L.date || !liveFresh(L.date)) return null;
     return { date: L.date, price: L.price, o: L.o, h: L.h, l: L.l, vol: L.vol, session: kr == null ? macroOpen(it.idx, L.date) : inSession(kr, L.date), macro: kr == null };
   }
@@ -4218,7 +4232,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     var stub = { ticker: t, name: nm };
     var acts = '<a class="btn" href="' + esc(safeUrl(cd.chartUrl || naverChartUrl(t, c))) + '" target="_blank" rel="noopener" title="네이버 증권에서 보기">' + ICON.ext + " 네이버</a>" +
       favAct(stub, c, "watch") + favAct(stub, c, "hold");
-    return top + (ok ? chartHtml(t) : "") + newsHtml(t) + sum + nav + body +
+    return top + chartHtml(t) + newsHtml(t) + sum + nav + body +   // 캔들은 data/chart/ 파일이라 시세 서버가 없어도 그린다(파일이 없으면 종가 선 — mountChart)
       (srcs ? '<div class="dt-src">' + srcs + "</div>" : "") + '<div class="dt-act">' + acts + "</div>";
   }
   function goneRepaint(c, t) {

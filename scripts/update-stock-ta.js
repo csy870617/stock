@@ -44,6 +44,22 @@ function loadStocks() {
   return list;
 }
 
+// 편성에서 빠진 종목(data/removed.json — lib-removed.js 가 400일 보관) — 상세 화면의 캔들 차트만 계속 만든다(지표는 계산하지 않는다).
+// 2026-11-24 사용자 '제외된 종목 차트도 캔들로' — 전엔 차트 파일을 지워 앱이 시세 서버 2년 종가 선으로 대신 그렸다.
+function loadRemoved(present) {
+  let items = {};
+  try { items = (JSON.parse(fs.readFileSync(path.join(ROOT, "data", "removed.json"), "utf8")) || {}).items || {}; } catch (_e) { return []; }
+  const seen = {}, list = [];
+  Object.keys(items).forEach((k) => {
+    const x = items[k], card = (x && x.card) || {};
+    const ticker = (x && x.t) || card.ticker, market = card.market;
+    if (!ticker || !market || present[ticker] || seen[ticker]) return;
+    seen[ticker] = 1;
+    list.push({ ticker: ticker, symbol: symbolFor({ ticker: ticker, market: market }), market: market });
+  });
+  return list;
+}
+
 function loadPrev() {
   if (!fs.existsSync(OUT)) return {};
   try {
@@ -227,6 +243,16 @@ async function mapLimit(items, limit, fn) {
     else fellBack++;   // 최초 실패는 생략(렌더가 해당 종목 TA를 숨김)
   });
 
+  // 편성에서 빠진 종목 — 차트 파일만(조회 실패면 이전 파일을 그대로 둔다)
+  const present = {};
+  stocks.forEach((s) => { present[s.ticker] = 1; });
+  const gone = loadRemoved(present);
+  let goneCharts = 0;
+  await mapLimit(gone, 8, async (s) => {
+    const rows = await fetchRows(s.symbol);
+    if (rows && writeChart(s.ticker, rows, s.market === "KOSPI" || s.market === "KOSDAQ" ? 0 : 2)) goneCharts++;
+  });
+
   // 시장 기준 변동성 — 조회 실패면 이전 값 유지
   const prevBench = (() => { try { global.window = {}; delete require.cache[require.resolve(OUT)]; require(OUT); return (global.window.STOCK_TA && global.window.STOCK_TA.bench) || {}; } catch (_e) { return {}; } })();
   const bench = {};
@@ -259,15 +285,15 @@ async function mapLimit(items, limit, fn) {
     "window.STOCK_TA = " + JSON.stringify(T) + ";\n";
   fs.writeFileSync(OUT, body);
 
-  // 편성에서 빠진 종목의 차트 파일 정리(남겨 두면 저장소만 커진다)
+  // 편성에도 보관 카드(removed.json)에도 없는 종목의 차트 파일 정리(남겨 두면 저장소만 커진다)
   let pruned = 0;
   if (fs.existsSync(CHART_DIR)) {
     const keep = {};
-    stocks.forEach((s) => { keep[path.basename(chartFile(s.ticker))] = 1; });
+    stocks.concat(gone).forEach((s) => { keep[path.basename(chartFile(s.ticker))] = 1; });
     // idx-* 는 지수 차트(update-indices.js 몫)라 남긴다
     fs.readdirSync(CHART_DIR).forEach((f) => { if (/\.json$/.test(f) && !/^idx-/.test(f) && !keep[f]) { fs.unlinkSync(path.join(CHART_DIR, f)); pruned++; } });
   }
 
   console.log("stock-ta.js 갱신: " + Object.keys(ta).length + "/" + stocks.length +
-    "종목 (" + asOf + ") — 실시간 " + live + " · 폴백 " + fellBack + " · 차트 " + charts + (pruned ? " (정리 " + pruned + ")" : ""));
+    "종목 (" + asOf + ") — 실시간 " + live + " · 폴백 " + fellBack + " · 차트 " + charts + " · 제외 종목 차트 " + goneCharts + "/" + gone.length + (pruned ?" (정리 " + pruned + ")" : ""));
 })();
