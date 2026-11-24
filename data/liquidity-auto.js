@@ -9,7 +9,7 @@ window.LIQUIDITY_AUTO = {
   "curve": "0.77",
   "vix": "26.6",
   "hyg20": "-0.4",
-  "dxy": "103.8",
+  "dxy": "104.3",
   "usdkrw": "1344"
  },
  "us": {
@@ -42,24 +42,24 @@ window.LIQUIDITY_AUTO = {
   "meetings": [
    {
     "date": "2026-12-09",
-    "rate": 4.148,
-    "stepBp": 26.8,
-    "cumBp": 26.8,
+    "rate": 4.141,
+    "stepBp": 26.1,
+    "cumBp": 26.1,
     "outcomes": [
      {
       "n": 1,
-      "p": 93
+      "p": 96
      },
      {
       "n": 2,
-      "p": 7
+      "p": 4
      }
     ]
    },
    {
     "date": "2027-01-27",
     "rate": 4.3,
-    "stepBp": 15.2,
+    "stepBp": 15.9,
     "cumBp": 42,
     "outcomes": [
      {
@@ -74,24 +74,24 @@ window.LIQUIDITY_AUTO = {
    },
    {
     "date": "2027-03-17",
-    "rate": 4.455,
-    "stepBp": 15.5,
-    "cumBp": 57.5,
+    "rate": 4.444,
+    "stepBp": 14.4,
+    "cumBp": 56.4,
     "outcomes": [
      {
       "n": 2,
-      "p": 70
+      "p": 74
      },
      {
       "n": 3,
-      "p": 30
+      "p": 26
      }
     ]
    },
    {
     "date": "2027-04-28",
     "rate": 4.485,
-    "stepBp": 3,
+    "stepBp": 4.1,
     "cumBp": 60.5,
     "outcomes": [
      {
@@ -106,49 +106,49 @@ window.LIQUIDITY_AUTO = {
    },
    {
     "date": "2027-06-09",
-    "rate": 4.549,
-    "stepBp": 6.4,
-    "cumBp": 66.9,
+    "rate": 4.542,
+    "stepBp": 5.7,
+    "cumBp": 66.2,
     "outcomes": [
      {
       "n": 3,
-      "p": 68
+      "p": 65
      },
      {
       "n": 2,
-      "p": 32
+      "p": 35
      }
     ]
    },
    {
     "date": "2027-07-28",
-    "rate": 4.545,
-    "stepBp": -0.4,
-    "cumBp": 66.5,
+    "rate": 4.54,
+    "stepBp": -0.2,
+    "cumBp": 66,
     "outcomes": [
      {
       "n": 3,
-      "p": 66
+      "p": 64
      },
      {
       "n": 2,
-      "p": 34
+      "p": 36
      }
     ]
    },
    {
     "date": "2027-09-15",
-    "rate": 4.545,
-    "stepBp": 0,
-    "cumBp": 66.5,
+    "rate": 4.56,
+    "stepBp": 2,
+    "cumBp": 68,
     "outcomes": [
      {
       "n": 3,
-      "p": 66
+      "p": 72
      },
      {
       "n": 2,
-      "p": 34
+      "p": 28
      }
     ]
    }

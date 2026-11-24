@@ -2,22 +2,22 @@
 // 앱 상단 '데이터 신선도' 패널이 읽는다. 직접 수정하지 말 것.
 window.COVERAGE_STATUS = {
  "asOf": "2026-11-24",
- "T": "2026-11-23",
- "total": 102,
+ "T": "2026-11-24",
+ "total": 101,
  "cycleDays": 7,
  "daily": [
   {
    "key": "techNote",
    "label": "기술 대응",
-   "done": 102,
-   "total": 102,
+   "done": 101,
+   "total": 101,
    "ok": true
   },
   {
    "key": "valueNote",
    "label": "밸류 설명",
-   "done": 102,
-   "total": 102,
+   "done": 101,
+   "total": 101,
    "ok": true
   },
   {
@@ -30,9 +30,9 @@ window.COVERAGE_STATUS = {
   {
    "key": "topPicks",
    "label": "Top Pick",
-   "done": 0,
+   "done": 6,
    "total": 6,
-   "ok": false
+   "ok": true
   },
   {
    "key": "liquidity",
@@ -65,8 +65,8 @@ window.COVERAGE_STATUS = {
   {
    "key": "trend",
    "label": "현재 추세",
-   "done": 99,
-   "total": 99,
+   "done": 98,
+   "total": 98,
    "ok": true
   },
   {
@@ -81,8 +81,8 @@ window.COVERAGE_STATUS = {
   {
    "key": "verified",
    "label": "목표가 재검증",
-   "fresh": 102,
-   "total": 102,
+   "fresh": 101,
+   "total": 101,
    "oldestDays": 4,
    "ok": true
   },
@@ -108,9 +108,9 @@ window.COVERAGE_STATUS = {
    "key": "aiTarget",
    "label": "AI 적정가 재시도",
    "fresh": 101,
-   "total": 102,
-   "oldestDays": 15,
-   "ok": false
+   "total": 101,
+   "oldestDays": 3,
+   "ok": true
   },
   {
    "key": "tier",
@@ -122,13 +122,7 @@ window.COVERAGE_STATUS = {
    "ok": true
   }
  ],
- "ok": false,
- "overdue": [
-  {
-   "key": "aiTarget",
-   "label": "AI 적정가 재시도",
-   "days": 15
-  }
- ],
- "dataHash": "c944cc419997"
+ "ok": true,
+ "overdue": [],
+ "dataHash": "e3c5c1375982"
 };
