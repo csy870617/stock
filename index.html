@@ -6476,21 +6476,45 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
       '<div class="fw-cs">' + chips + "</div>" + risk + "</div>";
   }
   // ── 상세 ──
-  function fwSpark(pts, kind) {
+  // live: 마지막 점이 월말이 아닌 '지금 값'(이달 진행 중) — 점선으로 잇고 속이 빈 점·옅은 막대(차트의 장중 봉과 같은 뜻)
+  function fwSpark(pts, kind, live) {
     var v = (pts || []).map(function (p) { return p[1]; }).filter(function (x) { return x != null && isFinite(x); });
     if (v.length < 3) return "";
-    var W = 92, Hh = 28, mn = Math.min.apply(null, v), mx = Math.max.apply(null, v), rg = mx - mn || 1;
-    var xs = function (i) { return (i / (v.length - 1)) * (W - 2) + 1; }, ys = function (y) { return Hh - 3 - ((y - mn) / rg) * (Hh - 6); };
+    var W = 92, Hh = 28, mn = Math.min.apply(null, v), mx = Math.max.apply(null, v), rg = mx - mn || 1, n = v.length;
+    var xs = function (i) { return (i / (n - 1)) * (W - 2) + 1; }, ys = function (y) { return Hh - 3 - ((y - mn) / rg) * (Hh - 6); };
     if (kind === "bar") {
-      var z = ys(Math.max(mn, Math.min(mx, 0))), bw = Math.max(1, (W - 2) / v.length - 1);
+      var z = ys(Math.max(mn, Math.min(mx, 0))), bw = Math.max(1, (W - 2) / n - 1);
       return '<svg class="fw-sp" viewBox="0 0 ' + W + " " + Hh + '" width="' + W + '" height="' + Hh + '" aria-hidden="true">' + v.map(function (y, i) {
-        var y1 = ys(y); return '<rect x="' + (xs(i) - bw / 2).toFixed(1) + '" y="' + Math.min(y1, z).toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + Math.max(1, Math.abs(z - y1)).toFixed(1) +
-          '" fill="' + (y >= 0 ? "var(--up)" : "var(--down)") + '" rx="0.5"/>';
+        var y1 = ys(y), cl = y >= 0 ? "var(--up)" : "var(--down)", now = live && i === n - 1;
+        return '<rect x="' + (xs(i) - bw / 2).toFixed(1) + '" y="' + Math.min(y1, z).toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + Math.max(1, Math.abs(z - y1)).toFixed(1) +
+          '" fill="' + cl + '"' + (now ? ' fill-opacity="0.35" stroke="' + cl + '" stroke-width="0.8"' : "") + ' rx="0.5"/>';
       }).join("") + "</svg>";
     }
-    var d = v.map(function (y, i) { return (i ? "L" : "M") + xs(i).toFixed(1) + " " + ys(y).toFixed(1); }).join("");
+    var nL = live ? n - 1 : n, d = v.slice(0, nL).map(function (y, i) { return (i ? "L" : "M") + xs(i).toFixed(1) + " " + ys(y).toFixed(1); }).join("");
+    var cx = xs(n - 1).toFixed(1), cy = ys(v[n - 1]).toFixed(1);
     return '<svg class="fw-sp" viewBox="0 0 ' + W + " " + Hh + '" width="' + W + '" height="' + Hh + '" aria-hidden="true"><path d="' + d + '" fill="none" stroke="var(--ink2)" stroke-width="1.5" stroke-linejoin="round" stroke-linecap="round"/>' +
-      '<circle cx="' + xs(v.length - 1).toFixed(1) + '" cy="' + ys(v[v.length - 1]).toFixed(1) + '" r="2.4" fill="var(--ink)"/></svg>';
+      (live ? '<path d="M' + xs(n - 2).toFixed(1) + " " + ys(v[n - 2]).toFixed(1) + "L" + cx + " " + cy + '" fill="none" stroke="var(--ink2)" stroke-width="1.5" stroke-dasharray="2 2"/>' +
+        '<circle cx="' + cx + '" cy="' + cy + '" r="2.4" fill="var(--sf)" stroke="var(--ink)" stroke-width="1.4"/>'
+        : '<circle cx="' + cx + '" cy="' + cy + '" r="2.4" fill="var(--ink)"/>') + "</svg>";
+  }
+  // 그래프 끝의 '지금 값' — data/liquidity-flow.js 의 now(update-liquidity-flow.js, 지표 상세 그래프와 같은 단위).
+  //   2026-11-25 사용자 '신용융자 추이 그래프도 가장 최신 정보의 그래프로' — 월말 추이는 끝난 달까지라 위쪽 지금 값보다 한 달 가까이 늦었다.
+  //   마지막 월말(lastM)보다 뒤 날짜일 때만(이달 진행 중) 돌려준다. 월별 자료(M2·회사채 스프레드)는 없다.
+  function fiNow(k, lastM) {
+    var N = (window.LIQUIDITY_FLOW || {}).now, p = N && N.ind ? N.ind[k] : null;
+    return p && p.d && (!lastM || String(p.d).slice(0, 7) > lastM) ? p : null;
+  }
+  function fiNowIdx(key, lastM) {   // KS 코스피 · SPY(배당 재투자 — 지표 상세) · SPX(S&P500 지수 — 흐름 점수 그래프), 끝난 장의 마지막 종가
+    var N = (window.LIQUIDITY_FLOW || {}).now, p = N && N.idx ? N.idx[key] : null;
+    return p && p.d && p.v != null && (!lastM || String(p.d).slice(0, 7) > lastM) ? p : null;
+  }
+  // 큰 그래프의 끝 '지금 값' — 앞 월말에서 점선으로 잇고 속이 빈 점
+  function fiLiveMark(vals, X, Y, color) {
+    var n = vals.length, y = vals[n - 1], y0 = vals[n - 2];
+    if (y == null || !isFinite(y)) return "";
+    var x1 = X(n - 1).toFixed(1), y1 = Y(y).toFixed(1);
+    return (y0 != null && isFinite(y0) ? '<path d="M' + X(n - 2).toFixed(1) + " " + Y(y0).toFixed(1) + "L" + x1 + " " + y1 + '" fill="none" stroke="' + color + '" stroke-width="2" stroke-dasharray="3 3" stroke-linecap="round"/>' : "") +
+      '<circle cx="' + x1 + '" cy="' + y1 + '" r="3.5" fill="var(--sf)" stroke="' + color + '" stroke-width="2"/>';
   }
   function fwValTxt(x) {
     if (x.value == null) return "–";
@@ -6505,20 +6529,23 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
       '<div class="fw-xl" aria-hidden="true">' + [0, 1, 2, 3, 4].map(function (k) { return "<i" + (k === o.levelIdx ? ' class="on" style="background:var(--lq' + k + ')"' : ' style="background:var(--lq' + k + ')"') + "></i>"; }).join("") + "</div>" +
       '<div class="fw-scale" aria-hidden="true"><span>많이 빠짐</span><span>보통</span><span>많이 들어옴</span></div>' +
       '<div class="fw-meta">흐름 점수 ' + esc(fwSign(o.score, 2)) + (top != null ? " · 최근 5년 중 상위 " + top + "%" : "") + " · 구성 지표 " + o.n + "개 · " + esc(mdOf(F.asOf)) + " 기준</div></div>";
-    var chart = '<section class="dt-sec" id="fw-sc"><h3>흐름 점수와 ' + esc(o.idxName || "지수") + ' <span class="md-as">월말 · 5년</span></h3>' +
+    var scLive = fwLive(o);
+    var chart = '<section class="dt-sec" id="fw-sc"><h3>흐름 점수와 ' + esc(o.idxName || "지수") + ' <span class="md-as">월말 · 5년' + (scLive ? " · 끝은 " + esc(mdOf(F.asOf)) + " 값" : "") + '</span></h3>' +
       '<div class="fw-read" id="fwRead">그래프를 누르면 그 달 값</div>' +
       '<div class="fw-chart" data-fwc="score"></div><div class="fw-ct">' + esc(o.idxName || "지수") + '</div><div class="fw-chart sm" data-fwc="idx"></div>' +
-      '<p class="fw-note">점수 0 = 지난 5년 평소, 위로 갈수록 돈이 들어오는 쪽. 두 그래프는 같은 달끼리 세로로 맞췄다.</p></section>';
+      '<p class="fw-note">점수 0 = 지난 5년 평소, 위로 갈수록 돈이 들어오는 쪽. 두 그래프는 같은 달끼리 세로로 맞췄다.' +
+      (scLive ? " 맨 끝 빈 점 = " + esc(mdOf(F.asOf)) + " 기준 지금 값(이달 진행 중 — 월말 값이 아니다)." : "") + "</p></section>";
     var rows = (o.comps || []).map(function (x) {
+      var sp = x.spark || [], nw = fiNow(x.key, sp.length ? sp[sp.length - 1][0] : null);
       var vd = x.valid ? '<span class="fw-vd" title="결과를 보기 전에 기준을 정한 과거 검증을 통과한 쓰임">✓ ' + esc(x.valid) + "</span>" : "";
       return '<div class="fw-row fw-link" role="button" tabindex="0" data-fi="' + esc(x.key) + '" data-fic="' + esc(c) + '" aria-label="' + esc(x.name + " 자세히 보기") + '"><div class="fw-rl"><div class="fw-rn">' + fwArrow(x.state) + esc(x.name) + "</div>" +
         '<div class="fw-rs">' + esc(x.sub || "") + (x.d ? " · " + esc(String(x.d).length > 7 ? mdOf(x.d) : x.d.replace("-", "년 ") + "월") : "") + "</div>" + vd + "</div>" +
         '<div class="fw-rr"><div class="fw-rv">' + esc(fwValTxt(x)) + "</div>" +
-        '<div class="fw-rc">' + (x.chg != null ? "3개월 " + esc(fwChg(x)) : x.z != null ? "평소 대비 " + esc(fwSign(x.z, 1)) + "σ" : "") + "</div>" + fwSpark(x.spark, x.sparkKind) + "</div>" +
+        '<div class="fw-rc">' + (x.chg != null ? "3개월 " + esc(fwChg(x)) : x.z != null ? "평소 대비 " + esc(fwSign(x.z, 1)) + "σ" : "") + "</div>" + fwSpark(nw ? sp.concat([[nw.d, nw.lv]]) : sp, x.sparkKind, !!nw) + "</div>" +
         '<span class="fw-rgo" aria-hidden="true">' + ICON.chev + "</span></div>";
     }).join("");
     var comps = '<section class="dt-sec" id="fw-cp"><h3>지금 흐름</h3><p class="fw-lg">' + fwArrow("들어옴") + " 돈이 들어오는 쪽 " + fwArrow("빠짐") + " 빠지는 쪽 " + fwArrow("보통") +
-      " 평소 수준 — 최근 3개월 변화를 지난 5년 평소와 비교 · 오른쪽 작은 선은 최근 3년 월말 · 줄을 누르면 그 지표의 긴 추이·검증</p>" + rows + "</section>";
+      " 평소 수준 — 최근 3개월 변화를 지난 5년 평소와 비교 · 오른쪽 작은 선은 최근 3년 월말(끝 빈 점 = 지금 값) · 줄을 누르면 그 지표의 긴 추이·검증</p>" + rows + "</section>";
     var risk = "";
     if (o.risk) {
       var r = o.risk;
@@ -6569,9 +6596,20 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     FWC.cur = st;
     fwPaint(st);
   }
+  // 흐름 점수 그래프 끝에 지금 점수를 잇나 — 월말 점수(hist)는 끝난 달까지, 위쪽 점수는 오늘 값
+  function fwLive(o) {
+    var F = window.LIQUIDITY_FLOW || {}, h = (o && o.hist) || [], lastM = h.length ? h[h.length - 1][0] : "";
+    return !!(o && o.score != null && F.asOf && lastM && String(F.asOf).slice(0, 7) > lastM);
+  }
   function fwPaint(st) {
     var o = st.o, sc = (o.hist || []).filter(function (p) { return p[1] != null; }), ix = o.idx || [];
     var months = sc.map(function (p) { return p[0]; }), imap = {}; ix.forEach(function (p) { imap[p[0]] = p[1]; });
+    var asOf = (window.LIQUIDITY_FLOW || {}).asOf, live = fwLive(o), nIx = null;
+    if (live) {   // 끝 = 오늘 점수 · 지수는 끝난 장의 마지막 종가(날짜가 다르면 값 줄에 따로 적는다)
+      nIx = fiNowIdx(st.c === "us" ? "SPX" : "KS", months[months.length - 1]);
+      sc = sc.concat([[asOf, o.score]]); months = months.concat([asOf]);
+      if (nIx) imap[asOf] = nIx.v;
+    }
     var els = st.sec.querySelectorAll("[data-fwc]");
     if (!months.length || !els.length) return;
     var W = Math.max(240, els[0].clientWidth || 320);
@@ -6581,15 +6619,15 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
       var mn = Math.min.apply(null, v.concat(opt.zero ? [0] : [])), mx = Math.max.apply(null, v.concat(opt.zero ? [0] : [])), pad = (mx - mn) * 0.08 || 1;
       mn -= pad; mx += pad;
       var X = function (i) { return pl + (i / Math.max(1, vals.length - 1)) * (W - pl - pr); }, Y = function (y) { return pt + (1 - (y - mn) / (mx - mn)) * (H - pt - pb); };
-      var d = "", started = false;
-      vals.forEach(function (y, i) { if (y == null) { started = false; return; } d += (started ? "L" : "M") + X(i).toFixed(1) + " " + Y(y).toFixed(1); started = true; });
+      var d = "", started = false, nL = live ? vals.length - 1 : vals.length;
+      vals.forEach(function (y, i) { if (i >= nL) return; if (y == null) { started = false; return; } d += (started ? "L" : "M") + X(i).toFixed(1) + " " + Y(y).toFixed(1); started = true; });
       var grid = "", ticks = opt.ticks(mn, mx);
       ticks.forEach(function (t) { grid += '<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + Y(t.v).toFixed(1) + '" y2="' + Y(t.v).toFixed(1) + '" stroke="var(--line)" stroke-width="1"' + (t.dash ? ' stroke-dasharray="3 3"' : "") + "/>" +
         '<text x="' + (W - pr + 6) + '" y="' + (Y(t.v) + 4).toFixed(1) + '" class="fw-tk">' + esc(t.l) + "</text>"; });
       var axis = "";
       if (opt.axis) months.forEach(function (m, i) { if (m.slice(5) === "01") axis += '<text x="' + X(i).toFixed(1) + '" y="' + (H - 4) + '" class="fw-tk" text-anchor="middle">' + m.slice(0, 4) + "</text>"; });
       el.innerHTML = '<svg width="' + W + '" height="' + H + '" viewBox="0 0 ' + W + " " + H + '" role="img" aria-label="' + esc(opt.label) + '">' + grid + axis +
-        '<path d="' + d + '" fill="none" stroke="' + opt.color + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>' +
+        '<path d="' + d + '" fill="none" stroke="' + opt.color + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>' + (live ? fiLiveMark(vals, X, Y, opt.color) : "") +
         '<line class="fw-x" x1="0" x2="0" y1="' + pt + '" y2="' + (H - pb) + '" stroke="var(--ink2)" stroke-width="1" visibility="hidden"/>' +
         '<circle class="fw-dot" r="3.5" fill="' + opt.color + '" stroke="var(--sf)" stroke-width="2" visibility="hidden"/></svg>';
       el._fw = { X: X, Y: Y, vals: vals, W: W, pl: pl, pr: pr };
@@ -6606,8 +6644,9 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
         var x = g.X(i); ln.setAttribute("x1", x); ln.setAttribute("x2", x); ln.setAttribute("visibility", "visible");
         if (y != null) { dot.setAttribute("cx", x); dot.setAttribute("cy", g.Y(y)); dot.setAttribute("visibility", "visible"); } else dot.setAttribute("visibility", "hidden");
       });
-      var m = months[i], v = sc[i] && sc[i][1], iv = imap[m];
-      read.innerHTML = "<b>" + esc(m.replace("-", "년 ")) + "월</b> · 흐름 점수 <b>" + esc(fwSign(v, 2)) + "</b>" + (iv != null ? " · " + esc(o.idxName || "지수") + " <b>" + esc(Number(iv).toLocaleString("en-US", { maximumFractionDigits: 2 })) + "</b>" : "");
+      var m = months[i], v = sc[i] && sc[i][1], iv = imap[m], isNow = live && i === months.length - 1;
+      read.innerHTML = (isNow ? "<b>" + esc(mdOf(m)) + " 기준</b> 지금(이달 진행 중)" : "<b>" + esc(m.replace("-", "년 ")) + "월</b>") + " · 흐름 점수 <b>" + esc(fwSign(v, 2)) + "</b>" +
+        (iv != null ? " · " + esc(o.idxName || "지수") + " <b>" + esc(Number(iv).toLocaleString("en-US", { maximumFractionDigits: 2 })) + "</b>" + (isNow && nIx && nIx.d !== m ? "(" + esc(mdOf(nIx.d)) + ")" : "") : "");
     }
     function onMove(e) {
       var el = e.currentTarget, g = el._fw; if (!g) return;
@@ -6778,12 +6817,15 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
       return '<button type="button" data-firg="' + r[0] + '" aria-pressed="' + (FI.range === r[0] ? "true" : "false") + '">' + r[1] + "</button>";
     }).join("") + "</div>" : "";
     var thrNote = rk.length ? " 주황 점선 = 급락 신호 기준선(그달 앞 5년 값 중 나쁜 쪽 3분의 1 경계 — 넘으면 켜짐)." : "";
-    var chart = '<section class="dt-sec" id="fi-ch"><h3>추이 <span class="md-as">월말</span></h3>' + rg +
+    // 그래프 끝의 지금 값(이달 진행 중) — 마지막 월말보다 뒤 날짜의 값이 있을 때
+    var sp0 = x.spark || [], nw = fiNow(k, D ? D.months[D.months.length - 1] : sp0.length ? sp0[sp0.length - 1][0] : null);
+    var nowNote = nw ? " 맨 끝 빈 점" + (D ? "·옅은 막대" : "") + " = " + mdOf(nw.d) + " 기준 지금 값(이달 진행 중 — 월말 값이 아니다" + (k === "KFF3" ? ", 외국인은 이달 누계·최근 63거래일 합" : "") + ")." : "";
+    var chart = '<section class="dt-sec" id="fi-ch"><h3>추이 <span class="md-as">월말' + (nw ? " · 끝은 " + esc(mdOf(nw.d)) + " 값" : "") + '</span></h3>' + rg +
       '<div class="fw-read" id="fiRead">' + (D ? "그래프를 누르면 그 달 값" : FI.err ? "긴 추이를 불러오지 못했다 — 최근 3년 월말만 보인다" : "긴 추이 불러오는 중… 먼저 최근 3년") + "</div>" +
       '<div class="fw-ct">' + esc(D ? inf.lv : "최근 3년 월말" + (x.unit ? " · " + x.unit : "")) + '</div><div class="fw-chart" data-fic="lv"></div>' +
       (D ? '<div class="fw-ct">' + esc(inf.sig) + ' <span class="fi-lg" aria-hidden="true"><i class="fi-sw in"></i>들어옴<i class="fi-sw out"></i>빠짐<i class="fi-sw flat"></i>보통</span></div><div class="fw-chart" data-fic="sig"></div>' +
         '<div class="fw-ct">' + esc((D.idx && D.idx[ck] && D.idx[ck].name) || "") + '</div><div class="fw-chart sm" data-fic="idx"></div>' : "") +
-      '<p class="fw-note">' + (D ? "막대 색 = 그달 " + fiJosa(k === "M2R" ? "실질 증가율" : k === "KFF3" ? "3개월 합" : "3개월 변화", "이", "가") + " 그달 앞 5년 평소보다 돈이 들어오는 쪽(초록)·빠지는 쪽(주황)으로 0.5 표준편차 넘게 벗어났는지(회색 = 보통)." + thrNote + " 세 그래프는 같은 달끼리 세로로 맞췄다." : "") + "</p></section>";
+      '<p class="fw-note">' + (D ? "막대 색 = 그달 " + fiJosa(k === "M2R" ? "실질 증가율" : k === "KFF3" ? "3개월 합" : "3개월 변화", "이", "가") + " 그달 앞 5년 평소보다 돈이 들어오는 쪽(초록)·빠지는 쪽(주황)으로 0.5 표준편차 넘게 벗어났는지(회색 = 보통)." + thrNote + " 세 그래프는 같은 달끼리 세로로 맞췄다." : "") + esc(nowNote) + "</p></section>";
     var read = '<section class="dt-sec" id="fi-rd"><h3>어떻게 읽나</h3><dl class="fi-dl">' +
       "<dt>무엇</dt><dd>" + esc(inf.what) + "</dd><dt>방향</dt><dd>" + esc(inf.dir) + "</dd>" +
       "<dt>판정</dt><dd>지금 값을 직전 5년(60개월) 같은 신호의 평균·표준편차와 견준 값(z)이 +0.5 이상이면 들어옴, −0.5 이하면 빠짐, 그 사이는 보통.</dd>" +
@@ -6817,7 +6859,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
       (bars ? '<div class="fi-zs">' + bars + "</div>" : "") + '<p class="fw-note">' + esc(FI_SCORE_EV[ck]) + " 단계 = 지금 점수가 최근 5년 월말 점수 중 어디인가(20%씩 5단계).</p></section>";
     return top + hero + nav + chart + read + ev + risk + scoreSec +
       '<section class="dt-sec" id="fi-ai"><h3>AI에게 묻기</h3>' + aiSectionHtml("m:" + c, { kind: "market", c: c }) + "</section>" +
-      '<p class="fw-foot">' + esc(cn) + " 자료: " + esc(inf.src) + ". 위쪽 지금 값은 매일 자동 계산(공개가 늦는 자료는 공개된 마지막 값), 추이 그래프는 월말 값.</p>";
+      '<p class="fw-foot">' + esc(cn) + " 자료: " + esc(inf.src) + ". 위쪽 지금 값은 매일 자동 계산(공개가 늦는 자료는 공개된 마지막 값), 추이 그래프는 월말 값(맨 끝은 지금 값).</p>";
   }
   function mountIndCharts(c, k) {
     FIC.cur = null;
@@ -6839,16 +6881,26 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
   function fiPaint(st) {
     var D = FI.data, c = st.c, k = st.k, x = fiComp(c, k), ck = fiCk(c);
     var els = st.sec.querySelectorAll("[data-fic]"); if (!els.length || !x) return;
-    var months, lv, sig = null, zs = null, ix = null, thrLv = null, thrSig = null, idxName = "";
+    var months, lv, sig = null, zs = null, ix = null, thrLv = null, thrSig = null, thrLvNow = null, thrSigNow = null, idxName = "";
     if (D && D.series && D.series[k]) {
       var S = D.series[k], n = D.months.length, first = 0;
       while (first < n && S.lv[first] == null && S.sig[first] == null) first++;
       var span = FI.range === "all" ? n : Math.min(n, (+FI.range || 10) * 12), from = Math.max(first, n - span);
       months = D.months.slice(from); lv = S.lv.slice(from); sig = S.sig.slice(from); zs = S.z.slice(from);
       if (D.idx && D.idx[ck]) { ix = D.idx[ck].v.slice(from); idxName = D.idx[ck].short || D.idx[ck].name; }
-      Object.keys(D.risk || {}).forEach(function (rk) { var r = D.risk[rk]; if (r.ind !== k) return; if (r.on === "lv") thrLv = r.thr.slice(from); else thrSig = r.thr.slice(from); });
+      Object.keys(D.risk || {}).forEach(function (rk) { var r = D.risk[rk]; if (r.ind !== k) return; if (r.on === "lv") { thrLv = r.thr.slice(from); thrLvNow = r.now; } else { thrSig = r.thr.slice(from); thrSigNow = r.now; } });
     } else {
       var sp = x.spark || []; months = sp.map(function (p) { return p[0]; }); lv = sp.map(function (p) { return p[1]; });
+    }
+    // 끝 = 지금 값(이달 진행 중) — 수준·3개월 변화·평소 대비·지수·기준선(지금 기준)을 한 칸씩 잇는다
+    var nw = months && months.length ? fiNow(k, months[months.length - 1]) : null, live = !!nw, nIx = null;
+    if (live) {
+      nIx = ix ? fiNowIdx(ck === "us" ? "SPY" : "KS", months[months.length - 1]) : null;
+      months = months.concat([nw.d]); lv = lv.concat([nw.lv]);
+      if (sig) { sig = sig.concat([nw.sig]); zs = zs.concat([nw.z]); }
+      if (ix) ix = ix.concat([nIx ? nIx.v : null]);
+      if (thrLv) thrLv = thrLv.concat([thrLvNow]);
+      if (thrSig) thrSig = thrSig.concat([thrSigNow]);
     }
     if (!months || months.length < 2) return;
     var W = Math.max(240, els[0].clientWidth || 320), yrs = months.length / 12, ystep = yrs <= 6 ? 1 : yrs <= 12 ? 2 : 5;
@@ -6870,13 +6922,15 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
         var y0 = Y(Math.max(mn, Math.min(mx, 0))), bw = Math.max(1, (W - pl - pr) / nN - (nN > 90 ? 0.4 : 1.2));
         vals.forEach(function (v, i) {
           if (v == null || !isFinite(v)) return;
-          var z = opt.zs ? opt.zs[i] : null, cl = z == null ? "var(--track)" : z >= 0.5 ? "var(--lq4)" : z <= -0.5 ? "var(--lq0)" : "var(--lq2)", y1 = Y(v);
-          marks += '<rect x="' + (X(i) - bw / 2).toFixed(1) + '" y="' + Math.min(y1, y0).toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + Math.max(0.8, Math.abs(y0 - y1)).toFixed(1) + '" fill="' + cl + '"' + (z != null && z > -0.5 && z < 0.5 ? ' fill-opacity="0.55"' : "") + "/>";
+          var z = opt.zs ? opt.zs[i] : null, cl = z == null ? "var(--track)" : z >= 0.5 ? "var(--lq4)" : z <= -0.5 ? "var(--lq0)" : "var(--lq2)", y1 = Y(v), now = live && i === nN - 1;
+          // 지금 값(이달 진행 중) 막대는 옅게 채우고 테두리 — 월말 막대와 구별
+          marks += '<rect x="' + (X(i) - bw / 2).toFixed(1) + '" y="' + Math.min(y1, y0).toFixed(1) + '" width="' + bw.toFixed(1) + '" height="' + Math.max(0.8, Math.abs(y0 - y1)).toFixed(1) + '" fill="' + cl + '"' +
+            (now ? ' fill-opacity="0.3" stroke="' + cl + '" stroke-width="1.2"' : z != null && z > -0.5 && z < 0.5 ? ' fill-opacity="0.55"' : "") + "/>";
         });
       } else {
-        var d = "", on = false;
-        vals.forEach(function (y, i) { if (y == null || !isFinite(y)) { on = false; return; } d += (on ? "L" : "M") + X(i).toFixed(1) + " " + Y(y).toFixed(1); on = true; });
-        marks = '<path d="' + d + '" fill="none" stroke="' + opt.color + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+        var d = "", on = false, nL = live ? nN - 1 : nN;
+        vals.forEach(function (y, i) { if (i >= nL) return; if (y == null || !isFinite(y)) { on = false; return; } d += (on ? "L" : "M") + X(i).toFixed(1) + " " + Y(y).toFixed(1); on = true; });
+        marks = '<path d="' + d + '" fill="none" stroke="' + opt.color + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>' + (live ? fiLiveMark(vals, X, Y, opt.color) : "");
       }
       if (opt.thr) {
         var td = "", ton = false;
@@ -6902,11 +6956,13 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
         if (y != null && isFinite(y)) { dot.setAttribute("cx", xx); dot.setAttribute("cy", g.Y(y)); dot.setAttribute("visibility", "visible"); } else dot.setAttribute("visibility", "hidden");
       });
       if (!read) return;
-      var m = months[i], bits = ["<b>" + esc(fiDate(m)) + " 말</b>", esc(FW_SHORT[k] || x.name) + " <b>" + esc(fiLv(k, lv[i])) + "</b>"];
-      if (sig) { var s0 = fiState(zs && zs[i]); bits.push((k === "M2R" ? "실질 " : k === "KFF3" ? "3개월 합 " : "3개월 ") + "<b>" + esc(fiSig(k, sig[i])) + "</b>" + (s0 ? "(" + esc(s0) + ")" : "")); }
+      var m = months[i], isNow = live && i === months.length - 1;
+      var bits = [isNow ? "<b>" + esc(mdOf(m)) + " 기준</b> 지금(이달 진행 중)" : "<b>" + esc(fiDate(m)) + " 말</b>",
+        esc(k === "KFF3" && isNow ? "외국인 이달 누계" : FW_SHORT[k] || x.name) + " <b>" + esc(fiLv(k, lv[i])) + "</b>"];
+      if (sig) { var s0 = fiState(zs && zs[i]); bits.push((k === "M2R" ? "실질 " : k === "KFF3" ? (isNow ? "63거래일 합 " : "3개월 합 ") : "3개월 ") + "<b>" + esc(fiSig(k, sig[i])) + "</b>" + (s0 ? "(" + esc(s0) + ")" : "")); }
       if (thrLv && thrLv[i] != null) bits.push("기준선 " + esc(fiLv(k, thrLv[i])));
       if (thrSig && thrSig[i] != null) bits.push("변화 기준선 " + esc(fiSig(k, thrSig[i])));
-      if (ix && ix[i] != null) bits.push(esc(idxName) + " <b>" + esc(Number(ix[i]).toLocaleString("en-US", { maximumFractionDigits: 0 })) + "</b>");
+      if (ix && ix[i] != null) bits.push(esc(idxName) + " <b>" + esc(Number(ix[i]).toLocaleString("en-US", { maximumFractionDigits: 0 })) + "</b>" + (isNow && nIx && nIx.d !== m ? "(" + esc(mdOf(nIx.d)) + ")" : ""));
       read.innerHTML = bits.join(" · ");
     }
     function onMove(e) {

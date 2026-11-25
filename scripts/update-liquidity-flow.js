@@ -20,7 +20,7 @@
 const fs = require("fs");
 const path = require("path");
 const { execFile } = require("child_process");
-const { exchangeDate } = require("./lib-quote");   // 봉마다 거래소 현지 날짜(서머타임 반영)
+const { exchangeDate, settleDailyBars } = require("./lib-quote");   // 봉마다 거래소 현지 날짜(서머타임 반영) · 끝난 장 기준 일봉 정리
 
 const ROOT = path.join(__dirname, "..");
 const OUT = path.join(ROOT, "data", "liquidity-flow.js");
@@ -64,11 +64,15 @@ async function fred(id) {
   }
   return null;
 }
-async function yahoo(sym, adj, years) {
+// settle: 진행 중인 장의 미완성 일봉을 버리고 끝난 장의 빈 종가를 확정 시세로 채운다(지수 — 지표 상세 그래프 끝의 '지금 값'이
+//   장중 값이 되거나, 야후가 한국 지수 당일 종가를 비워 둔 탓에 하루 전 값이 되지 않게, lib-quote settleDailyBars)
+async function yahoo(sym, adj, years, settle) {
   for (let i = 0; i < 3; i++) {
     const t = await curl(["-A", "Mozilla/5.0", "https://query1.finance.yahoo.com/v8/finance/chart/" + encodeURIComponent(sym) + "?interval=1d&range=" + years + "y"]);
     try {
-      const r = JSON.parse(t).chart.result[0], q = r.indicators.quote[0], a = adj && r.indicators.adjclose && r.indicators.adjclose[0].adjclose;
+      const r = JSON.parse(t).chart.result[0];
+      if (settle) settleDailyBars(r);
+      const q = r.indicators.quote[0], a = adj && r.indicators.adjclose && r.indicators.adjclose[0].adjclose;
       const m = {};
       // 날짜 = 봉마다 그 시각의 거래소 시간대로 센 현지 날짜(달러인덱스·원/달러 여름 봉이 하루 앞으로 밀리지 않게 — lib-quote exchangeDate)
       r.timestamp.forEach((ts, k) => { const v = a ? a[k] : q.close[k]; if (v != null && isFinite(v) && v > 0) m[exchangeDate(ts, r.meta)] = v; });
@@ -130,8 +134,8 @@ const monthlyOf = (map) => { const o = {}; Object.keys(map || {}).forEach((d) =>
   const ids = ["WALCL", "WTREGEN", "RRPONTSYD", "M2SL", "CPIAUCSL", "BAA10Y", "NFCI"];
   const F = {}; for (const id of ids) F[id] = await fred(id);
   const yy = first ? 23 : 2;
-  const Y = { DXY: await yahoo("DX-Y.NYB", false, yy), KRW: await yahoo("KRW=X", false, yy), SPY: await yahoo("SPY", true, yy), KS: await yahoo("^KS11", false, yy),
-    SPX: await yahoo("^GSPC", false, Math.max(yy, 6)) };   // 화면 그래프용 S&P500 지수(연구 수익은 SPY 배당 포함)
+  const Y = { DXY: await yahoo("DX-Y.NYB", false, yy), KRW: await yahoo("KRW=X", false, yy), SPY: await yahoo("SPY", true, yy, true), KS: await yahoo("^KS11", false, yy, true),
+    SPX: await yahoo("^GSPC", false, Math.max(yy, 6), true) };   // 화면 그래프용 S&P500 지수(연구 수익은 SPY 배당 포함)
   const K = { DEP: await kofia("STATSCU0100000060BO", fromY), MRG: await kofia("STATSCU0100000070BO", fromY) };
   const eFrom = first ? "200301" : addM(today.slice(0, 7), -24).replace("-", "");
   const E = { corp3: await ecos("721Y001", "7020000", eFrom), ktb3: await ecos("721Y001", "5020000", eFrom) };
@@ -204,8 +208,32 @@ const monthlyOf = (map) => { const o = {}; Object.keys(map || {}).forEach((d) =>
   };
   const lastI = MS.length;   // 오늘 = 마지막 끝난 달 다음
   const zNow = {}; Object.keys(NOW).forEach((k) => { zNow[k] = zOf(k, NOW[k], histOf(k, lastI)); });
+  // 그래프 끝의 '지금 값'(2026-11-25 사용자 '신용융자 추이 그래프도 가장 최신 정보의 그래프로') — 지표 상세·지표 줄의 월말 추이는 끝난 달까지라
+  //   위쪽 지금 값(예: 11/24)보다 한 달 가까이 늦었다. 마지막 끝난 달보다 뒤 날짜의 값이 있으면 그 날짜·수준(lv)·3개월 변화(sig)·평소 대비(z)를
+  //   liquidity-ind.json 과 같은 단위(build-liquidity-ind.js IND)로 남기고, 앱이 그래프 맨 끝에 '이달 진행 중' 점으로 잇는다.
+  //   월별 자료(M2·회사채 스프레드)는 끝난 달 값이 이미 마지막이라 없다. 외국인 수준은 이달 누계(월 합 그래프와 같은 뜻의 진행 중 값), 3개월은 63거래일 합.
+  const lastM = MS[MS.length - 1];
+  const newer = (d) => !!d && String(d).slice(0, 7) > lastM;
+  // 소수는 넉넉히(4자리) — 화면이 위쪽 지금 값과 같은 자리로 한 번만 반올림하게(두 번 반올림하면 1,346.47 → 1,346.5 → '1,347' 처럼 어긋난다)
+  const pt = (d, lvV, lvD, sigV, sigD, z) => (newer(d) && (ok(lvV) || ok(sigV)) ? { d, lv: rnd(lvV, Math.max(lvD, 4)), sig: rnd(sigV, Math.max(sigD, 4)), z: rnd(z, 2) } : null);
+  const ffLast = ffDays.length ? ffDays[ffDays.length - 1] : null;
+  const ffMtd = ffLast ? ffDays.filter((d) => d.slice(0, 7) === ffLast.slice(0, 7)).reduce((s, d) => s + FFd[d], 0) : null;
+  const nowInd = {
+    NL3: nlNow ? pt(nlNow.d, ok(nlNow.v) ? nlNow.v / 1e6 : null, 3, ok(NOW.NL3) ? NOW.NL3 * 100 : null, 2, zNow.NL3) : null,
+    CS3: cs ? pt(cs.d, cs.v, 2, ok(NOW.CS3) ? NOW.CS3 * 100 : null, 1, zNow.CS3) : null,
+    FCI3: fci ? pt(fci.d, fci.v, 3, NOW.FCI3, 3, zNow.FCI3) : null,
+    USD3: dxy ? pt(dxy.d, dxy.v, 2, ok(NOW.USD3) ? NOW.USD3 * 100 : null, 2, zNow.USD3) : null,
+    KDEP3: dep ? pt(dep.d, dep.v / 1e6, 2, ok(NOW.KDEP3) ? NOW.KDEP3 * 100 : null, 2, zNow.KDEP3) : null,
+    KMRG3: mrg ? pt(mrg.d, mrg.v / 1e6, 2, ok(NOW.KMRG3) ? NOW.KMRG3 * 100 : null, 2, zNow.KMRG3) : null,
+    KFF3: ffLast && ffDays.length >= 63 ? pt(ffLast, ffMtd / 1e4, 2, ff63 / 1e4, 2, zNow.KFF3) : null,
+    KRW3: krw ? pt(krw.d, krw.v, 1, ok(NOW.KRW3) ? NOW.KRW3 * 100 : null, 2, zNow.KRW3) : null,
+  };
+  Object.keys(nowInd).forEach((k) => { if (!nowInd[k]) delete nowInd[k]; });
+  const nowIdx = {};   // 지수 — 끝난 장의 마지막 종가(지표 상세: 한국 코스피·미국 SPY 배당 재투자, 돈의 흐름 상세: S&P500 지수)
+  [["KS", 2], ["SPY", 2], ["SPX", 2]].forEach(([k, d]) => { const x = L(k); if (x && newer(x.d)) nowIdx[k] = { d: x.d, v: rnd(x.v, d) }; });
   const LEVELS = ["많이 빠지는 중", "빠지는 중", "보통", "들어오는 중", "많이 들어오는 중"];
-  const out = { asOf: today, builtAt: new Date().toISOString().slice(0, 19) + "Z", evidence: EVIDENCE, levels: LEVELS, missing: miss.length ? miss : undefined };
+  const out = { asOf: today, builtAt: new Date().toISOString().slice(0, 19) + "Z", evidence: EVIDENCE, levels: LEVELS, missing: miss.length ? miss : undefined,
+    now: { after: lastM, ind: nowInd, idx: nowIdx } };
   const pctIn = (v, arr) => { const x = arr.filter(ok); if (!ok(v) || x.length < 24) return null; return x.filter((y) => y < v).length / x.length; };
   const tsOf = (k, n, f) => MS.slice(-n).map((m) => [m, rnd(f ? f(m) : h(m, k), 4)]).filter((p) => ok(p[1]));
   const state = (z) => (!ok(z) ? null : z >= 0.5 ? "들어옴" : z <= -0.5 ? "빠짐" : "보통");
