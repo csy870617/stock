@@ -2,9 +2,9 @@
 // groups["<country>|<theme>"] = {defects 편성 결격(state 결격|점검 필요|감시), list 후보(status 검증 통과|보류|검증 대기|근접 후보)}
 // 세션 판정은 data/candidate-notes.json(CLAUDE.md §3-7) — 이 파일을 직접 고치지 않는다.
 window.CANDIDATES = {
- "asOf": "2026-11-24",
+ "asOf": "2026-11-25",
  "T": "2026-11-24",
- "screenAsOf": "2026-11-23",
+ "screenAsOf": "2026-11-25",
  "screenFresh": true,
  "beta": {
   "korea": 0.76,
@@ -41,7 +41,7 @@ window.CANDIDATES = {
       },
       {
        "k": "theme",
-       "msg": "주제 기준 미달 — 정체성 조건 미달: 시총 순위 86위 — 상위 60 안이어야 한다",
+       "msg": "주제 기준 미달 — 정체성 조건 미달: 시총 순위 81위 — 상위 60 안이어야 한다",
        "fresh": false
       },
       {
@@ -115,11 +115,19 @@ window.CANDIDATES = {
      "url": "https://m.stock.naver.com/domestic/stock/278470/total"
     },
     {
+     "ticker": "307950",
+     "name": "현대오토에버",
+     "status": "근접 후보",
+     "why": "3년 평균 ROIC 8.9% · 매출 성장 14.5% · 주식 수 연 0%",
+     "near": "정체성 조건 미달(3년 평균 ROIC 상위 절반): 3년 평균 ROIC 8.9% — 적격 후보 중앙값 10.3% 이상이어야 한다",
+     "url": "https://m.stock.naver.com/domestic/stock/307950/total"
+    },
+    {
      "ticker": "005940",
      "name": "NH투자증권",
      "status": "근접 후보",
      "why": "3년 평균 ROIC 2.8% · 매출 성장 36.5% · 주식 수 연 8.8%",
-     "near": "정체성 조건 미달: 시총 순위 64위 — 상위 60 안이어야 한다",
+     "near": "정체성 조건 미달: 시총 순위 71위 — 상위 60 안이어야 한다",
      "cap": "금융 상한",
      "url": "https://m.stock.naver.com/domestic/stock/005940/total"
     }
@@ -146,7 +154,7 @@ window.CANDIDATES = {
      "note": "3년 매출 연평균 음수로 성장 지속성 미달, 3분기 실적·컨센서스 2곳 미확인.",
      "asOf": "2026-11-05",
      "why": "3년 매출 연평균 -0.3% · FCF 마진 9.4% · 3년 평균 ROIC 11.9%",
-     "near": "정체성 조건 미달: 시총 순위 151위 — 상위 150 안이어야 한다",
+     "near": "정체성 조건 미달: 시총 순위 154위 — 상위 150 안이어야 한다",
      "url": "https://m.stock.naver.com/domestic/stock/319660/total"
     },
     {
@@ -246,19 +254,13 @@ window.CANDIDATES = {
    ]
   },
   "korea|value": {
-   "eligible": 55,
+   "eligible": 56,
    "defects": [
     {
      "ticker": "000270",
      "name": "기아",
      "state": "감시",
-     "flags": [
-      {
-       "k": "theme",
-       "msg": "주제 기준 미달 — 정체성 조건 미달: 이익 개선 없음 — 올해 추정 영업이익 −6.2% · 최근 분기 영업이익 전년 대비 −4.9%(둘 중 하나가 증가여야 한다)",
-       "fresh": false
-      }
-     ],
+     "flags": [],
      "note": "추세 붕괴 — 11/20·11/23 이틀 코스피 약 −8.4% 시장 급락(외국인 7거래일 연속 순매도)에 함께 밀린 것이고 회사 고유 악재는 확인되지 않았다. 이익 개선 없음 조건은 확정 3분기 영업이익 +24.3% 로 회복이 확인된 상태 그대로이며, 4분기 감소나 연간 감소가 확정되면 실질로 다시 본다.",
      "judged": "2026-11-23",
      "verdict": "형식",
@@ -271,7 +273,7 @@ window.CANDIDATES = {
      "flags": [
       {
        "k": "theme",
-       "msg": "주제 기준 미달 — 정체성 조건 미달: 시총 순위 254위 — 상위 200 안이어야 한다",
+       "msg": "주제 기준 미달 — 정체성 조건 미달: 시총 순위 255위 — 상위 200 안이어야 한다",
        "fresh": false
       }
      ],
@@ -286,7 +288,7 @@ window.CANDIDATES = {
      "flags": [
       {
        "k": "theme",
-       "msg": "주제 기준 미달 — 정체성 조건 미달(EBIT/EV·FCF 수익률 상위 30%): EBIT/EV 3.9% · FCF/시총 0.6% — 둘 중 하나가 문턱(7% · 7.8%) 이상이어야 한다",
+       "msg": "주제 기준 미달 — 정체성 조건 미달(EBIT/EV·FCF 수익률 상위 30%): EBIT/EV 4% · FCF/시총 0.6% — 둘 중 하나가 문턱(6.8% · 7.3%) 이상이어야 한다",
        "fresh": false
       }
      ],
@@ -311,7 +313,7 @@ window.CANDIDATES = {
      "flags": [
       {
        "k": "theme",
-       "msg": "주제 기준 미달 — 정체성 조건 미달(EBIT/EV·FCF 수익률 상위 30%): EBIT/EV 6.5% · FCF/시총 6.4% — 둘 중 하나가 문턱(7% · 7.8%) 이상이어야 한다",
+       "msg": "주제 기준 미달 — 정체성 조건 미달(EBIT/EV·FCF 수익률 상위 30%): EBIT/EV 6.2% · FCF/시총 6.1% — 둘 중 하나가 문턱(6.8% · 7.3%) 이상이어야 한다",
        "fresh": false
       },
       {
@@ -332,7 +334,7 @@ window.CANDIDATES = {
      "status": "보류",
      "note": "3분기 연결 매출·영업이익 증가는 재확인했지만 컨센서스 목표가가 날짜 지난 집계 두 곳뿐이고 증권사 리포트를 특정하지 못했다.",
      "asOf": "2026-11-20",
-     "why": "EBIT/EV 15.2% · FCF/시총 26.7% · 매출 성장 8.5%",
+     "why": "EBIT/EV 14.3% · FCF/시총 24.8% · 매출 성장 8.5%",
      "url": "https://m.stock.naver.com/domestic/stock/002790/total"
     },
     {
@@ -341,35 +343,35 @@ window.CANDIDATES = {
      "status": "보류",
      "note": "편의점·슈퍼·홈쇼핑 개선으로 상반기 영업이익이 늘었지만 작년 3분기 높은 기저를 넘는지 3분기 실적 확인이 필요하다.",
      "asOf": "2026-11-04",
-     "why": "EBIT/EV 6.7% · FCF/시총 40.6% · 매출 성장 3.3%",
+     "why": "EBIT/EV 6.6% · FCF/시총 38.9% · 매출 성장 3.3%",
      "url": "https://m.stock.naver.com/domestic/stock/007070/total"
     },
     {
      "ticker": "012330",
      "name": "현대모비스",
      "status": "검증 대기",
-     "why": "EBIT/EV 10.5% · FCF/시총 11% · 매출 성장 6.8%",
+     "why": "EBIT/EV 9.5% · FCF/시총 9.8% · 매출 성장 6.8%",
      "url": "https://m.stock.naver.com/domestic/stock/012330/total"
     },
     {
      "ticker": "021240",
      "name": "코웨이",
      "status": "검증 대기",
-     "why": "EBIT/EV 9.7% · FCF/시총 -2.7% · 매출 성장 15.2%",
+     "why": "EBIT/EV 9.4% · FCF/시총 -2.6% · 매출 성장 15.2%",
      "url": "https://m.stock.naver.com/domestic/stock/021240/total"
     },
     {
      "ticker": "006260",
      "name": "LS",
      "status": "검증 대기",
-     "why": "EBIT/EV 7% · FCF/시총 -18.4% · 매출 성장 15.7%",
+     "why": "EBIT/EV 7.1% · FCF/시총 -19.2% · 매출 성장 15.7%",
      "url": "https://m.stock.naver.com/domestic/stock/006260/total"
     },
     {
      "ticker": "069960",
      "name": "현대백화점",
      "status": "검증 대기",
-     "why": "EBIT/EV 8.4% · FCF/시총 20.9% · 매출 성장 1%",
+     "why": "EBIT/EV 8.4% · FCF/시총 20.7% · 매출 성장 1%",
      "url": "https://m.stock.naver.com/domestic/stock/069960/total"
     },
     {
@@ -384,14 +386,14 @@ window.CANDIDATES = {
      "ticker": "214450",
      "name": "파마리서치",
      "status": "검증 대기",
-     "why": "EBIT/EV 7.1% · FCF/시총 5.4% · 매출 성장 53.2%",
+     "why": "EBIT/EV 6.9% · FCF/시총 5.3% · 매출 성장 53.2%",
      "url": "https://m.stock.naver.com/domestic/stock/214450/total"
     },
     {
      "ticker": "003690",
      "name": "코리안리",
      "status": "검증 대기",
-     "why": "EBIT/EV 21.9% · 매출 성장 -3.6%",
+     "why": "EBIT/EV 23% · 매출 성장 -3.6%",
      "cap": "금융 상한",
      "url": "https://m.stock.naver.com/domestic/stock/003690/total"
     },
@@ -399,9 +401,16 @@ window.CANDIDATES = {
      "ticker": "279570",
      "name": "케이뱅크",
      "status": "검증 대기",
-     "why": "EBIT/EV 5.6% · 매출 성장 8.7%",
+     "why": "EBIT/EV 5.7% · 매출 성장 8.7%",
      "cap": "금융 상한",
      "url": "https://m.stock.naver.com/domestic/stock/279570/total"
+    },
+    {
+     "ticker": "000990",
+     "name": "DB하이텍",
+     "status": "검증 대기",
+     "why": "EBIT/EV 8.5% · FCF/시총 7.3% · 매출 성장 23.5%",
+     "url": "https://m.stock.naver.com/domestic/stock/000990/total"
     },
     {
      "ticker": "001720",
@@ -411,19 +420,11 @@ window.CANDIDATES = {
      "nofx": 1,
      "cap": "금융 상한",
      "url": "https://m.stock.naver.com/domestic/stock/001720/total"
-    },
-    {
-     "ticker": "000150",
-     "name": "두산",
-     "status": "근접 후보",
-     "why": "EBIT/EV 5.9% · FCF/시총 5.2% · 매출 성장 9.1%",
-     "near": "정체성 조건 미달(EBIT/EV·FCF 수익률 상위 30%): EBIT/EV 5.9% · FCF/시총 5.2% — 둘 중 하나가 문턱(7% · 7.8%) 이상이어야 한다",
-     "url": "https://m.stock.naver.com/domestic/stock/000150/total"
     }
    ]
   },
   "korea|dividend": {
-   "eligible": 35,
+   "eligible": 34,
    "defects": [
     {
      "ticker": "029780",
@@ -485,7 +486,7 @@ window.CANDIDATES = {
      "status": "보류",
      "note": "3분기 실적 발표 전이고 2분기 영업이익이 컨센서스를 밑돌았으며 이익 변동이 배당 후보 중 가장 크다.",
      "asOf": "2026-11-07",
-     "why": "배당 비감소 4년 · 배당성향 25.4% · 배당 4.7%",
+     "why": "배당 비감소 4년 · 배당성향 25.4% · 배당 4.6%",
      "url": "https://m.stock.naver.com/domestic/stock/383220/total"
     },
     {
@@ -494,7 +495,7 @@ window.CANDIDATES = {
      "status": "보류",
      "note": "금융(편중 유지), 컨센서스 2곳 교차확인 실패.",
      "asOf": "2026-11-05",
-     "why": "배당 비감소 3년 · 배당성향 31.3% · 배당 4.7%",
+     "why": "배당 비감소 3년 · 배당성향 31.3% · 배당 4.9%",
      "cap": "금융 상한",
      "url": "https://m.stock.naver.com/domestic/stock/003690/total"
     },
@@ -504,7 +505,7 @@ window.CANDIDATES = {
      "status": "보류",
      "note": "금융 업종 상한에 걸리고 목표가를 내는 증권사 1곳뿐인 블로커 유지.",
      "asOf": "2026-10-23",
-     "why": "배당 비감소 1년 · 배당성향 74.5% · 배당 7.6%",
+     "why": "배당 비감소 1년 · 배당성향 74.5% · 배당 7.8%",
      "cap": "금융 상한",
      "url": "https://m.stock.naver.com/domestic/stock/031210/total"
     },
@@ -514,7 +515,7 @@ window.CANDIDATES = {
      "status": "보류",
      "note": "삼성그룹 계열이라 삼성그룹 상한 5 초과를 해소하지 못하고 2026E 영업이익 감익 추정 블로커 유지.",
      "asOf": "2026-10-23",
-     "why": "배당 비감소 2년 · 배당성향 60% · 배당 6.7%",
+     "why": "배당 비감소 2년 · 배당성향 60% · 배당 6.3%",
      "url": "https://m.stock.naver.com/domestic/stock/030000/total"
     },
     {
@@ -523,7 +524,7 @@ window.CANDIDATES = {
      "status": "보류",
      "note": "8월 밸류업(배당성향 30%·자사주 매입) 확인, 지주사 연결 왜곡과 컨센서스 부재가 블로커.",
      "asOf": "2026-10-26",
-     "why": "배당 비감소 4년 · 배당성향 20.8% · 배당 4.3%",
+     "why": "배당 비감소 4년 · 배당성향 20.8% · 배당 4.2%",
      "url": "https://m.stock.naver.com/domestic/stock/009970/total"
     },
     {
@@ -532,7 +533,7 @@ window.CANDIDATES = {
      "status": "보류",
      "note": "배당 지속성은 양호하나 경영권 분쟁 소송과 실적·컨센서스 미확인.",
      "asOf": "2026-10-26",
-     "why": "배당 비감소 4년 · 배당성향 30% · 배당 6.1%",
+     "why": "배당 비감소 4년 · 배당성향 30% · 배당 5.8%",
      "url": "https://m.stock.naver.com/domestic/stock/000240/total"
     },
     {
@@ -541,7 +542,7 @@ window.CANDIDATES = {
      "status": "보류",
      "note": "2분기 영업손실로 이익 안정성이 배당 주제에 못 미치고 3분기 실적 발표 전.",
      "asOf": "2026-11-07",
-     "why": "배당 비감소 4년 · 배당성향 34.5% · 배당 4.3%",
+     "why": "배당 비감소 4년 · 배당성향 34.5% · 배당 4.2%",
      "url": "https://m.stock.naver.com/domestic/stock/018670/total"
     },
     {
@@ -559,14 +560,14 @@ window.CANDIDATES = {
      "status": "보류",
      "note": "분기배당 유지와 연간 최소 배당 정책은 지켜지고 있지만 3분기에 연간 판매·영업이익률 목표를 낮췄고 1~3분기 누적 영업이익이 줄어 이익 안정성 확인이 더 필요하다.",
      "asOf": "2026-11-04",
-     "why": "배당 비감소 0년 · 배당성향 27.7% · 배당 4%",
+     "why": "배당 비감소 0년 · 배당성향 27.7% · 배당 3.7%",
      "url": "https://m.stock.naver.com/domestic/stock/005380/total"
     },
     {
      "ticker": "024110",
      "name": "기업은행",
      "status": "검증 대기",
-     "why": "배당 비감소 0년 · 배당성향 30.8% · 배당 5.7%",
+     "why": "배당 비감소 0년 · 배당성향 30.8% · 배당 5.6%",
      "cap": "금융 상한",
      "url": "https://m.stock.naver.com/domestic/stock/024110/total"
     },
@@ -574,7 +575,7 @@ window.CANDIDATES = {
      "ticker": "103140",
      "name": "풍산",
      "status": "검증 대기",
-     "why": "배당 비감소 0년 · 배당성향 31.6% · 배당 3.8%",
+     "why": "배당 비감소 0년 · 배당성향 31.6% · 배당 3.7%",
      "url": "https://m.stock.naver.com/domestic/stock/103140/total"
     },
     {
@@ -588,7 +589,7 @@ window.CANDIDATES = {
    ]
   },
   "us|core": {
-   "eligible": 54,
+   "eligible": 53,
    "defects": [
     {
      "ticker": "GOOGL",
@@ -617,6 +618,7 @@ window.CANDIDATES = {
      "note": "3분기 데이터센터 수요로 사상 최대 실적이지만 3년 평균 ROIC 자료가 없어 우량 정체성을 판정할 수 없고 시총 순위가 상위 120 경계다. 성장 주제에 더 맞다.",
      "asOf": "2026-11-15",
      "why": "매출 성장 10.3% · 주식 수 연 -2.1%",
+     "near": "정체성 조건 미달: 시총 순위 127위 — 상위 120 안이어야 한다",
      "url": "https://m.stock.naver.com/worldstock/stock/ETN/total"
     },
     {
@@ -629,18 +631,18 @@ window.CANDIDATES = {
      "url": "https://m.stock.naver.com/worldstock/stock/VRTX.O/total"
     },
     {
-     "ticker": "CAT",
-     "name": "Caterpillar",
-     "status": "검증 대기",
-     "why": "3년 평균 ROIC 21.5% · 매출 성장 4.3% · 주식 수 연 -3.5%",
-     "url": "https://m.stock.naver.com/worldstock/stock/CAT/total"
-    },
-    {
      "ticker": "XOM",
      "name": "Exxonmobil",
      "status": "검증 대기",
      "why": "매출 성장 -5% · 주식 수 연 0.2%",
      "url": "https://m.stock.naver.com/worldstock/stock/XOM/total"
+    },
+    {
+     "ticker": "CAT",
+     "name": "Caterpillar",
+     "status": "검증 대기",
+     "why": "3년 평균 ROIC 21.5% · 매출 성장 4.3% · 주식 수 연 -3.5%",
+     "url": "https://m.stock.naver.com/worldstock/stock/CAT/total"
     },
     {
      "ticker": "PLTR",
@@ -657,18 +659,18 @@ window.CANDIDATES = {
      "url": "https://m.stock.naver.com/worldstock/stock/MS/total"
     },
     {
-     "ticker": "COP",
-     "name": "ConocoPhillips",
-     "status": "검증 대기",
-     "why": "매출 성장 4.9% · 주식 수 연 6.1%",
-     "url": "https://m.stock.naver.com/worldstock/stock/COP/total"
-    },
-    {
      "ticker": "IBKR",
      "name": "Interactive Brokers",
      "status": "검증 대기",
      "why": "매출 성장 23.4% · 주식 수 연 1.8%",
      "url": "https://m.stock.naver.com/worldstock/stock/IBKR.O/total"
+    },
+    {
+     "ticker": "COP",
+     "name": "ConocoPhillips",
+     "status": "검증 대기",
+     "why": "매출 성장 4.9% · 주식 수 연 6.1%",
+     "url": "https://m.stock.naver.com/worldstock/stock/COP/total"
     },
     {
      "ticker": "BRK.A",
@@ -685,16 +687,16 @@ window.CANDIDATES = {
      "url": "https://m.stock.naver.com/worldstock/stock/PGR/total"
     },
     {
-     "ticker": "APH",
-     "name": "Amphenol",
+     "ticker": "BLK",
+     "name": "BlackRock",
      "status": "검증 대기",
-     "why": "3년 평균 ROIC 20.9% · 매출 성장 51.7% · 주식 수 연 1.1%",
-     "url": "https://m.stock.naver.com/worldstock/stock/APH/total"
+     "why": "3년 평균 ROIC 11.6% · 매출 성장 18.7% · 주식 수 연 6.1%",
+     "url": "https://m.stock.naver.com/worldstock/stock/BLK/total"
     }
    ]
   },
   "us|growth": {
-   "eligible": 69,
+   "eligible": 68,
    "defects": [
     {
      "ticker": "NVDA",
@@ -771,18 +773,18 @@ window.CANDIDATES = {
      "url": "https://m.stock.naver.com/worldstock/stock/AMD.O/total"
     },
     {
-     "ticker": "TT",
-     "name": "Trane Technologies",
-     "status": "검증 대기",
-     "why": "3년 매출 연평균 10.1% · FCF 마진 13.2% · 3년 평균 ROIC 24.6%",
-     "url": "https://m.stock.naver.com/worldstock/stock/TT/total"
-    },
-    {
      "ticker": "DELL",
      "name": "Dell Technologies",
      "status": "검증 대기",
      "why": "3년 매출 연평균 3.5% · FCF 마진 7.5% · 3년 평균 ROIC 29%",
      "url": "https://m.stock.naver.com/worldstock/stock/DELL.K/total"
+    },
+    {
+     "ticker": "TT",
+     "name": "Trane Technologies",
+     "status": "검증 대기",
+     "why": "3년 매출 연평균 10.1% · FCF 마진 13.2% · 3년 평균 ROIC 24.6%",
+     "url": "https://m.stock.naver.com/worldstock/stock/TT/total"
     },
     {
      "ticker": "GEV",
@@ -813,6 +815,13 @@ window.CANDIDATES = {
      "url": "https://m.stock.naver.com/worldstock/stock/MRVL.O/total"
     },
     {
+     "ticker": "ADI",
+     "name": "Analog Devices",
+     "status": "검증 대기",
+     "why": "3년 매출 연평균 -2.8% · FCF 마진 38.8% · 3년 평균 ROIC 5.7%",
+     "url": "https://m.stock.naver.com/worldstock/stock/ADI.O/total"
+    },
+    {
      "ticker": "STX",
      "name": "Seagate Technology",
      "status": "검증 대기",
@@ -820,23 +829,16 @@ window.CANDIDATES = {
      "url": "https://m.stock.naver.com/worldstock/stock/STX.O/total"
     },
     {
-     "ticker": "AME",
-     "name": "AMETEK",
+     "ticker": "HPE",
+     "name": "Hewlett Packard Enterprise",
      "status": "검증 대기",
-     "why": "3년 매출 연평균 6.4% · FCF 마진 22.6% · 3년 평균 ROIC 11.9%",
-     "url": "https://m.stock.naver.com/worldstock/stock/AME/total"
-    },
-    {
-     "ticker": "ADI",
-     "name": "Analog Devices",
-     "status": "검증 대기",
-     "why": "3년 매출 연평균 -2.8% · FCF 마진 38.8% · 3년 평균 ROIC 5.7%",
-     "url": "https://m.stock.naver.com/worldstock/stock/ADI.O/total"
+     "why": "3년 매출 연평균 6.4% · FCF 마진 1.8% · 3년 평균 ROIC 3.4%",
+     "url": "https://m.stock.naver.com/worldstock/stock/HPE/total"
     }
    ]
   },
   "us|value": {
-   "eligible": 77,
+   "eligible": 78,
    "defects": [
     {
      "ticker": "GM",
@@ -876,8 +878,8 @@ window.CANDIDATES = {
      "status": "검증 통과",
      "note": "1분기(FY27) 매출 30% 증가(추가 1주 제외 26%)·비GAAP EPS 66% 증가, 연간 매출·EPS 가이던스 상향. 하반기 성장 둔화 전망과 잉여현금흐름 감소·매출총이익률 하락이 리스크다.",
      "asOf": "2026-11-04",
-     "why": "EBIT/EV 5% · FCF/시총 5.5% · 매출 성장 5.4%",
-     "near": "정체성 조건 미달: 시총 순위 413위 — 상위 400 안이어야 한다",
+     "why": "EBIT/EV 5.3% · FCF/시총 5.8% · 매출 성장 5.4%",
+     "near": "정체성 조건 미달: 시총 순위 420위 — 상위 400 안이어야 한다",
      "url": "https://m.stock.naver.com/worldstock/stock/NTAP.O/total"
     },
     {
@@ -886,8 +888,15 @@ window.CANDIDATES = {
      "status": "보류",
      "note": "2분기 조정 EPS 5% 증가·연간 EPS 가이던스 유지. 동일점 매출 증가가 거의 멈춰 연간 동일점 매출 가이던스를 낮췄다 — 다음 분기 동일점 매출 회복 확인 필요.",
      "asOf": "2026-11-04",
-     "why": "EBIT/EV 3.6% · FCF/시총 8.6% · 매출 성장 0.4%",
+     "why": "EBIT/EV 3.5% · FCF/시총 8.3% · 매출 성장 0.4%",
      "url": "https://m.stock.naver.com/worldstock/stock/KR/total"
+    },
+    {
+     "ticker": "DELL",
+     "name": "Dell Technologies",
+     "status": "검증 대기",
+     "why": "EBIT/EV 3.9% · FCF/시총 4.6% · 매출 성장 18.8%",
+     "url": "https://m.stock.naver.com/worldstock/stock/DELL.K/total"
     },
     {
      "ticker": "WFC",
@@ -897,13 +906,6 @@ window.CANDIDATES = {
      "url": "https://m.stock.naver.com/worldstock/stock/WFC/total"
     },
     {
-     "ticker": "CRM",
-     "name": "Salesforce",
-     "status": "검증 대기",
-     "why": "EBIT/EV 5.2% · FCF/시총 9.5% · 매출 성장 9.6%",
-     "url": "https://m.stock.naver.com/worldstock/stock/CRM/total"
-    },
-    {
      "ticker": "JPM",
      "name": "JPMorgan Chase &",
      "status": "검증 대기",
@@ -911,17 +913,24 @@ window.CANDIDATES = {
      "url": "https://m.stock.naver.com/worldstock/stock/JPM/total"
     },
     {
+     "ticker": "CRM",
+     "name": "Salesforce",
+     "status": "검증 대기",
+     "why": "EBIT/EV 5% · FCF/시총 9.1% · 매출 성장 9.6%",
+     "url": "https://m.stock.naver.com/worldstock/stock/CRM/total"
+    },
+    {
      "ticker": "XYZ",
      "name": "Block",
      "status": "검증 대기",
-     "why": "EBIT/EV 3.7% · FCF/시총 5.5% · 매출 성장 0.3%",
+     "why": "EBIT/EV 3.7% · FCF/시총 5.4% · 매출 성장 0.3%",
      "url": "https://m.stock.naver.com/worldstock/stock/XYZ/total"
     },
     {
      "ticker": "UNH",
      "name": "UnitedHealth Incorporated",
      "status": "검증 대기",
-     "why": "EBIT/EV 5.4% · FCF/시총 5.4% · 매출 성장 11.8%",
+     "why": "EBIT/EV 5.3% · FCF/시총 5.2% · 매출 성장 11.8%",
      "url": "https://m.stock.naver.com/worldstock/stock/UNH/total"
     },
     {
@@ -949,20 +958,13 @@ window.CANDIDATES = {
      "ticker": "CVS",
      "name": "CVS Health",
      "status": "검증 대기",
-     "why": "EBIT/EV 3% · FCF/시총 7.7% · 매출 성장 7.8%",
+     "why": "EBIT/EV 3% · FCF/시총 7.6% · 매출 성장 7.8%",
      "url": "https://m.stock.naver.com/worldstock/stock/CVS/total"
-    },
-    {
-     "ticker": "BNY",
-     "name": "Bank of New York Mellon",
-     "status": "검증 대기",
-     "why": "FCF/시총 5.3% · 매출 성장 7.8%",
-     "url": "https://m.stock.naver.com/worldstock/stock/BNY/total"
     }
    ]
   },
   "us|dividend": {
-   "eligible": 79,
+   "eligible": 75,
    "defects": [
     {
      "ticker": "KO",
@@ -1022,7 +1024,7 @@ window.CANDIDATES = {
      "ticker": "UNH",
      "name": "UnitedHealth Incorporated",
      "status": "검증 대기",
-     "why": "배당 비감소 10년 · 배당성향 65.7% · 배당 2.7%",
+     "why": "배당 비감소 10년 · 배당성향 65.7% · 배당 2.8%",
      "url": "https://m.stock.naver.com/worldstock/stock/UNH/total"
     },
     {
@@ -1036,49 +1038,35 @@ window.CANDIDATES = {
      "ticker": "WMB",
      "name": "The Williams Companies",
      "status": "검증 대기",
-     "why": "배당 비감소 10년 · 배당성향 93.3% · 배당 3.3%",
+     "why": "배당 비감소 10년 · 배당성향 93.3% · 배당 3.2%",
      "url": "https://m.stock.naver.com/worldstock/stock/WMB/total"
     },
     {
      "ticker": "USB",
      "name": "U.S. Bancorp",
      "status": "검증 대기",
-     "why": "배당 비감소 10년 · 배당성향 41.8% · 배당 3.9%",
+     "why": "배당 비감소 10년 · 배당성향 41.8% · 배당 3.8%",
      "url": "https://m.stock.naver.com/worldstock/stock/USB/total"
     },
     {
      "ticker": "SRE",
      "name": "Sempra",
      "status": "검증 대기",
-     "why": "배당 비감소 10년 · 배당성향 87.3% · 배당 3.5%",
+     "why": "배당 비감소 10년 · 배당성향 87.3% · 배당 3.4%",
      "url": "https://m.stock.naver.com/worldstock/stock/SRE/total"
-    },
-    {
-     "ticker": "AIG",
-     "name": "American International",
-     "status": "검증 대기",
-     "why": "배당 비감소 10년 · 배당성향 31.5% · 배당 2.5%",
-     "url": "https://m.stock.naver.com/worldstock/stock/AIG/total"
     },
     {
      "ticker": "VALE",
      "name": "Vale S.A.",
      "status": "검증 대기",
-     "why": "배당 비감소 1년 · 배당성향 19.9% · 배당 10%",
+     "why": "배당 비감소 1년 · 배당성향 19.9% · 배당 9.7%",
      "url": "https://m.stock.naver.com/worldstock/stock/VALE.K/total"
-    },
-    {
-     "ticker": "TFC",
-     "name": "Truist Financial",
-     "status": "검증 대기",
-     "why": "배당 비감소 9년 · 배당성향 53.7% · 배당 4.5%",
-     "url": "https://m.stock.naver.com/worldstock/stock/TFC/total"
     },
     {
      "ticker": "SYY",
      "name": "Sysco",
      "status": "검증 대기",
-     "why": "배당 비감소 9년 · 배당성향 59% · 배당 2.8%",
+     "why": "배당 비감소 9년 · 배당성향 59% · 배당 2.7%",
      "url": "https://m.stock.naver.com/worldstock/stock/SYY/total"
     },
     {
@@ -1089,11 +1077,25 @@ window.CANDIDATES = {
      "url": "https://m.stock.naver.com/worldstock/stock/AEE/total"
     },
     {
-     "ticker": "ITW",
-     "name": "Illinois Tool Works",
+     "ticker": "TFC",
+     "name": "Truist Financial",
      "status": "검증 대기",
-     "why": "배당 비감소 10년 · 배당성향 58.2% · 배당 2.5%",
-     "url": "https://m.stock.naver.com/worldstock/stock/ITW/total"
+     "why": "배당 비감소 9년 · 배당성향 53.7% · 배당 4.4%",
+     "url": "https://m.stock.naver.com/worldstock/stock/TFC/total"
+    },
+    {
+     "ticker": "AEP",
+     "name": "American Electric Power",
+     "status": "검증 대기",
+     "why": "배당 비감소 9년 · 배당성향 56.1% · 배당 3.1%",
+     "url": "https://m.stock.naver.com/worldstock/stock/AEP.O/total"
+    },
+    {
+     "ticker": "KDP",
+     "name": "Keurig Dr Pepper",
+     "status": "검증 대기",
+     "why": "배당 비감소 6년 · 배당성향 60.1% · 배당 2.6%",
+     "url": "https://m.stock.naver.com/worldstock/stock/KDP.O/total"
     }
    ]
   }
@@ -1127,11 +1129,13 @@ window.CANDIDATES = {
    }
   },
   "korea|value|000270": {
-   "scheme": "keys",
-   "theme": {
-    "id:improve": "-"
-   },
    "gone": {
+    "theme:id:improve": [
+     "-",
+     "2026-11-24",
+     null,
+     0
+    ],
     "trend": [
      "2026-11-23",
      "2026-11-23",

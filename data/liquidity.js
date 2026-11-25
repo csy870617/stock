@@ -1,45 +1,47 @@
 // 유동성 판단(온디맨드) — 시장지표 baseline(data/liquidity-auto.js, 매일 자동)을 거시 이벤트·내러티브로 보정/덮어쓰기.
 // 앱은 이 파일이 있으면 우선 표시하고 baseline 을 병기, 없으면 baseline 을 게이지로 쓴다.
 window.LIQUIDITY_DATA = {
- "asOf": "2026-11-24",
- "headline": "미국은 돈의 흐름이 보통이지만 극도의 공포와 연준 인상 경로가 겹쳐 단기 부정·중기 신중, 한국은 예탁금·신용융자 감소와 외국인 순매도가 이어져 단기·중기 모두 부정이다.",
- "headlineUS": "흐름 점수 -0.15로 중간 구간이고 순유동성은 소폭 늘었다. 다만 심리 11.3 극도의 공포와 12월 인상 93% 반영으로 단기 부정·중기 신중이다.",
- "headlineKR": "투자자예탁금 3개월 -17.2%, 신용융자 -20.5%로 개인 자금이 빠지고 있다. 11/24 외국인이 7거래일 만에 순매수로 돌아섰지만 3개월 합은 큰 순매도라 단기·중기 모두 부정이다.",
+ "asOf": "2026-11-25",
+ "headline": "미국·한국 모두 돈의 흐름이 빠지는 중이고, 연준·한은 인상 경로와 극도의 공포 심리가 겹쳐 단기 유동성 여건은 두 나라 모두 부정적이다.",
+ "headlineUS": "미국 흐름 점수 -0.36(최근 5년 하위 27%)으로 돈이 빠지는 중이며, 12월 인상이 사실상 확정 반영돼 단기 부정·중기 신중이다. 극도의 공포(11.4) 구간에서는 과거 3개월 안 10% 넘는 추가 하락 비율이 31%였다.",
+ "headlineKR": "한국은 예탁금·신용융자가 3개월 새 각각 17.2%·20.5% 줄어 단기·중기 모두 부정이다. 11/24 하루 반등은 외국인·기관 동반 순매수였지만 20일 외국인 누적은 -14조원대 순매도다.",
  "us": {
   "shortTerm": "부정",
   "midTerm": "신중",
   "drivers": [
-   "흐름 점수 -0.15로 최근 5년 중 52% 위치의 보통 국면이고, 연준 순유동성 5.82조 달러는 3개월 +0.6%로 소폭 늘었다.",
-   "신용 스프레드 1.61%p(3개월 -2bp)는 안정적이지만 금융여건지수(3개월 +0.07)와 달러인덱스(3개월 +5.3%)는 빠지는 쪽이며, 신용 경고는 4개 중 1개다.",
-   "시장 심리 11.3 극도의 공포 구간으로, 과거 20 미만인 달 뒤 3개월 안 S&P500이 10% 넘게 더 빠진 경우가 31%(그 밖 8%)여서 단기는 baseline 신중보다 낮은 부정으로 본다.",
-   "선물은 12/9 0.25%p 인상 93%, 2027년 3월 기대 4.46%의 인상 경로를 반영한다. 흐름 점수가 중간 구간이어서 중기는 baseline 부정보다 한 단계 높은 신중으로 둔다."
+   "흐름 점수 -0.36으로 최근 5년 하위 27% 위치, 금융여건지수 -0.478(3개월 +0.07)과 달러인덱스 3개월 +5.1%가 '빠짐' 쪽이다.",
+   "연방기금금리 선물은 12/9 25bp 인상 97%, 2027년 3월까지 기대 금리 4.45%로 추가 인상 경로를 반영하고 있다.",
+   "연준 순유동성 5.82조 달러(3개월 +0.6%)와 신용 스프레드 1.59%p(3개월 -4bp)는 보통이고 하이일드 스프레드도 11bp 좁혀져, 중기는 baseline 부정보다 한 단계 높은 신중으로 본다.",
+   "신용 경고는 4개 중 1개(금융여건 3개월 변화)만 켜져 있으나, 시장 심리 11.4의 극도의 공포 구간은 과거 3개월 안 10% 넘는 추가 하락 비율이 31%(그 밖 8%)였다."
   ]
  },
  "korea": {
   "shortTerm": "부정",
   "midTerm": "부정",
   "drivers": [
-   "투자자예탁금 85.3조원(3개월 -17.2%)과 신용융자 25.9조원(3개월 -20.5%)이 모두 빠지는 중이며, 과거 예탁금 증가 하위 3분의 1 구간의 다음 3개월 코스피 초과수익 평균은 -1.9%였다.",
-   "외국인 순매수는 3개월 합 -63.1조원으로 빠지는 쪽이고 코스피 20일 외국인 순매도는 14조1,044억원이다. 11/24 하루는 7,981억원 순매수로 7거래일 연속 순매도가 끊겼다.",
-   "흐름 점수 -0.24로 최근 5년 중 38% 위치이며, 원/달러 3개월 -2.8%만 들어오는 쪽이다. 시장 심리는 1.2로 극도의 공포 구간이다.",
-   "한국은행 기준금리 3%에 대해 시장 금리는 3개월 기대 3.21%·1년 기대 3.61%로 인상 쪽에 기울어 있다."
+   "투자자예탁금 85.3조원(3개월 -17.2%)으로 감소 폭이 커, 과거 예탁금 감소 하위 3분의 1 구간의 다음 3개월 코스피 초과수익 평균은 -1.9%였다.",
+   "신용융자 25.9조원(3개월 -20.5%), 외국인 순매수 누적 -63.1조원으로 개인·외국인 자금 모두 빠지는 흐름이다.",
+   "원/달러 1,345원(3개월 -2.7%)은 '들어옴', 회사채 스프레드 0.69%p(3개월 -1bp)는 보통이라 단기는 baseline 매우 부정보다 한 단계 높은 부정으로 본다.",
+   "11/26 금통위에서 3.00%→3.25% 인상이 유력하고 1년 기대 금리 3.6%로 추가 인상 경로가 반영돼 있다."
   ]
  },
- "nextCheck": "코스피 5,000선 회복 뒤 외국인 순매수 지속 여부, 11/26 금통위 결정, 12/9 FOMC 인상 폭을 확인한다.",
+ "nextCheck": "11/25 미국 10월 PCE, 11/26 금통위 결정·K점도표, 코스피 저항 5,322·지지 4,958 유지 여부를 확인한다.",
  "sources": [
-  "https://www.investing.com/news/economy-news/asian-stocks-rally-as-huangs-nvidia-return-revives-ai-trade-5046823",
-  "https://www.marketscreener.com/news/wall-street-soars-on-huang-s-return-to-nvidia-treasury-yields-rise-ce7851dadf8ff627",
-  "https://www.ppss.kr/news/articleView.html?idxno=322468",
-  "https://www.m-economynews.com/news/article.html?no=73485"
+  "https://cappnotes.substack.com/p/closing-look-tuesday-november-24",
+  "https://news.bizwatch.co.kr/article/market/2026/11/24/0037",
+  "https://www.blockmedia.co.kr/archives/1169839",
+  "https://www.fnnews.com/news/202611241533500378"
  ],
  "policyNews": {
-  "asOf": "2026-11-24",
+  "asOf": "2026-11-25",
   "us": {
    "stance": "매파",
-   "note": "윌리엄스 뉴욕 연은 총재는 11/23 인플레이션이 여전히 너무 높아 할 일이 남았다고 했지만 12월 결정은 지표를 보겠다고 했고, 월러 이사는 물가가 계속 뜨거우면 12월 0.5%p 인상도 검토해야 한다고 했다. 선물시장은 12/9 인상을 사실상 완전히 반영했다.",
+   "note": "10월 FOMC 의사록에서 거의 모든 위원이 12월 0.25%p 인상을 예상했고 2명은 0.5%p 가능성을 언급했다. 월러 이사는 12월 0.5%p 인상을, 무살렘 세인트루이스 연은 총재는 여러 차례 인상 필요를 말했고, CME FedWatch 12월 25bp 인상 확률은 96.4%다.",
    "sources": [
-    "https://broadspectrum.substack.com/p/broad-spectrum-finance-116-the-reinstatement",
-    "https://www.marketscreener.com/news/wall-street-soars-on-huang-s-return-to-nvidia-treasury-yields-rise-ce7851dadf8ff627"
+    "https://thelandcle.org/stories/fed-minutes-higher-interest-rates-needed-in-december-as-inflation-worries-mount/",
+    "https://ca.finance.yahoo.com/news/fed-minutes-higher-interest-rates-191215222.html",
+    "https://pomegra.io/news/fed-rate-hike-odds-near-90-as-waller-eyes-bigger-move",
+    "https://www.cnbc.com/2026/11/20/warsh-fed-forward-guidance-rate-hikes.html"
    ]
   },
   "korea": {
