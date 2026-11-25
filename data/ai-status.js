@@ -2,108 +2,121 @@
 // 앱 'AI 연결' 창이 '매일 자동 분석' 칸에 보여 준다. 비용은 토큰 기준 추정(웹 검색은 횟수만 — 검색당 요금 별도).
 window.AI_STATUS = {
  "defects": {
-  "at": "2026-11-25T03:40:42.125Z",
+  "at": "2026-11-25T08:36:40.437Z",
   "model": "claude-sonnet-5-5",
   "ok": true,
-  "pending": 0,
-  "judged": 0,
-  "items": [],
+  "pending": 2,
+  "judged": 2,
+  "items": [
+   {
+    "g": "korea|growth",
+    "t": "095340",
+    "name": "ISC",
+    "verdict": "형식"
+   },
+   {
+    "g": "korea|value",
+    "t": "267270",
+    "name": "HD건설기계",
+    "verdict": "형식"
+   }
+  ],
   "usage": {
-   "calls": 0,
-   "input": 0,
-   "output": 0,
+   "calls": 4,
+   "input": 98398,
+   "output": 3719,
    "cacheRead": 0,
-   "searches": 0,
-   "usd": 0
+   "searches": 6,
+   "usd": 0.234
   }
  },
  "news": {
-  "at": "2026-11-25T03:44:39.466Z",
+  "at": "2026-11-25T08:42:21.434Z",
   "model": "claude-haiku-5-5",
   "ok": true,
   "stocks": 98,
   "fetched": 98,
-  "called": 83,
+  "called": 51,
   "lines": 67,
   "usage": {
-   "calls": 83,
-   "input": 134572,
-   "output": 5482,
+   "calls": 51,
+   "input": 100178,
+   "output": 3259,
    "cacheRead": 0,
    "searches": 0,
-   "usd": 0.016
+   "usd": 0.012
   }
  },
  "daily": {
-  "at": "2026-11-25T03:41:49.715Z",
-  "T": "2026-11-24",
+  "at": "2026-11-25T08:38:59.057Z",
+  "T": "2026-11-25",
   "basis": {
-   "kr": "2026-11-24",
+   "kr": "2026-11-25",
    "us": "2026-11-24"
   },
   "model": "claude-opus-5-5",
   "ok": true,
   "seen": {
-   "at": "2026-11-25T03:44:39.362Z",
+   "at": "2026-11-25T08:42:21.307Z",
    "basis": {
-    "kr": "2026-11-24",
+    "kr": "2026-11-25",
     "us": "2026-11-24"
    },
    "items": {
     "market": {
-     "sig": "11/24 한국은 엔비디아 젠슨 황 복귀 소식에 반도체가 급등하며 코스피#ajluiq",
+     "sig": "미국 반도체 급락이 한국 증시로 번진 하루다. 11/24 필라델피아 반도#1gdweq0",
      "basis": {
-      "kr": "2026-11-24",
+      "kr": "2026-11-25",
       "us": "2026-11-24"
      }
     },
     "liquidity": {
-     "sig": "미국·한국 모두 돈의 흐름이 빠지는 중이고, 연준·한은 인상 경로와 극도#frlocm",
+     "sig": "미국·한국 모두 돈의 흐름이 빠지는 중이고, 연준·한은 인상 경로와 극도#1cwazts",
      "basis": {
-      "kr": "2026-11-24",
+      "kr": "2026-11-25",
       "us": "2026-11-24"
      }
     },
     "indexNotes": {
-     "sig": "하락세. 일봉 구름 아래·전환<기준·MACD 시그널 하회, 머리 위 매물#v63es",
+     "sig": "하락세(매도) — 일목 구름 아래, 전환선이 기준선 아래이고 RSI 35#1hq4bn3",
      "basis": {
-      "kr": "2026-11-24",
+      "kr": "2026-11-25",
       "us": "2026-11-24"
      }
     },
     "topPicks": {
-     "sig": "7월 발표한 300억원 규모 자사주 매입을 마쳐 밸류업 계획 이후 유통주#2u215m",
+     "sig": "300억원 자사주 매입을 마쳐 밸류업 계획 이후 유통주식수가 약 7.4%#14hr0rr",
      "basis": {
-      "kr": "2026-11-24",
-      "us": "2026-11-23"
+      "kr": "2026-11-25",
+      "us": "2026-11-24"
      }
     }
    }
   },
   "inputs": {
-   "market": "p02bq0",
-   "indexNotes": "1flbt2s"
+   "market": "zd8htd",
+   "indexNotes": "nfnwlr"
   },
   "wrote": [
    "liquidity",
    "indexNotes",
-   "market"
+   "market",
+   "topPicks"
   ],
   "sig": {
-   "liquidity": "미국·한국 모두 돈의 흐름이 빠지는 중이고, 연준·한은 인상 경로와 극도#frlocm",
-   "indexNotes": "하락세. 일봉 구름 아래·전환<기준·MACD 시그널 하회, 머리 위 매물#v63es",
-   "market": "11/24 한국은 엔비디아 젠슨 황 복귀 소식에 반도체가 급등하며 코스피#ajluiq",
-   "topPicks": "7월 발표한 300억원 규모 자사주 매입을 마쳐 밸류업 계획 이후 유통주#1tu7kx8"
+   "liquidity": "미국·한국 모두 돈의 흐름이 빠지는 중이고, 연준·한은 인상 경로와 극도#1cwazts",
+   "indexNotes": "하락세(매도) — 일목 구름 아래, 전환선이 기준선 아래이고 RSI 35#1hq4bn3",
+   "market": "미국 반도체 급락이 한국 증시로 번진 하루다. 11/24 필라델피아 반도#1gdweq0",
+   "topPicks": "300억원 자사주 매입을 마쳐 밸류업 계획 이후 유통주식수가 약 7.4%#14hr0rr"
   },
   "sources": 40,
   "usage": {
    "calls": 2,
-   "input": 563498,
-   "output": 16203,
+   "input": 409395,
+   "output": 14600,
    "cacheRead": 0,
    "searches": 6,
-   "usd": 2.578
-  },
-  "note": "새 종가로 세션 문장 갱신: market, liquidity, indexNotes"
+   "usd": 1.93
+  }
  }
 };
