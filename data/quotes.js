@@ -42,6 +42,13 @@ window.STOCK_QUOTES = {
    "close": 24850,
    "closeDate": "2026-11-25"
   },
+  "192820": {
+   "price": 327000,
+   "date": "2026-11-25",
+   "changePct": 12.2,
+   "close": 327000,
+   "closeDate": "2026-11-25"
+  },
   "207940": {
    "price": 1363000,
    "date": "2026-11-25",
@@ -679,13 +686,6 @@ window.STOCK_QUOTES = {
    "close": 208.71,
    "closeDate": "2026-11-24"
   },
-  "LOGI": {
-   "price": 100.16,
-   "date": "2026-11-24",
-   "changePct": -0.2,
-   "close": 100.16,
-   "closeDate": "2026-11-24"
-  },
   "RMD": {
    "price": 243.44,
    "date": "2026-11-24",
@@ -702,7 +702,7 @@ window.STOCK_QUOTES = {
    "changePct": -6.2,
    "close": 4697.51,
    "closeDate": "2026-11-25",
-   "at": "2026-11-25T08:35:07Z"
+   "at": "2026-11-25T09:15:54Z"
   },
   "sp500": {
    "symbol": "^GSPC",
@@ -711,7 +711,7 @@ window.STOCK_QUOTES = {
    "changePct": -0.5,
    "close": 7201.09,
    "closeDate": "2026-11-24",
-   "at": "2026-11-25T08:35:07Z"
+   "at": "2026-11-25T09:15:54Z"
   },
   "rsp": {
    "symbol": "RSP",
@@ -720,7 +720,7 @@ window.STOCK_QUOTES = {
    "changePct": 0.5,
    "close": 213.96,
    "closeDate": "2026-11-24",
-   "at": "2026-11-25T08:35:07Z"
+   "at": "2026-11-25T09:15:54Z"
   }
  }
 };
