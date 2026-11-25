@@ -5,34 +5,34 @@ window.LIQUIDITY_AUTO = {
  "asOf": "2026-11-25",
  "note": "Yahoo 시장지표 기반 자동 baseline(금리·일드커브·VIX·HY신용·달러·원달러·코스피). 거시 이벤트·내러티브는 미반영 — 온디맨드 유동성이 보정.",
  "inputs": {
-  "us10y": "4.90",
-  "curve": "0.74",
-  "vix": "26.4",
-  "hyg20": "-1.0",
+  "us10y": "4.85",
+  "curve": "0.69",
+  "vix": "28.3",
+  "hyg20": "-0.9",
   "dxy": "103.8",
   "usdkrw": "1341"
  },
  "us": {
   "shortTerm": "신중",
-  "midTerm": "부정",
+  "midTerm": "매우 부정",
   "shortScore": -0.25,
-  "midScore": -1.14,
+  "midScore": -1.27,
   "drivers": [
-   "VIX 26.4 (−1)",
-   "10Y 추세 (+1)",
+   "VIX 28.3 (−2)",
+   "10Y 추세 (+2)",
    "HY 신용(20d) (−1)",
    "달러 추세 (−1)"
   ]
  },
  "korea": {
   "shortTerm": "매우 부정",
-  "midTerm": "부정",
-  "shortScore": -1.24,
-  "midScore": -1.15,
+  "midTerm": "매우 부정",
+  "shortScore": -1.42,
+  "midScore": -1.28,
   "drivers": [
    "코스피 모멘텀(20d) (−2)",
+   "글로벌 변동성 VIX (−2)",
    "원/달러 추세 (−1)",
-   "글로벌 변동성 VIX (−1)",
    "글로벌 신용(20d) (−1)"
   ]
  },
@@ -58,97 +58,97 @@ window.LIQUIDITY_AUTO = {
    },
    {
     "date": "2027-01-27",
-    "rate": 4.275,
-    "stepBp": 15.5,
-    "cumBp": 39.5,
+    "rate": 4.28,
+    "stepBp": 16,
+    "cumBp": 40,
     "outcomes": [
      {
       "n": 2,
-      "p": 58
-     },
-     {
-      "n": 1,
-      "p": 42
-     }
-    ]
-   },
-   {
-    "date": "2027-03-17",
-    "rate": 4.419,
-    "stepBp": 14.4,
-    "cumBp": 53.9,
-    "outcomes": [
-     {
-      "n": 2,
-      "p": 84
-     },
-     {
-      "n": 3,
-      "p": 16
-     }
-    ]
-   },
-   {
-    "date": "2027-04-28",
-    "rate": 4.465,
-    "stepBp": 4.6,
-    "cumBp": 58.5,
-    "outcomes": [
-     {
-      "n": 2,
-      "p": 66
-     },
-     {
-      "n": 3,
-      "p": 34
-     }
-    ]
-   },
-   {
-    "date": "2027-06-09",
-    "rate": 4.529,
-    "stepBp": 6.4,
-    "cumBp": 64.9,
-    "outcomes": [
-     {
-      "n": 3,
       "p": 60
      },
      {
-      "n": 2,
+      "n": 1,
       "p": 40
      }
     ]
    },
    {
-    "date": "2027-07-28",
-    "rate": 4.52,
-    "stepBp": -0.9,
-    "cumBp": 64,
+    "date": "2027-03-17",
+    "rate": 4.435,
+    "stepBp": 15.5,
+    "cumBp": 55.5,
+    "outcomes": [
+     {
+      "n": 2,
+      "p": 78
+     },
+     {
+      "n": 3,
+      "p": 22
+     }
+    ]
+   },
+   {
+    "date": "2027-04-28",
+    "rate": 4.48,
+    "stepBp": 4.5,
+    "cumBp": 60,
+    "outcomes": [
+     {
+      "n": 2,
+      "p": 60
+     },
+     {
+      "n": 3,
+      "p": 40
+     }
+    ]
+   },
+   {
+    "date": "2027-06-09",
+    "rate": 4.559,
+    "stepBp": 7.9,
+    "cumBp": 67.9,
     "outcomes": [
      {
       "n": 3,
-      "p": 56
+      "p": 72
      },
      {
       "n": 2,
-      "p": 44
+      "p": 28
+     }
+    ]
+   },
+   {
+    "date": "2027-07-28",
+    "rate": 4.545,
+    "stepBp": -1.4,
+    "cumBp": 66.5,
+    "outcomes": [
+     {
+      "n": 3,
+      "p": 66
+     },
+     {
+      "n": 2,
+      "p": 34
      }
     ]
    },
    {
     "date": "2027-09-15",
-    "rate": 4.51,
-    "stepBp": -1,
-    "cumBp": 63,
+    "rate": 4.545,
+    "stepBp": 0,
+    "cumBp": 66.5,
     "outcomes": [
      {
       "n": 3,
-      "p": 52
+      "p": 66
      },
      {
       "n": 2,
-      "p": 48
+      "p": 34
      }
     ]
    }
@@ -156,11 +156,11 @@ window.LIQUIDITY_AUTO = {
   "source": "CBOT 연방기금금리 선물(ZQ, 야후) — 월물 가격으로 회의별 기대 금리를 푼 값(CME FedWatch 방식)"
  },
  "bok": {
-  "asOf": "2026-11-24",
+  "asOf": "2026-11-25",
   "base": 3,
   "call": 3.096,
   "cd91": 3.39,
-  "y1": 3.65,
+  "y1": 3.657,
   "y2": 3.632,
   "y3": 3.582,
   "exp3m": {
@@ -170,8 +170,8 @@ window.LIQUIDITY_AUTO = {
    "label": "3개월 동결 우세 — 인상 쪽으로 기움"
   },
   "exp12m": {
-   "rate": 3.6,
-   "chg": 0.6,
+   "rate": 3.607,
+   "chg": 0.607,
    "sd": 0.17,
    "label": "1년 인상 기대 — 기간 평균 금리가 지금보다 인상 약 2.4회분 높다"
   },
@@ -180,7 +180,7 @@ window.LIQUIDITY_AUTO = {
  "rateModel": {
   "validatedAt": "2026-10-20",
   "us": {
-   "asOf": "2026-11-23",
+   "asOf": "2026-11-24",
    "policy": 3.88,
    "forecasts": [
     {
@@ -193,25 +193,25 @@ window.LIQUIDITY_AUTO = {
     },
     {
      "h": 6,
-     "rate": 4.73,
-     "chg": 0.85,
+     "rate": 4.75,
+     "chg": 0.87,
      "rmse": 0.52,
      "noChangeRmse": 0.86,
-     "market": 4.33
+     "market": 4.34
     },
     {
      "h": 12,
-     "rate": 4.99,
-     "chg": 1.11,
+     "rate": 5.03,
+     "chg": 1.15,
      "rmse": 1.08,
      "noChangeRmse": 1.53,
-     "market": 4.57
+     "market": 4.59
     }
    ],
    "taylor": {
-    "rate": 4.76,
-    "infl": 3.12,
-    "inflAt": "2026-09",
+    "rate": 4.97,
+    "infl": 3.26,
+    "inflAt": "2026-10",
     "unemp": 4.1,
     "ustar": 4.39
    }

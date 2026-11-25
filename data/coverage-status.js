@@ -83,7 +83,7 @@ window.COVERAGE_STATUS = {
    "label": "목표가 재검증",
    "fresh": 101,
    "total": 101,
-   "oldestDays": 4,
+   "oldestDays": 3,
    "ok": true
   },
   {
@@ -109,7 +109,7 @@ window.COVERAGE_STATUS = {
    "label": "AI 적정가 재시도",
    "fresh": 101,
    "total": 101,
-   "oldestDays": 4,
+   "oldestDays": 3,
    "ok": true
   },
   {
@@ -124,5 +124,5 @@ window.COVERAGE_STATUS = {
  ],
  "ok": true,
  "overdue": [],
- "dataHash": "8af2fd3d7a86"
+ "dataHash": "ca6e5c6c4306"
 };
