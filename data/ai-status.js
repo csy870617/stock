@@ -2,90 +2,77 @@
 // 앱 'AI 연결' 창이 '매일 자동 분석' 칸에 보여 준다. 비용은 토큰 기준 추정(웹 검색은 횟수만 — 검색당 요금 별도).
 window.AI_STATUS = {
  "defects": {
-  "at": "2026-11-25T08:36:40.437Z",
+  "at": "2026-11-26T03:12:32.750Z",
   "model": "claude-sonnet-5-5",
   "ok": true,
-  "pending": 2,
-  "judged": 2,
-  "items": [
-   {
-    "g": "korea|growth",
-    "t": "095340",
-    "name": "ISC",
-    "verdict": "형식"
-   },
-   {
-    "g": "korea|value",
-    "t": "267270",
-    "name": "HD건설기계",
-    "verdict": "형식"
-   }
-  ],
+  "pending": 0,
+  "judged": 0,
+  "items": [],
   "usage": {
-   "calls": 4,
-   "input": 98398,
-   "output": 3719,
+   "calls": 0,
+   "input": 0,
+   "output": 0,
    "cacheRead": 0,
-   "searches": 6,
-   "usd": 0.234
+   "searches": 0,
+   "usd": 0
   }
  },
  "news": {
-  "at": "2026-11-25T08:42:21.434Z",
+  "at": "2026-11-26T03:17:01.509Z",
   "model": "claude-haiku-5-5",
   "ok": true,
   "stocks": 98,
   "fetched": 98,
-  "called": 51,
-  "lines": 67,
+  "called": 89,
+  "lines": 70,
   "usage": {
-   "calls": 51,
-   "input": 100178,
-   "output": 3259,
+   "calls": 89,
+   "input": 142147,
+   "output": 6304,
    "cacheRead": 0,
    "searches": 0,
-   "usd": 0.012
+   "usd": 0.017
   }
  },
  "daily": {
-  "at": "2026-11-25T08:38:59.057Z",
+  "at": "2026-11-26T03:14:35.697Z",
   "T": "2026-11-25",
   "basis": {
    "kr": "2026-11-25",
-   "us": "2026-11-24"
+   "us": "2026-11-25"
   },
   "model": "claude-opus-5-5",
   "ok": true,
   "seen": {
-   "at": "2026-11-25T08:42:21.307Z",
+   "at": "2026-11-26T03:17:01.375Z",
    "basis": {
     "kr": "2026-11-25",
-    "us": "2026-11-24"
+    "us": "2026-11-25"
    },
    "items": {
     "market": {
-     "sig": "미국 반도체 급락이 한국 증시로 번진 하루다. 11/24 필라델피아 반도#1gdweq0",
+     "sig": "AI·반도체 매도와 물가·관세 부담이 겹쳐 한국 증시 충격이 미국보다 훨#1inp9vi",
      "basis": {
       "kr": "2026-11-25",
-      "us": "2026-11-24"
+      "us": "2026-11-25"
      }
     },
     "liquidity": {
-     "sig": "미국·한국 모두 돈의 흐름이 빠지는 중이고, 연준·한은 인상 경로와 극도#1cwazts",
+     "sig": "미국·한국 모두 돈의 흐름이 빠지는 중이고, 연준·한은 인상 경로와 극도#gntk43",
      "basis": {
       "kr": "2026-11-25",
-      "us": "2026-11-24"
+      "us": "2026-11-25"
      }
     },
     "indexNotes": {
-     "sig": "하락세(매도) — 일목 구름 아래, 전환선이 기준선 아래이고 RSI 35#1hq4bn3",
+     "sig": "하락세 — 일봉 구름 아래, RSI 35.1이다. 지지 4,587 아래로#1i0109q",
      "basis": {
       "kr": "2026-11-25",
-      "us": "2026-11-24"
+      "us": "2026-11-25"
      }
     },
     "topPicks": {
-     "sig": "300억원 자사주 매입을 마쳐 밸류업 계획 이후 유통주식수가 약 7.4%#14hr0rr",
+     "sig": "1~3분기 누적 보험손익이 9.8%, 지배주주순이익이 4.6% 늘어 본업#1irg9xc",
      "basis": {
       "kr": "2026-11-25",
       "us": "2026-11-24"
@@ -94,29 +81,28 @@ window.AI_STATUS = {
    }
   },
   "inputs": {
-   "market": "zd8htd",
-   "indexNotes": "nfnwlr"
+   "market": "1wz72xc",
+   "indexNotes": "1f3dc30"
   },
   "wrote": [
    "liquidity",
    "indexNotes",
-   "market",
-   "topPicks"
+   "market"
   ],
   "sig": {
-   "liquidity": "미국·한국 모두 돈의 흐름이 빠지는 중이고, 연준·한은 인상 경로와 극도#1cwazts",
-   "indexNotes": "하락세(매도) — 일목 구름 아래, 전환선이 기준선 아래이고 RSI 35#1hq4bn3",
-   "market": "미국 반도체 급락이 한국 증시로 번진 하루다. 11/24 필라델피아 반도#1gdweq0",
+   "liquidity": "미국·한국 모두 돈의 흐름이 빠지는 중이고, 연준·한은 인상 경로와 극도#gntk43",
+   "indexNotes": "하락세 — 일봉 구름 아래, RSI 35.1이다. 지지 4,587 아래로#1i0109q",
+   "market": "AI·반도체 매도와 물가·관세 부담이 겹쳐 한국 증시 충격이 미국보다 훨#1inp9vi",
    "topPicks": "300억원 자사주 매입을 마쳐 밸류업 계획 이후 유통주식수가 약 7.4%#14hr0rr"
   },
   "sources": 40,
   "usage": {
    "calls": 2,
-   "input": 409395,
-   "output": 14600,
+   "input": 364085,
+   "output": 14447,
    "cacheRead": 0,
    "searches": 6,
-   "usd": 1.93
+   "usd": 1.745
   }
  }
 };
