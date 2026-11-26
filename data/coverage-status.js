@@ -30,9 +30,9 @@ window.COVERAGE_STATUS = {
   {
    "key": "topPicks",
    "label": "Top Pick",
-   "done": 6,
+   "done": 0,
    "total": 6,
-   "ok": true
+   "ok": false
   },
   {
    "key": "liquidity",
@@ -122,7 +122,7 @@ window.COVERAGE_STATUS = {
    "ok": true
   }
  ],
- "ok": true,
+ "ok": false,
  "overdue": [],
- "dataHash": "3bb187a0ddda"
+ "dataHash": "5c48a18373d7"
 };
