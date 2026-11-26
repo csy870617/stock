@@ -91,13 +91,6 @@ window.STOCK_QUOTES = {
    "close": 119200,
    "closeDate": "2026-11-26"
   },
-  "282330": {
-   "price": 138100,
-   "date": "2026-11-26",
-   "changePct": -3,
-   "close": 138100,
-   "closeDate": "2026-11-26"
-  },
   "298040": {
    "price": 1613000,
    "date": "2026-11-26",
@@ -357,11 +350,11 @@ window.STOCK_QUOTES = {
    "close": 82100,
    "closeDate": "2026-11-26"
   },
-  "021240": {
-   "price": 99700,
+  "033780": {
+   "price": 179500,
    "date": "2026-11-26",
-   "changePct": -2.4,
-   "close": 99700,
+   "changePct": -2,
+   "close": 179500,
    "closeDate": "2026-11-26"
   },
   "MSFT": {
@@ -692,6 +685,20 @@ window.STOCK_QUOTES = {
    "changePct": 0.9,
    "close": 245.7,
    "closeDate": "2026-11-25"
+  },
+  "DG": {
+   "price": 139.27,
+   "date": "2026-11-25",
+   "changePct": 0.4,
+   "close": 139.27,
+   "closeDate": "2026-11-25"
+  },
+  "DXCM": {
+   "price": 84.84,
+   "date": "2026-11-25",
+   "changePct": 0.2,
+   "close": 84.84,
+   "closeDate": "2026-11-25"
   }
  },
  "indices": {
@@ -702,7 +709,7 @@ window.STOCK_QUOTES = {
    "changePct": 0.3,
    "close": 4711.21,
    "closeDate": "2026-11-26",
-   "at": "2026-11-26T09:08:35Z"
+   "at": "2026-11-26T09:17:53Z"
   },
   "sp500": {
    "symbol": "^GSPC",
@@ -711,7 +718,7 @@ window.STOCK_QUOTES = {
    "changePct": -0.3,
    "close": 7182.78,
    "closeDate": "2026-11-25",
-   "at": "2026-11-26T09:08:35Z"
+   "at": "2026-11-26T09:17:53Z"
   },
   "rsp": {
    "symbol": "RSP",
@@ -720,7 +727,7 @@ window.STOCK_QUOTES = {
    "changePct": 0.8,
    "close": 215.74,
    "closeDate": "2026-11-25",
-   "at": "2026-11-26T09:08:35Z"
+   "at": "2026-11-26T09:17:53Z"
   }
  }
 };
