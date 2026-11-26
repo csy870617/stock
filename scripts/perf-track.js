@@ -24,9 +24,11 @@ const FORMAL = ["core", "growth", "value", "dividend"];
 const RETIRED = new Set(["rising"]);
 // picks = 홈 'Top Pick'(그날 고른 나라별 3종목 — 스냅샷 picks, 2026-07-31~): 가장 눈에 띄는 추천이라 같은 방식으로 성적을 잰다
 const GROUPS = ["all"].concat(FORMAL, ["spotlight", "tier:1", "tier:2", "tier:3", "picks", "watch", "hold"]);
-// Top Pick 선정 규칙이 바뀐 날 — 2026-10-27 '균형' 큐레이션 → '건강 + 상승 가능성' 순위(lib-picks.js). 그날 기록의 Top Pick 부터
-//   새 규칙이라 picks 묶음에 그 뒤 구간만 잰 창(w.rule)을 더한다 — 앱 '지난 성적'은 새 규칙이 5거래일 쌓이면 그 성적을 보인다.
-const PICKS_RULE = { from: "2026-10-27", label: "건강 + 상승 가능성" };
+// Top Pick 선정 규칙이 바뀐 날 — 그날 기록의 Top Pick 부터 새 규칙이라 picks 묶음에 그 뒤 구간만 잰 창(w.rule)을 더한다
+//   — 앱 '지난 성적'은 새 규칙이 5거래일 쌓이면 그 성적을 보인다. before = 앱 성과 탭 안내에 그 전 규칙을 밝히는 말.
+//   2026-10-27 '균형' 큐레이션 → '건강 + 상승 가능성'(주주환원·자본효율 점수) 순위, 2026-11-26 점수의 절반을 성장으로(사용자 '안정성도 중요하지만
+//   동일하게 성장성도 중요해' — lib-picks ⑤).
+const PICKS_RULE = { from: "2026-11-26", label: "건강 + 성장·주주환원 반반", before: "10/27~11/25 는 건강 + 주주환원·자본효율 점수, 그 전은 품질·실적·변동성 균형 큐레이션" };
 const REMOVED_DAYS = 90;   // 편출 종목 목록에 남기는 기간(일)
 const SWAP_DAYS = 365;     // 교체 성과를 재는 기간(일)
 const AFTER = 20;          // 교체 뒤 비교 시점(거래일)

@@ -3743,13 +3743,21 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     if (Array.isArray(r)) for (i = 0; i < r.length; i++) if (r[i].ticker === t) return { x: r[i], n: r.length };
     return null;
   }
-  // 점수 재료 한 줄 — lib-picks partsLine 과 같은 표기(그 나라 재료만, 값이 있는 것만)
+  // 점수 재료 한 줄 — lib-picks partsLine 과 같은 표기(그 나라 재료만, 값이 있는 것만). 뒤의 둘은 성장 기둥(2026-11-26~ — 두 나라 같다)
   function pickParts(x, c) {
     var a = [], sg = function (v) { return (v > 0 ? "+" : v < 0 ? "−" : "") + Math.abs(v); };
     if (x.issCa) a.push("주식 수 변화 0 으로 봄(분할 등 자본 거래)"); else if (x.iss != null) a.push("주식 수 연 " + sg(x.iss) + "%");
     if (c === "us") { if (x.shy != null) a.push("주주환원 수익률 " + x.shy + "%"); if (x.roic != null) a.push("ROIC " + x.roic + "%"); }
     else if (x.dy != null) a.push("배당수익률 " + x.dy + "%");
+    if (x.eg != null) a.push("예상 이익 성장 " + sg(x.eg) + "%");
+    if (x.sg3 != null) a.push("3년 매출 연 " + sg(x.sg3) + "%");
     return a.join(" · ");
+  }
+  // 두 기둥 — 점수 = 주주환원·자본효율 절반 + 성장 절반(lib-picks ⑤, 2026-11-26 사용자 '안정성도 중요하지만 동일하게 성장성도 중요해')
+  function pickPillars(x) {
+    if (x.sA == null || x.sG == null) return "";
+    var f = function (v) { return Math.round(v * 100); };
+    return " (주주환원·자본효율 " + f(x.sA) + " · 성장 " + (x.gNA ? "자료 없음" : f(x.sG)) + " / 100)";
   }
   function healthBody(s, c) {
     var h = healthOf(c, s.ticker);
@@ -3758,8 +3766,8 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     var top = '<div class="hc-top"><span class="hc-st' + (bad ? " bad" : "") + '">' + (bad ? ICON.x + "건강 조건 미달" : ICON.check + "건강 조건 통과") + "</span>" +
       (bad ? '<span class="hc-why">' + esc(h.w) + "</span>" : "") + "</div>";
     var rank = h.hold ? "보유 종목은 Top Pick 후보가 아니라 순위를 매기지 않는다."
-      : bad ? "건강 조건에 걸려 상승 가능성 순위에서 제외."
-      : rk ? "상승 가능성 점수 " + nat + " 후보 " + rk.n + "종목 중 <b>" + rk.x.rank + "위</b>" + (rk.x.pick ? " · 오늘의 Top Pick " + rk.x.pick : "") +
+      : bad ? "건강 조건에 걸려 Top Pick 순위에서 제외."
+      : rk ? "Top Pick 점수 " + nat + " 후보 " + rk.n + "종목 중 <b>" + rk.x.rank + "위</b>" + (rk.x.pick ? " · 오늘의 Top Pick " + rk.x.pick : "") + pickPillars(rk.x) +
           (pickParts(rk.x, c) ? " — " + esc(pickParts(rk.x, c)) : "") + (rk.x.skip ? " · 같은 업종 종목이 이미 Top Pick 이라 건너뜀" : "")
       : "점수 자료(주식 수" + (c === "us" ? "·주주환원·ROIC" : "·배당") + ")가 없어 순위 없음.";
     var list = '<ul class="hc-list">' + h.c.map(function (k) {
@@ -4311,9 +4319,9 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
   // '많이 오를 종목' 순위처럼 읽혔다(2026-10-16 — 증권사 목표가 낙관 편향, TP_REALITY 참조).
   function byName(a, b) { return String(a.name || "").localeCompare(String(b.name || ""), "ko"); }
 
-  // Top Pick 순위 — data/pick-scores.js(scripts/pick-score.js 가 매일 생성: 건강 관문 + 상승 가능성 점수, scripts/lib-picks.js — 2026-10-27~).
+  // Top Pick 순위 — data/pick-scores.js(scripts/pick-score.js 가 매일 생성: 건강 관문 + 점수(주주환원·자본효율 절반 + 성장 절반), scripts/lib-picks.js — 2026-10-27~, 성장 절반 2026-11-26~).
   //   큐레이션(topPicks — 이 순위 1~3위에 이유를 붙인 것)이 없거나 일부가 편성에서 빠졌을 때 같은 순위로 채운다. 순위 파일이 없으면 채우지 않는다.
-  var PICK_CRIT = "건강 조건(흑자·희석·자산 급증·이익 변동·추세·수급·결격, 한국은 목표가 급락도)을 통과한 정식 추천·주목·관심 종목 중 상승 가능성 점수(미국: 주식 수 감소·주주환원·ROIC, 한국: 주식 수 감소·배당) 1~3위(미국은 업종마다 한 종목) — 확실한 예측이 아니라 확률을 조금 기울이는 기준";
+  var PICK_CRIT = "건강 조건(흑자·희석·자산 급증·이익 변동·추세·수급·결격, 한국은 목표가 급락도)을 통과한 정식 추천·주목·관심 종목 중 점수 1~3위(미국은 업종마다 한 종목) — 점수 = 주주환원·자본효율(미국: 주식 수 감소·주주환원·ROIC, 한국: 주식 수 감소·배당) 절반 + 성장(증권사 예상 이익 성장·3년 매출 성장) 절반. 확실한 예측이 아니라 확률을 조금 기울이는 기준";
   //   오늘의 1~3위(top — 미국은 업종마다 한 종목, 10/27 4차 연구)를 앞에 두고 나머지는 점수 순. 업종 분산 나라는 이미 나온 업종을 뒤로 미룬다.
   function rankedPicks(cc) {
     var P = window.PICK_SCORES, x = P && P[cc], r = x && x.ranked;
@@ -4798,7 +4806,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     var btn = document.getElementById("picksRec");
     if (!btn) return;
     if (!PERF) { btn.hidden = true; if (!perfFail) setTimeout(loadPerf, 800); return; }
-    // 선정 규칙이 바뀐 뒤(perf.json picksRule — 2026-10-27 '건강 + 상승 가능성')는 새 규칙 구간(w.rule)이 5거래일 쌓이면 그 성적을,
+    // 선정 규칙이 바뀐 뒤(perf.json picksRule — 2026-10-27 '건강 + 상승 가능성', 2026-11-26 성장 절반)는 새 규칙 구간(w.rule)이 5거래일 쌓이면 그 성적을,
     //   그 전에는 이전 기준(균형 큐레이션)의 기록임을 밝혀 전체 기록을 보인다
     var g = PERF[state.country] && PERF[state.country].groups && PERF[state.country].groups.picks, rule = g && g.w && g.w.rule;
     var useRule = !!(rule && rule.days >= 5), s = useRule ? rule : g && g.w && g.w.all;
@@ -4955,7 +4963,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
           (ws.betaAlpha != null && Math.abs(ws.beta - 1) >= 0.25 ? " · 감안하면 " + fmtPp(ws.betaAlpha) : "") + "</span>" : "") + "</div>" +
       // Top Pick 선정 규칙이 바뀐 날(perf.json picksRule) — 곡선은 이어 그리고, 새 규칙 구간 성적을 따로 적는다
       (sel === "picks" && PERF.picksRule ? '<p class="pf-note">' + esc(mdOf(PERF.picksRule.from)) + "부터 '" + esc(PERF.picksRule.label) +
-        "' 순위로 고른다(그 전은 품질·실적·변동성 균형 큐레이션)." + (gs.w.rule ? " 새 기준 " + esc(mdOf(gs.w.rule.from)) + "~ " + fmtPct(gs.w.rule.ret) + " · " + esc(bn) + " " +
+        "' 순위로 고른다(" + esc(PERF.picksRule.before || "그 전은 품질·실적·변동성 균형 큐레이션") + ")." + (gs.w.rule ? " 새 기준 " + esc(mdOf(gs.w.rule.from)) + "~ " + fmtPct(gs.w.rule.ret) + " · " + esc(bn) + " " +
         fmtPct(gs.w.rule.bench) + " (" + gs.w.rule.days + "거래일)" : "") + "</p>" : "");
     if (cmp) {   // 겹쳐 보기 — 묶음마다 처음 담은 날부터의 누적(늦게 시작한 묶음은 그날 0%), 지수는 회색
       var ks = sel === "cmp-theme" ? recoThemes().filter(function (t) { return C.groups[t.key]; }).slice(0, 5).map(function (t, i) { return [t.key, t.label, "c" + i]; })

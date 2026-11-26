@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Top Pick 순위 — 건강 관문 + 상승 가능성 점수(scripts/lib-picks.js, 2026-10-27~)로 나라별 정식 추천 종목을 줄 세운다(토큰 0).
+// Top Pick 순위 — 건강 관문 + 점수(주주환원·자본효율 절반 + 성장 절반 — scripts/lib-picks.js, 2026-10-27~ · 성장 절반 2026-11-26~)로 나라별 정식 추천 종목을 줄 세운다(토큰 0).
 //   사용: node scripts/pick-score.js           — 순위·제외 사유를 보인다(세션이 topPicks 를 쓸 때 ★ Top Pick 1~3 을 그대로 쓴다 — 미국은 업종마다 한 종목)
 //         node scripts/pick-score.js --emit    — data/pick-scores.js 도 쓴다(앱 Top Pick 자동 선정·기준 표시, Action 매일)
 //         node scripts/pick-score.js --json    — 결과를 JSON 으로
@@ -31,15 +31,16 @@ if (JSON_OUT) console.log(JSON.stringify(R, null, 1));
 else report();
 function report() {
 
-console.log("Top Pick 순위 — 건강 관문 + 상승 가능성 점수 · T " + (TA.asOf || "–") + " · 스크린 " + ((DC && DC.asOf) || "없음") + " · 한국 목표가 3개월 변화 " + ((RVD && RVD.asOf) || "없음"));
+console.log("Top Pick 순위 — 건강 관문 + 점수(주주환원·자본효율 절반 + 성장 절반) · T " + (TA.asOf || "–") + " · 스크린 " + ((DC && DC.asOf) || "없음") + " · 한국 목표가 3개월 변화 " + ((RVD && RVD.asOf) || "없음"));
 const tp = D.topPicks || {};
 ["korea", "us"].forEach((c) => {
   const r = R[c], cur = (tp[c] || []).map((x) => x.ticker);
   console.log("\n■ " + (c === "korea" ? "한국" : "미국") + " — 건강 통과 " + r.ranked.length + " · 제외 " + r.excluded.length + " · 점수 자료 없음 " + r.unscored.length +
-    " · 지금 Top Pick(" + (tp.asOf || "–") + "): " + (cur.join(", ") || "–") + "\n  점수 = " + LP.SCORE[c].map((k) => ({ iss: "주식 수 감소", shy: "주주환원 수익률", roic: "ROIC", dy: "배당수익률" })[k]).join("·") + " 백분위" + (LP.SCORE[c].length > 1 ? " 평균" : ""));
+    " · 지금 Top Pick(" + (tp.asOf || "–") + "): " + (cur.join(", ") || "–") + "\n  점수 = 주주환원·자본효율(" + LP.SCORE[c].map((k) => ({ iss: "주식 수 감소", shy: "주주환원 수익률", roic: "ROIC", dy: "배당수익률" })[k]).join("·") + " 백분위 평균) 절반 + 성장(" +
+    LP.GROWTH.map((k) => ({ eg: "증권사 예상 이익 성장", sg3: "3년 매출 연평균 성장(비금융)" })[k]).join("·") + " 백분위 평균, 자료 없으면 0.5) 절반");
   if (r.diversify) console.log("  업종 분산: 1~3위는 업종마다 한 종목(lib-picks DIVERSIFY — 미국 나스닥 섹터)");
   r.ranked.slice(0, 10).forEach((x) => console.log("  " + String(x.rank).padStart(2) + ". " + x.ticker + " " + x.name + " (" + LP.slotKo(x) + (x.secKo ? " · " + x.secKo : "") + ") 점수 " +
-    x.score.toFixed(3) + " — " + LP.partsLine(x, c) + (x.pick ? "  ★ Top Pick " + x.pick : "") +
+    x.score.toFixed(3) + "(주주환원 " + x.sA.toFixed(2) + " · 성장 " + x.sG.toFixed(2) + (x.gNA ? " 자료 없음" : "") + ") — " + LP.partsLine(x, c) + (x.pick ? "  ★ Top Pick " + x.pick : "") +
     (x.skip ? "  (같은 업종 " + x.skip + " 가 이미 Top Pick)" : "") + (cur.includes(x.ticker) ? "  ← 지금" : "")));
   if (r.ranked.length > 10) console.log("  … " + (r.ranked.length - 10) + "종목 더");
   if (r.excluded.length) console.log("  건강 조건 제외: " + r.excluded.map((x) => x.name + "(" + x.why + ")").join(", "));
@@ -50,7 +51,9 @@ const tp = D.topPicks || {};
 
 }
 if (process.argv.includes("--emit")) {
-  const keep = (x) => ({ rank: x.rank, ticker: x.ticker, name: x.name, theme: x.theme, tier: x.tier, tag: x.tag, score: x.score, iss: x.iss, shy: x.shy, roic: x.roic, dy: x.dy,
+  // sA·sG = 두 기둥 점수(주주환원·자본효율 · 성장, 2026-11-26~), eg·sg3 = 성장 재료(예상 이익 성장 · 3년 매출 연평균 성장 %), gNA = 성장 자료 없음(0.5 로 봄)
+  const keep = (x) => ({ rank: x.rank, ticker: x.ticker, name: x.name, theme: x.theme, tier: x.tier, tag: x.tag, score: x.score, sA: x.sA, sG: x.sG, gNA: x.gNA || undefined,
+    iss: x.iss, shy: x.shy, roic: x.roic, dy: x.dy, eg: x.eg, sg3: x.sg3,
     issCa: x.issCa || undefined, sec: x.secKo || undefined, tp3: x.tp3, pick: x.pick || undefined, skip: x.skip || undefined });
   // 종목별 건강 점검(앱 종목 상세 '건강 점검') — {w 걸린 사유(없으면 통과), c: [[항목, 1 통과|0 걸림|null 판정 안 함, 사실 한 줄], …], hold: 보유만 있는 종목(순위 후보 아님)}
   const healthOut = (h) => { const o = {}; Object.keys(h || {}).forEach((t) => { const x = h[t]; o[t] = { w: x.why || undefined, c: x.checks.map((k) => [k.k, k.st, k.t]), hold: x.hold ? 1 : undefined }; }); return o; };

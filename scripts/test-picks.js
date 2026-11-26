@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Top Pick 순위(lib-picks) 시험 — 네트워크 없이 돈다(토큰 0).
-//   ①② 건강 관문(unhealthy) ↔ 화면용 건강 점검 목록(healthChecks) 일치 ③ 무배당 = 배당수익률 0 · 대표 자리(정식 먼저)
+//   ①② 건강 관문(unhealthy) ↔ 화면용 건강 점검 목록(healthChecks) 일치 ③ 무배당 = 배당수익률 0 · 대표 자리(정식 먼저) ④ 성장 기둥(점수의 절반, 2026-11-26)
 //   '걸린 항목이 하나라도 있다 ⟺ unhealthy 가 사유를 낸다'를 ①지금 데이터의 모든 후보·보유 종목 ②무작위 입력(빈 값·문턱 경계)으로 확인한다.
 //   관문 조건을 고치고 건강 점검 목록을 안 고치면 여기서 걸린다(화면이 판정과 다른 말을 하지 않게).
 //   사용: node scripts/test-picks.js      — 어긋나면 exit 1
@@ -91,6 +91,39 @@ for (let i = 0; i < 300000; i++) {
   n++;
   if (!K3.excluded.some((x) => x.ticker === "A" && /점검 중/.test(x.why))) note("점검 필요 종목이 Top Pick 후보에서 빠지지 않음: " + JSON.stringify(K3.excluded));
   if (K3.excluded.some((x) => x.ticker === "B")) note("감시(판정 끝) 종목이 Top Pick 후보에서 빠짐: " + JSON.stringify(K3.excluded));
+}
+// ④ 성장 기둥(2026-11-26 — 점수 = 주주환원·자본효율 절반 + 성장 절반, lib-picks ⑤)
+{
+  // 예상 이익 성장 = 선행 EPS ÷ 지난 EPS − 1 — 지난 EPS 0 이하면 비움, 선행 EPS 0 이하(적자 예상)면 −100
+  const eg = LP.expGrowth;
+  n++;
+  if (!(Math.abs(eg({ eps: 100, feps: 120 }) - 20) < 1e-9)) note("예상 이익 성장 계산 이상: " + eg({ eps: 100, feps: 120 }));
+  if (eg({ eps: -5, feps: 3 }) !== null || eg({ eps: 0, feps: 3 }) !== null || eg({ eps: 10 }) !== null || eg(null) !== null) note("지난 EPS 0 이하·선행 EPS 없음은 비워야 한다");
+  if (eg({ eps: 10, feps: -1 }) !== -100 || eg({ eps: 10, feps: 0 }) !== -100) note("적자 예상은 −100 으로 봐야 한다");
+  // 같은 주주환원·자본효율 재료면 성장이 큰 쪽이 위 · 금융의 3년 매출 성장은 쓰지 않는다 · 성장 자료가 없으면 성장 기둥 0.5
+  const mk = (t) => ({ ticker: t, name: t, theme: "core", tier: 1, market: "KOSPI" });
+  const fxRow = (t, sg3, fin) => ({ ticker: t, fin: !!fin, fx: { year: 2025, niPos: 1, iss: -2, payoutFy: 30, ag: 5, sroa: 1, sg3 } });
+  const sigs = { short: { signal: "매수" }, mid: { signal: "매수" }, long: { signal: "매수" } };
+  const rows = [fxRow("H", 25), fxRow("M", 10), fxRow("L", 1), fxRow("N", null), fxRow("Q", 40, true)];
+  const S = { D: { korea: rows.map((r) => mk(r.ticker)), us: [] }, TA: { ta: Object.fromEntries(rows.map((r) => [r.ticker, sigs])) }, EV: {}, CA: { groups: {} },
+    DC: { groups: { "korea|core": { incumbents: rows } } },
+    FU: { H: { dy: 2, eps: 100, feps: 140 }, M: { dy: 2, eps: 100, feps: 115 }, L: { dy: 2, eps: 100, feps: 101 }, N: { dy: 2 }, Q: { dy: 2, eps: 100, feps: 90 } }, RV: {} };
+  const K = LP.rankPicks(S).korea, by = (t) => K.ranked.find((x) => x.ticker === t);
+  n++;
+  if (K.top.join() !== "H,M,N") note("같은 주주환원 재료에서 성장 순서로 줄 서지 않음(기대 H,M,N — N 은 성장 자료 없음 0.5): " + K.ranked.map((x) => x.ticker + ":" + x.score + "/" + x.sG).join(" "));
+  if (!by("Q") || by("Q").sg3 != null || by("Q").pct.sg3 != null) note("금융 종목의 3년 매출 성장은 쓰지 않아야 한다: " + JSON.stringify(by("Q")));
+  if (!by("N") || by("N").sG !== 0.5 || !by("N").gNA) note("성장 자료가 없는 종목은 성장 기둥 0.5·gNA: " + JSON.stringify(by("N")));
+  if (!/예상 이익 성장 \+40%/.test(LP.partsLine(by("H"), "korea")) || !/3년 매출 연 \+25%/.test(LP.partsLine(by("H"), "korea"))) note("partsLine 에 성장 재료가 없음: " + LP.partsLine(by("H"), "korea"));
+  // 지금 데이터 — 점수 = (주주환원·자본효율 + 성장) ÷ 2(반올림 차이 안)
+  if (D) {
+    const R = LP.rankPicks({ D, TA: load("stock-ta.js", "STOCK_TA") || {}, EV: (load("events.js", "STOCK_EVENTS") || {}).items || {}, CA: load("candidates.js", "CANDIDATES") || { groups: {} },
+      DC: load("discovery-candidates.js", "DISCOVERY_CANDIDATES"), FU: (load("fundamentals.js", "STOCK_FUND") || {}).items || {}, RV: (load("revisions.js", "STOCK_REVISIONS") || {}).items || {} });
+    ["korea", "us"].forEach((c) => R[c].ranked.forEach((x) => {
+      n++;
+      if (x.sA == null || x.sG == null || Math.abs(x.score - (x.sA + x.sG) / 2) > 0.0011) note("점수가 두 기둥 평균이 아님 " + c + " " + x.ticker + " " + JSON.stringify({ score: x.score, sA: x.sA, sG: x.sG }));
+      if (x.sG < 0 || x.sG > 1 || x.sA < 0 || x.sA > 1) note("기둥 점수가 0~1 밖 " + c + " " + x.ticker);
+    }));
+  }
 }
 console.log("test-picks: " + n + "건 — 어긋남 " + bad);
 process.exit(bad ? 1 : 0);

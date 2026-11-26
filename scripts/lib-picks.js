@@ -22,6 +22,18 @@
 //      (지난 180일 안 증권사마다 최신, 2곳 이상)이 3개월 새 10% 넘게 내린 종목을 뺀다 — data/revisions.js(update-revisions.js).
 //      한국 2022~2026 후보 40종목 중 1~3위 흉내에서 6개월 평균 초과 +0.86%p(t 3.0, 전·후반·해마다 양), 확인용 301~600위 +0.14%p(t 1.1).
 //      미국은 효과가 없어(−0.08%p) 쓰지 않는다. 앞날 기대를 점수에 더하는 후보(목표가 상향·성장 예측·상승여력)는 두 나라 모두 사전 기준 미달(PREREG-6).
+//   ⑤ 성장 기둥(2026-11-26 사용자 요청 "추천 종목에 안정성도 중요하지만 동일하게 성장성도 중요해. 성장을 통한 주가 상승을 기대할 수 있는
+//      주식 추천을 중요한 기준으로 추가해줘"): 점수 = ② 의 백분위 평균(주주환원·자본효율 기둥) 절반 + 성장 기둥 절반(GROWTH).
+//      성장 기둥 = 같은 나라 관문 통과 종목 안의 백분위 평균, 값이 있는 것만(둘 다 없으면 0.5 — 가운데로 본다):
+//        예상 이익 성장(eg) = 증권사 컨센서스 선행 EPS ÷ 지난 EPS − 1(fundamentals.js feps·eps — 한국 FnGuide 올해 추정·미국 다음 4분기 합)
+//          — 앞으로 이익이 얼마나 늘 것으로 보나. 선행 EPS 가 0 이하(적자 예상)면 −100% 로 본다.
+//        3년 매출 연평균 성장(sg3, 비금융만 — 금융의 '매출'은 이자·보험 수익이라 주제 스크린처럼 뺀다) — 지난 3년 꾸준히 컸나
+//          (주제 연구 2차에서 다음 해 매출 성장을 가장 잘 이어 간 재료, 순위 IC +0.18).
+//      안정성은 ① 건강 관문이 그대로 맡는다(걸리면 순위에 없다). 사전 등록 검증을 통과한 규칙이 아니라 사용자 방향 선택이다:
+//        가장 가까운 과거 시험(6차 — 재무로 예측한 다음 해 매출 성장 F3·목표가 변화를 더한 F4, 재료 하나로 더한 무게)은 미국 1~3위 6개월 평균 초과
+//        +0.3~0.5%p(t 1.0~1.2 · 확인용 t 2.3~2.9, 폭락 비슷)로 같은 방향이었고, 한국은 평균 상승 폭이 커진 대신(+3.9~7.4%p) 12개월 −30% 폭락이
+//        2.3% → 4.1~5.8%(무작위 11.8%)·시장보다 오른 비율 −2%p 였다. 1년 매출 성장 크기는 성장주 안에서 이후 수익이 오히려 낮아(주제 연구 t −2.6·−2.9) 쓰지 않는다.
+//        증권사 예상 이익 성장은 무료 과거 기록이 없어 시험하지 못했다 — 성과 탭이 2026-11-26 부터 새 기준 구간을 따로 잰다(perf-track PICKS_RULE).
 //   나라별 1~3위(③ 적용) = 오늘의 Top Pick(rankPicks 의 top). ai-daily·세션은 이 순서 그대로 쓰고 이유 문장만 쓴다(pick-score.js 로 확인).
 //   후보 = 정식 추천 4주제 + 주목(신고가·턴어라운드) + 관심 편성 종목(2026-10-30 사용자 요청 '관심 종목도 Top Pick 조건에 해당하면 빼지 마' —
 //   검증 연구도 편성과 무관한 시총 상위 전체에서 했다). 보유 목록은 사용자가 이미 산 종목이라 넣지 않는다.
@@ -52,20 +64,27 @@ const CUTS = {
   us: { iss: 5, ag: 30.1, sroa: 7.6, sroaFin: 2.8 },
   korea: { iss: 5, ag: 36.7, sroa: 9.8, sroaFin: null },
 };
-// 점수 재료(나라별) — 위 ②
+// 점수 재료(나라별) — 위 ②(주주환원·자본효율 기둥)와 ⑤(성장 기둥 — 두 나라 같다). 점수 = 두 기둥 평균(같은 무게)
 const SCORE = { us: ["iss", "shy", "roic"], korea: ["iss", "dy"] };
-const NOTE = "건강 조건(흑자·희석·자산 급증·이익 변동·추세·수급·결격, 한국은 목표가 급락도)을 통과한 정식 추천·주목·관심 종목 중 상승 가능성 점수(미국: 주식 수 감소·주주환원·ROIC, 한국: 주식 수 감소·배당) 1~3위(미국은 업종마다 한 종목) — 확실한 예측이 아니라 확률을 조금 기울이는 기준";
+const GROWTH = ["eg", "sg3"];
+const NOTE = "건강 조건(흑자·희석·자산 급증·이익 변동·추세·수급·결격, 한국은 목표가 급락도)을 통과한 정식 추천·주목·관심 종목 중 점수 1~3위(미국은 업종마다 한 종목) — 점수 = 주주환원·자본효율(미국: 주식 수 감소·주주환원·ROIC, 한국: 주식 수 감소·배당) 절반 + 성장(증권사 예상 이익 성장·3년 매출 성장) 절반. 확실한 예측이 아니라 확률을 조금 기울이는 기준";
 // 앱 ⓘ·문서용 검증 요약(research/top-pick/README.md — 자본 거래 정리 뒤 값, 앱과 같은 처리)
+// 성장 기둥(⑤) 설명 — 두 나라 공통 머리말 + 나라별 과거 시험 사실
+const GROWTH_EV = "성장 절반(2026-11-26~)은 사용자 방향 선택이다 — 안정성(건강 조건)만큼 성장도 보라는 뜻이고, 사전 검증을 통과한 규칙은 아니다. ";
 const EVIDENCE = {
   us: "과거 검증(미국 2011~2026 시총 상위 500, 매월 후보 40종목 중 1~3위를 고르는 상황을 흉내): 3개월 뒤 시장보다 오른 경우 52.5%(무작위 49.8%), " +
     "12개월 안 −30% 폭락 4.2%(4.6%). 우량·저평가·배당 지표를 더한 묶음 6가지와 데이터가 고르는 방식은 이보다 못했다. " +
-    "1~3위를 업종마다 한 종목으로 고르면 금융 비중이 29%에서 24%로 줄고 성적은 같았다. 차이는 작다 — 확실히 오르는 종목은 없다.",
+    "1~3위를 업종마다 한 종목으로 고르면 금융 비중이 29%에서 24%로 줄고 성적은 같았다. " + GROWTH_EV +
+    "가장 가까운 과거 시험(재무로 예측한 다음 해 매출 성장을 더한 점수)에선 1~3위 6개월 평균 초과가 0.3~0.5%p 높고 폭락은 비슷했다(같은 방향, 기준 미달). " +
+    "증권사 예상 이익 성장은 과거 기록이 없어 시험하지 못했다. 차이는 작다 — 확실히 오르는 종목은 없다.",
   korea: "과거 검증(한국 2022~2026 시총 상위 300, 매월 후보 40종목 중 1~3위를 고르는 상황을 흉내): 3개월 뒤 시장보다 오른 경우 54%(무작위 43%), " +
     "12개월 안 −30% 폭락 2%(12%). 주식 수 감소만 볼 때(49%·8%)보다 나았고 확인용 중소형주(301~600위)에서도 같은 방향이었다. 평균 상승 폭은 주식 수만 볼 때가 컸다. " +
     "업종마다 한 종목으로 고르는 방식은 2023~2025년 금융주 강세 탓에 대형주에서 성적이 낮아 쓰지 않는다. " +
-    "증권사 목표가 평균이 3개월 새 10% 넘게 내린 종목을 빼면 1~3위의 6개월 평균 초과가 대형주에서 0.9%p 높았다(해마다 같은 방향, 중소형은 +0.1%p) — 확실히 오르는 종목은 없다.",
+    "증권사 목표가 평균이 3개월 새 10% 넘게 내린 종목을 빼면 1~3위의 6개월 평균 초과가 대형주에서 0.9%p 높았다(해마다 같은 방향, 중소형은 +0.1%p). " + GROWTH_EV +
+    "가장 가까운 과거 시험(재무로 예측한 다음 해 매출 성장을 더한 점수)에선 1~3위 평균 상승 폭이 커진 대신 12개월 안 −30% 폭락이 2.3%에서 4.1~5.8%로 늘었다(무작위 11.8%). " +
+    "증권사 예상 이익 성장은 과거 기록이 없어 시험하지 못했다 — 확실히 오르는 종목은 없다.",
 };
-const SCORE_KO = { iss: "주식 수", shy: "주주환원", roic: "ROIC", dy: "배당" };
+const SCORE_KO = { iss: "주식 수", shy: "주주환원", roic: "ROIC", dy: "배당", eg: "예상 이익 성장", sg3: "3년 매출 성장" };
 
 const ok = (v) => v != null && isFinite(v);
 const mean = (a) => { const x = a.filter(ok); return x.length ? x.reduce((s, v) => s + v, 0) / x.length : null; };
@@ -82,7 +101,13 @@ function pctRank(vals) {
   };
 }
 
-// 편성 종목의 재무 값 — {niPos, iss, shy, roic, ag, sroa, dy, fin, post}(%), 없으면 null. fu = fundamentals.js 항목(배당수익률·결산 뒤 주식 수 변화)
+// 예상 이익 성장(%) — 증권사 컨센서스 선행 EPS ÷ 지난 EPS − 1(fundamentals.js). 지난 EPS 가 0 이하이면 성장률이 뜻이 없어 비우고(적자는 관문이 뺀다),
+//   선행 EPS 가 0 이하(적자 예상)면 가장 낮게(−100%) 본다. 위 ⑤
+function expGrowth(fu) {
+  if (!fu || !ok(fu.eps) || !(fu.eps > 0) || !ok(fu.feps)) return null;
+  return fu.feps > 0 ? (fu.feps / fu.eps - 1) * 100 : -100;
+}
+// 편성 종목의 재무 값 — {niPos, iss, shy, roic, ag, sroa, dy, fin, post, eg, sg3}(%), 없으면 null. fu = fundamentals.js 항목(배당수익률·결산 뒤 주식 수 변화·선행 EPS)
 function finOf(DC, country, theme, ticker, fu) {
   const g = DC && DC.groups && DC.groups[country + "|" + theme];
   const inc = PERSONAL_FX.has(theme) ? ((DC && DC.personal && DC.personal[country]) || {})[ticker] : g && (g.incumbents || []).find((x) => x.ticker === ticker);
@@ -99,7 +124,8 @@ function finOf(DC, country, theme, ticker, fu) {
   //   점수 1.000 으로 한국 1위였다(0 으로 보면 0.5, 11위). 결산 현금배당성향이 0 으로 확인된 한국 종목만 0 으로 본다(자료가 없으면 그대로 비움).
   const dy = dyKnown != null ? dyKnown : country === "korea" && !(fu && fu.dyFlag) && fx.payoutFy === 0 ? 0 : null;
   return { niPos: fx.niPos == null ? null : fx.niPos, iss: iss(fx.iss), issCa: ca(fx.iss), shy: ok(fx.shy) ? fx.shy : null, roic: ok(fx.roic) ? fx.roic : null,
-    ag: ok(fx.ag) ? fx.ag : null, sroa: ok(fx.sroa) ? fx.sroa : null, dy, fin: !!inc.fin, post, src: "fx" };
+    ag: ok(fx.ag) ? fx.ag : null, sroa: ok(fx.sroa) ? fx.sroa : null, dy, fin: !!inc.fin, post, src: "fx",
+    eg: expGrowth(fu), sg3: !inc.fin && ok(fx.sg3) ? fx.sg3 : null };
 }
 
 // 건강 관문 — 걸린 사유(첫 번째 하나) 또는 null. rv = revisions.js 항목(목표가 3개월 변화)
@@ -208,13 +234,16 @@ function rankPicks(S) {
       else if (!f || !SCORE[c].some((k) => ok(f[k]))) unscored.push(Object.assign(base, { why: "점수 자료 없음(" + SCORE[c].map((k) => SCORE_KO[k]).join("·") + ")" }));
       else healthy.push({ s, f, base, sec: sectorOf(c, (S.FU || {})[s.ticker]), tp3: rv && ok(rv.chg) ? rv.chg : undefined });
     });
-    // 재료마다 같은 나라 관문 통과 종목 안의 백분위 — 주식 수는 줄수록 좋다(1 − 백분위)
+    // 재료마다 같은 나라 관문 통과 종목 안의 백분위 — 주식 수는 줄수록 좋다(1 − 백분위). 3년 매출 성장은 비금융만 값이 있어 그 안의 백분위다
     const pr = {};
-    SCORE[c].forEach((k) => { pr[k] = pctRank(healthy.map((h) => h.f[k])); });
+    SCORE[c].concat(GROWTH).forEach((k) => { pr[k] = pctRank(healthy.map((h) => h.f[k])); });
     const ranked = healthy.map((h) => {
       const p = {};
-      SCORE[c].forEach((k) => { const v = pr[k](h.f[k]); p[k] = v == null ? null : r3(k === "iss" ? 1 - v : v); });
-      return Object.assign(h.base, { score: r3(mean(SCORE[c].map((k) => p[k]))), iss: r1(h.f.iss), shy: r1(h.f.shy), roic: r1(h.f.roic), dy: r1(h.f.dy),
+      SCORE[c].concat(GROWTH).forEach((k) => { const v = pr[k](h.f[k]); p[k] = v == null ? null : r3(k === "iss" ? 1 - v : v); });
+      // 점수 = 주주환원·자본효율 기둥(②) 절반 + 성장 기둥(⑤) 절반 — 성장 값이 하나도 없으면 성장 기둥을 가운데(0.5)로 본다
+      const sA = mean(SCORE[c].map((k) => p[k])), g = mean(GROWTH.map((k) => p[k])), sG = g == null ? 0.5 : g;
+      return Object.assign(h.base, { score: r3((sA + sG) / 2), sA: r3(sA), sG: r3(sG), gNA: g == null || undefined,
+        iss: r1(h.f.iss), shy: r1(h.f.shy), roic: r1(h.f.roic), dy: r1(h.f.dy), eg: r1(h.f.eg), sg3: r1(h.f.sg3),
         pct: p, src: h.f.src, issCa: h.f.issCa || undefined, sec: h.sec || undefined, secKo: SEC.sectorKo(c, h.sec) || undefined, tp3: h.tp3 });
     });
     ranked.sort((p, q) => (q.score - p.score) || ((p.tier || 9) - (q.tier || 9)) || (THEMES.indexOf(p.theme) - THEMES.indexOf(q.theme)) || String(p.name).localeCompare(String(q.name), "ko"));
@@ -232,7 +261,7 @@ function rankPicks(S) {
   return out;
 }
 
-// 화면·프롬프트용 한 줄 — 그 나라 점수 재료만: '주식 수 연 −1.2% · 주주환원 수익률 3.1% · ROIC 24%'(값이 있는 것만)
+// 화면·프롬프트용 한 줄 — 그 나라 점수 재료만: '주식 수 연 −1.2% · 주주환원 수익률 3.1% · ROIC 24% · 예상 이익 성장 +12% · 3년 매출 연 +9%'(값이 있는 것만)
 function partsLine(x, country) {
   const use = SCORE[country] || SCORE.us, a = [];
   if (use.includes("iss")) {
@@ -242,6 +271,9 @@ function partsLine(x, country) {
   if (use.includes("shy") && ok(x.shy)) a.push("주주환원 수익률 " + x.shy + "%");
   if (use.includes("roic") && ok(x.roic)) a.push("ROIC " + x.roic + "%");
   if (use.includes("dy") && ok(x.dy)) a.push("배당수익률 " + x.dy + "%");
+  // 성장 기둥(⑤) — 두 나라 같다
+  if (ok(x.eg)) a.push("예상 이익 성장 " + (x.eg > 0 ? "+" : "") + x.eg + "%");
+  if (ok(x.sg3)) a.push("3년 매출 연 " + (x.sg3 > 0 ? "+" : "") + x.sg3 + "%");
   return a.join(" · ");
 }
 
@@ -251,14 +283,17 @@ const slotKo = (x) => (x.theme === "spotlight" ? "주목" + (x.tag ? "(" + x.tag
 
 // Top Pick 고장 수리(2026-11-14) — 지금 Top Pick 가운데 검증 오류가 되는 종목(편성에서 빠졌거나, 엔진 단·중·장기가 모두 매도 이하 —
 //   validate-reco 가 오류로 막는다)이 있으면 그 나라 목록을 지금 순위 1~3위로 다시 세운다. 남는 종목의 이유는 그대로, 새로 들어온 종목은
-//   순위 재료(주식 수 감소·ROIC — 회사 수치)로 만든 사실 한 줄(다음 AI·세션 회차가 이유를 다시 쓴다).
+//   순위 재료(주식 수 감소·ROIC·예상 이익 성장 — 회사 수치)로 만든 사실 한 줄(다음 AI·세션 회차가 이유를 다시 쓴다).
 //   그 전엔 Top Pick 한 종목이 하루 사이 추세 붕괴가 되면 고칠 주체가 없었다: update-reco 의 전체 검증이 실패해 기술 대응 자동 생성(gen-technote)부터
 //   저장이 막히고, Action 의 그날 커밋이 통째로 멈췄다(다음 세션이 손으로 고칠 때까지). gen-technote 가 신호가 바뀐 그 실행에서 함께 고친다.
 //   R = rankPicks 결과, D = STOCK_DATA, TA = STOCK_TA. 고칠 것이 없으면 null, 있으면 { tp(새 topPicks), moved[설명] }.
 function autoReason(row, c) {
-  const iss = row && !row.issCa && row.iss != null && row.iss < 0 ? "주식 수가 연 " + Math.abs(row.iss) + "% 줄었" : null;
-  const roic = row && c === "us" && row.roic != null ? "ROIC 는 " + row.roic + "%다" : null;
-  return "건강 조건을 모두 통과했고 " + (iss && roic ? iss + "으며 " + roic : iss ? iss + "다" : roic || "상승 가능성 점수가 후보 가운데 " + (row ? row.rank : "상위") + "위다") + ".";
+  const parts = [];   // [이어지는 꼴, 끝나는 꼴] — 회사 수치만(가격 의존 수치 금지)
+  if (row && !row.issCa && row.iss != null && row.iss < 0) parts.push(["주식 수가 연 " + Math.abs(row.iss) + "% 줄었으며", "주식 수가 연 " + Math.abs(row.iss) + "% 줄었다"]);
+  if (row && c === "us" && row.roic != null) parts.push(["ROIC 는 " + row.roic + "%이고", "ROIC 는 " + row.roic + "%다"]);
+  if (row && row.eg != null && row.eg > 0) parts.push(["증권사 예상 이익 성장은 " + row.eg + "%이고", "증권사 예상 이익 성장은 " + row.eg + "%다"]);   // 성장 기둥(⑤)
+  if (!parts.length) return "건강 조건을 모두 통과했고 점수가 후보 가운데 " + (row ? row.rank : "상위") + "위다.";
+  return "건강 조건을 모두 통과했고 " + parts.map((q, i) => (i === parts.length - 1 ? q[1] : q[0])).join(" ") + ".";
 }
 function repairTopPicks(tp, R, D, TA) {
   if (!tp || !R || !D) return null;
@@ -293,4 +328,4 @@ function repairTopPicks(tp, R, D, TA) {
   return moved.length ? { tp: out, moved } : null;
 }
 
-module.exports = { CUTS, SCORE, NOTE, EVIDENCE, DIVERSIFY, REV, rankPicks, finOf, partsLine, pickTop, canPick, slotKo, unhealthy, healthChecks, repairTopPicks };
+module.exports = { CUTS, SCORE, GROWTH, NOTE, EVIDENCE, DIVERSIFY, REV, rankPicks, finOf, expGrowth, partsLine, pickTop, canPick, slotKo, unhealthy, healthChecks, repairTopPicks, autoReason };
