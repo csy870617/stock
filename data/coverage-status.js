@@ -109,7 +109,7 @@ window.COVERAGE_STATUS = {
    "label": "AI 적정가 재시도",
    "fresh": 102,
    "total": 102,
-   "oldestDays": 4,
+   "oldestDays": 3,
    "ok": true
   },
   {
@@ -118,11 +118,11 @@ window.COVERAGE_STATUS = {
    "fresh": 8,
    "total": 8,
    "unit": "그룹",
-   "oldestDays": 5,
+   "oldestDays": 1,
    "ok": true
   }
  ],
  "ok": true,
  "overdue": [],
- "dataHash": "827ba2a9fd6c"
+ "dataHash": "e4a4882d001c"
 };
