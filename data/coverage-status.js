@@ -2,7 +2,7 @@
 // 앱 상단 '데이터 신선도' 패널이 읽는다. 직접 수정하지 말 것.
 window.COVERAGE_STATUS = {
  "asOf": "2026-11-27",
- "T": "2026-11-26",
+ "T": "2026-11-27",
  "total": 102,
  "cycleDays": 7,
  "daily": [
@@ -124,5 +124,5 @@ window.COVERAGE_STATUS = {
  ],
  "ok": true,
  "overdue": [],
- "dataHash": "a41a8f3ad252"
+ "dataHash": "827ba2a9fd6c"
 };

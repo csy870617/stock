@@ -9,7 +9,7 @@ window.LIQUIDITY_AUTO = {
   "curve": "0.69",
   "vix": "26.8",
   "hyg20": "-0.9",
-  "dxy": "103.7",
+  "dxy": "103.8",
   "usdkrw": "1343"
  },
  "us": {
@@ -25,12 +25,11 @@ window.LIQUIDITY_AUTO = {
   ]
  },
  "korea": {
-  "shortTerm": "매우 부정",
+  "shortTerm": "부정",
   "midTerm": "부정",
   "shortScore": -1,
   "midScore": -1.15,
   "drivers": [
-   "⚠ 코스피 급락 floor 발동 (20일 -21%)",
    "코스피 모멘텀(20d) (−2)",
    "글로벌 변동성 VIX (−1)",
    "글로벌 신용(20d) (−1)",
@@ -55,72 +54,72 @@ window.LIQUIDITY_AUTO = {
    },
    {
     "date": "2027-01-27",
-    "rate": 4.295,
-    "stepBp": 16.7,
-    "cumBp": 41.7,
+    "rate": 4.29,
+    "stepBp": 16.2,
+    "cumBp": 41.2,
     "outcomes": [
      {
       "n": 2,
-      "p": 67
+      "p": 65
      },
      {
       "n": 1,
-      "p": 33
+      "p": 35
      }
     ]
    },
    {
     "date": "2027-03-17",
-    "rate": 4.461,
+    "rate": 4.456,
     "stepBp": 16.6,
-    "cumBp": 58.4,
+    "cumBp": 57.9,
     "outcomes": [
      {
       "n": 2,
-      "p": 66
+      "p": 68
      },
      {
       "n": 3,
-      "p": 34
+      "p": 32
      }
     ]
    },
    {
     "date": "2027-04-28",
-    "rate": 4.515,
+    "rate": 4.51,
     "stepBp": 5.4,
-    "cumBp": 63.7,
+    "cumBp": 63.2,
     "outcomes": [
      {
       "n": 3,
-      "p": 55
+      "p": 53
      },
      {
       "n": 2,
-      "p": 45
+      "p": 47
      }
     ]
    },
    {
     "date": "2027-06-09",
-    "rate": 4.586,
+    "rate": 4.581,
     "stepBp": 7.1,
-    "cumBp": 70.9,
+    "cumBp": 70.4,
     "outcomes": [
      {
       "n": 3,
-      "p": 84
+      "p": 82
      },
      {
       "n": 2,
-      "p": 16
+      "p": 18
      }
     ]
    },
    {
     "date": "2027-07-28",
     "rate": 4.585,
-    "stepBp": -0.1,
+    "stepBp": 0.4,
     "cumBp": 70.7,
     "outcomes": [
      {
@@ -135,17 +134,17 @@ window.LIQUIDITY_AUTO = {
    },
    {
     "date": "2027-09-15",
-    "rate": 4.575,
-    "stepBp": -1,
-    "cumBp": 69.8,
+    "rate": 4.565,
+    "stepBp": -2,
+    "cumBp": 68.7,
     "outcomes": [
      {
       "n": 3,
-      "p": 79
+      "p": 75
      },
      {
       "n": 2,
-      "p": 21
+      "p": 25
      }
     ]
    }
@@ -158,8 +157,8 @@ window.LIQUIDITY_AUTO = {
   "call": 3.321,
   "cd91": 3.4,
   "y1": 3.672,
-  "y2": 3.694,
-  "y3": 3.666,
+  "y2": 3.72,
+  "y3": 3.687,
   "exp3m": {
    "rate": 3.22,
    "chg": -0.03,
