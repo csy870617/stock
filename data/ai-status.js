@@ -2,7 +2,7 @@
 // 앱 'AI 연결' 창이 '매일 자동 분석' 칸에 보여 준다. 비용은 토큰 기준 추정(웹 검색은 횟수만 — 검색당 요금 별도).
 window.AI_STATUS = {
  "defects": {
-  "at": "2026-11-26T08:20:45.323Z",
+  "at": "2026-11-27T03:31:44.535Z",
   "model": "claude-sonnet-5-5",
   "ok": true,
   "pending": 0,
@@ -18,20 +18,20 @@ window.AI_STATUS = {
   }
  },
  "news": {
-  "at": "2026-11-26T08:25:20.967Z",
+  "at": "2026-11-27T03:33:41.817Z",
   "model": "claude-haiku-5-5",
   "ok": true,
-  "stocks": 98,
-  "fetched": 98,
-  "called": 58,
-  "lines": 71,
+  "stocks": 99,
+  "fetched": 99,
+  "called": 85,
+  "lines": 74,
   "usage": {
-   "calls": 58,
-   "input": 109623,
-   "output": 4254,
+   "calls": 85,
+   "input": 138702,
+   "output": 5609,
    "cacheRead": 0,
    "searches": 0,
-   "usd": 0.013
+   "usd": 0.017
   }
  },
  "daily": {
@@ -44,14 +44,14 @@ window.AI_STATUS = {
   "model": "claude-opus-5-5",
   "ok": true,
   "seen": {
-   "at": "2026-11-26T08:25:20.858Z",
+   "at": "2026-11-27T03:33:41.717Z",
    "basis": {
     "kr": "2026-11-26",
     "us": "2026-11-25"
    },
    "items": {
     "market": {
-     "sig": "미국은 물가·관세·AI주 매도로 장중 급락했다가 낙폭을 대부분 되찾아 혼#qibcp5",
+     "sig": "미국은 물가·관세·AI주 매도로 장중 급락했다가 낙폭을 대부분 되찾아 혼#7bnn6p",
      "basis": {
       "kr": "2026-11-26",
       "us": "2026-11-25"
@@ -65,14 +65,14 @@ window.AI_STATUS = {
      }
     },
     "indexNotes": {
-     "sig": "하락세 — 일봉 구름 아래·MACD 시그널 하회, RSI 35.5로 과매#fgtm8l",
+     "sig": "하락세 — 일봉 구름 아래·MACD 시그널 하회, RSI 35.5로 과매#1tthsgo",
      "basis": {
       "kr": "2026-11-26",
       "us": "2026-11-25"
      }
     },
     "topPicks": {
-     "sig": "주식 수를 연 2.9% 줄이는 주주환원과 증권사 예상 이익 성장 +16%#1b5jabu",
+     "sig": "주식 수를 연 2.9% 줄이는 주주환원과 증권사 예상 이익 성장 +16%#kwjna2",
      "basis": {
       "kr": "2026-11-26",
       "us": "2026-11-25"
@@ -104,6 +104,8 @@ window.AI_STATUS = {
    "cacheRead": 0,
    "searches": 6,
    "usd": 2.803
-  }
+  },
+  "checkedAt": "2026-11-27T03:33:41.717Z",
+  "skipped": "오늘(2026-11-26) 몫이 이미 최신 — AI 작성분 유지"
  }
 };
