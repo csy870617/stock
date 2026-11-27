@@ -6716,14 +6716,14 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     korea: {
       KDEP3: { lv: "투자자예탁금 · 조원", sig: "3개월 변화율 · %",
         what: "주식을 사려고 증권 계좌에 넣어 둔 대기 자금.",
-        dir: "3개월 새 늘면 돈이 들어오는 쪽, 줄면 빠지는 쪽.", src: "금융투자협회 증시자금 — 매일, 하루 늦게 반영",
+        dir: "3개월 새 늘면 돈이 들어오는 쪽, 줄면 빠지는 쪽.", src: "금융투자협회 투자자예탁금(네이버 증권 증시자금동향 '고객예탁금'으로 받는다) — 영업일마다, 다음 날 오후 공표",
         ev: [["ok", "3개월 새 늘수록 다음 3개월 코스피 초과수익이 높았다(t 3.07, 전·후반 모두, 표본 밖 R² +11.4%) — 하위·중간·상위 3분의 1 평균 −1.9%·+1.7%·+5.1%."],
           ["ok", "지수 추세를 함께 넣어도(t 2.93), 2020~21년 코로나 유동성 장을 빼도(t 2.31) 유지."],
           ["no", "코스피 −10% 급락 확률은 가르지 못했다 — 개인 자금이 몰리는 국면은 과열과 같이 오기도 한다."],
           ["ref", "그달 코스피와 같이 움직였다(상관 0.43)."]] },
       KMRG3: { lv: "신용융자 잔고 · 조원", sig: "3개월 변화율 · %",
         what: "증권사에서 돈을 빌려 산 주식의 잔고(신용거래융자).",
-        dir: "3개월 새 늘면 돈이 들어오는 쪽 — 빚을 내서라도 사려는 돈.", src: "금융투자협회 신용공여 — 매일, 하루 늦게 반영",
+        dir: "3개월 새 늘면 돈이 들어오는 쪽 — 빚을 내서라도 사려는 돈.", src: "금융투자협회 신용거래융자(네이버 증권 증시자금동향 '신용잔고'로 받는다 — 금융투자협회 신용공여 표의 합계보다 1~2% 작은 정의) — 영업일마다, 다음 날 오후 공표",
         ev: [["ok", "3개월 새 늘수록 다음 3개월 코스피가 나았다(t 2.88, 전·후반 모두, 표본 밖 R² +1.5%) — 하위·중간·상위 3분의 1 평균 −0.7%·−0.8%·+7.5%."],
           ["ok", "지수 추세를 넣어도(t 2.08), 코로나 유동성 장을 빼도(t 2.96) 유지."],
           ["no", "코스피 −10% 급락 확률은 가르지 못했다."],
@@ -6754,8 +6754,34 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     }
   };
   var FI_EV = { ok: ["fi-ok", "검증 통과"], no: ["fi-no", "미달"], ref: ["fi-rf", "참고"] };
-  var FI_RANGES = [["3", "3년"], ["5", "5년"], ["10", "10년"], ["all", "전체"]];
-  var FI = { data: null, err: false, errAt: 0, wait: null, range: "10" }, FIC = { cur: null };
+  // 3개월·1년 = 일별(liquidity-ind.json daily — 자료가 나오는 대로, 2026-11-27 사용자 '신용융자 그래프 실시간으로'), 3년~전체 = 월말.
+  //   일별 자료가 없는 지표(M2·회사채 스프레드 — 월별 자료, 외국인 순매수 — 월 합 지표)는 일별 칸이 없고, 일별을 고른 채 넘어가면 3년 월말로 본다.
+  var FI_RANGES = [["3m", "3개월"], ["1y", "1년"], ["3", "3년"], ["5", "5년"], ["10", "10년"], ["all", "전체"]];
+  var FI_DAILY = { "3m": 92, "1y": 366 };   // 일별 보기의 최근 날 수
+  var FI = { data: null, err: false, errAt: 0, wait: null, range: "1y" }, FIC = { cur: null };
+  function fiDaily(k) { var D = FI.data, x = D && D.daily && D.daily.s ? D.daily.s[k] : null; return x && x.d && x.d.length >= 5 ? x : null; }
+  function fiRangeOf(k) { return FI_DAILY[FI.range] && !fiDaily(k) ? "3" : FI.range; }
+  function fiIsoMinus(iso, d) { return new Date(Date.parse(iso + "T00:00:00Z") - d * 864e5).toISOString().slice(0, 10); }
+  // 날짜 축 값 맞추기 — 그날 또는 그 전 마지막 값(7일 넘게 비면 없음)
+  function fiAtOrBefore(ser, iso) {
+    var lo = 0, hi = ser.d.length - 1, j = -1;
+    while (lo <= hi) { var m = (lo + hi) >> 1; if (ser.d[m] <= iso) { j = m; lo = m + 1; } else hi = m - 1; }
+    return j < 0 || (Date.parse(iso) - Date.parse(ser.d[j])) / 864e5 > 7 ? null : ser.v[j];
+  }
+  // 추이 머리말·설명 — 보기(일별·월말)에 따라. fiPaint 가 기간을 바꿀 때마다 다시 쓴다
+  function fiChartText(c, k, daily, nw, hasD) {
+    var rk = fiRiskItems(c, k).length, wk = k === "NL3" || k === "FCI3", kofia = k === "KDEP3" || k === "KMRG3";
+    var thrNote = rk ? " 주황 점선 = 급락 신호 기준선(그" + (daily ? "날이 든 달" : "달") + " 앞 5년 값 중 나쁜 쪽 3분의 1 경계 — 넘으면 켜짐)." : "";
+    if (daily) {
+      var last = daily.d[daily.d.length - 1];
+      return { as: (wk ? "주별" : "일별") + " · 마지막 " + mdOf(last), read: "그래프를 누르면 그 " + (wk ? "주" : "날") + " 값",
+        note: "막대 색 = 그" + (wk ? "주" : "날") + " 3개월(91일 전 대비) 변화가 그달 앞 5년 월말 평소보다 돈이 들어오는 쪽(초록)·빠지는 쪽(주황)으로 0.5 표준편차 넘게 벗어났는지(회색 = 보통)." + thrNote +
+          (kofia ? " 금융투자협회 집계는 영업일 다음 날 오후에 나와 그 뒤 자동 갱신(하루 몇 번)에 들어온다 — 장중에 바뀌는 값이 아니다." : wk ? " 연준 자산·NFCI 는 한 주에 한 번 나온다." : "") + " 세 그래프는 같은 날끼리 세로로 맞췄다." };
+    }
+    var nowNote = nw ? " 맨 끝 빈 점" + (hasD ? "·옅은 막대" : "") + " = " + mdOf(nw.d) + " 기준 지금 값(이달 진행 중 — 월말 값이 아니다" + (k === "KFF3" ? ", 외국인은 이달 누계·최근 63거래일 합" : "") + ")." : "";
+    return { as: "월말" + (nw ? " · 끝은 " + mdOf(nw.d) + " 값" : ""), read: hasD ? "그래프를 누르면 그 달 값" : "",
+      note: (hasD ? "막대 색 = 그달 " + fiJosa(k === "M2R" ? "실질 증가율" : k === "KFF3" ? "3개월 합" : "3개월 변화", "이", "가") + " 그달 앞 5년 평소보다 돈이 들어오는 쪽(초록)·빠지는 쪽(주황)으로 0.5 표준편차 넘게 벗어났는지(회색 = 보통)." + thrNote + " 세 그래프는 같은 달끼리 세로로 맞췄다." : "") + nowNote };
+  }
   function fiCk(c) { return c === "us" ? "us" : "korea"; }
   function fiComp(c, k) { var o = flowOf(c); return o ? (o.comps || []).filter(function (x) { return x.key === k; })[0] || null : null; }
   function fiInfo(c, k) { return (FI_INFO[fiCk(c)] || {})[k] || null; }
@@ -6821,19 +6847,19 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     var nav = '<nav class="dt-nav" aria-label="지표 항목">' + [["fi-ch", "추이"], ["fi-rd", "읽는 법"], ["fi-ev", "검증"]].concat(rk.length ? [["fi-rk", "급락 신호"]] : [], [["fi-sc", "점수 몫"], ["fi-ai", "AI"]])
       .map(function (p) { return '<a href="#' + p[0] + '" data-sec="' + p[0] + '">' + p[1] + "</a>"; }).join("") + "</nav>";
     // 추이 — 수준 · 3개월 변화(막대 색 = 그달 방향) · 지수, 같은 달 축의 세 그래프(이중 축 대신)
-    var rg = D ? '<div class="fi-rg" role="group" aria-label="기간">' + FI_RANGES.map(function (r) {
-      return '<button type="button" data-firg="' + r[0] + '" aria-pressed="' + (FI.range === r[0] ? "true" : "false") + '">' + r[1] + "</button>";
+    var rng = fiRangeOf(k), dly = FI_DAILY[rng] ? fiDaily(k) : null;
+    var rg = D ? '<div class="fi-rg" role="group" aria-label="기간">' + FI_RANGES.filter(function (r) { return !FI_DAILY[r[0]] || fiDaily(k); }).map(function (r) {
+      return '<button type="button" data-firg="' + r[0] + '" aria-pressed="' + (rng === r[0] ? "true" : "false") + '">' + r[1] + "</button>";
     }).join("") + "</div>" : "";
-    var thrNote = rk.length ? " 주황 점선 = 급락 신호 기준선(그달 앞 5년 값 중 나쁜 쪽 3분의 1 경계 — 넘으면 켜짐)." : "";
-    // 그래프 끝의 지금 값(이달 진행 중) — 마지막 월말보다 뒤 날짜의 값이 있을 때
+    // 그래프 끝의 지금 값(이달 진행 중) — 마지막 월말보다 뒤 날짜의 값이 있을 때(월말 보기만 — 일별 보기는 마지막 날이 곧 지금 값)
     var sp0 = x.spark || [], nw = fiNow(k, D ? D.months[D.months.length - 1] : sp0.length ? sp0[sp0.length - 1][0] : null);
-    var nowNote = nw ? " 맨 끝 빈 점" + (D ? "·옅은 막대" : "") + " = " + mdOf(nw.d) + " 기준 지금 값(이달 진행 중 — 월말 값이 아니다" + (k === "KFF3" ? ", 외국인은 이달 누계·최근 63거래일 합" : "") + ")." : "";
-    var chart = '<section class="dt-sec" id="fi-ch"><h3>추이 <span class="md-as">월말' + (nw ? " · 끝은 " + esc(mdOf(nw.d)) + " 값" : "") + '</span></h3>' + rg +
-      '<div class="fw-read" id="fiRead">' + (D ? "그래프를 누르면 그 달 값" : FI.err ? "긴 추이를 불러오지 못했다 — 최근 3년 월말만 보인다" : "긴 추이 불러오는 중… 먼저 최근 3년") + "</div>" +
+    var ct = fiChartText(c, k, dly, dly ? null : nw, !!D);
+    var chart = '<section class="dt-sec" id="fi-ch"><h3>추이 <span class="md-as" id="fiChAs">' + esc(ct.as) + '</span></h3>' + rg +
+      '<div class="fw-read" id="fiRead">' + (D ? esc(ct.read) : FI.err ? "긴 추이를 불러오지 못했다 — 최근 3년 월말만 보인다" : "긴 추이 불러오는 중… 먼저 최근 3년") + "</div>" +
       '<div class="fw-ct">' + esc(D ? inf.lv : "최근 3년 월말" + (x.unit ? " · " + x.unit : "")) + '</div><div class="fw-chart" data-fic="lv"></div>' +
       (D ? '<div class="fw-ct">' + esc(inf.sig) + ' <span class="fi-lg" aria-hidden="true"><i class="fi-sw in"></i>들어옴<i class="fi-sw out"></i>빠짐<i class="fi-sw flat"></i>보통</span></div><div class="fw-chart" data-fic="sig"></div>' +
         '<div class="fw-ct">' + esc((D.idx && D.idx[ck] && D.idx[ck].name) || "") + '</div><div class="fw-chart sm" data-fic="idx"></div>' : "") +
-      '<p class="fw-note">' + (D ? "막대 색 = 그달 " + fiJosa(k === "M2R" ? "실질 증가율" : k === "KFF3" ? "3개월 합" : "3개월 변화", "이", "가") + " 그달 앞 5년 평소보다 돈이 들어오는 쪽(초록)·빠지는 쪽(주황)으로 0.5 표준편차 넘게 벗어났는지(회색 = 보통)." + thrNote + " 세 그래프는 같은 달끼리 세로로 맞췄다." : "") + esc(nowNote) + "</p></section>";
+      '<p class="fw-note" id="fiChNote">' + esc(ct.note) + "</p></section>";
     var read = '<section class="dt-sec" id="fi-rd"><h3>어떻게 읽나</h3><dl class="fi-dl">' +
       "<dt>무엇</dt><dd>" + esc(inf.what) + "</dd><dt>방향</dt><dd>" + esc(inf.dir) + "</dd>" +
       "<dt>판정</dt><dd>지금 값을 직전 5년(60개월) 같은 신호의 평균·표준편차와 견준 값(z)이 +0.5 이상이면 들어옴, −0.5 이하면 빠짐, 그 사이는 보통.</dd>" +
@@ -6867,7 +6893,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
       (bars ? '<div class="fi-zs">' + bars + "</div>" : "") + '<p class="fw-note">' + esc(FI_SCORE_EV[ck]) + " 단계 = 지금 점수가 최근 5년 월말 점수 중 어디인가(20%씩 5단계).</p></section>";
     return top + hero + nav + chart + read + ev + risk + scoreSec +
       '<section class="dt-sec" id="fi-ai"><h3>AI에게 묻기</h3>' + aiSectionHtml("m:" + c, { kind: "market", c: c }) + "</section>" +
-      '<p class="fw-foot">' + esc(cn) + " 자료: " + esc(inf.src) + ". 위쪽 지금 값은 매일 자동 계산(공개가 늦는 자료는 공개된 마지막 값), 추이 그래프는 월말 값(맨 끝은 지금 값).</p>";
+      '<p class="fw-foot">' + esc(cn) + " 자료: " + esc(inf.src) + ". 위쪽 지금 값은 매일 자동 계산(공개가 늦는 자료는 공개된 마지막 값), 추이 그래프는 3개월·1년은 일별(자료가 나오는 대로), 3년~전체는 월말 값(맨 끝은 지금 값).</p>";
   }
   function mountIndCharts(c, k) {
     FIC.cur = null;
@@ -6890,18 +6916,27 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     var D = FI.data, c = st.c, k = st.k, x = fiComp(c, k), ck = fiCk(c);
     var els = st.sec.querySelectorAll("[data-fic]"); if (!els.length || !x) return;
     var months, lv, sig = null, zs = null, ix = null, thrLv = null, thrSig = null, thrLvNow = null, thrSigNow = null, idxName = "";
-    if (D && D.series && D.series[k]) {
+    var rng = fiRangeOf(k), dly = FI_DAILY[rng] ? fiDaily(k) : null, daily = !!dly;
+    if (daily) {   // 일별 — 최근 3개월·1년(마지막 날이 곧 지금 값), 지수는 그날 또는 그 전 마지막 종가
+      var dLast = dly.d[dly.d.length - 1], dFrom = fiIsoMinus(dLast, FI_DAILY[rng]), f0 = 0;
+      while (f0 < dly.d.length && dly.d[f0] < dFrom) f0++;
+      months = dly.d.slice(f0); lv = dly.lv.slice(f0); sig = dly.sig.slice(f0); zs = dly.z.slice(f0);
+      var dIx = D.daily.idx && D.daily.idx[ck];
+      if (dIx) { ix = months.map(function (d) { return fiAtOrBefore(dIx, d); }); idxName = (D.idx && D.idx[ck] && (D.idx[ck].short || D.idx[ck].name)) || ""; }
+      var dTh = D.daily.thr && D.daily.thr[k];
+      if (dTh) { thrLv = dTh.lv.slice(f0); thrSig = dTh.sig.slice(f0); }
+    } else if (D && D.series && D.series[k]) {
       var S = D.series[k], n = D.months.length, first = 0;
       while (first < n && S.lv[first] == null && S.sig[first] == null) first++;
-      var span = FI.range === "all" ? n : Math.min(n, (+FI.range || 10) * 12), from = Math.max(first, n - span);
+      var span = rng === "all" ? n : Math.min(n, (+rng || 10) * 12), from = Math.max(first, n - span);
       months = D.months.slice(from); lv = S.lv.slice(from); sig = S.sig.slice(from); zs = S.z.slice(from);
       if (D.idx && D.idx[ck]) { ix = D.idx[ck].v.slice(from); idxName = D.idx[ck].short || D.idx[ck].name; }
       Object.keys(D.risk || {}).forEach(function (rk) { var r = D.risk[rk]; if (r.ind !== k) return; if (r.on === "lv") { thrLv = r.thr.slice(from); thrLvNow = r.now; } else { thrSig = r.thr.slice(from); thrSigNow = r.now; } });
     } else {
       var sp = x.spark || []; months = sp.map(function (p) { return p[0]; }); lv = sp.map(function (p) { return p[1]; });
     }
-    // 끝 = 지금 값(이달 진행 중) — 수준·3개월 변화·평소 대비·지수·기준선(지금 기준)을 한 칸씩 잇는다
-    var nw = months && months.length ? fiNow(k, months[months.length - 1]) : null, live = !!nw, nIx = null;
+    // 끝 = 지금 값(이달 진행 중) — 수준·3개월 변화·평소 대비·지수·기준선(지금 기준)을 한 칸씩 잇는다(월말 보기만 — 일별은 마지막 날이 지금 값)
+    var nw = !daily && months && months.length ? fiNow(k, months[months.length - 1]) : null, live = !!nw, nIx = null;
     if (live) {
       nIx = ix ? fiNowIdx(ck === "us" ? "SPY" : "KS", months[months.length - 1]) : null;
       months = months.concat([nw.d]); lv = lv.concat([nw.lv]);
@@ -6911,6 +6946,10 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
       if (thrSig) thrSig = thrSig.concat([thrSigNow]);
     }
     if (!months || months.length < 2) return;
+    // 머리말·설명·값 줄 — 보기(일별·월말)에 맞춘다(기간 버튼을 누를 때마다)
+    var ct = fiChartText(c, k, dly, nw, !!D), asEl = st.sec.querySelector("#fiChAs"), noteEl = st.sec.querySelector("#fiChNote");
+    if (asEl) asEl.textContent = ct.as;
+    if (noteEl) noteEl.textContent = ct.note;
     var W = Math.max(240, els[0].clientWidth || 320), yrs = months.length / 12, ystep = yrs <= 6 ? 1 : yrs <= 12 ? 2 : 5;
     function draw(el, vals, opt) {
       var H = opt.h, pl = 6, pr = 46, pt = 8, pb = opt.axis ? 18 : 6;
@@ -6924,7 +6963,17 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
         g += '<line x1="' + pl + '" x2="' + (W - pr) + '" y1="' + Y(t).toFixed(1) + '" y2="' + Y(t).toFixed(1) + '" stroke="var(--line)" stroke-width="1"' + (opt.zero && t === 0 ? "" : ' stroke-dasharray="2 3"') + "/>" +
           '<text x="' + (W - pr + 6) + '" y="' + (Y(t) + 4).toFixed(1) + '" class="fw-tk">' + esc((opt.signed && t > 0 ? "+" : "") + fiNum(t, dd)) + "</text>";
       });
-      if (opt.axis) months.forEach(function (m, i) { if (m.slice(5) === "01" && +m.slice(0, 4) % ystep === 0) g += '<text x="' + X(i).toFixed(1) + '" y="' + (H - 4) + '" class="fw-tk" text-anchor="middle">' + m.slice(0, 4) + "</text>"; });
+      if (opt.axis && daily) {   // 일별 — 달이 바뀌는 날에 'M월'(1월은 연도), 글자가 겹치면 건너뛴다(연도는 앞 달 이름보다 먼저)
+        var labs = [];
+        months.forEach(function (d, i) {
+          if (!i || d.slice(0, 7) === months[i - 1].slice(0, 7)) return;
+          var xx = X(i), yr = d.slice(5, 7) === "01", prev = labs[labs.length - 1];
+          if (xx > W - pr - 8) return;
+          if (prev && xx - prev.x < 30) { if (yr && !prev.yr) labs.pop(); else return; }
+          labs.push({ x: xx, yr: yr, t: yr ? d.slice(0, 4) : +d.slice(5, 7) + "월" });
+        });
+        labs.forEach(function (q) { g += '<text x="' + q.x.toFixed(1) + '" y="' + (H - 4) + '" class="fw-tk" text-anchor="middle">' + q.t + "</text>"; });
+      } else if (opt.axis) months.forEach(function (m, i) { if (m.slice(5) === "01" && +m.slice(0, 4) % ystep === 0) g += '<text x="' + X(i).toFixed(1) + '" y="' + (H - 4) + '" class="fw-tk" text-anchor="middle">' + m.slice(0, 4) + "</text>"; });
       var marks = "";
       if (opt.bars) {
         var y0 = Y(Math.max(mn, Math.min(mx, 0))), bw = Math.max(1, (W - pl - pr) / nN - (nN > 90 ? 0.4 : 1.2));
@@ -6951,10 +7000,11 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
       el._fw = { X: X, Y: Y, vals: vals, W: W, pl: pl, pr: pr };
     }
     var inf = fiInfo(c, k) || {};
-    draw(els[0], lv, { h: 140, color: "var(--ink)", axis: !sig, thr: thrLv, label: (inf.lv || x.name) + " 월말 추이" });
+    var per = daily ? " 일별 추이" : " 월말 추이";
+    draw(els[0], lv, { h: 140, color: "var(--ink)", axis: !sig, thr: thrLv, label: (inf.lv || x.name) + per });
     var sigEl = st.sec.querySelector('[data-fic="sig"]'), ixEl = st.sec.querySelector('[data-fic="idx"]');
-    if (sigEl && sig) draw(sigEl, sig, { h: 110, bars: true, zs: zs, zero: true, signed: true, thr: thrSig, label: (inf.sig || "3개월 변화") + " 월별" });
-    if (ixEl && ix) draw(ixEl, ix, { h: 92, color: "var(--mut)", axis: true, nt: 2, label: idxName + " 월말 추이" });
+    if (sigEl && sig) draw(sigEl, sig, { h: 110, bars: true, zs: zs, zero: true, signed: true, thr: thrSig, label: (inf.sig || "3개월 변화") + (daily ? " 일별" : " 월별") });
+    if (ixEl && ix) draw(ixEl, ix, { h: 92, color: "var(--mut)", axis: true, nt: 2, label: idxName + per });
     var read = st.sec.querySelector("#fiRead"), panels = [els[0], sigEl, ixEl].filter(function (e) { return e && e._fw; });
     function show(i) {
       panels.forEach(function (el) {
@@ -6965,9 +7015,10 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
       });
       if (!read) return;
       var m = months[i], isNow = live && i === months.length - 1;
-      var bits = [isNow ? "<b>" + esc(mdOf(m)) + " 기준</b> 지금(이달 진행 중)" : "<b>" + esc(fiDate(m)) + " 말</b>",
+      var yr = daily && m.slice(0, 4) !== new Date().toISOString().slice(0, 4) ? m.slice(2, 4) + "년 " : "";
+      var bits = [daily ? "<b>" + esc(yr + mdOf(m)) + "</b>" : isNow ? "<b>" + esc(mdOf(m)) + " 기준</b> 지금(이달 진행 중)" : "<b>" + esc(fiDate(m)) + " 말</b>",
         esc(k === "KFF3" && isNow ? "외국인 이달 누계" : FW_SHORT[k] || x.name) + " <b>" + esc(fiLv(k, lv[i])) + "</b>"];
-      if (sig) { var s0 = fiState(zs && zs[i]); bits.push((k === "M2R" ? "실질 " : k === "KFF3" ? (isNow ? "63거래일 합 " : "3개월 합 ") : "3개월 ") + "<b>" + esc(fiSig(k, sig[i])) + "</b>" + (s0 ? "(" + esc(s0) + ")" : "")); }
+      if (sig) { var s0 = fiState(zs && zs[i]); bits.push((k === "M2R" ? "실질 " : k === "KFF3" ? (isNow ? "63거래일 합 " : "3개월 합 ") : daily ? "91일 전 대비 " : "3개월 ") + "<b>" + esc(fiSig(k, sig[i])) + "</b>" + (s0 ? "(" + esc(s0) + ")" : "")); }
       if (thrLv && thrLv[i] != null) bits.push("기준선 " + esc(fiLv(k, thrLv[i])));
       if (thrSig && thrSig[i] != null) bits.push("변화 기준선 " + esc(fiSig(k, thrSig[i])));
       if (ix && ix[i] != null) bits.push(esc(idxName) + " <b>" + esc(Number(ix[i]).toLocaleString("en-US", { maximumFractionDigits: 0 })) + "</b>" + (isNow && nIx && nIx.d !== m ? "(" + esc(mdOf(nIx.d)) + ")" : ""));
@@ -6983,7 +7034,7 @@ document.body.classList.add("ready");   // 자료 스크립트를 다 받았다 
     if (D) show(months.length - 1);
   }
   window.addEventListener("resize", function () { var st = FIC.cur; if (st && st.sec.isConnected) { clearTimeout(st.t); st.t = setTimeout(function () { fiPaint(st); }, 150); } });
-  // 기간 버튼(3년·5년·10년·전체)
+  // 기간 버튼(3개월·1년 일별 · 3년·5년·10년·전체 월말)
   shBody.addEventListener("click", function (e) {
     var b = e.target.closest && e.target.closest("[data-firg]"); if (!b) return;
     FI.range = b.getAttribute("data-firg");

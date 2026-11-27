@@ -74,17 +74,6 @@ async function fred(id) {
   }
   return null;
 }
-async function kofia(obj, fromYear) {
-  const m = {};
-  for (let y = fromYear; y <= new Date().getUTCFullYear(); y++) {
-    const body = JSON.stringify({ dmSearch: { tmpV40: "1000000", tmpV41: "1", tmpV1: "D", tmpV45: y + "0101", tmpV46: y + "1231", OBJ_NM: obj } });
-    for (let i = 0; i < 3; i++) {
-      const t = await curl(["-X", "POST", "-H", "Content-Type: application/json", "-A", "Mozilla/5.0", "-d", body, "https://freesis.kofia.or.kr/meta/getMetaDataList.do"]);
-      try { (JSON.parse(t).ds1 || []).forEach((r) => { const d = String(r.TMPV1); if (ok(r.TMPV2)) m[d.slice(0, 4) + "-" + d.slice(4, 6) + "-" + d.slice(6, 8)] = r.TMPV2; }); break; } catch (_e) { await sleep(1500 * (i + 1)); }
-    }
-  }
-  return Object.keys(m).length ? m : null;
-}
 async function poolMap(list, n, fn) {
   const out = new Array(list.length); let k = 0;
   await Promise.all(Array.from({ length: Math.min(n, list.length) }, async () => { while (k < list.length) { const i = k++; out[i] = await fn(list[i], i); } }));
@@ -126,8 +115,12 @@ function summarize(c, R, idxMap) {
   ySyms.forEach(([s], k) => { Y[s] = Yv[k]; if (!Yv[k]) console.warn("  ⚠ 야후 " + s + " 실패"); });
   const baa = await fred("BAA10Y");
   if (!baa) console.warn("::warning::심리 온도계 — FRED BAA10Y 받기 실패(미국 신용 스프레드 빠짐)");
-  const margin = await kofia("STATSCU0100000070BO", new Date().getUTCFullYear() - YEARS);
-  if (!margin) console.warn("::warning::심리 온도계 — 금융투자협회 신용융자 받기 실패(한국 신용융자 빠짐)");
+  // 신용융자 — 네이버 증권 증시자금동향(금융투자협회 집계, 2026-11-27~: 금융투자협회 통계 사이트가 자동 요청을 막았다). 같은 실행에서 돈의 흐름이
+  //   방금 받았으면(30분 안) 쌓아 둔 일별 자료를 그대로 쓰고, 받기에 실패하면 쌓아 둔 마지막 값까지(lib-deposit)
+  const DP = await require("./lib-deposit").loadDeposit({ fresh: 30, log: console.log });
+  const margin = DP.mrg;
+  if (!margin) console.warn("::warning::심리 온도계 — 신용융자(증시자금) 자료 없음(한국 신용융자 빠짐)");
+  else if (DP.stale) console.warn("::warning::심리 온도계 — 증시자금(네이버) 받기 실패 — 쌓아 둔 " + DP.latest + " 값까지로 계산");
   let flows = {};
   try {
     const FL = JSON.parse(fs.readFileSync(FLOWS, "utf8")), col = FL.cols.indexOf("외국인");

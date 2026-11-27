@@ -7,6 +7,8 @@
 //     수준(lv) · 3개월 변화(sig — 흐름 점수에 들어가는 신호) · 그달 평소 대비(z — 직전 60개월 기준, 우호 방향 +) ·
 //     지금 z 의 기준(base — 직전 60개월 평균·표준편차) · 미국 신용 경고 기준선(직전 60개월의 나쁜 3분의 1 경계)과 켜진 달 · 지수.
 //   - 앱은 지표 상세를 열 때만 받는다(첫 화면엔 안 받는다). 오늘 값·방향(들어옴/빠짐)은 data/liquidity-flow.js 의 것을 쓴다.
+//   - daily(2026-11-27~, 사용자 '신용융자 그래프 실시간으로'): 최근 1년 일별 추이 — update-liquidity-flow.js 가 일별 원자료로 계산해 build({ daily })로 넘긴다.
+//     단독 실행(원자료 없음)이면 지난 파일의 daily 를 그대로 둔다.
 // update-liquidity-flow.js 가 매일 끝에서 부른다. 단독 실행: node scripts/build-liquidity-ind.js
 "use strict";
 const fs = require("fs");
@@ -41,7 +43,8 @@ function readFlow() {
   try { const w = {}; new Function("window", fs.readFileSync(FLOW, "utf8"))(w); return w.LIQUIDITY_FLOW || null; } catch (_e) { return null; }
 }
 
-function build() {
+function build(opts) {
+  opts = opts || {};
   const H = JSON.parse(fs.readFileSync(HIST, "utf8"));
   const flow = readFlow();
   const { MS, h, SIG, histOf, zOf, SCORE } = signals(H);
@@ -101,13 +104,16 @@ function build() {
     });
   });
 
+  let daily = opts.daily || null;
+  if (!daily) { try { daily = JSON.parse(fs.readFileSync(OUT, "utf8")).daily || null; } catch (_e) { daily = null; } }
   const out = {
     asOf: (flow && flow.asOf) || new Date().toISOString().slice(0, 10),
     builtAt: new Date().toISOString().slice(0, 19) + "Z",
-    note: "돈의 흐름 지표 상세의 월말 추이(build-liquidity-ind.js — 원자료 liquidity-hist.json, 식 lib-liqflow.js). lv 수준·sig 3개월 변화·z 그달 평소 대비(직전 60개월, 돈이 들어오는 쪽 +)·base 지금 z 의 기준·risk 미국 신용 경고 기준선(thr)과 켜진 달(hit)·idx 지수.",
+    note: "돈의 흐름 지표 상세의 월말 추이(build-liquidity-ind.js — 원자료 liquidity-hist.json, 식 lib-liqflow.js). lv 수준·sig 3개월 변화·z 그달 평소 대비(직전 60개월, 돈이 들어오는 쪽 +)·base 지금 z 의 기준·risk 미국 신용 경고 기준선(thr)과 켜진 달(hit)·idx 지수·daily 최근 1년 일별(update-liquidity-flow.js).",
     comp: COMP,
     months: MS,
     series, base, risk, idx,
+    daily: daily || undefined,
   };
   fs.writeFileSync(OUT, JSON.stringify(out));
   return { out, warn, bytes: fs.statSync(OUT).size };

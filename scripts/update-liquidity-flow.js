@@ -14,8 +14,12 @@
 // 신용 경고(미국) = 신용 스프레드 수준·3개월 변화·NFCI 수준·3개월 변화 각각이 직전 60개월의 나쁜 3분의 1 안인가.
 // 공개 지연(룩어헤드 방지 — 연구와 같다): 연준 주간 자료 2일·NFCI 5일·예탁금·신용융자 1일·미국 M2/물가 1개월. 오늘 값은 '지금 공개된 마지막 값'.
 //
-// 출력: data/liquidity-flow.js(window.LIQUIDITY_FLOW — 앱 홈 '돈의 흐름'·상세), data/liquidity-hist.json(월말 원자료 누적 — 다음 실행이 이어 쓴다)
-// 사용법: node scripts/update-liquidity-flow.js [--rebuild]   (--rebuild: 금융투자협회·한국은행 자료를 2004년부터 다시 받는다)
+// 투자자예탁금·신용융자(2026-11-27~): 금융투자협회 통계 사이트가 자동 요청을 막아 같은 집계를 공개하는 네이버 증권 증시자금동향에서 받아
+//   data/deposit-daily.json 에 쌓고(scripts/lib-deposit.js), 받기에 실패하면 쌓아 둔 마지막 값을 쓴다(그 날짜가 그대로 보인다).
+//   신용잔고는 금융투자협회 신용거래융자 합계의 98~99.9% 라 월말 이력도 매번 이 일별 자료로 다시 써 한 정의로 잇는다.
+// 출력: data/liquidity-flow.js(window.LIQUIDITY_FLOW — 앱 홈 '돈의 흐름'·상세), data/liquidity-hist.json(월말 원자료 누적 — 다음 실행이 이어 쓴다),
+//   data/liquidity-ind.json(지표 상세 — build-liquidity-ind.js: 월말 긴 추이 + 최근 1년 일별 추이)
+// 사용법: node scripts/update-liquidity-flow.js [--rebuild]   (--rebuild: 한국은행·증시자금 자료를 처음부터 다시 받는다)
 "use strict";
 const fs = require("fs");
 const path = require("path");
@@ -82,17 +86,6 @@ async function yahoo(sym, adj, years, settle) {
   }
   return null;
 }
-async function kofia(obj, fromYear) {
-  const m = {};
-  for (let y = fromYear; y <= new Date().getUTCFullYear(); y++) {
-    const body = JSON.stringify({ dmSearch: { tmpV40: "1000000", tmpV41: "1", tmpV1: "D", tmpV45: y + "0101", tmpV46: y + "1231", OBJ_NM: obj } });
-    for (let i = 0; i < 3; i++) {
-      const t = await curl(["-X", "POST", "-H", "Content-Type: application/json", "-A", "Mozilla/5.0", "-d", body, "https://freesis.kofia.or.kr/meta/getMetaDataList.do"]);
-      try { (JSON.parse(t).ds1 || []).forEach((r) => { const d = String(r.TMPV1); if (ok(r.TMPV2)) m[d.slice(0, 4) + "-" + d.slice(4, 6) + "-" + d.slice(6, 8)] = r.TMPV2; }); break; } catch (_e) { await sleep(1500 * (i + 1)); }
-    }
-  }
-  return Object.keys(m).length ? m : null;
-}
 async function ecos(stat, item, from) {
   const to = new Date().toISOString().slice(0, 7).replace("-", ""), m = {}, step = ECOS_KEY === "sample" ? 10 : 100;
   let total = null;
@@ -129,14 +122,17 @@ const monthlyOf = (map) => { const o = {}; Object.keys(map || {}).forEach((d) =>
   let H = { months: {} };
   try { H = JSON.parse(fs.readFileSync(HIST, "utf8")); } catch (_e) { H = { months: {} }; }
   const first = !Object.keys(H.months || {}).length || REBUILD;
-  const fromY = first ? 2004 : new Date().getUTCFullYear() - 1;
   // 미국(FRED 전체 CSV — 가볍다)·야후(지수·환율 — 처음엔 23년, 이후 2년)
   const ids = ["WALCL", "WTREGEN", "RRPONTSYD", "M2SL", "CPIAUCSL", "BAA10Y", "NFCI"];
   const F = {}; for (const id of ids) F[id] = await fred(id);
   const yy = first ? 23 : 2;
   const Y = { DXY: await yahoo("DX-Y.NYB", false, yy), KRW: await yahoo("KRW=X", false, yy), SPY: await yahoo("SPY", true, yy, true), KS: await yahoo("^KS11", false, yy, true),
     SPX: await yahoo("^GSPC", false, Math.max(yy, 6), true) };   // 화면 그래프용 S&P500 지수(연구 수익은 SPY 배당 포함)
-  const K = { DEP: await kofia("STATSCU0100000060BO", fromY), MRG: await kofia("STATSCU0100000070BO", fromY) };
+  // 투자자예탁금·신용융자 — 네이버 증권 증시자금동향(금융투자협회 집계) 일별, 쌓아 둔 전체 이력(lib-deposit). 받기에 실패하면 쌓아 둔 값(stale)
+  const DP = await require("./lib-deposit").loadDeposit({ full: REBUILD, log: console.log });
+  const K = { DEP: DP.dep, MRG: DP.mrg };
+  const stale = DP.stale && DP.rows ? ["DEP", "MRG"] : [];
+  if (stale.length) console.log("::warning::update-liquidity-flow: 증시자금(네이버) 받기 실패 — 쌓아 둔 " + DP.latest + " 값까지로 계산");
   const eFrom = first ? "200301" : addM(today.slice(0, 7), -24).replace("-", "");
   const E = { corp3: await ecos("721Y001", "7020000", eFrom), ktb3: await ecos("721Y001", "5020000", eFrom) };
   const miss = [].concat(ids.filter((k) => !F[k]), Object.keys(Y).filter((k) => !Y[k]), Object.keys(K).filter((k) => !K[k]), Object.keys(E).filter((k) => !E[k]));
@@ -177,6 +173,8 @@ const monthlyOf = (map) => { const o = {}; Object.keys(map || {}).forEach((d) =>
   const { MS, h, pchg, dif, SIG, histOf, zOf, SCORE } = signals(H);
 
   // ── 오늘 값(지금 공개된 마지막 값 — 3개월 전은 91일 전 값) ──
+  // 값이 없으면 null 그대로(null × 100 = 0 이 되어 앱에 '3개월 0%'로 보였다 — 2026-11-27 증시자금 받기 실패 때)
+  const x100 = (v) => (ok(v) ? v * 100 : null);
   const L = (k) => (S[k] ? lastOf(S[k]) : null);
   const ago = (k, iso, d) => (S[k] && iso ? val(atS(S[k], minusD(iso, d), 10)) : null);
   const nlNow = (() => {
@@ -231,8 +229,55 @@ const monthlyOf = (map) => { const o = {}; Object.keys(map || {}).forEach((d) =>
   Object.keys(nowInd).forEach((k) => { if (!nowInd[k]) delete nowInd[k]; });
   const nowIdx = {};   // 지수 — 끝난 장의 마지막 종가(지표 상세: 한국 코스피·미국 SPY 배당 재투자, 돈의 흐름 상세: S&P500 지수)
   [["KS", 2], ["SPY", 2], ["SPX", 2]].forEach(([k, d]) => { const x = L(k); if (x && newer(x.d)) nowIdx[k] = { d: x.d, v: rnd(x.v, d) }; });
+  // ── 최근 1년 일별 추이(지표 상세 '3개월·1년' — 2026-11-27 사용자 '신용융자 그래프 실시간으로') ──
+  //   월말 추이는 한 달에 한 점이라 그 사이 움직임이 안 보였다. 자료가 나오는 대로(일별 — 연준 순유동성·NFCI 는 주별) 그날 수준·3개월(91일) 변화·
+  //   그날 평소 대비 z 를 남긴다. z 의 기준 = 그날이 든 달 앞 60개월 월말(끝난 달이면 월말 추이와 같은 기준, 이번 달이면 지금 값과 같은 기준).
+  //   미국 신용 경고 기준선도 같은 달 기준. 월별 자료(M2·회사채 스프레드)와 외국인 순매수(월 합 지표)는 없다 — 앱은 월말 추이만 보인다.
+  const D_FROM = minusD(today, 370);
+  const mIdx = (day) => { const i = MS.indexOf(day.slice(0, 7)); return i >= 0 ? i : MS.length; };
+  const ago91 = (ser, day) => val(atS(ser, minusD(day, 91), 10));
+  // ser = {ks, vs} · lvF(값) → 화면 수준 · rawF(날짜, 값) → 신호 원값(lib-liqflow 와 같은 뜻) · mul = 신호 원값 → 화면 단위(build-liquidity-ind IND 와 같다)
+  const dailyOf = (key, ser, lvF, lvD, rawF, mul, sigD) => {
+    if (!ser || !ser.ks.length) return null;
+    const o = { d: [], lv: [], sig: [], z: [] };
+    ser.ks.forEach((day, j) => {
+      if (day < D_FROM) return;
+      const v = ser.vs[j], raw = rawF(day, v);
+      o.d.push(day); o.lv.push(rnd(lvF(v), Math.max(lvD, 2))); o.sig.push(ok(raw) ? rnd(raw * mul, Math.max(sigD, 2)) : null);
+      o.z.push(rnd(zOf(key, raw, histOf(key, mIdx(day))), 2));
+    });
+    return o.d.length >= 5 ? o : null;
+  };
+  const pctOf = (ser) => (day, v) => pchg(v, ago91(ser, day)), difOf = (ser) => (day, v) => dif(v, ago91(ser, day));
+  const nlSer = (() => {   // 연준 순유동성 — 연준 자산이 나온 날(주별)마다 같은 식(재무부 계좌·역레포는 그날 이전 마지막 값)
+    if (!S.WALCL || !S.WTREGEN) return null;
+    const ks = [], vs = [];
+    S.WALCL.ks.forEach((d, j) => { const t = val(atS(S.WTREGEN, d, 10)), r = S.RRPONTSYD ? val(atS(S.RRPONTSYD, d, 10)) : null; if (ok(t)) { ks.push(d); vs.push(S.WALCL.vs[j] - t - (ok(r) ? r * 1000 : 0)); } });
+    return { ks, vs };
+  })();
+  const dS = {
+    KMRG3: dailyOf("KMRG3", S.MRG, (v) => v / 1e6, 2, S.MRG ? pctOf(S.MRG) : null, 100, 2),
+    KDEP3: dailyOf("KDEP3", S.DEP, (v) => v / 1e6, 2, S.DEP ? pctOf(S.DEP) : null, 100, 2),
+    KRW3: dailyOf("KRW3", S.KRW, (v) => v, 1, S.KRW ? pctOf(S.KRW) : null, 100, 2),
+    USD3: dailyOf("USD3", S.DXY, (v) => v, 2, S.DXY ? pctOf(S.DXY) : null, 100, 2),
+    CS3: dailyOf("CS3", S.BAA10Y, (v) => v, 2, S.BAA10Y ? difOf(S.BAA10Y) : null, 100, 1),
+    FCI3: dailyOf("FCI3", S.NFCI, (v) => v, 3, S.NFCI ? difOf(S.NFCI) : null, 1, 3),
+    NL3: dailyOf("NL3", nlSer, (v) => v / 1e6, 3, nlSer ? pctOf(nlSer) : null, 100, 2),
+  };
+  Object.keys(dS).forEach((k) => { if (!dS[k]) delete dS[k]; });
+  // 신용 경고 기준선(그날이 든 달의 기준 — build-liquidity-ind 의 월별 thr 와 같은 식)
+  const cutOf = (k, i) => { const hs = histOf(k, i).map((v) => DIRN[k] * v).sort((a, b) => a - b); return hs.length >= 36 ? DIRN[k] * hs[Math.floor(hs.length / 3)] : null; };
+  const dThr = {};
+  [["CS3", "CS", "CS3", 100, 1], ["FCI3", "FCI", "FCI3", 1, 3]].forEach(([ind, lvK, sigK, sigMul, sigD]) => {
+    const o = dS[ind]; if (!o) return;
+    dThr[ind] = { lv: o.d.map((day) => rnd(cutOf(lvK, mIdx(day)), ind === "CS3" ? 2 : 3)), sig: o.d.map((day) => { const c = cutOf(sigK, mIdx(day)); return ok(c) ? rnd(c * sigMul, sigD) : null; }) };
+  });
+  const dIdx = {};
+  [["korea", "KS"], ["us", "SPY"]].forEach(([c, k]) => { const x = S[k]; if (!x) return; const d = [], v = []; x.ks.forEach((day, j) => { if (day >= D_FROM) { d.push(day); v.push(rnd(x.vs[j], 2)); } }); if (d.length) dIdx[c] = { d, v }; });
+  const daily = { asOf: today, from: D_FROM, s: dS, thr: dThr, idx: dIdx,
+    note: "최근 1년 일별(연준 순유동성·NFCI 는 주별) — lv 수준·sig 91일 전 대비 변화(화면 단위)·z 그날 평소 대비(그날이 든 달 앞 60개월 월말 기준)·thr 미국 신용 경고 기준선·idx 지수 종가(한국 코스피·미국 SPY)" };
   const LEVELS = ["많이 빠지는 중", "빠지는 중", "보통", "들어오는 중", "많이 들어오는 중"];
-  const out = { asOf: today, builtAt: new Date().toISOString().slice(0, 19) + "Z", evidence: EVIDENCE, levels: LEVELS, missing: miss.length ? miss : undefined,
+  const out = { asOf: today, builtAt: new Date().toISOString().slice(0, 19) + "Z", evidence: EVIDENCE, levels: LEVELS, missing: miss.length ? miss : undefined, stale: stale.length ? stale : undefined,
     now: { after: lastM, ind: nowInd, idx: nowIdx } };
   const pctIn = (v, arr) => { const x = arr.filter(ok); if (!ok(v) || x.length < 24) return null; return x.filter((y) => y < v).length / x.length; };
   const tsOf = (k, n, f) => MS.slice(-n).map((m) => [m, rnd(f ? f(m) : h(m, k), 4)]).filter((p) => ok(p[1]));
@@ -247,13 +292,13 @@ const monthlyOf = (map) => { const o = {}; Object.keys(map || {}).forEach((d) =>
     // 구성 지표 — 지금 값·3개월 변화·방향(z)·3년 월말 추이·검증 표시
     if (c === "us") {
       o.comps = [
-        { key: "NL3", name: "연준 순유동성", sub: "연준 자산 − 재무부 계좌 − 역레포", unit: "조 달러", value: nlNow && ok(nlNow.v) ? rnd(nlNow.v / 1e6, 2) : null, chg: rnd(NOW.NL3 * 100, 1), chgUnit: "%", z: rnd(zNow.NL3, 2),
+        { key: "NL3", name: "연준 순유동성", sub: "연준 자산 − 재무부 계좌 − 역레포", unit: "조 달러", value: nlNow && ok(nlNow.v) ? rnd(nlNow.v / 1e6, 2) : null, chg: rnd(x100(NOW.NL3), 1), chgUnit: "%", z: rnd(zNow.NL3, 2),
           state: state(zNow.NL3), d: nlNow && nlNow.d, spark: tsOf("NL", 36).map((x) => [x[0], rnd(x[1] / 1e6, 3)]), valid: "코스피 12개월(검증) · S&P500 은 경계선" },
-        { key: "CS3", name: "신용 스프레드", sub: "회사채(Baa) − 국채 10년", unit: "%p", value: rnd(NOW.CS, 2), chg: rnd(NOW.CS3 * 100, 0), chgUnit: "bp", z: rnd(zNow.CS3, 2),
+        { key: "CS3", name: "신용 스프레드", sub: "회사채(Baa) − 국채 10년", unit: "%p", value: rnd(NOW.CS, 2), chg: rnd(x100(NOW.CS3), 0), chgUnit: "bp", z: rnd(zNow.CS3, 2),
           state: state(zNow.CS3), d: cs && cs.d, spark: tsOf("CS", 36), valid: "S&P500 급락 위험(검증)" },
         { key: "FCI3", name: "금융여건지수", sub: "시카고 연은 NFCI — 0보다 낮으면 평소보다 느슨", unit: "", value: rnd(NOW.FCI, 3), chg: rnd(NOW.FCI3, 3), chgUnit: "", z: rnd(zNow.FCI3, 2),
           state: state(zNow.FCI3), d: fci && fci.d, spark: tsOf("FCI", 36), valid: "S&P500 급락 위험(검증)" },
-        { key: "USD3", name: "달러인덱스", sub: "달러가 강해지면 세계 돈이 미국으로", unit: "", value: rnd(dxy && dxy.v, 2), chg: rnd(NOW.USD3 * 100, 1), chgUnit: "%", z: rnd(zNow.USD3, 2),
+        { key: "USD3", name: "달러인덱스", sub: "달러가 강해지면 세계 돈이 미국으로", unit: "", value: rnd(dxy && dxy.v, 2), chg: rnd(x100(NOW.USD3), 1), chgUnit: "%", z: rnd(zNow.USD3, 2),
           state: state(zNow.USD3), d: dxy && dxy.d, spark: tsOf("DXY", 36) },
         { key: "M2R", name: "실질 통화량(M2)", sub: "M2 증가율 − 물가 상승률(전년 대비)", unit: "%", value: m2r ? rnd(m2r.v * 100, 1) : null, chg: null, chgUnit: "", z: rnd(zNow.M2R, 2),
           state: state(zNow.M2R), d: m2r && m2r.d, spark: tsOf("M2R", 36, (m) => { const a = pchg(h(m, "M2"), h(addM(m, -12), "M2")), b = pchg(h(m, "CPI"), h(addM(m, -12), "CPI")); return ok(a) && ok(b) ? (a - b) * 100 : null; }) },
@@ -271,17 +316,17 @@ const monthlyOf = (map) => { const o = {}; Object.keys(map || {}).forEach((d) =>
         note: on >= 2 ? "과거 4개 중 2개 이상이 켜졌을 때 다음 3개월 안 S&P500 −10% 하락 28%(그 밖 7%)" : on === 1 ? "켜진 신호 하나 — 그 신호만 켜졌던 때의 과거 확률은 아래" : "신용·금융여건이 최근 5년 중 나쁜 3분의 1에 들지 않았다" };
     } else {
       o.comps = [
-        { key: "KDEP3", name: "투자자예탁금", sub: "주식 사려고 증권 계좌에 넣어 둔 돈", unit: "조원", value: dep ? rnd(dep.v / 1e6, 1) : null, chg: rnd(NOW.KDEP3 * 100, 1), chgUnit: "%", z: rnd(zNow.KDEP3, 2),
+        { key: "KDEP3", name: "투자자예탁금", sub: "주식 사려고 증권 계좌에 넣어 둔 돈", unit: "조원", value: dep ? rnd(dep.v / 1e6, 1) : null, chg: rnd(x100(NOW.KDEP3), 1), chgUnit: "%", z: rnd(zNow.KDEP3, 2),
           state: state(zNow.KDEP3), d: dep && dep.d, spark: tsOf("DEP", 36).map((x) => [x[0], rnd(x[1] / 1e6, 2)]), valid: "다음 3개월 코스피(검증)" },
-        { key: "KMRG3", name: "신용융자", sub: "빚을 내 산 주식 잔고", unit: "조원", value: mrg ? rnd(mrg.v / 1e6, 1) : null, chg: rnd(NOW.KMRG3 * 100, 1), chgUnit: "%", z: rnd(zNow.KMRG3, 2),
+        { key: "KMRG3", name: "신용융자", sub: "빚을 내 산 주식 잔고", unit: "조원", value: mrg ? rnd(mrg.v / 1e6, 1) : null, chg: rnd(x100(NOW.KMRG3), 1), chgUnit: "%", z: rnd(zNow.KMRG3, 2),
           state: state(zNow.KMRG3), d: mrg && mrg.d, spark: tsOf("MRG", 36).map((x) => [x[0], rnd(x[1] / 1e6, 2)]), valid: "다음 3개월 코스피(검증)" },
         { key: "KFF3", name: "외국인 순매수", sub: "코스피 최근 3개월(63거래일) 합", unit: "조원", value: ffDays.length ? rnd(ff63 / 1e4, 1) : null, chg: null, chgUnit: "", z: rnd(zNow.KFF3, 2),
           state: state(zNow.KFF3), d: ffDays.length ? ffDays[ffDays.length - 1] : null, spark: tsOf("FF", 36).map((x) => [x[0], rnd(x[1] / 1e4, 2)]), sparkKind: "bar" },
-        { key: "KRW3", name: "원/달러", sub: "원화가 강해지면(내리면) 외국인 돈이 들어오기 쉽다", unit: "원", value: rnd(krw && krw.v, 0), chg: rnd(NOW.KRW3 * 100, 1), chgUnit: "%", z: rnd(zNow.KRW3, 2),
+        { key: "KRW3", name: "원/달러", sub: "원화가 강해지면(내리면) 외국인 돈이 들어오기 쉽다", unit: "원", value: rnd(krw && krw.v, 0), chg: rnd(x100(NOW.KRW3), 1), chgUnit: "%", z: rnd(zNow.KRW3, 2),
           state: state(zNow.KRW3), d: krw && krw.d, spark: tsOf("KRW", 36) },
-        { key: "KCS3", name: "회사채 스프레드", sub: "회사채(AA−) − 국고채 3년 · 월평균", unit: "%p", value: kcsM ? rnd(h(kcsM, "KCS"), 2) : null, chg: rnd(NOW.KCS3 * 100, 0), chgUnit: "bp", z: rnd(zNow.KCS3, 2),
+        { key: "KCS3", name: "회사채 스프레드", sub: "회사채(AA−) − 국고채 3년 · 월평균", unit: "%p", value: kcsM ? rnd(h(kcsM, "KCS"), 2) : null, chg: rnd(x100(NOW.KCS3), 0), chgUnit: "bp", z: rnd(zNow.KCS3, 2),
           state: state(zNow.KCS3), d: kcsM, spark: tsOf("KCS", 36) },
-        { key: "NL3", name: "미국 연준 순유동성", sub: "3개월 변화 — 세계로 풀린 달러", unit: "%", value: rnd(NOW.NL3 * 100, 1), chg: null, chgUnit: "", z: rnd(zNow.NL3, 2),
+        { key: "NL3", name: "미국 연준 순유동성", sub: "3개월 변화 — 세계로 풀린 달러", unit: "%", value: rnd(x100(NOW.NL3), 1), chg: null, chgUnit: "", z: rnd(zNow.NL3, 2),
           state: state(zNow.NL3), d: nlNow && nlNow.d, spark: tsOf("NL", 36).map((x) => [x[0], rnd(x[1] / 1e6, 3)]), valid: "다음 12개월 코스피(검증)" },
       ];
     }
@@ -299,7 +344,7 @@ const monthlyOf = (map) => { const o = {}; Object.keys(map || {}).forEach((d) =>
   if (miss.length > 3) console.log("::warning::update-liquidity-flow: 자료 " + miss.length + "개를 받지 못했다(" + miss.join(", ") + ") — 누적 파일로 계산");
   // 지표 상세(앱 — 돈의 흐름 지표 칸·줄을 누르면 열림)의 긴 월별 추이 — 방금 쓴 누적 원자료로, 같은 식(lib-liqflow.js)
   try {
-    const ind = require("./build-liquidity-ind").build();
+    const ind = require("./build-liquidity-ind").build({ daily });
     console.log("liquidity-ind.json 갱신 — " + Math.round(ind.bytes / 1024) + "KB");
     ind.warn.forEach((w) => console.log("::warning::build-liquidity-ind: " + w));
   } catch (e) { console.log("::warning::build-liquidity-ind 실패 — " + (e && e.message)); }
